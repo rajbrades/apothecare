@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@theme {
+  /* Apotheca Color System — Deep teal + warm gold accent */
+  --color-brand-50: #f0fdf9;
+  --color-brand-100: #ccfbef;
+  --color-brand-200: #99f6df;
+  --color-brand-300: #5ceacc;
+  --color-brand-400: #2dd4b3;
+  --color-brand-500: #14b89a;
+  --color-brand-600: #0d9479;
+  --color-brand-700: #0f7662;
+  --color-brand-800: #115e50;
+  --color-brand-900: #134e43;
+  --color-brand-950: #042f28;
+
+  /* Warm accent — gold for interactive elements */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8fafb;
+  --color-surface-tertiary: #f1f5f4;
+  --color-surface-elevated: #ffffff;
+  --color-border: #e2e8e6;
+  --color-border-light: #f0f3f2;
+
+  /* Text */
+  --color-text-primary: #1a2e2a;
+  --color-text-secondary: #4a6660;
+  --color-text-tertiary: #7a9690;
+  --color-text-muted: #a3bbb5;
+
+  /* Evidence level badge colors */
+  --color-evidence-meta: #f59e0b;
+  --color-evidence-rct: #3b82f6;
+  --color-evidence-guideline: #10b981;
+  --color-evidence-cohort: #8b5cf6;
+  --color-evidence-case: #6b7280;
+
+  /* Biomarker traffic light */
+  --color-biomarker-optimal: #10b981;
+  --color-biomarker-normal: #3b82f6;
+  --color-biomarker-borderline: #f59e0b;
+  --color-biomarker-out-of-range: #ef4444;
+  --color-biomarker-critical: #dc2626;
+
+  /* Typography */
+  --font-display: "Newsreader", "Georgia", serif;
+  --font-body: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+
+  /* Spacing */
+  --sidebar-width: 260px;
+  --header-height: 56px;
+}
+
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* Base styles */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Citation badge base */
+.citation-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+.citation-badge:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+/* Evidence level badges */
+.evidence-meta { background: #fef3c7; color: #92400e; }
+.evidence-rct { background: #dbeafe; color: #1e40af; }
+.evidence-guideline { background: #d1fae5; color: #065f46; }
+.evidence-cohort { background: #ede9fe; color: #5b21b6; }
+.evidence-case { background: #f3f4f6; color: #374151; }
+
+/* Biomarker range bar */
+.range-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-surface-tertiary);
+  overflow: visible;
+}
+
+.range-bar .marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  top: -2px;
+  transform: translateX(-50%);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Thinking indicator animation */
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.thinking-dot {
+  animation: thinking-pulse 1.4s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Sidebar active conversation indicator */
+.sidebar-conv-active {
+  background: var(--color-brand-50);
+  border-left: 2px solid var(--color-brand-500);
+}
+
+/* Deep consult toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--color-border);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle-switch.active {
+  background: var(--color-brand-500);
+}
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.toggle-switch.active::after {
+  transform: translateX(16px);
+}
+
+/* Timestamp formatting */
+.message-timestamp {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.group:hover .message-timestamp {
+  opacity: 1;
+}
