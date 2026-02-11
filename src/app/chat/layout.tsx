@@ -27,21 +27,22 @@ export default async function ChatLayout({
     redirect("/auth/onboarding");
   }
 
-  const { data: recentConversations } = await supabase
-    .from("conversations")
-    .select("id, title, updated_at")
-    .eq("practitioner_id", practitioner.id)
-    .eq("is_archived", false)
-    .order("updated_at", { ascending: false })
-    .limit(5);
-
-  const { data: recentVisits } = await supabase
-    .from("visits")
-    .select("id, visit_date, chief_complaint")
-    .eq("practitioner_id", practitioner.id)
-    .eq("is_archived", false)
-    .order("visit_date", { ascending: false })
-    .limit(3);
+  const [{ data: recentConversations }, { data: recentVisits }] = await Promise.all([
+    supabase
+      .from("conversations")
+      .select("id, title, updated_at")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("updated_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("visits")
+      .select("id, visit_date, chief_complaint")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("visit_date", { ascending: false })
+      .limit(3),
+  ]);
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">

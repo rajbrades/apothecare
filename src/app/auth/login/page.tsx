@@ -9,9 +9,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Enter your email first, then click Forgot password.");
+      return;
+    }
+    setError(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess("Password reset link sent. Check your email.");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +61,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-brand-700)] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center">
               <span className="text-white font-bold text-lg font-[var(--font-display)]">A</span>
             </div>
             <span className="text-2xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
@@ -87,7 +104,8 @@ export default function LoginPage() {
                 </label>
                 <button
                   type="button"
-                  className="text-xs text-[var(--color-brand-700)] hover:underline"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-[var(--color-brand-600)] hover:underline"
                 >
                   Forgot password?
                 </button>
@@ -109,10 +127,16 @@ export default function LoginPage() {
               </div>
             )}
 
+            {success && (
+              <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -124,7 +148,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/register"
-            className="text-[var(--color-brand-700)] font-medium hover:underline"
+            className="text-[var(--color-brand-600)] font-medium hover:underline"
           >
             Create one free
           </Link>

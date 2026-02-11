@@ -1,12 +1,27 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLINICAL_CHAT_SYSTEM_PROMPT, MODELS } from "@/lib/ai/anthropic";
+import { chatMessageSchema } from "@/lib/validations/chat";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+function jsonError(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // CSRF: Validate origin
+    const origin = request.headers.get("origin");
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    if (origin && !appUrl.startsWith(origin)) {
+      return jsonError("Forbidden", 403);
+    }
+
     const supabase = await createClient();
     const serviceClient = createServiceClient();
 
@@ -51,25 +66,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request
+    // Validate input
     const body = await request.json();
-    const {
-      message,
-      conversation_id,
-      patient_id,
-      is_deep_consult = false,
-    } = body;
+    const parsed = chatMessageSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonError(parsed.error.issues[0].message, 400);
+    }
+    const { message, conversation_id, patient_id, is_deep_consult } = parsed.data;
 
     // Capture request metadata for audit
     const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";
-
-    if (!message || typeof message !== "string") {
-      return new Response(JSON.stringify({ error: "Message is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
 
     // Get or create conversation
     let convId = conversation_id;

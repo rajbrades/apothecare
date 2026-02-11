@@ -1,8 +1,9 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo } from "react";
 import ReactMarkdown from "react-markdown";
-import { Copy, Star, Share2, FileDown, Check, Leaf } from "lucide-react";
+import rehypeSanitize from "rehype-sanitize";
+import { Copy, Star, Share2, FileDown } from "lucide-react";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
@@ -11,13 +12,10 @@ interface MessageBubbleProps {
 
 function ThinkingIndicator() {
   return (
-    <div className="flex items-center gap-2 py-3">
-      <div className="flex items-center gap-1.5">
-        <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
-      </div>
-      <span className="text-xs text-[var(--color-text-muted)]">Analyzing...</span>
+    <div className="flex items-center gap-1.5 py-2">
+      <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
+      <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
+      <div className="w-2 h-2 rounded-full bg-[var(--color-brand-400)] thinking-dot" />
     </div>
   );
 }
@@ -28,33 +26,27 @@ function StreamingCursor() {
   );
 }
 
-function formatTime(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
 export const MessageBubble = memo(function MessageBubble({
   message,
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const isStreaming = message.isStreaming;
   const isEmpty = !message.content;
-  const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div
-      className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"} group`}
+      className={`flex gap-4 ${isUser ? "justify-end" : "justify-start"} group`}
     >
-      {/* AI Avatar */}
+      {/* Avatar */}
       {!isUser && (
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-brand-700)] to-[var(--color-brand-800)] flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-          <Leaf size={14} className="text-white" strokeWidth={2} />
+        <div className="w-8 h-8 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center flex-shrink-0 mt-1">
+          <span className="text-white font-bold text-xs font-[var(--font-display)]">
+            A
+          </span>
         </div>
       )}
 
@@ -62,19 +54,14 @@ export const MessageBubble = memo(function MessageBubble({
       <div
         className={`max-w-[720px] ${
           isUser
-            ? "bg-[var(--color-surface-tertiary)] rounded-2xl rounded-tr-sm px-5 py-3"
+            ? "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] rounded-2xl rounded-tr-md px-5 py-3"
             : "flex-1"
         }`}
       >
         {isUser ? (
-          <>
-            <p className="text-[var(--color-text-primary)] text-[15px] leading-relaxed whitespace-pre-wrap">
-              {message.content}
-            </p>
-            <span className="message-timestamp block text-right mt-1.5">
-              {formatTime(message.createdAt || new Date())}
-            </span>
-          </>
+          <p className="text-[var(--color-text-primary)] text-[15px] leading-relaxed whitespace-pre-wrap">
+            {message.content}
+          </p>
         ) : (
           <>
             {isEmpty && isStreaming ? (
@@ -82,6 +69,7 @@ export const MessageBubble = memo(function MessageBubble({
             ) : (
               <div className="prose-apotheca">
                 <ReactMarkdown
+                  rehypePlugins={[rehypeSanitize]}
                   components={{
                     p: ({ children }) => (
                       <p className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] mb-3 last:mb-0">
@@ -174,19 +162,19 @@ export const MessageBubble = memo(function MessageBubble({
               </div>
             )}
 
-            {/* Action bar — visible on hover */}
+            {/* Action bar — only show when not streaming */}
             {!isStreaming && message.content && (
-              <div className="flex items-center gap-0.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={handleCopy}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Copy"
                 >
-                  {copied ? <Check size={13} className="text-[var(--color-brand-500)]" /> : <Copy size={13} />}
-                  {copied ? "Copied" : "Copy"}
+                  <Copy size={13} />
+                  Copy
                 </button>
                 <button
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent-600)] hover:bg-[var(--color-accent-50)] transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Add to Favorites"
                 >
                   <Star size={13} />
@@ -203,14 +191,20 @@ export const MessageBubble = memo(function MessageBubble({
                 >
                   <FileDown size={13} />
                 </button>
-                <span className="message-timestamp ml-2">
-                  {formatTime(message.createdAt || new Date())}
-                </span>
               </div>
             )}
           </>
         )}
       </div>
+
+      {/* User avatar */}
+      {isUser && (
+        <div className="w-8 h-8 rounded-full bg-[var(--color-surface-tertiary)] flex items-center justify-center flex-shrink-0 mt-1">
+          <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+            You
+          </span>
+        </div>
+      )}
     </div>
   );
 });

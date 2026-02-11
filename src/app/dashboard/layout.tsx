@@ -28,23 +28,23 @@ export default async function AppLayout({
     redirect("/auth/onboarding");
   }
 
-  // Get recent conversations
-  const { data: recentConversations } = await supabase
-    .from("conversations")
-    .select("id, title, updated_at")
-    .eq("practitioner_id", practitioner.id)
-    .eq("is_archived", false)
-    .order("updated_at", { ascending: false })
-    .limit(5);
-
-  // Get recent visits
-  const { data: recentVisits } = await supabase
-    .from("visits")
-    .select("id, visit_date, chief_complaint")
-    .eq("practitioner_id", practitioner.id)
-    .eq("is_archived", false)
-    .order("visit_date", { ascending: false })
-    .limit(3);
+  // Parallelize remaining queries
+  const [{ data: recentConversations }, { data: recentVisits }] = await Promise.all([
+    supabase
+      .from("conversations")
+      .select("id, title, updated_at")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("updated_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("visits")
+      .select("id, visit_date, chief_complaint")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("visit_date", { ascending: false })
+      .limit(3),
+  ]);
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">
