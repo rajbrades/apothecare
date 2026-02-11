@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Microscope, Dna, ClipboardList, Stethoscope, ShieldCheck, Zap } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -7,7 +8,7 @@ export default function HomePage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[var(--color-border-light)]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[var(--color-brand-700)] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center">
               <span className="text-white font-bold text-sm font-[var(--font-display)]">A</span>
             </div>
             <span className="text-xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
@@ -23,7 +24,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 bg-[var(--color-brand-700)] text-white rounded-lg hover:bg-[var(--color-brand-700)] transition-colors font-medium"
+              className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-lg hover:bg-[var(--color-brand-700)] transition-colors font-medium"
             >
               Get Started Free
             </Link>
@@ -42,7 +43,7 @@ export default function HomePage() {
 
           <h1 className="text-5xl md:text-6xl font-bold text-[var(--color-text-primary)] leading-tight mb-6 font-[var(--font-display)]">
             Clinical intelligence for{" "}
-            <span className="text-[var(--color-brand-700)]">functional medicine</span>
+            <span className="text-[var(--color-brand-600)]">functional medicine</span>
           </h1>
 
           <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto mb-12 leading-relaxed">
@@ -66,7 +67,7 @@ export default function HomePage() {
                 </span>
                 <Link
                   href="/auth/register"
-                  className="px-5 py-2 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors"
+                  className="px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors"
                 >
                   Start Free →
                 </Link>
@@ -97,38 +98,40 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                icon: "🔬",
+                icon: <Microscope size={24} className="text-[var(--color-brand-600)]" />,
                 title: "Evidence-Cited Chat",
                 desc: "Ask clinical questions and get responses grounded in functional medicine evidence from IFM, A4M, and peer-reviewed literature. Every claim is cited.",
               },
               {
-                icon: "🧬",
+                icon: <Dna size={24} className="text-[var(--color-brand-600)]" />,
                 title: "Multi-Modal Lab Interpretation",
                 desc: "Upload blood panels, GI-MAPs, DUTCH tests, OATs — the AI parses, interprets, and correlates findings across all your labs with functional ranges.",
               },
               {
-                icon: "📋",
+                icon: <ClipboardList size={24} className="text-[var(--color-brand-600)]" />,
                 title: "Protocol Generation",
                 desc: "AI-generated treatment protocols with supplement dosing, dietary interventions, and lifestyle recommendations — all backed by evidence citations.",
               },
               {
-                icon: "🏥",
+                icon: <Stethoscope size={24} className="text-[var(--color-brand-600)]" />,
                 title: "Clinical Visits",
                 desc: "Document visits with real-time evidence surfacing. Transcribe, generate SOAP notes, and query evidence — all in one workflow.",
               },
               {
-                icon: "🛡️",
+                icon: <ShieldCheck size={24} className="text-[var(--color-brand-600)]" />,
                 title: "HIPAA Compliant",
                 desc: "Built for clinical use from day one. End-to-end encryption, BAAs with all vendors, audit logging, and SOC 2 certification in progress.",
               },
               {
-                icon: "⚡",
+                icon: <Zap size={24} className="text-[var(--color-brand-600)]" />,
                 title: "Functional Ranges",
                 desc: "Every biomarker displayed with both conventional and functional/optimal ranges. Catch subclinical dysfunction that conventional labs miss.",
               },
             ].map((f) => (
               <div key={f.title} className="p-6 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)]">
-                <span className="text-2xl">{f.icon}</span>
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center">
+                  {f.icon}
+                </div>
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mt-3 mb-2">
                   {f.title}
                 </h3>
@@ -174,7 +177,7 @@ export default function HomePage() {
 
             {/* Pro */}
             <div className="p-8 rounded-2xl border-2 border-[var(--color-brand-500)] bg-white relative">
-              <div className="absolute -top-3 left-6 px-3 py-0.5 bg-[var(--color-brand-700)] text-white text-xs font-medium rounded-full">
+              <div className="absolute -top-3 left-6 px-3 py-0.5 bg-[var(--color-brand-600)] text-white text-xs font-medium rounded-full">
                 Most Popular
               </div>
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Pro</h3>
@@ -198,7 +201,7 @@ export default function HomePage() {
               </ul>
               <Link
                 href="/auth/register?plan=pro"
-                className="block text-center mt-8 px-6 py-3 rounded-lg bg-[var(--color-brand-700)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
+                className="block text-center mt-8 px-6 py-3 rounded-lg bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
               >
                 Start Free Trial →
               </Link>

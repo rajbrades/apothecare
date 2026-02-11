@@ -5,7 +5,7 @@ import { getAnthropicClient, CLINICAL_CHAT_SYSTEM_PROMPT, MODELS } from "@/lib/a
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const serviceClient = await createServiceClient();
+    const serviceClient = createServiceClient();
 
     // Verify authentication
     const {
@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
       patient_id,
       is_deep_consult = false,
     } = body;
+
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -167,6 +170,8 @@ export async function POST(request: NextRequest) {
       action: "query" as const,
       resource_type: "conversation",
       resource_id: convId,
+      ip_address: clientIp,
+      user_agent: userAgent,
       detail: {
         model,
         input_tokens: response.usage.input_tokens,
