@@ -1,233 +1,283 @@
 # Apotheca
 
-**AI Clinical Decision Support for Functional Medicine**
+<p align="center">
+  <strong>AI Clinical Decision Support for Functional & Integrative Medicine</strong>
+</p>
 
-Evidence-based clinical intelligence for MDs, DOs, NPs, PAs, DCs, and NDs practicing functional and integrative medicine.
+<p align="center">
+  Evidence-based clinical intelligence powered by AI — built for physicians, nurse practitioners, physician assistants, chiropractors, and naturopathic doctors who think differently about health.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#database-schema">Database</a> •
+  <a href="#api-reference">API</a> •
+  <a href="#deployment">Deployment</a> •
+  <a href="#roadmap">Roadmap</a>
+</p>
+
+---
+
+## The Problem
+
+Functional medicine practitioners spend **30–60 minutes per complex patient case** cobbling together evidence from ChatGPT, PubMed, UpToDate, IFM toolkits, and supplement databases. There's no dedicated AI clinical decision support tool for this $90B (and growing) market.
+
+**OpenEvidence** serves conventional medicine with a $3.5B valuation and 40% of US physicians. Apotheca is the functional medicine equivalent — purpose-built for practitioners who work with the IFM Matrix, interpret GI-MAPs alongside blood panels, and think in terms of root causes rather than symptom suppression.
 
 ## Features
 
-- 🧠 **AI Clinical Chat** — Evidence-cited responses with functional medicine expertise
-- 🔬 **Deep Consult Mode** — Extended analysis using Claude Opus for complex cases
-- 📊 **Dual-Range Lab Interpretation** — Conventional and functional/optimal reference ranges
-- 👥 **Patient Context Threading** — Link conversations to patient records
-- 📝 **Visit Documentation** — SOAP notes with IFM Matrix integration
-- 💊 **Protocol Generation** — Supplement dosing based on evidence
-- 🔒 **HIPAA Compliant** — Row-Level Security + audit logging
-- ✨ **Streaming Responses** — Real-time AI output with word count guidance
+### Evidence-Cited Clinical Chat
+Ask clinical questions and get streaming responses grounded in functional medicine evidence from IFM, A4M, Cleveland Clinic Center for Functional Medicine, and peer-reviewed literature. Every claim is cited with evidence strength indicators (meta-analysis, RCT, clinical guideline, case study).
+
+### Multi-Modal Lab Interpretation
+Upload blood panels, GI-MAPs, DUTCH tests, and OAT panels. The AI parses, interprets, and correlates findings across all your labs — with both **conventional and functional/optimal reference ranges** displayed side-by-side. No other tool does this.
+
+### Protocol Generation
+AI-generated treatment protocols with supplement dosing, dietary interventions, lifestyle recommendations, and drug-supplement interaction checking — all backed by evidence citations. One-click branded PDF export for patients.
+
+### Clinical Visits
+Document visits with real-time evidence surfacing. Transcribe appointments, generate SOAP notes, and query the evidence base — all in one workflow. Built around the **IFM Matrix** as a navigable clinical framework.
+
+### Deep Consult Mode
+Toggle to use Claude Opus for complex multi-system cases, differential diagnoses, and cross-lab correlations. Extended 4096-token responses with advanced clinical reasoning.
+
+### HIPAA Compliant from Day One
+End-to-end encryption, Business Associate Agreements with all vendors, Row-Level Security on every table, comprehensive audit logging (IP + user agent), CSRF protection, and SOC 2 certification in progress.
+
+### Dual-Range Biomarker Display
+Every biomarker displayed with both conventional and functional/optimal ranges. Catch subclinical thyroid dysfunction, early insulin resistance, and methylation issues that conventional ranges miss. Pre-seeded with 17+ biomarker references from IFM and A4M guidelines.
+
+## Target Practitioners
+
+| Practitioner Type | NPI Eligible | Priority |
+|---|---|---|
+| MD / DO (functional/integrative) | Yes | Primary — highest LTV, credibility anchor |
+| Nurse Practitioners (NP/APRN) | Yes | Primary — fast-growing, high usage |
+| Physician Assistants (PA-C) | Yes | Secondary — high usage in group practices |
+| Doctors of Chiropractic (DC) | Yes (Type 1) | Secondary — strong IFM/A4M presence |
+| Naturopathic Doctors (ND) | Varies by state | Secondary — natural fit, high engagement |
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 + React 19 + TypeScript + Tailwind CSS v4
-- **Database**: PostgreSQL with pgvector (Supabase Cloud for production)
-- **Auth**: Supabase Auth with Row-Level Security
-- **AI**: Anthropic Claude API (Sonnet 4 + Opus 4)
-- **Hosting**: AWS Amplify (production) / localhost (dev)
-- **Payments**: Stripe
+| Layer | Technology | Rationale |
+|---|---|---|
+| **Frontend** | Next.js 15 + TypeScript + Tailwind CSS v4 | App Router, RSC, streaming support |
+| **Database** | Supabase Cloud (PostgreSQL + pgvector) | RLS, vector search for RAG, JSONB for flexible schemas |
+| **Auth** | Supabase Auth | HIPAA BAA on Pro plan, RLS integration, MFA support |
+| **AI** | Anthropic Claude API | Sonnet 4.5 (standard) + Opus 4.5 (deep consult). HIPAA BAA with zero-retention |
+| **Validation** | Zod | Input validation on all API routes |
+| **Icons** | Lucide React | Consistent icon system across all pages |
+| **Fonts** | Newsreader + DM Sans + JetBrains Mono | Loaded via `<link>` preconnect (non-blocking) |
+| **Hosting (prod)** | Vercel (dev) / AWS Amplify (prod) | Auto-deploy from main; Amplify for HIPAA BAA |
 
-## Prerequisites
+## Getting Started
 
-- Node.js 20+
-- PostgreSQL 16+ with pgvector extension
-- Anthropic API key
-- Supabase account (for production)
+### Prerequisites
 
-## Quick Start
+- **Node.js** 20+
+- **Anthropic API key** — [console.anthropic.com](https://console.anthropic.com)
+- **Supabase project** — [supabase.com](https://supabase.com)
 
-### 1. Clone and install
+### Installation
 
 ```bash
 git clone https://github.com/rajbrades/apotheca.git
 cd apotheca
 npm install
+cp .env.example .env.local
+# Edit .env.local with your values
 ```
 
-### 2. Create a Supabase project
+### Database Setup
 
-1. Go to [supabase.com/dashboard/projects](https://supabase.com/dashboard/projects)
-2. Click "New project"
-3. Choose a name and strong database password
-4. Wait ~2 minutes for project creation
+Run these in the Supabase SQL Editor:
 
-### 3. Enable pgvector extension
+```sql
+-- 1. Extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
-1. In your Supabase dashboard, go to **Database → Extensions**
-2. Search for **pgvector** and enable it
-3. Wait for it to activate
-
-### 4. Run the database migration
-
-1. In your Supabase dashboard, go to **SQL Editor**
-2. Click "New query"
-3. Copy the entire contents of `supabase/migrations/001_initial_schema.sql`
-4. Paste into the SQL Editor and click "Run"
-
-**Note:** Skip the first few lines (`CREATE EXTENSION`) since you already enabled extensions via the UI.
-
-### 5. Set up environment variables
-
-1. In your Supabase dashboard, go to **Settings → API**
-2. Copy your **Project URL**, **anon public key**, and **secret key**
-3. Get your Anthropic API key from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
-4. Create `.env.local`:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxx
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxxxx
-ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=Apotheca
+-- 2. Full schema (minus extension lines)
+-- Copy contents of supabase/migrations/001_initial_schema.sql
 ```
 
-**⚠️ Security:** Never commit `.env.local` to git or share these keys publicly.
-
-### 6. Start the development server
+### Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000).
 
-### 7. Create your account
+### Environment Variables
 
-1. Click "Get Started" or go to `/auth/register`
-2. Fill in your details and create an account
-3. Complete the onboarding with your credentials
-4. Start chatting!
+| Variable | Description | Required |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) | Yes |
+| `ANTHROPIC_API_KEY` | Anthropic API key | Yes |
+| `NEXT_PUBLIC_APP_URL` | Application URL (used for CSRF validation) | Yes |
+| `NEXT_PUBLIC_APP_NAME` | Application display name | Yes |
+| `STRIPE_SECRET_KEY` | Stripe secret key | For payments |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | For payments |
 
-## Environment Variables Reference
+## Architecture
 
-### Required
-
-```bash
-# Supabase (get from Settings → API)
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxx  # or eyJhbGci... format
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxxxx           # or eyJhbGci... format
-
-# Anthropic (get from console.anthropic.com)
-ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
-
-# App config
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=Apotheca
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Client (Browser)                      │
+│                    Next.js 15 + React 19                     │
+│              Tailwind CSS v4 + DM Sans + Newsreader          │
+│              SSE streaming + keyboard shortcuts               │
+└──────────────┬──────────────────────────────┬────────────────┘
+               │                              │
+               ▼                              ▼
+┌──────────────────────┐       ┌──────────────────────────────┐
+│   Next.js API Routes │       │     Supabase Auth (JWT)      │
+│   /api/chat/stream   │       │   Session management + MFA    │
+│   /api/chat/history  │       │   Row-Level Security tokens   │
+│   (Zod validated)    │       └──────────────────────────────┘
+│   (CSRF protected)   │
+└──────────┬───────────┘
+           │
+     ┌─────┴──────┐
+     ▼            ▼
+┌──────────┐  ┌────────────────────────────────────────────────┐
+│ Anthropic│  │              Supabase Cloud                     │
+│ Claude   │  │  ┌────────────┐  ┌───────────┐  ┌───────────┐ │
+│ API      │  │  │ PostgreSQL │  │  Storage   │  │  Auth      │ │
+│          │  │  │ + pgvector │  │ (Lab PDFs) │  │           │ │
+│ Sonnet   │  │  │ + RLS      │  │ encrypted  │  │           │ │
+│ Opus     │  │  └────────────┘  └───────────┘  └───────────┘ │
+└──────────┘  └────────────────────────────────────────────────┘
 ```
 
-### Optional (for local PostgreSQL)
-
-```bash
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/apotheca
-```
-
-### Optional (for payments - not required for development)
-
-```bash
-STRIPE_SECRET_KEY=sk_test_xxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxx
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
-```
-
-## Troubleshooting
-
-### "Invalid API key" error
-
-- Make sure all three credentials (URL + anon key + secret key) are from the **same** Supabase project
-- Verify there are no extra spaces, quotes, or line breaks in your `.env.local`
-- After updating `.env.local`, clear the cache and restart:
-  ```bash
-  rm -rf .next
-  npm run dev
-  ```
-- Hard refresh your browser (Cmd+Shift+R)
-
-### "Stream interrupted" error in chat
-
-- Verify you have a valid `ANTHROPIC_API_KEY` in `.env.local`
-- Check the server logs for API errors
-- Make sure your Anthropic account has credits
-
-### Supabase migration errors
-
-- Enable pgvector extension via the Supabase UI **before** running migrations
-- Skip `CREATE EXTENSION` lines if you already enabled extensions via UI
-- Check that your database password is correct
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep dive.
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── chat/          # Clinical chat endpoint
-│   │   └── ...
-│   ├── auth/              # Auth pages (login, register, callback)
-│   ├── chat/              # Chat interface
-│   ├── dashboard/         # Main dashboard
-│   ├── labs/              # Lab interpretation
-│   ├── patients/          # Patient management
-│   ├── visits/            # Visit documentation
-│   └── page.tsx           # Landing page
+├── app/
+│   ├── api/chat/
+│   │   ├── history/route.ts        # GET conversation messages
+│   │   ├── route.ts                # DEPRECATED (410) — use /stream
+│   │   └── stream/route.ts         # SSE streaming + Zod + CSRF
+│   ├── auth/
+│   │   ├── callback/route.ts       # OAuth/email callback
+│   │   ├── login/page.tsx          # Login + forgot password
+│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
+│   │   └── register/page.tsx       # Registration
+│   ├── chat/
+│   │   ├── layout.tsx              # Chat layout (sidebar)
+│   │   ├── loading.tsx             # Loading skeleton
+│   │   └── page.tsx                # Chat page
+│   ├── dashboard/
+│   │   ├── layout.tsx              # Dashboard layout (sidebar + trust banner)
+│   │   ├── loading.tsx             # Loading skeleton
+│   │   └── page.tsx                # Dashboard home
+│   ├── globals.css                 # Design system variables
+│   ├── layout.tsx                  # Root layout (fonts)
+│   └── page.tsx                    # Public landing page
 ├── components/
-│   ├── ui/                # Shared UI components
-│   ├── chat/              # Chat-specific components
-│   ├── labs/              # Lab-specific components
-│   ├── visits/            # Visit-specific components
-│   ├── patients/          # Patient-specific components
-│   └── layout/            # Layout components (sidebar, header)
+│   ├── chat/
+│   │   ├── chat-input.tsx          # Input + Deep Consult tooltip + shortcuts
+│   │   ├── chat-interface.tsx      # Main chat container
+│   │   └── message-bubble.tsx      # Markdown + rehype-sanitize + actions
+│   └── layout/
+│       └── sidebar.tsx             # Nav + gold accents + upgrade banner
+├── hooks/
+│   └── use-chat.ts                 # SSE streaming hook
 ├── lib/
-│   ├── supabase/          # Supabase client utilities
-│   ├── ai/                # Anthropic client + prompts
-│   └── rag/               # RAG pipeline utilities
-├── types/                 # TypeScript type definitions
-├── hooks/                 # Custom React hooks
-└── styles/                # Additional styles
+│   ├── ai/anthropic.ts             # Claude client + system prompts
+│   ├── supabase/
+│   │   ├── client.ts               # Browser client
+│   │   ├── middleware.ts           # Auth middleware
+│   │   └── server.ts              # Server client + standalone service client
+│   └── validations/
+│       └── chat.ts                 # Zod schemas
+├── middleware.ts                    # Root middleware
+└── types/database.ts               # Supabase types
 ```
 
 ## Database Schema
 
-See `supabase/migrations/001_initial_schema.sql` for the complete schema including:
-- Practitioners (users with credential verification)
-- Patients
-- Conversations + Messages (with citation metadata)
-- Visits (SOAP notes, IFM Matrix)
-- Lab Reports + Biomarker Results (dual-range system)
-- Clinical Reviews
-- Evidence Documents + Chunks (RAG vector store)
-- Biomarker Reference Ranges (pre-seeded with functional ranges)
-- Audit Logs (HIPAA compliance)
-- Row-Level Security policies on all tables
+12 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
 
-## Key Features
+**Core:** practitioners, patients, conversations, messages
+**Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded)
+**Evidence:** evidence_sources, evidence_embeddings
+**System:** audit_logs, usage_tracking
 
-- [x] Clinical chat with evidence-cited responses
-- [x] Streaming AI responses with real-time output
-- [x] Deep Consult mode (Claude Opus for complex cases)
-- [x] Word count guidance (1500 word soft target)
-- [x] Supabase Auth with credential verification
-- [x] HIPAA audit logging
-- [x] Free tier with 2 queries/day limit
-- [ ] Patient management with context threading
-- [ ] Multi-modal lab interpretation (blood, stool, saliva)
-- [ ] Functional vs. conventional range display
-- [ ] Visit documentation with SOAP note generation
-- [ ] Protocol generation with supplement dosing
-- [ ] Stripe subscription ($89/mo Pro tier)
+## API Reference
 
-## Scripts
+See [`docs/API.md`](docs/API.md) for the complete reference.
 
-```bash
-npm run dev       # Start development server
-npm run build     # Build for production
-npm run start     # Start production server
-npm run lint      # Run ESLint
-npm run db:migrate # Run database migrations
+### Primary Endpoint
+
+**`POST /api/chat/stream`** — Send a clinical query and receive SSE-streamed response.
+
+Validated with Zod. Protected by CSRF origin checking. Audit-logged with IP + user agent.
+
+```json
+{
+  "message": "Evidence-based interventions for elevated zonulin?",
+  "conversation_id": "uuid (optional)",
+  "patient_id": "uuid (optional)",
+  "is_deep_consult": false
+}
 ```
 
-## Contributing
+## Design System
 
-This is a private project. Please contact the repository owner for access.
+| Element | Value |
+|---|---|
+| **Primary** | Deep teal (`#0d9479`) |
+| **Accent** | Warm gold (`#f59e0b`) |
+| **Display font** | Newsreader (serif) |
+| **Body font** | DM Sans (sans-serif) |
+| **Mono font** | JetBrains Mono |
+| **Sidebar** | 260px |
+
+### Evidence Badge Colors
+Meta-analysis (gold) · RCT (blue) · Clinical Guideline (green) · Cohort Study (purple) · Case Study (gray)
+
+### Biomarker Traffic Light
+Optimal (green) · Normal (blue) · Borderline (amber) · Out of Range (red) · Critical (dark red)
+
+## Deployment
+
+**Development:** Vercel auto-deploy from main branch.
+**Production:** AWS Amplify (HIPAA-eligible under standard AWS BAA, $20–100/mo vs Vercel Enterprise $3K+/mo).
+
+## Pricing
+
+| | Free | Pro |
+|---|---|---|
+| **Price** | $0 | $89/month |
+| Clinical queries | 2/day | Unlimited |
+| Evidence sources | PubMed only | All (A4M, IFM, premium) |
+| Deep Consult | — | ✓ |
+| Lab interpretation | — | ✓ |
+| Visit documentation | — | ✓ |
+| Protocol generation | — | ✓ |
+| HIPAA BAA | — | ✓ |
+
+## Roadmap
+
+See [`TODO.md`](TODO.md) for the prioritized task list.
 
 ## License
 
 Proprietary — All rights reserved.
+
+---
+
+<p align="center">
+  <strong>Apotheca</strong> — The storehouse of remedies, reimagined for modern functional medicine.
+</p>
