@@ -1,0 +1,74 @@
+# Apotheca — TODO
+
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 completion.
+
+---
+
+## P0 — Fix Before Any Demo ✅ COMPLETE
+
+- [x] **Security:** Fix `createServiceClient()` — standalone client, no cookie passthrough
+- [x] **Usability:** Fix query count display for new users
+- [x] **UI:** Remove duplicate trust banner
+- [x] **Security:** Add IP + user agent to audit logs (HIPAA)
+- [x] **Performance:** Move Google Fonts to `<link>` preconnect
+- [x] **Usability:** Add loading skeletons for dashboard + chat
+- [x] **UI:** Replace emoji icons with Lucide
+
+---
+
+## P1 — Ship Quality ✅ MOSTLY COMPLETE
+
+- [x] **Security:** Zod input validation on chat stream route
+- [x] **Security:** CSRF origin checking on chat stream route
+- [x] **Usability:** Deep Consult explanation tooltip/modal
+- [x] **UI:** Elevate "New Conversation" as primary sidebar action
+- [x] **Performance:** Parallelize dashboard + chat layout DB queries
+- [x] **Usability:** Keyboard shortcuts (⌘K, ⌘↵, Esc)
+- [x] **Performance:** Deprecate non-streaming /api/chat route
+- [x] **Security:** rehype-sanitize on ReactMarkdown
+- [x] **Usability:** Forgot password wired to Supabase
+- [x] **UI:** Gold accent activated (sidebar upgrade banner, Pro badge, Deep Consult)
+
+### Remaining P1 (design-heavy)
+- [ ] **UI:** Redesign landing page — product mockups, scroll animations, social proof, trust partner logos
+- [ ] **Performance:** Debounce ReactMarkdown during streaming — simpler renderer while streaming, full ReactMarkdown on completion
+
+---
+
+## P2 — Award-Worthy Polish (Month 1)
+
+- [ ] **Design:** Build evidence badge component — inline citations with color-coded evidence levels. Expand on hover with full source details.
+- [ ] **Design:** Build biomarker dual-range bar visualization — range bar CSS exists but no component renders it. Signature visual feature.
+- [ ] **UI:** Page transition animations (Framer Motion)
+- [ ] **UI:** Scroll-triggered animations on landing page
+- [ ] **Design:** Create illustration/photography style guide + hero visual
+- [ ] **Usability:** NPI validation — Luhn mod 10 check digit algorithm
+- [ ] **UI:** Dark mode support
+- [ ] **Security:** Content-Security-Policy + Strict-Transport-Security headers
+- [ ] **Usability:** Query reset countdown timer ("Resets in X hours")
+- [ ] **Usability:** Empty state pages for /labs, /patients, /visits (currently 404)
+- [ ] **Usability:** Conversation management — rename, delete, archive from sidebar
+- [ ] **UI:** Consistent container styling — standardize border-radius, shadow levels, border usage
+- [ ] **UI:** Leverage typography system — Newsreader for ALL headings, JetBrains Mono for ALL data values
+- [ ] **Performance:** Paginate conversation history API
+- [ ] **Performance:** Cache sidebar data or lift to shared layout
+- [ ] **Design:** Micro-animations — hover states, entrance animations, chat input glow
+- [ ] **UI:** Consistent icon sizing (16px inline, 18px nav, 20px feature)
+- [ ] **Security:** Environment variable validation at startup
+- [ ] **Design:** Landing → App visual continuity
+- [ ] **Design:** Proper logomark to replace "A" circle placeholder
+
+---
+
+## Backlog
+
+- [ ] OAuth providers (Google, Apple) for registration
+- [ ] Mobile responsive pass on all pages
+- [ ] PWA support for mobile practitioners
+- [ ] Error boundary components for graceful failures
+- [ ] Analytics integration (PostHog or Mixpanel)
+- [ ] A/B testing framework for landing page conversion
+- [ ] Accessibility audit (WCAG 2.1 AA)
+- [ ] SEO optimization — meta tags, Open Graph images, structured data
+- [ ] Rate limiting middleware (beyond daily query count)
+- [ ] Prompt injection detection layer before Claude API calls
