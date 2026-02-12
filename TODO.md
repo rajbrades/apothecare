@@ -30,7 +30,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 
 - [x] **UI:** Gold accent activated (sidebar upgrade banner, Pro badge, Deep Consult)
 
 ### Remaining P1 (design-heavy)
-- [ ] **UI:** Redesign landing page — product mockups, scroll animations, social proof, trust partner logos
+- [x] **UI:** Redesign landing page — product mockups, scroll animations, social proof, trust partner logos
 - [ ] **Performance:** Debounce ReactMarkdown during streaming — simpler renderer while streaming, full ReactMarkdown on completion
 
 ---
@@ -57,6 +57,15 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 
 - [ ] **Security:** Environment variable validation at startup
 - [ ] **Design:** Landing → App visual continuity
 - [ ] **Design:** Proper logomark to replace "A" circle placeholder
+
+---
+
+## Supplement Intelligence (Core Feature)
+
+- [ ] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
+- [ ] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
+- [ ] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
+- [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
 
 ---
 
