@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { chatHistoryQuerySchema } from "@/lib/validations/chat";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,20 +13,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const conversationId = request.nextUrl.searchParams.get("conversation_id");
-    if (!conversationId) {
+    // Parse and validate query parameters
+    const raw = {
+      conversation_id: request.nextUrl.searchParams.get("conversation_id") ?? undefined,
+      cursor: request.nextUrl.searchParams.get("cursor") ?? undefined,
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+    };
+
+    const parsed = chatHistoryQuerySchema.safeParse(raw);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "conversation_id is required" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid parameters" },
         { status: 400 }
       );
     }
 
-    // Fetch messages (RLS ensures only the owner can access)
-    const { data: messages, error } = await supabase
+    const { conversation_id, cursor, limit } = parsed.data;
+
+    // Build query — fetch limit + 1 to determine if more messages exist
+    let query = supabase
       .from("messages")
       .select("id, role, content, citations, created_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
+      .eq("conversation_id", conversation_id)
+      .order("created_at", { ascending: false })
+      .limit(limit + 1);
+
+    // Cursor is the created_at of the oldest loaded message; fetch older ones
+    if (cursor) {
+      query = query.lt("created_at", cursor);
+    }
+
+    const { data: rows, error } = await query;
 
     if (error) {
       return NextResponse.json(
@@ -34,7 +52,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    const allRows = rows || [];
+    const hasMore = allRows.length > limit;
+    const messages = hasMore ? allRows.slice(0, limit) : allRows;
+
+    // Reverse so messages are in ascending chronological order
+    messages.reverse();
+
+    const nextCursor = hasMore ? messages[0]?.created_at ?? null : null;
+
+    return NextResponse.json({ messages, nextCursor, hasMore });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

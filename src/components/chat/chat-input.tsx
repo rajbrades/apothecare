@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Square, Paperclip, Microscope, X } from "lucide-react";
+import { ResetCountdown } from "@/components/ui/reset-countdown";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -208,6 +209,11 @@ export function ChatInput({
             {queriesRemaining !== null && queriesRemaining !== undefined && (
               <p className="text-[11px] text-[var(--color-text-muted)]">
                 <span className="font-[var(--font-mono)]">{queriesRemaining}</span> queries remaining
+                {queriesRemaining === 0 && (
+                  <span className="ml-1.5 text-[var(--color-text-muted)]">
+                    · <ResetCountdown />
+                  </span>
+                )}
               </p>
             )}
             <p className="text-[11px] text-[var(--color-text-muted)] hidden sm:block">

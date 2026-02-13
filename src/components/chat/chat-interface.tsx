@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useChat } from "@/hooks/use-chat";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
-import { ArrowRight, Leaf } from "lucide-react";
+import { ArrowRight, Leaf, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 
@@ -17,17 +17,21 @@ export function ChatInterface() {
 
   const [isDeepConsult, setIsDeepConsult] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
 
   const {
     messages,
     isLoading,
+    isLoadingMore,
+    hasMoreMessages,
     conversationId,
     queriesRemaining,
     error,
     sendMessage,
     stopStreaming,
     loadConversation,
+    loadMoreMessages,
     clearMessages,
   } = useChat({
     conversationId: convId,
@@ -36,6 +40,21 @@ export function ChatInterface() {
       window.history.replaceState(null, "", `/chat?id=${id}`);
     },
   });
+
+  // Preserve scroll position when prepending older messages
+  const handleLoadMore = useCallback(async () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const previousScrollHeight = container.scrollHeight;
+    await loadMoreMessages();
+
+    // After the DOM updates, restore relative scroll position
+    requestAnimationFrame(() => {
+      const newScrollHeight = container.scrollHeight;
+      container.scrollTop = newScrollHeight - previousScrollHeight;
+    });
+  }, [loadMoreMessages]);
 
   // Load existing conversation
   useEffect(() => {
@@ -99,7 +118,7 @@ export function ChatInterface() {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         {messages.length === 0 && !initialQuery ? (
           /* Empty state — show suggestions */
           <div className="flex flex-col items-center justify-center h-full px-6">
@@ -137,6 +156,26 @@ export function ChatInterface() {
         ) : (
           /* Messages list */
           <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+            {/* Load earlier messages */}
+            {hasMoreMessages && (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--color-brand-600)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)] rounded-full border border-[var(--color-brand-200)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load earlier messages"
+                  )}
+                </button>
+              </div>
+            )}
+
             {messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}

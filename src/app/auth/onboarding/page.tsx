@@ -17,6 +17,32 @@ const licenseOptions: { value: LicenseType; label: string; npiRequired: boolean 
   { value: "other", label: "Other Healthcare Professional", npiRequired: false },
 ];
 
+/**
+ * Validates an NPI (National Provider Identifier) using the Luhn mod 10
+ * check digit algorithm. Per CMS specification, the NPI is validated by
+ * prepending the constant "80840" to the 10-digit NPI, then running the
+ * standard Luhn check on the resulting 15-digit string.
+ */
+function validateNpi(npi: string): boolean {
+  if (!/^\d{10}$/.test(npi)) return false;
+
+  const digits = ("80840" + npi).split("").map(Number);
+  let sum = 0;
+
+  // Luhn: walk right-to-left, doubling every second digit from the right
+  for (let i = digits.length - 1; i >= 0; i--) {
+    const distFromRight = digits.length - 1 - i;
+    let d = digits[i];
+    if (distFromRight % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+
+  return sum % 10 === 0;
+}
+
 const specialtyOptions = [
   "Hormone Optimization",
   "GI / Gut Health",
@@ -40,6 +66,7 @@ export default function OnboardingPage() {
   const [npi, setNpi] = useState("");
   const [practiceName, setPracticeName] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [npiError, setNpiError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -204,16 +231,54 @@ export default function OnboardingPage() {
                   <input
                     type="text"
                     value={npi}
-                    onChange={(e) => setNpi(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setNpi(value);
+                      if (npiError) setNpiError(null);
+                    }}
+                    onBlur={() => {
+                      if (npi.length === 0) {
+                        setNpiError(null);
+                      } else if (npi.length !== 10) {
+                        setNpiError("NPI must be exactly 10 digits.");
+                      } else if (!validateNpi(npi)) {
+                        setNpiError("Invalid NPI — check digit failed. Please verify your number.");
+                      } else {
+                        setNpiError(null);
+                      }
+                    }}
                     placeholder="10-digit NPI"
                     maxLength={10}
-                    className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-[var(--font-mono)]"
+                    className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-[var(--font-mono)] ${
+                      npiError
+                        ? "border-red-400 focus:border-red-500"
+                        : "border-[var(--color-border)] focus:border-[var(--color-brand-400)]"
+                    }`}
                   />
+                  {npiError && (
+                    <p className="mt-1.5 text-xs text-red-600">{npiError}</p>
+                  )}
                 </div>
               )}
 
               <button
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (selectedLicense?.npiRequired) {
+                    if (npi.length === 0) {
+                      setNpiError("NPI is required for your license type.");
+                      return;
+                    }
+                    if (npi.length !== 10) {
+                      setNpiError("NPI must be exactly 10 digits.");
+                      return;
+                    }
+                    if (!validateNpi(npi)) {
+                      setNpiError("Invalid NPI — check digit failed. Please verify your number.");
+                      return;
+                    }
+                  }
+                  setStep(2);
+                }}
                 disabled={!licenseType}
                 className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >

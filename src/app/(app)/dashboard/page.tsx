@@ -1,19 +1,18 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Dna, Stethoscope, Users } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
+import { ResetCountdown } from "@/components/ui/reset-countdown";
+import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // These calls are deduplicated by React cache() — the parent (app) layout
+  // already fetched this data, so no extra database round-trips occur.
+  const user = await getAuthUser();
   if (!user) redirect("/auth/login");
 
-  const { data: practitioner } = await supabase
-    .from("practitioners")
-    .select("full_name, subscription_tier, daily_query_count, daily_query_reset_at")
-    .eq("auth_user_id", user.id)
-    .single();
+  const practitioner = await getPractitioner(user.id);
+  if (!practitioner) redirect("/auth/onboarding");
 
   // Reset stale daily count on the client side for display
   let queriesUsed = practitioner?.daily_query_count || 0;
@@ -88,7 +87,12 @@ export default async function DashboardPage() {
             <span className="text-xs text-[var(--color-text-muted)]">
               <span className="font-[var(--font-mono)]">{queriesRemaining}</span> of <span className="font-[var(--font-mono)]">2</span> free queries remaining today
               {queriesRemaining === 0 && (
-                <> · <Link href="/pricing" className="text-[var(--color-brand-600)] font-medium hover:underline">Upgrade to Pro</Link></>
+                <>
+                  {" · "}
+                  <ResetCountdown />
+                  {" · "}
+                  <Link href="/pricing" className="text-[var(--color-brand-600)] font-medium hover:underline">Upgrade to Pro</Link>
+                </>
               )}
             </span>
           </div>

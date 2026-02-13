@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 
+const HISTORY_PAGE_SIZE = 50;
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -29,6 +31,8 @@ interface UseChatOptions {
 export function useChat(options: UseChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(
     options.conversationId || null
   );
@@ -36,6 +40,7 @@ export function useChat(options: UseChatOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingContentRef = useRef<string>("");
+  const nextCursorRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -202,19 +207,52 @@ export function useChat(options: UseChatOptions = {}) {
   const loadConversation = useCallback(
     async (convId: string) => {
       try {
-        const response = await fetch(`/api/chat/history?conversation_id=${convId}`);
+        const response = await fetch(
+          `/api/chat/history?conversation_id=${convId}&limit=${HISTORY_PAGE_SIZE}`
+        );
         if (!response.ok) throw new Error("Failed to load conversation");
         const data = await response.json();
         setMessages(
           data.messages.map((m: ChatMessage) => ({ ...m, isStreaming: false }))
         );
         setConversationId(convId);
+        setHasMoreMessages(data.hasMore ?? false);
+        nextCursorRef.current = data.nextCursor ?? null;
       } catch {
         setError("Failed to load conversation history");
       }
     },
     []
   );
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!conversationId || !nextCursorRef.current || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams({
+        conversation_id: conversationId,
+        limit: String(HISTORY_PAGE_SIZE),
+        cursor: nextCursorRef.current,
+      });
+      const response = await fetch(`/api/chat/history?${params}`);
+      if (!response.ok) throw new Error("Failed to load more messages");
+
+      const data = await response.json();
+      const older = (data.messages || []).map((m: ChatMessage) => ({
+        ...m,
+        isStreaming: false,
+      }));
+
+      setMessages((prev) => [...older, ...prev]);
+      setHasMoreMessages(data.hasMore ?? false);
+      nextCursorRef.current = data.nextCursor ?? null;
+    } catch {
+      setError("Failed to load earlier messages");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [conversationId, isLoadingMore]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -225,12 +263,15 @@ export function useChat(options: UseChatOptions = {}) {
   return {
     messages,
     isLoading,
+    isLoadingMore,
+    hasMoreMessages,
     conversationId,
     queriesRemaining,
     error,
     sendMessage,
     stopStreaming,
     loadConversation,
+    loadMoreMessages,
     clearMessages,
   };
 }
