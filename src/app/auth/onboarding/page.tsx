@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Logomark } from "@/components/ui/logomark";
 import type { LicenseType } from "@/types/database";
 
 const licenseOptions: { value: LicenseType; label: string; npiRequired: boolean }[] = [
@@ -108,8 +109,8 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-10 h-10 rounded-full bg-[var(--color-brand-700)] flex items-center justify-center mx-auto">
-            <span className="text-white font-bold text-lg font-[var(--font-display)]">A</span>
+          <div className="flex justify-center">
+            <Logomark size="md" />
           </div>
           <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mt-4 font-[var(--font-display)]">
             Welcome to Apotheca
@@ -133,7 +134,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl border border-[var(--color-border)] shadow-sm p-8">
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
           {step === 1 && (
             <div className="space-y-5">
               <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
@@ -151,7 +152,7 @@ export default function OnboardingPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setLicenseType(opt.value)}
-                      className={`text-left px-3 py-2.5 text-sm rounded-lg border transition-all ${
+                      className={`text-left px-3 py-2.5 text-sm rounded-[var(--radius-sm)] border transition-all ${
                         licenseType === opt.value
                           ? "border-[var(--color-brand-400)] bg-[var(--color-brand-50)] text-[var(--color-brand-700)]"
                           : "border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-200)]"
@@ -175,7 +176,7 @@ export default function OnboardingPage() {
                       value={licenseNumber}
                       onChange={(e) => setLicenseNumber(e.target.value)}
                       placeholder="Optional"
-                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
                     />
                   </div>
                   <div>
@@ -188,7 +189,7 @@ export default function OnboardingPage() {
                       onChange={(e) => setLicenseState(e.target.value)}
                       placeholder="e.g., FL"
                       maxLength={2}
-                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] uppercase"
+                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] uppercase"
                     />
                   </div>
                 </div>
@@ -206,7 +207,7 @@ export default function OnboardingPage() {
                     onChange={(e) => setNpi(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     placeholder="10-digit NPI"
                     maxLength={10}
-                    className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-[var(--font-mono)]"
+                    className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-[var(--font-mono)]"
                   />
                 </div>
               )}
@@ -214,7 +215,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => setStep(2)}
                 disabled={!licenseType}
-                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -247,7 +248,7 @@ export default function OnboardingPage() {
                   value={practiceName}
                   onChange={(e) => setPracticeName(e.target.value)}
                   placeholder="e.g., Integrative Health Center"
-                  className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                  className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
                 />
               </div>
 
@@ -283,14 +284,14 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+                  className="flex-1 py-2.5 text-sm font-medium rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleComplete}
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
                 >
                   {loading ? "Setting up..." : "Launch Apotheca →"}
                 </button>

@@ -18,12 +18,12 @@ export function Pricing() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Free */}
           <ScrollReveal delay={0}>
-            <div className="h-full p-8 rounded-2xl border border-[var(--color-border)] bg-white">
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Free</h3>
               <p className="text-[var(--color-text-secondary)] text-sm mt-1">
                 Try Apotheca risk-free
               </p>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4">$0</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4 font-[var(--font-mono)]">$0</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {[
                   { text: "2 clinical queries per day", included: true },
@@ -43,9 +43,9 @@ export function Pricing() {
                     }`}
                   >
                     {item.included ? (
-                      <Check size={15} className="text-[var(--color-brand-500)] flex-shrink-0" />
+                      <Check className="icon-inline text-[var(--color-brand-500)] flex-shrink-0" />
                     ) : (
-                      <X size={15} className="text-[var(--color-text-muted)] flex-shrink-0" />
+                      <X className="icon-inline text-[var(--color-text-muted)] flex-shrink-0" />
                     )}
                     {item.text}
                   </li>
@@ -53,7 +53,7 @@ export function Pricing() {
               </ul>
               <Link
                 href="/auth/register"
-                className="block text-center mt-8 px-6 py-3 rounded-lg border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-secondary)] transition-colors"
+                className="block text-center mt-8 px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-secondary)] transition-colors"
               >
                 Get Started
               </Link>
@@ -62,7 +62,7 @@ export function Pricing() {
 
           {/* Pro */}
           <ScrollReveal delay={100}>
-            <div className="h-full p-8 rounded-2xl border-2 border-[var(--color-brand-500)] bg-white relative">
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border-2 border-[var(--color-brand-500)] bg-[var(--color-surface)] shadow-[var(--shadow-elevated)] relative">
               <div className="absolute -top-3 left-6 px-3 py-0.5 bg-[var(--color-brand-600)] text-white text-xs font-medium rounded-full">
                 Most Popular
               </div>
@@ -70,7 +70,7 @@ export function Pricing() {
               <p className="text-[var(--color-text-secondary)] text-sm mt-1">
                 Everything you need in practice
               </p>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4 font-[var(--font-mono)]">
                 $89
                 <span className="text-base font-normal text-[var(--color-text-tertiary)]">
                   /mo
@@ -90,14 +90,14 @@ export function Pricing() {
                   "HIPAA BAA included",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2.5">
-                    <Check size={15} className="text-[var(--color-brand-500)] flex-shrink-0" />
+                    <Check className="icon-inline text-[var(--color-brand-500)] flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
               <Link
                 href="/auth/register?plan=pro"
-                className="block text-center mt-8 px-6 py-3 rounded-lg bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
+                className="block text-center mt-8 px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
               >
                 Start Free Trial &rarr;
               </Link>

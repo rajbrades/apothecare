@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 interface ScrollRevealProps {
   children: ReactNode;
   className?: string;
   delay?: number;
-  direction?: "up" | "left" | "right" | "none";
+  direction?: "up" | "left" | "right" | "scale" | "none";
+  threshold?: number;
 }
 
 export function ScrollReveal({
@@ -14,44 +15,47 @@ export function ScrollReveal({
   className,
   delay = 0,
   direction = "up",
+  threshold = 0.15,
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      el.classList.add("revealed");
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
+          el.classList.add("revealed");
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+      { threshold, rootMargin: "0px 0px -60px 0px" }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [threshold]);
 
-  const baseTransform = {
-    up: "translateY(24px)",
-    left: "translateX(-24px)",
-    right: "translateX(24px)",
-    none: "none",
-  }[direction];
+  // Round delay to nearest 100 for CSS class matching
+  const roundedDelay = Math.round(delay / 100) * 100;
 
   return (
     <div
       ref={ref}
-      className={className}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? "none" : baseTransform,
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
-      }}
+      className={`scroll-reveal ${className || ""}`}
+      data-direction={direction}
+      data-delay={roundedDelay > 0 ? String(roundedDelay) : undefined}
     >
       {children}
     </div>

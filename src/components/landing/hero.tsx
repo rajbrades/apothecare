@@ -12,7 +12,7 @@ export function Hero() {
       </ScrollReveal>
 
       <ScrollReveal delay={100}>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[var(--color-text-primary)] leading-tight mb-6 font-[var(--font-display)]">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[var(--color-text-primary)] leading-tight mb-6">
           Clinical intelligence for{" "}
           <span className="text-[var(--color-brand-600)]">functional medicine</span>
         </h1>
@@ -28,7 +28,7 @@ export function Hero() {
 
       <ScrollReveal delay={300}>
         <div className="max-w-2xl mx-auto">
-          <div className="relative bg-white rounded-2xl border border-[var(--color-border)] shadow-lg shadow-[var(--color-brand-100)]/50 p-2">
+          <div className="relative container-elevated p-2">
             <input
               type="text"
               placeholder="Ask a clinical question..."
@@ -41,7 +41,7 @@ export function Hero() {
               </span>
               <Link
                 href="/auth/register"
-                className="px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors"
+                className="px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors"
               >
                 Start Free &rarr;
               </Link>
@@ -59,7 +59,7 @@ export function Hero() {
           <ScrollReveal key={q} delay={400 + i * 100} className="flex-1">
             <Link
               href="/auth/register"
-              className="block px-4 py-3 text-sm text-left text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all"
+              className="block px-4 py-3 text-sm text-left text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all"
             >
               {q}
             </Link>

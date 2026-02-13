@@ -7,6 +7,7 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ArrowRight, Leaf } from "lucide-react";
 import Link from "next/link";
+import { Logomark } from "@/components/ui/logomark";
 
 export function ChatInterface() {
   const searchParams = useSearchParams();
@@ -102,8 +103,8 @@ export function ChatInterface() {
         {messages.length === 0 && !initialQuery ? (
           /* Empty state — show suggestions */
           <div className="flex flex-col items-center justify-center h-full px-6">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[var(--color-brand-700)] to-[var(--color-brand-800)] flex items-center justify-center mb-5 shadow-lg shadow-[var(--color-brand-200)]">
-              <Leaf size={24} className="text-white" strokeWidth={1.5} />
+            <div className="mb-5">
+              <Logomark size="lg" />
             </div>
             <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-1 font-[var(--font-display)]">
               What can I help you with?
@@ -118,7 +119,7 @@ export function ChatInterface() {
                   key={q.text}
                   onClick={() => sendMessage(q.text)}
                   disabled={isLoading}
-                  className="group/card text-left px-4 py-3.5 text-[13px] text-[var(--color-text-secondary)] bg-white rounded-xl border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:shadow-sm transition-all disabled:opacity-50"
+                  className="group/card text-left px-4 py-3.5 text-[13px] text-[var(--color-text-secondary)] bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:shadow-sm transition-all disabled:opacity-50 suggestion-card-hover"
                 >
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-brand-500)] mb-1 block">
                     {q.category}
@@ -126,8 +127,7 @@ export function ChatInterface() {
                   <span className="flex items-start justify-between gap-2">
                     <span className="leading-snug">{q.text}</span>
                     <ArrowRight
-                      size={14}
-                      className="text-[var(--color-text-muted)] group-hover/card:text-[var(--color-brand-500)] mt-0.5 flex-shrink-0 transition-colors"
+                      className="icon-inline text-[var(--color-text-muted)] group-hover/card:text-[var(--color-brand-500)] mt-0.5 flex-shrink-0 transition-colors"
                     />
                   </span>
                 </button>

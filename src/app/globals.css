@@ -56,6 +56,98 @@
   /* Spacing */
   --sidebar-width: 260px;
   --header-height: 56px;
+
+  /* Standardized container tokens */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 12px 40px -8px rgba(0, 0, 0, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+
+  /* Icon sizes — standardized across components */
+  --icon-inline: 16px;
+  --icon-nav: 18px;
+  --icon-feature: 20px;
+}
+
+/* ===================================
+   Dark Mode — prefers-color-scheme
+   =================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-brand-50: #0a2922;
+    --color-brand-100: #0f3d33;
+    --color-brand-200: #145244;
+    --color-brand-300: #1a6b59;
+    --color-brand-400: #22907a;
+    --color-brand-500: #14b89a;
+    --color-brand-600: #2dd4b3;
+    --color-brand-700: #5ceacc;
+    --color-brand-800: #99f6df;
+    --color-brand-900: #ccfbef;
+    --color-brand-950: #f0fdf9;
+
+    --color-gold-50: #1c1608;
+    --color-gold-100: #2d2210;
+    --color-gold-200: #3d2e14;
+    --color-gold-300: #6b4f1a;
+    --color-gold-400: #a37620;
+    --color-gold-500: #d99b1f;
+    --color-gold-600: #f5b73a;
+    --color-gold-700: #fcd34d;
+
+    --color-surface: #0f1a17;
+    --color-surface-secondary: #141f1c;
+    --color-surface-tertiary: #1a2925;
+    --color-border: #243833;
+    --color-border-light: #1d2e29;
+
+    --color-text-primary: #e8f0ee;
+    --color-text-secondary: #a3bbb5;
+    --color-text-tertiary: #7a9690;
+    --color-text-muted: #4a6660;
+
+    /* Evidence badges — adjusted for dark backgrounds */
+    --color-evidence-meta: #fbbf24;
+    --color-evidence-rct: #60a5fa;
+    --color-evidence-guideline: #34d399;
+    --color-evidence-cohort: #a78bfa;
+    --color-evidence-case: #9ca3af;
+
+    /* Biomarker — slightly brighter on dark */
+    --color-biomarker-optimal: #34d399;
+    --color-biomarker-normal: #60a5fa;
+    --color-biomarker-borderline: #fbbf24;
+    --color-biomarker-out-of-range: #f87171;
+    --color-biomarker-critical: #ef4444;
+
+    /* Shadow tokens for dark mode */
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+    --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.3), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-modal: 0 12px 40px -8px rgba(0, 0, 0, 0.4), 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Evidence badge dark overrides */
+  .evidence-meta { background: #422006; color: #fcd34d; }
+  .evidence-rct { background: #1e3a5f; color: #93c5fd; }
+  .evidence-guideline { background: #064e3b; color: #6ee7b7; }
+  .evidence-cohort { background: #2e1065; color: #c4b5fd; }
+  .evidence-case { background: #1f2937; color: #d1d5db; }
+
+  /* Range bar marker border adapts to dark surface */
+  .range-bar .marker {
+    border-color: var(--color-surface);
+  }
+
+  /* Scrollbar dark mode */
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+  }
 }
 
 /* Google Fonts loaded via <link> in root layout for performance */
@@ -69,7 +161,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
+/* ===================================
+   Typography System
+   Newsreader for ALL headings
+   JetBrains Mono for ALL data values
+   =================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono,
+.data-value {
+  font-family: var(--font-mono);
+}
+
+/* ===================================
+   Scrollbar styling
+   =================================== */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -84,12 +196,167 @@ body {
   background: var(--color-text-muted);
 }
 
-/* Citation badge base */
+/* ===================================
+   Page Transition Animations
+   CSS-based transitions for Next.js
+   =================================== */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.page-transition-enter {
+  animation: page-enter 0.35s ease-out both;
+}
+
+/* Main content areas get the enter animation */
+main {
+  animation: page-enter 0.3s ease-out both;
+}
+
+/* ===================================
+   Scroll-Triggered Animations
+   Used by the ScrollReveal component
+   =================================== */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scroll reveal states — hidden until IntersectionObserver triggers */
+.scroll-reveal {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.scroll-reveal[data-direction="up"] {
+  transform: translateY(32px);
+}
+
+.scroll-reveal[data-direction="left"] {
+  transform: translateX(-32px);
+}
+
+.scroll-reveal[data-direction="right"] {
+  transform: translateX(32px);
+}
+
+.scroll-reveal[data-direction="scale"] {
+  transform: scale(0.95);
+}
+
+.scroll-reveal[data-direction="none"] {
+  /* fade only */
+}
+
+/* When revealed */
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stagger support — apply via delay data attribute */
+.scroll-reveal.revealed[data-delay="100"] { transition-delay: 100ms; }
+.scroll-reveal.revealed[data-delay="200"] { transition-delay: 200ms; }
+.scroll-reveal.revealed[data-delay="300"] { transition-delay: 300ms; }
+.scroll-reveal.revealed[data-delay="400"] { transition-delay: 400ms; }
+.scroll-reveal.revealed[data-delay="500"] { transition-delay: 500ms; }
+.scroll-reveal.revealed[data-delay="600"] { transition-delay: 600ms; }
+.scroll-reveal.revealed[data-delay="700"] { transition-delay: 700ms; }
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .scroll-reveal.revealed {
+    transition: none;
+  }
+  main {
+    animation: none;
+  }
+  .page-transition-enter {
+    animation: none;
+  }
+}
+
+/* ===================================
+   Citation Badge
+   =================================== */
 .citation-badge {
   display: inline-flex;
   align-items: center;
   padding: 1px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -110,11 +377,13 @@ body {
 .evidence-cohort { background: #ede9fe; color: #5b21b6; }
 .evidence-case { background: #f3f4f6; color: #374151; }
 
-/* Biomarker range bar */
+/* ===================================
+   Biomarker Range Bar
+   =================================== */
 .range-bar {
   position: relative;
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-tertiary);
   overflow: visible;
 }
@@ -126,11 +395,13 @@ body {
   border-radius: 50%;
   top: -2px;
   transform: translateX(-50%);
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* Thinking indicator animation */
+/* ===================================
+   Thinking Indicator Animation
+   =================================== */
 @keyframes thinking-pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -142,7 +413,9 @@ body {
 .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
 .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
 
-/* Landing page animations */
+/* ===================================
+   Landing Page Animations
+   =================================== */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: none; }
@@ -155,4 +428,291 @@ body {
 @keyframes gentle-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+/* ===================================
+   Standardized Container Styles
+   =================================== */
+.container-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.container-elevated {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-elevated);
+}
+
+.container-modal {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-modal);
+}
+
+/* ===================================
+   Standardized Icon Sizes
+   =================================== */
+.icon-inline {
+  width: var(--icon-inline);
+  height: var(--icon-inline);
+}
+
+.icon-nav {
+  width: var(--icon-nav);
+  height: var(--icon-nav);
+}
+
+.icon-feature {
+  width: var(--icon-feature);
+  height: var(--icon-feature);
+}
+
+/* ===================================
+   Micro-Animations
+   Hover states, entrance animations,
+   chat input glow, evidence/biomarker
+   =================================== */
+
+/* --- Chat Input Glow --- */
+@keyframes input-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 12px -2px color-mix(in srgb, var(--color-brand-400) 30%, transparent),
+      0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.chat-input-glow:focus-within {
+  animation: input-glow-pulse 2.5s ease-in-out infinite;
+  border-color: var(--color-brand-300);
+}
+
+/* --- Evidence Badge Hover --- */
+.evidence-badge-hover {
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease,
+    filter 0.15s ease;
+}
+
+.evidence-badge-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.12);
+}
+
+.evidence-badge-hover:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* --- Evidence Popover Expand --- */
+@keyframes evidence-expand {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-evidence-expand {
+  animation: evidence-expand 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Biomarker Range Bar Fill --- */
+@keyframes range-bar-fill {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* --- Biomarker Marker Entrance --- */
+@keyframes marker-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+.biomarker-marker-entrance {
+  animation: marker-pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
+}
+
+/* --- Biomarker Row Entrance --- */
+@keyframes row-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.biomarker-row-entrance {
+  animation: row-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.biomarker-row-entrance:nth-child(1) { animation-delay: 0.05s; }
+.biomarker-row-entrance:nth-child(2) { animation-delay: 0.1s; }
+.biomarker-row-entrance:nth-child(3) { animation-delay: 0.15s; }
+.biomarker-row-entrance:nth-child(4) { animation-delay: 0.2s; }
+.biomarker-row-entrance:nth-child(5) { animation-delay: 0.25s; }
+.biomarker-row-entrance:nth-child(6) { animation-delay: 0.3s; }
+
+/* --- Biomarker Panel Card Entrance --- */
+@keyframes panel-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.biomarker-panel-entrance {
+  animation: panel-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Button & Card Hover States --- */
+.hover-lift {
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.hover-lift:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card);
+}
+
+/* Subtle scale on press for icon buttons */
+.hover-press {
+  transition: transform 0.15s ease;
+}
+
+.hover-press:hover {
+  transform: scale(1.05);
+}
+
+.hover-press:active {
+  transform: scale(0.95);
+}
+
+/* Sidebar nav item slide indicator */
+@keyframes nav-indicator-slide {
+  from {
+    opacity: 0;
+    transform: scaleY(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* --- Message Bubble Entrance --- */
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.message-entrance {
+  animation: message-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Suggested Question Card Hover --- */
+.suggestion-card-hover {
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.suggestion-card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+}
+
+/* --- Logomark Animation --- */
+@keyframes logo-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-brand-500) 20%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+  }
+}
+
+.logo-breathe:hover {
+  animation: logo-breathe 2s ease-in-out infinite;
+}
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-glow:focus-within {
+    animation: none;
+  }
+  .evidence-badge-hover:hover {
+    transform: none;
+  }
+  .animate-evidence-expand {
+    animation: none;
+    opacity: 1;
+  }
+  .biomarker-marker-entrance,
+  .biomarker-row-entrance,
+  .biomarker-panel-entrance,
+  .message-entrance {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .hover-lift:hover,
+  .hover-press:hover {
+    transform: none;
+  }
+  .logo-breathe:hover {
+    animation: none;
+  }
 }

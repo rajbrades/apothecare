@@ -139,7 +139,7 @@ export function FeatureLab() {
           <ScrollReveal direction="left">
             <div>
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
-                <Dna size={22} className="text-[var(--color-brand-600)]" />
+                <Dna className="icon-feature text-[var(--color-brand-600)]" />
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
                 Multi-modal lab interpretation
@@ -168,7 +168,7 @@ export function FeatureLab() {
 
           {/* Mockup */}
           <ScrollReveal direction="right">
-            <div className="rounded-2xl border border-[var(--color-border)] shadow-lg shadow-[var(--color-brand-100)]/20 overflow-hidden bg-white">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">
               {/* Panel header */}
               <div className="px-5 py-4 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">
                 <div className="flex items-center justify-between">

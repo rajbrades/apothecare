@@ -46,7 +46,7 @@ export function Testimonials() {
         <div className="grid md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <ScrollReveal key={t.name} delay={i * 100}>
-              <div className="h-full p-8 rounded-2xl bg-white border border-[var(--color-border-light)] flex flex-col">
+              <div className="h-full p-8 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border-light)] shadow-[var(--shadow-card)] flex flex-col">
                 {/* Quote mark */}
                 <span className="text-4xl leading-none text-[var(--color-brand-200)] font-[var(--font-display)] mb-3">
                   &ldquo;

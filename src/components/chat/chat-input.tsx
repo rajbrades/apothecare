@@ -82,13 +82,13 @@ export function ChatInput({
   }, [isLoading, onStop]);
 
   return (
-    <div className="border-t border-[var(--color-border-light)] bg-white px-6 py-4">
+    <div className="border-t border-[var(--color-border-light)] bg-[var(--color-surface)] px-6 py-4">
       <div className="max-w-3xl mx-auto">
         <div
-          className={`relative bg-white rounded-2xl border transition-all ${
+          className={`relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border transition-all chat-input-glow ${
             disabled
               ? "border-[var(--color-border-light)] opacity-60"
-              : "border-[var(--color-border)] shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-[var(--color-brand-300)]"
+              : "border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] focus-within:shadow-[var(--shadow-elevated)] focus-within:border-[var(--color-brand-300)]"
           }`}
         >
           <textarea
@@ -99,7 +99,7 @@ export function ChatInput({
             placeholder={placeholder}
             disabled={disabled || isLoading}
             rows={1}
-            className="w-full px-5 pt-4 pb-2 text-[15px] bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-2xl resize-none"
+            className="w-full px-5 pt-4 pb-2 text-[15px] bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-[var(--radius-lg)] resize-none"
           />
 
           {/* Bottom toolbar */}
@@ -110,7 +110,7 @@ export function ChatInput({
                 disabled={disabled}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)] transition-colors disabled:opacity-50"
               >
-                <Paperclip size={13} />
+                <Paperclip className="icon-inline" />
                 Attach
               </button>
 
@@ -126,7 +126,7 @@ export function ChatInput({
                       : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-gold-50)] hover:text-[var(--color-gold-700)] hover:border-[var(--color-gold-200)]"
                   }`}
                 >
-                  <Microscope size={13} />
+                  <Microscope className="icon-inline" />
                   Deep Consult
                   {isDeepConsult && (
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold-500)]" />
@@ -144,7 +144,7 @@ export function ChatInput({
 
                 {/* Deep Consult info popover */}
                 {showDeepConsultInfo && (
-                  <div className="absolute bottom-full left-0 mb-2 w-72 p-4 bg-white rounded-xl border border-[var(--color-border)] shadow-lg z-10">
+                  <div className="absolute bottom-full left-0 mb-2 w-72 p-4 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-10">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
                         Deep Consult Mode
@@ -153,7 +153,7 @@ export function ChatInput({
                         onClick={() => setShowDeepConsultInfo(false)}
                         className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
                       >
-                        <X size={14} />
+                        <X className="icon-inline" />
                       </button>
                     </div>
                     <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-2">
@@ -184,7 +184,7 @@ export function ChatInput({
                 className="w-9 h-9 rounded-full bg-[var(--color-text-secondary)] flex items-center justify-center hover:bg-[var(--color-text-primary)] transition-colors"
                 title="Stop generating (Esc)"
               >
-                <Square size={14} fill="white" stroke="white" />
+                <Square className="icon-inline" fill="white" stroke="white" />
               </button>
             ) : (
               <button
@@ -193,7 +193,7 @@ export function ChatInput({
                 className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Send message (Enter)"
               >
-                <Send size={15} stroke="white" />
+                <Send className="icon-inline" stroke="white" />
               </button>
             )}
           </div>
@@ -207,7 +207,7 @@ export function ChatInput({
           <div className="flex items-center gap-3">
             {queriesRemaining !== null && queriesRemaining !== undefined && (
               <p className="text-[11px] text-[var(--color-text-muted)]">
-                {queriesRemaining} queries remaining
+                <span className="font-[var(--font-mono)]">{queriesRemaining}</span> queries remaining
               </p>
             )}
             <p className="text-[11px] text-[var(--color-text-muted)] hidden sm:block">

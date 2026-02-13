@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { LogoAvatar } from "@/components/ui/logomark";
 
 const USER_QUESTION =
   "What are evidence-based interventions for elevated zonulin with concurrent low secretory IgA?";
@@ -181,7 +182,7 @@ export function ChatMockup() {
         </p>
 
         <Link href="/auth/register" className="block group">
-          <div className="rounded-2xl border border-[var(--color-border)] shadow-xl shadow-[var(--color-brand-100)]/30 overflow-hidden bg-white group-hover:shadow-2xl transition-shadow">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)] group-hover:shadow-[var(--shadow-modal)] transition-shadow">
             {/* Window chrome */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">
               <div className="flex gap-1.5">
@@ -190,9 +191,7 @@ export function ChatMockup() {
                 <div className="w-3 h-3 rounded-full bg-[var(--color-border)]" />
               </div>
               <div className="flex-1 flex items-center justify-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center">
-                  <span className="text-white text-[9px] font-bold font-[var(--font-display)]">A</span>
-                </div>
+                <LogoAvatar size={20} />
                 <span className="text-xs text-[var(--color-text-secondary)] font-medium">
                   Apotheca Clinical Chat
                 </span>
@@ -212,9 +211,7 @@ export function ChatMockup() {
               {/* AI response */}
               {phase !== "idle" && (
                 <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center mt-0.5">
-                    <span className="text-white text-[10px] font-bold font-[var(--font-display)]">A</span>
-                  </div>
+                  <LogoAvatar size={28} className="mt-0.5" />
                   <div className="flex-1 text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
                     {phase === "thinking" && (
                       <div className="flex items-center gap-1 py-2">

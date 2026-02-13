@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Dna, Stethoscope, Users } from "lucide-react";
+import { Logomark } from "@/components/ui/logomark";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -35,19 +36,19 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6">
       {/* Brand mark */}
-      <div className="w-16 h-16 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center mb-6 shadow-lg shadow-[var(--color-brand-200)]">
-        <span className="text-white font-bold text-2xl font-[var(--font-display)]">A</span>
+      <div className="mb-6">
+        <Logomark size="lg" />
       </div>
 
       {/* Search input */}
       <div className="w-full max-w-2xl mb-6">
         <form action="/chat" method="GET">
-          <div className="relative bg-white rounded-2xl border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow">
+          <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <input
               name="q"
               type="text"
               placeholder="Ask a clinical question..."
-              className="w-full px-6 py-4 text-base bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-2xl"
+              className="w-full px-6 py-4 text-base bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-[var(--radius-lg)]"
               autoFocus
             />
             <div className="flex items-center justify-between px-6 pb-3">
@@ -85,7 +86,7 @@ export default async function DashboardPage() {
         {isFree && (
           <div className="text-center mt-3">
             <span className="text-xs text-[var(--color-text-muted)]">
-              {queriesRemaining} of 2 free queries remaining today
+              <span className="font-[var(--font-mono)]">{queriesRemaining}</span> of <span className="font-[var(--font-mono)]">2</span> free queries remaining today
               {queriesRemaining === 0 && (
                 <> · <Link href="/pricing" className="text-[var(--color-brand-600)] font-medium hover:underline">Upgrade to Pro</Link></>
               )}
@@ -100,7 +101,7 @@ export default async function DashboardPage() {
           <Link
             key={q}
             href={`/chat?q=${encodeURIComponent(q)}`}
-            className="flex items-center justify-between w-full px-5 py-3.5 text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all group"
+            className="flex items-center justify-between w-full px-5 py-3.5 text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all group"
           >
             <span>{q}</span>
             <svg
@@ -134,14 +135,14 @@ export default async function DashboardPage() {
       {/* Quick action cards */}
       <div className="flex gap-4 mt-12">
         {[
-          { href: "/labs", icon: <Dna size={20} />, label: "Upload Labs" },
-          { href: "/visits/new", icon: <Stethoscope size={20} />, label: "Start Visit" },
-          { href: "/patients", icon: <Users size={20} />, label: "Patients" },
+          { href: "/labs", icon: <Dna className="icon-feature" />, label: "Upload Labs" },
+          { href: "/visits/new", icon: <Stethoscope className="icon-feature" />, label: "Start Visit" },
+          { href: "/patients", icon: <Users className="icon-feature" />, label: "Patients" },
         ].map((action) => (
           <Link
             key={action.href}
             href={action.href}
-            className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-700)]"
+            className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-700)]"
           >
             {action.icon}
             {action.label}

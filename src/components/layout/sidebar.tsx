@@ -13,6 +13,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useState } from "react";
+import { Logomark } from "@/components/ui/logomark";
 
 interface SidebarProps {
   practitioner: {
@@ -54,12 +55,7 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
       {/* Logo */}
       <div className="h-[var(--header-height)] flex items-center px-5 border-b border-[var(--color-border-light)]">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center">
-            <span className="text-white font-bold text-xs font-[var(--font-display)]">A</span>
-          </div>
-          <span className="text-base font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
-            Apotheca
-          </span>
+          <Logomark size="xs" withText />
         </Link>
       </div>
 
@@ -68,9 +64,9 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
         {/* Primary CTA */}
         <Link
           href="/chat"
-          className="flex items-center justify-center gap-2 w-full px-3 py-2.5 mb-4 rounded-lg bg-[var(--color-brand-600)] text-white text-sm font-medium hover:bg-[var(--color-brand-700)] transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 w-full px-3 py-2.5 mb-4 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white text-sm font-medium hover:bg-[var(--color-brand-700)] transition-colors shadow-sm"
         >
-          <Plus size={16} strokeWidth={2} />
+          <Plus className="icon-inline" strokeWidth={2} />
           New Conversation
         </Link>
 
@@ -88,7 +84,7 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                     : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
-                <item.icon size={17} strokeWidth={1.5} />
+                <item.icon className="icon-nav" strokeWidth={1.5} />
                 {item.label}
               </Link>
             );
@@ -240,7 +236,7 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
             href="/settings"
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >
-            <Settings size={16} />
+            <Settings className="icon-inline" />
           </Link>
         </div>
       </div>

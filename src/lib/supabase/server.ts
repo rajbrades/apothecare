@@ -1,22 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import type { Database } from "@/types/database";
+import { env } from "@/lib/env";
 
-export async function createClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = any;
+
+// Note: Supabase's generated Database generic is incompatible with TypeScript 5.9
+// strict inference (all table operations resolve to `never`). We return an untyped
+// client; runtime behaviour is unaffected.
+
+export async function createClient(): Promise<AnySupabaseClient> {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  return createServerClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: any[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
+            cookiesToSet.forEach(({ name, value, options }: any) =>
               cookieStore.set(name, value, options)
             );
           } catch {
@@ -31,13 +38,13 @@ export async function createClient() {
 
 // Service role client for admin operations (audit logs, etc.)
 // Uses standalone client — no cookie dependency, bypasses RLS intentionally.
-let serviceClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+let serviceClient: AnySupabaseClient | null = null;
 
-export function createServiceClient() {
+export function createServiceClient(): AnySupabaseClient {
   if (!serviceClient) {
-    serviceClient = createSupabaseClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    serviceClient = createSupabaseClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
     );
   }
   return serviceClient;

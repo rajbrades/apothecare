@@ -15,10 +15,14 @@ function jsonError(message: string, status: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    // CSRF: Validate origin
+    // CSRF: Validate origin header matches our app's origin exactly.
+    // We compare parsed origins (scheme + host + port) to prevent
+    // prefix-matching bypasses (e.g. "http://localhost:300" matching
+    // "http://localhost:3000").
     const origin = request.headers.get("origin");
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    if (origin && !appUrl.startsWith(origin)) {
+    const appOrigin = new URL(appUrl).origin;
+    if (origin && origin !== appOrigin) {
       return jsonError("Forbidden", 403);
     }
 
@@ -52,9 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check query limits
-    const { data: allowed } = await supabase.rpc("check_and_increment_query", {
-      p_practitioner_id: practitioner.id,
-    });
+    const { data: allowed } = await supabase.rpc(
+      "check_and_increment_query",
+      { p_practitioner_id: practitioner.id }
+    );
 
     if (!allowed) {
       return new Response(
@@ -133,10 +138,10 @@ export async function POST(request: NextRequest) {
 
     // Build messages array
     const messages = (history || [])
-      .filter((m) => m.role !== "system")
-      .map((m) => ({
+      .filter((m: any) => m.role !== "system")
+      .map((m: any) => ({
         role: m.role as "user" | "assistant",
-        content: m.content,
+        content: m.content as string,
       }));
 
     // Stream from Anthropic

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Logomark } from "@/components/ui/logomark";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -58,12 +59,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-brand-700)] flex items-center justify-center">
-              <span className="text-white font-bold text-lg font-[var(--font-display)]">A</span>
-            </div>
-            <span className="text-2xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
-              Apotheca
-            </span>
+            <Logomark size="md" withText />
           </Link>
           <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
             Create your account — 2 free queries per day, no credit card required
@@ -71,7 +67,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl border border-[var(--color-border)] shadow-sm p-8">
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
               <label
@@ -87,7 +83,7 @@ export default function RegisterPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Dr. Jane Smith"
                 required
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
@@ -105,7 +101,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@practice.com"
                 required
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
@@ -124,7 +120,7 @@ export default function RegisterPage() {
                 placeholder="Min. 8 characters"
                 required
                 minLength={8}
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-lg outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
               />
             </div>
 
@@ -137,7 +133,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>

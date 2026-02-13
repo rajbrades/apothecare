@@ -4,6 +4,7 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import { Copy, Star, Share2, FileDown } from "lucide-react";
+import { LogoAvatar } from "@/components/ui/logomark";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
@@ -48,22 +49,18 @@ export const MessageBubble = memo(function MessageBubble({
 
   return (
     <div
-      className={`flex gap-4 ${isUser ? "justify-end" : "justify-start"} group`}
+      className={`flex gap-4 ${isUser ? "justify-end" : "justify-start"} group message-entrance`}
     >
       {/* Avatar */}
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center flex-shrink-0 mt-1">
-          <span className="text-white font-bold text-xs font-[var(--font-display)]">
-            A
-          </span>
-        </div>
+        <LogoAvatar size={32} className="mt-1" />
       )}
 
       {/* Message content */}
       <div
         className={`max-w-[720px] ${
           isUser
-            ? "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] rounded-2xl rounded-tr-md px-5 py-3"
+            ? "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] rounded-[var(--radius-lg)] rounded-tr-[var(--radius-sm)] px-5 py-3"
             : "flex-1"
         }`}
       >
@@ -110,7 +107,7 @@ export const MessageBubble = memo(function MessageBubble({
                       </h2>
                     ),
                     h3: ({ children }) => (
-                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mt-4 mb-1.5">
+                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mt-4 mb-1.5 font-[var(--font-display)]">
                         {children}
                       </h3>
                     ),
@@ -140,7 +137,7 @@ export const MessageBubble = memo(function MessageBubble({
                         );
                       }
                       return (
-                        <code className="block bg-[var(--color-surface-tertiary)] rounded-lg p-4 text-[13px] font-[var(--font-mono)] text-[var(--color-text-primary)] overflow-x-auto mb-3">
+                        <code className="block bg-[var(--color-surface-tertiary)] rounded-[var(--radius-sm)] p-4 text-[13px] font-[var(--font-mono)] text-[var(--color-text-primary)] overflow-x-auto mb-3">
                           {children}
                         </code>
                       );
@@ -182,26 +179,26 @@ export const MessageBubble = memo(function MessageBubble({
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Copy"
                 >
-                  <Copy size={13} />
+                  <Copy className="icon-inline" />
                   Copy
                 </button>
                 <button
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Add to Favorites"
                 >
-                  <Star size={13} />
+                  <Star className="icon-inline" />
                 </button>
                 <button
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Share"
                 >
-                  <Share2 size={13} />
+                  <Share2 className="icon-inline" />
                 </button>
                 <button
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                   title="Export PDF"
                 >
-                  <FileDown size={13} />
+                  <FileDown className="icon-inline" />
                 </button>
               </div>
             )}

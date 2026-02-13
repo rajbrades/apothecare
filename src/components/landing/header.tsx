@@ -1,17 +1,11 @@
 import Link from "next/link";
+import { Logomark } from "@/components/ui/logomark";
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[var(--color-border-light)]">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface)]/80 backdrop-blur-md border-b border-[var(--color-border-light)]">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center">
-            <span className="text-white font-bold text-sm font-[var(--font-display)]">A</span>
-          </div>
-          <span className="text-xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
-            Apotheca
-          </span>
-        </div>
+        <Logomark size="sm" withText />
         <div className="flex items-center gap-4">
           <Link
             href="/auth/login"
@@ -21,7 +15,7 @@ export function Header() {
           </Link>
           <Link
             href="/auth/register"
-            className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-lg hover:bg-[var(--color-brand-700)] transition-colors font-medium"
+            className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors font-medium"
           >
             Get Started Free
           </Link>

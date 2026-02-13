@@ -36,7 +36,7 @@ export function FeatureProtocol() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Mockup (left on desktop) */}
           <ScrollReveal direction="left" className="order-2 md:order-1">
-            <div className="rounded-2xl border border-[var(--color-border)] shadow-lg shadow-[var(--color-brand-100)]/20 overflow-hidden bg-white">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">
               {/* Header */}
               <div className="px-5 py-4 border-b border-[var(--color-border-light)] bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-surface-secondary)]">
                 <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -89,7 +89,7 @@ export function FeatureProtocol() {
           <ScrollReveal direction="right" className="order-1 md:order-2">
             <div>
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
-                <ClipboardList size={22} className="text-[var(--color-brand-600)]" />
+                <ClipboardList className="icon-feature text-[var(--color-brand-600)]" />
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
                 Evidence-backed protocol generation
