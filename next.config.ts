@@ -5,15 +5,18 @@ import type { NextConfig } from "next";
 // ---------------------------------------------------------------------------
 // Build as an array for readability, then join with "; ".
 // NOTE: 'unsafe-inline' for style-src is required because Tailwind CSS v4 and
-// CSS custom properties inject inline styles. We compensate by keeping
-// script-src strict ('self' only — no inline scripts, no eval).
+// CSS custom properties inject inline styles.
+// In DEVELOPMENT: Next.js requires 'unsafe-eval' and 'unsafe-inline' for HMR.
+// In PRODUCTION: Strict CSP with 'self' only.
 // ---------------------------------------------------------------------------
+const isDev = process.env.NODE_ENV === "development";
+
 const cspDirectives = [
   // Default: nothing unless explicitly allowed
   "default-src 'self'",
 
-  // Scripts: self only — no inline, no eval
-  "script-src 'self'",
+  // Scripts: In dev, allow eval + inline for Next.js HMR. In prod, strict.
+  isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self'",
 
   // Styles: self + inline (Tailwind v4 / CSS custom properties) + Google Fonts CSS
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

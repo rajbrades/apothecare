@@ -58,68 +58,18 @@ export function Logomark({ size = "md", withText = false, className = "" }: Logo
           className="fill-[var(--color-brand-600)]"
         />
 
-        {/* Mortar bowl silhouette — a wide curved vessel */}
-        <path
-          d="M18 34 C18 34, 19 44, 32 44 C45 44, 46 34, 46 34 L46 36 C46 36, 45 47, 32 47 C19 47, 18 36, 18 36 Z"
+        {/* Letter "A" */}
+        <text
+          x="32"
+          y="44"
+          textAnchor="middle"
           className="fill-white"
-          opacity="0.95"
-        />
-
-        {/* Bowl rim — thin line across the top */}
-        <rect
-          x="16"
-          y="33"
-          width="32"
-          height="2.5"
-          rx="1.25"
-          className="fill-white"
-          opacity="0.95"
-        />
-
-        {/* Leaf — growing from the mortar, the core botanical symbol */}
-        <path
-          d="M32 32 C32 22, 40 18, 44 17 C43 21, 40 27, 32 32 Z"
-          className="fill-[var(--color-brand-200)]"
-          opacity="0.9"
-        />
-
-        {/* Leaf vein / midrib */}
-        <path
-          d="M32 32 C35 26, 39 21, 43 18"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity="0.5"
-          fill="none"
-        />
-
-        {/* Second smaller leaf for balance */}
-        <path
-          d="M30 31 C27 23, 22 20, 19 19.5 C21 22.5, 24 27, 30 31 Z"
-          className="fill-[var(--color-brand-300)]"
-          opacity="0.7"
-        />
-
-        {/* Pestle — angled across the bowl */}
-        <rect
-          x="35"
-          y="20"
-          width="3"
-          height="18"
-          rx="1.5"
-          className="fill-white"
-          opacity="0.9"
-          transform="rotate(25 36.5 29)"
-        />
-
-        {/* Pestle knob */}
-        <circle
-          cx="41"
-          cy="19.5"
-          r="2.5"
-          className="fill-white"
-          opacity="0.9"
-        />
+          fontSize="36"
+          fontWeight="700"
+          fontFamily="var(--font-display), ui-serif, Georgia, serif"
+        >
+          A
+        </text>
       </svg>
 
       {withText && (
@@ -158,36 +108,18 @@ export function LogoAvatar({ size = 32, className = "" }: LogoAvatarProps) {
         role="img"
         aria-label="Apotheca"
       >
-        {/* Simplified icon for small sizes — leaf + bowl */}
-        {/* Bowl */}
-        <path
-          d="M10 36 C10 36, 12 52, 32 52 C52 52, 54 36, 54 36 L54 38 C54 38, 52 55, 32 55 C12 55, 10 38, 10 38 Z"
+        {/* Letter "A" */}
+        <text
+          x="32"
+          y="48"
+          textAnchor="middle"
           fill="white"
-          opacity="0.95"
-        />
-        <rect
-          x="8"
-          y="34"
-          width="48"
-          height="3.5"
-          rx="1.75"
-          fill="white"
-          opacity="0.95"
-        />
-
-        {/* Central leaf */}
-        <path
-          d="M32 33 C32 18, 44 12, 50 10 C48 16, 42 26, 32 33 Z"
-          fill="white"
-          opacity="0.7"
-        />
-
-        {/* Small leaf */}
-        <path
-          d="M29 32 C25 20, 17 14, 13 13 C16 18, 21 26, 29 32 Z"
-          fill="white"
-          opacity="0.5"
-        />
+          fontSize="44"
+          fontWeight="700"
+          fontFamily="var(--font-display), ui-serif, Georgia, serif"
+        >
+          A
+        </text>
       </svg>
     </div>
   );
