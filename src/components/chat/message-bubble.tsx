@@ -26,6 +26,15 @@ function StreamingCursor() {
   );
 }
 
+function StreamingRenderer({ content }: { content: string }) {
+  return (
+    <div className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] whitespace-pre-wrap break-words">
+      {content}
+      <StreamingCursor />
+    </div>
+  );
+}
+
 export const MessageBubble = memo(function MessageBubble({
   message,
 }: MessageBubbleProps) {
@@ -66,6 +75,10 @@ export const MessageBubble = memo(function MessageBubble({
           <>
             {isEmpty && isStreaming ? (
               <ThinkingIndicator />
+            ) : isStreaming ? (
+              <div className="prose-apotheca">
+                <StreamingRenderer content={message.content} />
+              </div>
             ) : (
               <div className="prose-apotheca">
                 <ReactMarkdown
@@ -158,7 +171,6 @@ export const MessageBubble = memo(function MessageBubble({
                 >
                   {message.content}
                 </ReactMarkdown>
-                {isStreaming && <StreamingCursor />}
               </div>
             )}
 

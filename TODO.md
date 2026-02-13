@@ -16,7 +16,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 
 
 ---
 
-## P1 — Ship Quality ✅ MOSTLY COMPLETE
+## P1 — Ship Quality ✅ COMPLETE
 
 - [x] **Security:** Zod input validation on chat stream route
 - [x] **Security:** CSRF origin checking on chat stream route
@@ -31,7 +31,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 
 
 ### Remaining P1 (design-heavy)
 - [x] **UI:** Redesign landing page — product mockups, scroll animations, social proof, trust partner logos
-- [ ] **Performance:** Debounce ReactMarkdown during streaming — simpler renderer while streaming, full ReactMarkdown on completion
+- [x] **Performance:** Debounce ReactMarkdown during streaming — simpler renderer while streaming, full ReactMarkdown on completion
 
 ---
 
