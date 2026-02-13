@@ -8,6 +8,23 @@
 
 ---
 
+## PROJECT OVERVIEW
+
+**Apotheca** is an AI-powered clinical decision support platform designed specifically for functional and integrative medicine practitioners (MDs, DOs, Nurse Practitioners, Physician Assistants, Chiropractors, and Naturopathic Doctors).
+
+### Mission
+Apotheca addresses the gap in evidence-based AI tools for functional medicine. Unlike general clinical tools (e.g., OpenEvidence), Apotheca is purpose-built for practitioners who work with functional medicine frameworks like the IFM Matrix, interpret advanced labs (GI-MAPs, DUTCH tests, OAT panels), and approach health from a root-cause perspective.
+
+### Core Features
+- **Evidence-Cited Clinical Chat**: AI-powered clinical queries grounded in functional medicine evidence (IFM, A4M, Cleveland Clinic Center for Functional Medicine, peer-reviewed literature) with evidence strength indicators
+- **Multi-Modal Lab Interpretation**: Parse and correlate blood panels, GI-MAPs, DUTCH tests, and OAT panels with both conventional and functional/optimal reference ranges displayed side-by-side
+- **Protocol Generation**: AI-generated treatment protocols with supplement dosing, dietary interventions, lifestyle recommendations, and drug-supplement interaction checking
+- **Clinical Visit Documentation**: Real-time evidence surfacing, appointment transcription, SOAP note generation, and evidence-based clinical workflows using the IFM Matrix
+- **Deep Consult Mode**: Advanced reasoning for complex multi-system cases and differential diagnoses
+- **HIPAA Compliance**: End-to-end encryption, Business Associate Agreements, Row-Level Security, audit logging, CSRF protection, and SOC 2 certification in progress
+
+---
+
 ## 1. CONFIDENTIAL INFORMATION
 
 "Confidential Information" includes all non-public information related to the Apotheca project, including but not limited to:
