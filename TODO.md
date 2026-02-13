@@ -1,6 +1,6 @@
 # Apotheca — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 completion.
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 13, 2026.
 
 ---
 
@@ -35,28 +35,28 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated after P0 + P1 
 
 ---
 
-## P2 — Award-Worthy Polish (Month 1) ✅ MOSTLY COMPLETE
+## P2 — Award-Worthy Polish (Month 1) ✅ COMPLETE
 
 - [x] **Design:** Build evidence badge component — inline citations with color-coded evidence levels. Expand on hover with full source details.
 - [x] **Design:** Build biomarker dual-range bar visualization — range bar CSS exists but no component renders it. Signature visual feature.
 - [x] **UI:** Page transition animations (CSS-based)
 - [x] **UI:** Scroll-triggered animations on landing page
-- [ ] **Design:** Create illustration/photography style guide + hero visual
-- [ ] **Usability:** NPI validation — Luhn mod 10 check digit algorithm
+- [x] **Design:** Create illustration/photography style guide + hero visual
+- [x] **Usability:** NPI validation — Luhn mod 10 check digit algorithm
 - [x] **UI:** Dark mode support
-- [x] **Security:** Content-Security-Policy + Strict-Transport-Security headers
-- [ ] **Usability:** Query reset countdown timer ("Resets in X hours")
-- [ ] **Usability:** Empty state pages for /labs, /patients, /visits (currently 404)
-- [ ] **Usability:** Conversation management — rename, delete, archive from sidebar
+- [x] **Security:** Content-Security-Policy + Strict-Transport-Security headers (dev mode relaxed for HMR)
+- [x] **Usability:** Query reset countdown timer ("Resets in X hours")
+- [x] **Usability:** Empty state pages for /labs, /patients, /visits
+- [x] **Usability:** Conversation management — rename, delete, archive from sidebar
 - [x] **UI:** Consistent container styling — standardize border-radius, shadow levels, border usage
 - [x] **UI:** Leverage typography system — Newsreader for ALL headings, JetBrains Mono for ALL data values
-- [ ] **Performance:** Paginate conversation history API
-- [ ] **Performance:** Cache sidebar data or lift to shared layout
+- [x] **Performance:** Paginate conversation history API (cursor-based, 50 per page)
+- [x] **Performance:** Cache sidebar data via shared `(app)` route group layout with React `cache()`
 - [x] **Design:** Micro-animations — hover states, entrance animations, chat input glow
 - [x] **UI:** Consistent icon sizing (16px inline, 18px nav, 20px feature)
 - [x] **Security:** Environment variable validation at startup
 - [x] **Design:** Landing → App visual continuity
-- [x] **Design:** Proper logomark to replace "A" circle placeholder
+- [x] **Design:** Logomark — "A" on brand circle
 
 ---
 

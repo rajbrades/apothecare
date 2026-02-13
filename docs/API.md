@@ -90,13 +90,15 @@ Returns `410 Gone`. All traffic should use `/api/chat/stream`.
 
 ### `GET /api/chat/history` ✅ Implemented
 
-Load messages for an existing conversation.
+Load messages for an existing conversation with cursor-based pagination.
 
 **Query Parameters:**
 
-| Field | Type | Required |
-|---|---|---|
-| `conversation_id` | UUID | Yes |
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `conversation_id` | UUID | Yes | — | Conversation to load messages from |
+| `cursor` | UUID | No | — | Message ID to start pagination from (exclusive) |
+| `limit` | number | No | 50 | Number of messages to return (max: 100) |
 
 **Response (200):**
 ```json
@@ -115,8 +117,19 @@ Load messages for an existing conversation.
       "citations": [...],
       "created_at": "2026-02-11T14:30:05Z"
     }
-  ]
+  ],
+  "next_cursor": "msg_uuid_or_null",
+  "has_more": false
 }
+```
+
+**Pagination Example:**
+```javascript
+// First page
+GET /api/chat/history?conversation_id=conv_123&limit=20
+
+// Next page
+GET /api/chat/history?conversation_id=conv_123&limit=20&cursor=msg_last_id
 ```
 
 **Security:** RLS-protected — only conversation owner can access.

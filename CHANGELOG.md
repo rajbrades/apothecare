@@ -2,6 +2,29 @@
 
 All notable changes to Apotheca will be documented in this file.
 
+## [0.4.0] - 2026-02-13
+
+### Added
+- **Landing page redesign (Session 5)**: 12 new components with scroll animations, product mockups, social proof, testimonials, and trust partner logos. Professional $100M+ product polish.
+- **NPI Luhn validation**: Onboarding now validates NPI numbers using Luhn algorithm checksum.
+- **Query reset countdown timer**: Sidebar shows countdown to daily query limit reset for free-tier users.
+- **Empty state pages**: Dedicated empty state pages for /labs, /patients, and /visits with illustrated placeholders.
+- **Conversation management**: Rename, archive, and delete conversations with confirmation modals.
+- **Cursor-based pagination**: `GET /api/chat/history` now supports `cursor` and `limit` parameters for efficient pagination.
+- **Shared (app) layout**: Route group layout with React `cache()` for optimized data fetching across all authenticated pages.
+- **Evidence badge component**: `<EvidenceBadge>` component with color-coded evidence levels (meta-analysis, RCT, guideline, cohort, case study).
+- **Biomarker component**: `<BiomarkerBar>` dual-range visualization showing conventional and functional/optimal reference ranges.
+- **CSP headers**: Content-Security-Policy configured in `next.config.ts` for enhanced security.
+- **Environment validation**: Zod schemas validate all required environment variables at build time.
+- **Logomark component**: Reusable SVG logomark for navbar, loading states, and empty states.
+
+### Changed
+- **File structure**: Consolidated chat and dashboard layouts into shared `(app)` route group layout, eliminating code duplication.
+- **Conversation history API**: Now returns paginated results with cursor-based navigation for better performance with large conversation histories.
+
+### Security
+- **CSP headers**: Strict Content-Security-Policy headers block inline scripts and restrict resource origins.
+
 ## [0.3.0] - 2026-02-11
 
 ### Security

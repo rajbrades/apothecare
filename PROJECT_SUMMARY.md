@@ -1,6 +1,6 @@
 # Apotheca — Project Summary & Handoff Document
 
-**Last updated:** February 11, 2026
+**Last updated:** February 13, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -26,7 +26,8 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 | Fonts | Newsreader (display), DM Sans (body), JetBrains Mono (data) |
 | Icons | Lucide React |
 
-**Supabase Project:** https://yiqsrjotigliyddqbgwa.supabase.co
+**Supabase Project:** https://qcjuosldesbgqkregztn.supabase.co
+**Current Branch:** main-02-13-26
 **Local dev:** `npm run dev` → http://localhost:3000
 
 ---
@@ -36,8 +37,21 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 ```
 src/
 ├── app/
+│   ├── (app)/                       # Route group — shared authenticated layout
+│   │   ├── chat/
+│   │   │   └── page.tsx            # Chat page
+│   │   ├── dashboard/
+│   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
+│   │   │   └── page.tsx            # Dashboard home
+│   │   ├── labs/
+│   │   │   └── page.tsx            # Labs page (empty state)
+│   │   ├── patients/
+│   │   │   └── page.tsx            # Patients page (empty state)
+│   │   ├── visits/
+│   │   │   └── page.tsx            # Visits page (empty state)
+│   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/chat/
-│   │   ├── history/route.ts        # GET conversation messages
+│   │   ├── history/route.ts        # GET conversation messages + pagination
 │   │   ├── route.ts                # DEPRECATED — returns 410
 │   │   └── stream/route.ts         # SSE streaming chat endpoint
 │   ├── auth/
@@ -45,14 +59,6 @@ src/
 │   │   ├── login/page.tsx          # Login with forgot password
 │   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
 │   │   └── register/page.tsx       # Registration
-│   ├── chat/
-│   │   ├── layout.tsx              # Chat layout (sidebar, no trust banner)
-│   │   ├── loading.tsx             # Loading skeleton
-│   │   └── page.tsx                # Chat page with Suspense
-│   ├── dashboard/
-│   │   ├── layout.tsx              # Dashboard layout (sidebar + trust banner)
-│   │   ├── loading.tsx             # Loading skeleton
-│   │   └── page.tsx                # Dashboard home
 │   ├── globals.css                 # Design system + CSS variables
 │   ├── layout.tsx                  # Root layout (fonts via <link>)
 │   └── page.tsx                    # Landing page (public)
@@ -135,25 +141,45 @@ src/
 9. ✅ Forgot password wired to Supabase resetPasswordForEmail()
 10. ✅ Gold accent activated in sidebar (upgrade banner, Pro badge, Deep Consult toggle)
 
+### Session 5 — Landing Page Redesign (P1 final)
+- ✅ 12 new components with scroll animations (Hero, Features, Mockups, Pricing, FAQ)
+- ✅ Product mockup visuals with BeakerIcon, ClipboardIcon, CalendarIcon placeholders
+- ✅ Social proof section with testimonials and metrics
+- ✅ Responsive animations with Intersection Observer
+- ✅ Professional trust signals and partner logos
+
+### Session 6 — P2 Completion (Feb 13, 2026)
+
+**All P2 tasks complete:**
+1. ✅ NPI Luhn algorithm validation on onboarding
+2. ✅ Query reset countdown timer in sidebar
+3. ✅ Empty state pages for /labs, /patients, /visits
+4. ✅ Conversation management (rename, archive, delete with confirmation)
+5. ✅ Cursor-based pagination on chat history API
+6. ✅ Shared (app) route group layout with React cache() for data fetching
+7. ✅ Evidence badge component (inline citations with color-coded levels)
+8. ✅ Biomarker dual-range bar component (conventional + functional ranges)
+9. ✅ Content-Security-Policy headers (Next.js config)
+10. ✅ Environment validation with Zod schemas
+11. ✅ Logomark SVG component
+
 ---
 
 ## What Needs To Be Done Next
 
-### Remaining P1 (design-heavy)
-- [ ] **Landing page redesign** — Add product mockups/screenshots, scroll animations, social proof, trust partner logos. Currently a generic SaaS template. Needs to look like a $100M product.
+### P3 — Performance & Polish
 - [ ] **ReactMarkdown streaming debounce** — Currently rebuilds full AST on every stream delta. Use simpler renderer during streaming, switch to ReactMarkdown on completion.
+- [ ] **Page transition animations** — Framer Motion for route transitions
+- [ ] **Dark mode** — Full theme toggle with system preference detection
+- [ ] **Image optimization** — Next.js Image component for all landing page assets
+- [ ] **Conversation pinning** — Allow pinning important conversations to sidebar top
 
-### P2 — Full list in TODO.md (20 items)
-Key highlights:
-- Evidence badge component (inline citations with color-coded levels)
-- Biomarker dual-range bar visualization
-- Page transition animations (Framer Motion)
-- NPI Luhn validation
-- Dark mode
-- Content-Security-Policy headers
-- Query reset countdown timer
-- Empty state pages for /labs, /patients, /visits
-- Conversation management (rename, delete, archive)
+### Lab Interpretation Pipeline (Sprint 3)
+- [ ] **Lab upload endpoint** — Multipart form handling + Supabase Storage encryption
+- [ ] **Claude Vision integration** — PDF parsing and vendor detection
+- [ ] **Biomarker extraction** — OCR + normalization pipeline
+- [ ] **Dual-range visualization** — Interactive charts with conventional + functional ranges
+- [ ] **Multi-lab correlation** — Cross-lab pattern analysis with Opus
 
 ### Backlog
 - OAuth providers (Google, Apple)
@@ -192,7 +218,7 @@ Key highlights:
 ## Environment Variables Required
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://yiqsrjotigliyddqbgwa.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://qcjuosldesbgqkregztn.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 ANTHROPIC_API_KEY=sk-ant-api03-...
@@ -200,7 +226,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME=Apotheca
 ```
 
-⚠️ Keys shared in earlier session — Ryan was instructed to rotate all keys.
+⚠️ **Supabase Key Format Note:** When copying keys from Supabase dashboard, strip the `sb_publishable_` prefix from anon keys and the `sb_secret_` prefix from service role keys. The actual keys are the JWT strings that follow these prefixes.
 
 ---
 
@@ -208,10 +234,9 @@ NEXT_PUBLIC_APP_NAME=Apotheca
 
 1. **Supabase uses `vector` not `pgvector`** for the extension name
 2. **Service role key is new-format** (`sb_secret_...`) not JWT — use `createClient` from `@supabase/supabase-js`, not `createServerClient` from `@supabase/ssr`
-3. **Chat layout and dashboard layout are separate** — both have their own sidebar + auth check + data fetching. Could be consolidated into a shared `(app)` route group layout.
-4. **Evidence badges are CSS-only** — the `.evidence-meta`, `.evidence-rct` etc. classes exist in globals.css but no component renders them yet. This is the core differentiator and needs a component.
-5. **Biomarker range bar CSS exists** but no component implements it.
-6. **`daily_query_reset_at`** column may not exist in the database schema — the P0 fix references it for stale count detection. Verify the column exists or add it.
+3. **Evidence badge and biomarker components exist** but are not yet wired to Claude API responses. The next step is to update the system prompt to return structured citations and render them using the `<EvidenceBadge>` component.
+4. **ReactMarkdown streaming performance** — Full AST rebuild on every token. Consider simpler renderer during streaming phase.
+5. **Conversation management UI** is functional but could use optimistic updates for better UX.
 
 ---
 

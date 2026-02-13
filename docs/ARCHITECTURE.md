@@ -144,3 +144,63 @@ The Supabase service role client (`createServiceClient()`) uses `@supabase/supab
 6. Rerank: Claude scores each chunk for relevance
 7. Top 5 chunks injected into prompt with source metadata
 ```
+
+## Current File Structure
+
+```
+src/
+├── app/
+│   ├── (app)/                       # Route group — shared authenticated layout
+│   │   ├── chat/
+│   │   │   └── page.tsx            # Chat page
+│   │   ├── dashboard/
+│   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
+│   │   │   └── page.tsx            # Dashboard home
+│   │   ├── labs/
+│   │   │   └── page.tsx            # Labs page (empty state)
+│   │   ├── patients/
+│   │   │   └── page.tsx            # Patients page (empty state)
+│   │   ├── visits/
+│   │   │   └── page.tsx            # Visits page (empty state)
+│   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
+│   ├── api/chat/
+│   │   ├── history/route.ts        # GET conversation messages + pagination
+│   │   ├── route.ts                # DEPRECATED — returns 410
+│   │   └── stream/route.ts         # SSE streaming chat endpoint
+│   ├── auth/
+│   │   ├── callback/route.ts       # OAuth/email callback
+│   │   ├── login/page.tsx          # Login with forgot password
+│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
+│   │   └── register/page.tsx       # Registration
+│   ├── globals.css                 # Design system + CSS variables
+│   ├── layout.tsx                  # Root layout (fonts via <link>)
+│   └── page.tsx                    # Landing page (public)
+├── components/
+│   ├── chat/
+│   │   ├── chat-input.tsx          # Input bar + Deep Consult tooltip + keyboard shortcuts
+│   │   ├── chat-interface.tsx      # Main chat container
+│   │   └── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
+│   ├── clinical/
+│   │   ├── biomarker-bar.tsx       # Dual-range bar visualization
+│   │   └── evidence-badge.tsx      # Color-coded evidence level badges
+│   ├── layout/
+│   │   ├── logomark.tsx            # SVG logomark component
+│   │   └── sidebar.tsx             # Elevated New Conversation + gold accents
+│   └── ui/
+│       └── empty-state.tsx         # Empty state pattern for labs/patients/visits
+├── hooks/
+│   └── use-chat.ts                 # SSE streaming hook
+├── lib/
+│   ├── ai/anthropic.ts             # Claude client + system prompt + models
+│   ├── supabase/
+│   │   ├── client.ts               # Browser client
+│   │   ├── middleware.ts           # Auth middleware + route protection
+│   │   └── server.ts              # Server client + standalone service client
+│   ├── utils/
+│   │   └── npi-validation.ts       # Luhn algorithm for NPI validation
+│   └── validations/
+│       ├── chat.ts                 # Zod schemas for chat API
+│       └── env.ts                  # Environment variable validation
+├── middleware.ts                    # Root middleware
+└── types/database.ts               # Supabase type definitions
+```

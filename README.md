@@ -164,8 +164,21 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep dive.
 ```
 src/
 ├── app/
+│   ├── (app)/                       # Route group — shared authenticated layout
+│   │   ├── chat/
+│   │   │   └── page.tsx            # Chat page
+│   │   ├── dashboard/
+│   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
+│   │   │   └── page.tsx            # Dashboard home
+│   │   ├── labs/
+│   │   │   └── page.tsx            # Labs page (empty state)
+│   │   ├── patients/
+│   │   │   └── page.tsx            # Patients page (empty state)
+│   │   ├── visits/
+│   │   │   └── page.tsx            # Visits page (empty state)
+│   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/chat/
-│   │   ├── history/route.ts        # GET conversation messages
+│   │   ├── history/route.ts        # GET conversation messages + pagination
 │   │   ├── route.ts                # DEPRECATED (410) — use /stream
 │   │   └── stream/route.ts         # SSE streaming + Zod + CSRF
 │   ├── auth/
@@ -173,14 +186,6 @@ src/
 │   │   ├── login/page.tsx          # Login + forgot password
 │   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
 │   │   └── register/page.tsx       # Registration
-│   ├── chat/
-│   │   ├── layout.tsx              # Chat layout (sidebar)
-│   │   ├── loading.tsx             # Loading skeleton
-│   │   └── page.tsx                # Chat page
-│   ├── dashboard/
-│   │   ├── layout.tsx              # Dashboard layout (sidebar + trust banner)
-│   │   ├── loading.tsx             # Loading skeleton
-│   │   └── page.tsx                # Dashboard home
 │   ├── globals.css                 # Design system variables
 │   ├── layout.tsx                  # Root layout (fonts)
 │   └── page.tsx                    # Public landing page
