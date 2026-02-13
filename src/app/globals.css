@@ -75,7 +75,8 @@
 /* ===================================
    Dark Mode — prefers-color-scheme
    =================================== */
-@media (prefers-color-scheme: dark) {
+/* Dark mode disabled — light only for now. To re-enable, change selector back to: @media (prefers-color-scheme: dark) */
+html.dark {
   :root {
     --color-brand-50: #0a2922;
     --color-brand-100: #0f3d33;

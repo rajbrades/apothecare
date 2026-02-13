@@ -15,6 +15,8 @@ export type LabReportStatus = "uploading" | "classifying" | "parsing" | "interpr
 export type BiomarkerFlag = "optimal" | "normal" | "borderline_low" | "borderline_high" | "low" | "high" | "critical";
 export type EvidenceLevel = "meta_analysis" | "rct" | "cohort_study" | "case_study" | "clinical_guideline" | "expert_consensus" | "in_vitro" | "other";
 export type AuditAction = "create" | "read" | "update" | "delete" | "export" | "login" | "logout" | "upload" | "query" | "generate";
+export type VisitStatus = "draft" | "completed";
+export type VisitType = "soap" | "follow_up";
 
 // ===========================================
 // Table Row Types
@@ -103,11 +105,48 @@ export interface Citation {
   excerpt?: string;
 }
 
+export interface ProtocolItem {
+  name: string;
+  detail: string;
+  rationale: string;
+  evidence_level?: EvidenceLevel;
+  dosage?: string;
+  form?: string;
+  timing?: string;
+  duration?: string;
+  interactions?: string[];
+}
+
+export interface VisitProtocol {
+  supplements: ProtocolItem[];
+  dietary: ProtocolItem[];
+  lifestyle: ProtocolItem[];
+  follow_up_labs: ProtocolItem[];
+}
+
+export interface IFMMatrixNode {
+  findings: string[];
+  severity: "none" | "low" | "moderate" | "high";
+  notes: string;
+}
+
+export interface IFMMatrix {
+  assimilation: IFMMatrixNode;
+  defense_repair: IFMMatrixNode;
+  energy: IFMMatrixNode;
+  biotransformation: IFMMatrixNode;
+  transport: IFMMatrixNode;
+  communication: IFMMatrixNode;
+  structural_integrity: IFMMatrixNode;
+}
+
 export interface Visit {
   id: string;
   practitioner_id: string;
   patient_id: string | null;
   visit_date: string;
+  visit_type: VisitType;
+  status: VisitStatus;
   note_template: string;
   chief_complaint: string | null;
   subjective: string | null;
@@ -118,7 +157,8 @@ export interface Visit {
   ai_soap_note: string | null;
   ai_assessment: string | null;
   ai_plan: string | null;
-  ifm_matrix: Record<string, unknown>;
+  ai_protocol: VisitProtocol;
+  ifm_matrix: IFMMatrix | Record<string, unknown>;
   conversation_id: string | null;
   is_archived: boolean;
   created_at: string;
@@ -212,7 +252,11 @@ export interface Database {
       };
       visits: {
         Row: Visit;
-        Insert: Omit<Visit, "id" | "created_at" | "updated_at">;
+        Insert: Omit<Visit, "id" | "created_at" | "updated_at" | "status" | "ai_protocol" | "ifm_matrix"> & {
+          status?: VisitStatus;
+          ai_protocol?: VisitProtocol | Record<string, unknown>;
+          ifm_matrix?: IFMMatrix | Record<string, unknown>;
+        };
         Update: Partial<Omit<Visit, "id" | "created_at">>;
       };
       lab_reports: {

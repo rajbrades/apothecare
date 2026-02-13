@@ -43,7 +43,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/visits/new", icon: Stethoscope, label: "New Visit" },
+  { href: "/visits", icon: Stethoscope, label: "Visits" },
   { href: "/labs", icon: FlaskConical, label: "Labs" },
   { href: "/patients", icon: Users, label: "Patients" },
 ];
@@ -474,18 +474,25 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                   No visits yet
                 </p>
               ) : (
-                recentVisits.slice(0, 3).map((visit) => (
+                recentVisits.slice(0, 3).map((visit) => {
+                  const isVisitActive = pathname === `/visits/${visit.id}`;
+                  return (
                   <Link
                     key={visit.id}
                     href={`/visits/${visit.id}`}
-                    className="block px-3 pl-7 py-1.5 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] rounded-md truncate transition-colors"
+                    className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${
+                      isVisitActive
+                        ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+                    }`}
                   >
                     {visit.chief_complaint || "Visit"}
                     <span className="block text-[11px] text-[var(--color-text-muted)]">
                       {new Date(visit.visit_date).toLocaleDateString()}
                     </span>
                   </Link>
-                ))
+                  );
+                })
               )}
             </div>
           )}

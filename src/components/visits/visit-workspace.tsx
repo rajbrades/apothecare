@@ -1,0 +1,312 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowLeft, Calendar, User, Sparkles, Check, RotateCcw,
+  Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
+  Grid3x3, Pill, MessageSquare,
+} from "lucide-react";
+import { RawNotesInput } from "./raw-notes-input";
+import { SoapSections } from "./soap-sections";
+import { IFMMatrixView } from "./ifm-matrix-view";
+import { ProtocolPanel } from "./protocol-panel";
+import { ExportMenu } from "./export-menu";
+import { useVisitStream } from "@/hooks/use-visit-stream";
+import type { Visit } from "@/types/database";
+
+type Tab = "soap" | "ifm" | "protocol" | "chat";
+
+interface VisitWorkspaceProps {
+  visit: Visit & {
+    patients?: {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+    } | null;
+  };
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoGenerate = searchParams.get("generate") === "true";
+
+  const [visit, setVisit] = useState(initialVisit);
+  const [activeTab, setActiveTab] = useState<Tab>("soap");
+  const [rawNotes, setRawNotes] = useState(visit.raw_notes || "");
+  const [showNotes, setShowNotes] = useState(!visit.subjective);
+  const [saving, setSaving] = useState(false);
+
+  const stream = useVisitStream();
+  const isReadOnly = visit.status === "completed";
+  const patientName = visit.patients
+    ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
+    : null;
+
+  // Auto-generate on mount if redirected from new visit with notes
+  useEffect(() => {
+    if (autoGenerate && rawNotes.trim() && visit.status === "draft") {
+      stream.generate(visit.id, rawNotes);
+      // Clean the URL param
+      window.history.replaceState({}, "", `/visits/${visit.id}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update local visit state when AI generation completes
+  useEffect(() => {
+    if (stream.soap.status === "complete" && stream.soap.data) {
+      setVisit((prev) => ({
+        ...prev,
+        subjective: stream.soap.data.subjective || prev.subjective,
+        objective: stream.soap.data.objective || prev.objective,
+        assessment: stream.soap.data.assessment || prev.assessment,
+        plan: stream.soap.data.plan || prev.plan,
+      }));
+      setShowNotes(false);
+    }
+  }, [stream.soap.status, stream.soap.data]);
+
+  useEffect(() => {
+    if (stream.ifm_matrix.status === "complete" && stream.ifm_matrix.data) {
+      setVisit((prev) => ({ ...prev, ifm_matrix: stream.ifm_matrix.data }));
+    }
+  }, [stream.ifm_matrix.status, stream.ifm_matrix.data]);
+
+  useEffect(() => {
+    if (stream.protocol.status === "complete" && stream.protocol.data) {
+      setVisit((prev) => ({ ...prev, ai_protocol: stream.protocol.data }));
+    }
+  }, [stream.protocol.status, stream.protocol.data]);
+
+  const handleGenerate = useCallback(() => {
+    if (!rawNotes.trim()) return;
+    stream.generate(visit.id, rawNotes);
+  }, [visit.id, rawNotes, stream]);
+
+  const handleFieldUpdate = useCallback(async (field: string, value: string) => {
+    setVisit((prev) => ({ ...prev, [field]: value }));
+
+    // Debounced auto-save
+    setSaving(true);
+    await fetch(`/api/visits/${visit.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    setSaving(false);
+  }, [visit.id]);
+
+  const handleStatusToggle = useCallback(async () => {
+    const newStatus = visit.status === "draft" ? "completed" : "draft";
+    const res = await fetch(`/api/visits/${visit.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (res.ok) {
+      setVisit((prev) => ({ ...prev, status: newStatus }));
+      router.refresh();
+    }
+  }, [visit.id, visit.status, router]);
+
+  const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
+    { key: "soap", label: "SOAP Note", icon: ClipboardList },
+    { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
+    { key: "protocol", label: "Protocol", icon: Pill },
+    { key: "chat", label: "Chat", icon: MessageSquare },
+  ];
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 py-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <Link
+            href="/visits"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to visits
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+              visit.visit_type === "follow_up"
+                ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
+                : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
+            }`}>
+              {visit.visit_type === "follow_up" ? (
+                <RefreshCcw className="w-4.5 h-4.5 text-[var(--color-gold-600)]" strokeWidth={1.5} />
+              ) : (
+                <Stethoscope className="w-4.5 h-4.5 text-[var(--color-brand-600)]" strokeWidth={1.5} />
+              )}
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                {visit.chief_complaint || "Visit Note"}
+              </h1>
+              <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {formatDate(visit.visit_date)}
+                </span>
+                {patientName && (
+                  <span className="inline-flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    {patientName}
+                  </span>
+                )}
+                <span className="capitalize">
+                  {visit.visit_type === "follow_up" ? "Follow-up" : "SOAP"}
+                </span>
+                {saving && (
+                  <span className="text-[var(--color-brand-500)]">Saving...</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <ExportMenu visit={visit} />
+          <button
+            onClick={handleStatusToggle}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${
+              visit.status === "completed"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+            }`}
+          >
+            {visit.status === "completed" ? (
+              <><RotateCcw className="w-3 h-3" /> Reopen</>
+            ) : (
+              <><Check className="w-3 h-3" /> Mark Complete</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Raw notes (collapsible) */}
+      {!isReadOnly && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors mb-2"
+          >
+            {showNotes ? "Hide raw notes" : "Show raw notes"}
+          </button>
+          {showNotes && (
+            <div className="space-y-3">
+              <RawNotesInput
+                value={rawNotes}
+                onChange={setRawNotes}
+                visitType={visit.visit_type as "soap" | "follow_up"}
+                disabled={stream.isGenerating}
+              />
+              <div className="flex items-center gap-3">
+                {stream.isGenerating ? (
+                  <button
+                    onClick={stream.abort}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)] hover:bg-red-100 transition-colors"
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    Stop Generation
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGenerate}
+                    disabled={!rawNotes.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {visit.subjective ? "Regenerate" : "Generate SOAP Note"}
+                  </button>
+                )}
+                {stream.isGenerating && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Generating...
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Error */}
+      {stream.error && (
+        <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+          {stream.error}
+        </div>
+      )}
+
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
+        {tabs.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === key
+                ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
+                : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="min-h-[400px]">
+        {activeTab === "soap" && (
+          <SoapSections
+            subjective={visit.subjective || ""}
+            objective={visit.objective || ""}
+            assessment={visit.assessment || ""}
+            plan={visit.plan || ""}
+            soapStatus={stream.soap.status}
+            streamingText={stream.soap.rawText}
+            readOnly={isReadOnly}
+            onUpdate={handleFieldUpdate}
+          />
+        )}
+        {activeTab === "ifm" && (
+          <IFMMatrixView
+            matrix={visit.ifm_matrix}
+            status={stream.ifm_matrix.status}
+          />
+        )}
+        {activeTab === "protocol" && (
+          <ProtocolPanel
+            protocol={visit.ai_protocol}
+            status={stream.protocol.status}
+          />
+        )}
+        {activeTab === "chat" && (
+          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
+            <MessageSquare className="w-8 h-8 mb-3 opacity-50" />
+            <p className="text-sm mb-2">Visit Chat</p>
+            <p className="text-xs text-center max-w-sm">
+              Ask follow-up questions about this visit. AI will have full context of the SOAP note, IFM mapping, and protocol.
+            </p>
+            <p className="text-xs mt-3 text-[var(--color-brand-600)]">Coming in next update</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
