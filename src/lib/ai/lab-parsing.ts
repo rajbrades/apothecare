@@ -28,8 +28,9 @@ export async function parseLabReport(
       .eq("id", reportId);
 
     // Download PDF from storage
-    const pdfBuffer = await downloadFromStorage(storagePath);
+    let pdfBuffer: Buffer | null = await downloadFromStorage(storagePath);
     const base64Pdf = pdfBuffer.toString("base64");
+    pdfBuffer = null; // FREE MEMORY IMMEDIATELY
 
     // Send to Claude Vision for extraction
     const response = await anthropic.messages.create({

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Get practitioner profile
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("*")
+      .select("id, daily_query_count, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
 

@@ -4,6 +4,7 @@ import { uploadLabSchema, labListQuerySchema } from "@/lib/validations/lab";
 import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports";
 import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
+import { checkRateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("lab_reports")
-      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, parsed_data, error_message, created_at, updated_at, patients(first_name, last_name)")
+      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, error_message, created_at, updated_at, patients(first_name, last_name)")
       .eq("practitioner_id", practitioner.id)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -74,10 +75,15 @@ export async function POST(request: NextRequest) {
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    const rateLimitError = await checkRateLimit(
+      supabase, practitioner.id, practitioner.subscription_tier, "lab_upload"
+    );
+    if (rateLimitError) return rateLimitError;
 
     // Parse multipart form data
     const formData = await request.formData();

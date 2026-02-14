@@ -83,10 +83,23 @@ export async function POST(
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, daily_query_count, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    // Check query limits (AI extraction counts as a query)
+    const { data: allowed } = await supabase.rpc(
+      "check_and_increment_query",
+      { p_practitioner_id: practitioner.id }
+    );
+
+    if (!allowed) {
+      return jsonError(
+        `Daily query limit reached (${practitioner.subscription_tier === "free" ? 2 : "unlimited"}). Upgrade to Pro for unlimited uploads.`,
+        429
+      );
+    }
 
     // Verify patient ownership
     const { data: patient } = await supabase

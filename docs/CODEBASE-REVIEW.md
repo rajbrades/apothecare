@@ -28,8 +28,10 @@ The 260px fixed sidebar has no hamburger/drawer. The entire authenticated app is
 ~~Origin validation exists only on `/api/chat/stream`. All other 11+ mutating POST/PATCH/DELETE endpoints are unprotected.~~
 - **Fixed:** Created shared `src/lib/api/csrf.ts` utility (`validateCsrf()`) and applied to all 13 mutating handlers across 11 route files.
 
-### 3. No Rate Limiting on AI Endpoints (Security CRITICAL)
-Only chat has a daily query limit. Visit generate (3 AI calls), scribe, transcribe, lab parsing, and document extraction have zero rate limits -- unbounded API cost exposure.
+### 3. ~~No Rate Limiting on AI Endpoints~~ (Security CRITICAL) — FIXED
+~~Only chat has a daily query limit. Visit generate, lab parsing, and document extraction have zero rate limits.~~
+- **Fixed:** Applied `check_and_increment_query()` (shared daily limit) to `visits/[id]/generate`, `labs` POST, and `patients/[id]/documents` POST.
+- **Future Consideration (Option B):** Ideally, we should separate "generations" (high value) from "chats" (low value) into distinct quotas. For now, they share the same "Daily Query" pool (Option A).
 
 ### 4. Full PDFs Loaded Into Memory as Base64 (Performance CRITICAL)
 10MB PDFs become ~23MB in Node.js heap (buffer + base64). Under concurrent usage, this can OOM serverless functions.

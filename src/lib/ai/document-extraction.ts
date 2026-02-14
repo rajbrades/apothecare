@@ -27,8 +27,9 @@ export async function extractDocumentContent(
       .eq("id", documentId);
 
     // Download PDF from storage
-    const pdfBuffer = await downloadFromStorage(storagePath);
+    let pdfBuffer: Buffer | null = await downloadFromStorage(storagePath);
     const base64Pdf = pdfBuffer.toString("base64");
+    pdfBuffer = null; // FREE MEMORY IMMEDIATELY
 
     let rawText = "";
 

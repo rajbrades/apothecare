@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { transcribeAudio, MAX_AUDIO_SIZE } from "@/lib/ai/transcription";
 import { validateCsrf } from "@/lib/api/csrf";
+import { checkRateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -39,10 +40,15 @@ export async function POST(
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    const rateLimitError = await checkRateLimit(
+      supabase, practitioner.id, practitioner.subscription_tier, "visit_transcribe"
+    );
+    if (rateLimitError) return rateLimitError;
 
     // Verify visit ownership
     const { data: visit } = await supabase

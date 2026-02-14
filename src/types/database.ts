@@ -343,6 +343,19 @@ export interface Database {
           evidence_level: EvidenceLevel;
         }>;
       };
+      check_rate_limit: {
+        Args: {
+          p_practitioner_id: string;
+          p_action: string;
+          p_max_count: number;
+          p_window_interval: string;
+        };
+        Returns: {
+          allowed: boolean;
+          remaining: number;
+          reset_at: string;
+        };
+      };
     };
   };
 }
