@@ -16,7 +16,9 @@ export type BiomarkerFlag = "optimal" | "normal" | "borderline_low" | "borderlin
 export type EvidenceLevel = "meta_analysis" | "rct" | "cohort_study" | "case_study" | "clinical_guideline" | "expert_consensus" | "in_vitro" | "other";
 export type AuditAction = "create" | "read" | "update" | "delete" | "export" | "login" | "logout" | "upload" | "query" | "generate";
 export type VisitStatus = "draft" | "completed";
-export type VisitType = "soap" | "follow_up";
+export type VisitType = "soap" | "follow_up" | "history_physical" | "consult";
+export type DocumentType = "intake_form" | "health_history" | "lab_report" | "imaging" | "referral" | "consent" | "insurance" | "other";
+export type DocumentStatus = "uploading" | "uploaded" | "extracting" | "extracted" | "error";
 
 // ===========================================
 // Table Row Types
@@ -50,6 +52,16 @@ export interface Practitioner {
   updated_at: string;
 }
 
+export interface PatientClinicalSummary {
+  intake_summary?: string;
+  key_findings?: string[];
+  medications_from_docs?: string[];
+  supplements_from_docs?: string[];
+  allergies_from_docs?: string[];
+  document_count?: number;
+  last_updated?: string;
+}
+
 export interface Patient {
   id: string;
   practitioner_id: string;
@@ -63,7 +75,31 @@ export interface Patient {
   supplements: string | null;
   allergies: string[] | null;
   notes: string | null;
+  clinical_summary: PatientClinicalSummary;
   is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PatientDocument {
+  id: string;
+  practitioner_id: string;
+  patient_id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  storage_path: string;
+  document_type: DocumentType;
+  document_date: string | null;
+  title: string | null;
+  status: DocumentStatus;
+  extracted_text: string | null;
+  extracted_data: Record<string, unknown>;
+  extraction_summary: string | null;
+  extraction_model: string | null;
+  error_message: string | null;
+  uploaded_at: string;
+  extracted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -157,6 +193,7 @@ export interface Visit {
   ai_soap_note: string | null;
   ai_assessment: string | null;
   ai_plan: string | null;
+  template_content: Record<string, unknown> | null;
   ai_protocol: VisitProtocol;
   ifm_matrix: IFMMatrix | Record<string, unknown>;
   conversation_id: string | null;
@@ -258,6 +295,11 @@ export interface Database {
           ifm_matrix?: IFMMatrix | Record<string, unknown>;
         };
         Update: Partial<Omit<Visit, "id" | "created_at">>;
+      };
+      patient_documents: {
+        Row: PatientDocument;
+        Insert: Omit<PatientDocument, "id" | "created_at" | "updated_at" | "uploaded_at">;
+        Update: Partial<Omit<PatientDocument, "id" | "created_at">>;
       };
       lab_reports: {
         Row: LabReport;

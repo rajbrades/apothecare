@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createVisitSchema, visitListQuerySchema } from "@/lib/validations/visit";
+import { validateCsrf } from "@/lib/api/csrf";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -57,6 +58,9 @@ export async function GET(request: NextRequest) {
 // ── POST /api/visits — Create a new visit ───────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const supabase = await createClient();
     const serviceClient = createServiceClient();
 
@@ -90,7 +94,10 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) return jsonError("Failed to create visit", 500);
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return jsonError(error.message || "Failed to create visit", 500);
+    }
 
     // Audit log
     const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";

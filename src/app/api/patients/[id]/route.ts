@@ -1,0 +1,142 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { updatePatientSchema } from "@/lib/validations/patient";
+import { validateCsrf } from "@/lib/api/csrf";
+
+function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
+
+async function getAuthPractitioner(supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never) {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return null;
+
+  const { data: practitioner } = await supabase
+    .from("practitioners")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  return practitioner;
+}
+
+// ── GET /api/patients/[id] — Fetch single patient with document count ───
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+    const practitioner = await getAuthPractitioner(supabase);
+    if (!practitioner) return jsonError("Unauthorized", 401);
+
+    const { data: patient, error } = await supabase
+      .from("patients")
+      .select("*")
+      .eq("id", id)
+      .eq("practitioner_id", practitioner.id)
+      .single();
+
+    if (error || !patient) return jsonError("Patient not found", 404);
+
+    // Fetch document count
+    const { count } = await supabase
+      .from("patient_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("patient_id", id);
+
+    return NextResponse.json({ patient, documentCount: count || 0 });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
+
+// ── PATCH /api/patients/[id] — Update patient fields ────────────────────
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
+    const { id } = await params;
+    const supabase = await createClient();
+    const serviceClient = createServiceClient();
+    const practitioner = await getAuthPractitioner(supabase);
+    if (!practitioner) return jsonError("Unauthorized", 401);
+
+    const body = await request.json();
+    const parsed = updatePatientSchema.safeParse(body);
+    if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
+
+    const { data: patient, error } = await supabase
+      .from("patients")
+      .update(parsed.data)
+      .eq("id", id)
+      .eq("practitioner_id", practitioner.id)
+      .select()
+      .single();
+
+    if (error) return jsonError("Failed to update patient", 500);
+
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
+    await serviceClient.from("audit_logs").insert({
+      practitioner_id: practitioner.id,
+      action: "update",
+      resource_type: "patient",
+      resource_id: id,
+      ip_address: clientIp,
+      user_agent: userAgent,
+      detail: { fields_updated: Object.keys(parsed.data) },
+    });
+
+    return NextResponse.json({ patient });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
+
+// ── DELETE /api/patients/[id] — Soft delete (archive) ───────────────────
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
+    const { id } = await params;
+    const supabase = await createClient();
+    const serviceClient = createServiceClient();
+    const practitioner = await getAuthPractitioner(supabase);
+    if (!practitioner) return jsonError("Unauthorized", 401);
+
+    const { error } = await supabase
+      .from("patients")
+      .update({ is_archived: true })
+      .eq("id", id)
+      .eq("practitioner_id", practitioner.id);
+
+    if (error) return jsonError("Failed to archive patient", 500);
+
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
+    await serviceClient.from("audit_logs").insert({
+      practitioner_id: practitioner.id,
+      action: "delete",
+      resource_type: "patient",
+      resource_id: id,
+      ip_address: clientIp,
+      user_agent: userAgent,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}

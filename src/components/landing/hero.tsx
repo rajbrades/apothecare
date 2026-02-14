@@ -3,7 +3,7 @@ import { ScrollReveal } from "./scroll-reveal";
 
 export function Hero() {
   return (
-    <section className="max-w-4xl mx-auto px-6 pt-24 pb-20 text-center">
+    <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-16 sm:pb-20 text-center">
       <ScrollReveal>
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)] text-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-[var(--color-brand-500)]" />
@@ -35,13 +35,13 @@ export function Hero() {
               className="w-full px-4 py-3 text-lg bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
               readOnly
             />
-            <div className="flex items-center justify-between px-4 pb-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 pb-3">
               <span className="text-xs text-[var(--color-text-muted)]">
                 2 free queries/day · No credit card required
               </span>
               <Link
                 href="/auth/register"
-                className="px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors"
+                className="w-full sm:w-auto text-center px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors"
               >
                 Start Free &rarr;
               </Link>

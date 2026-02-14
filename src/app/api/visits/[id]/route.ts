@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { updateVisitSchema } from "@/lib/validations/visit";
+import { validateCsrf } from "@/lib/api/csrf";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -51,6 +52,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
     const supabase = await createClient();
     const serviceClient = createServiceClient();
@@ -112,6 +116,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const { id } = await params;
     const supabase = await createClient();
     const serviceClient = createServiceClient();

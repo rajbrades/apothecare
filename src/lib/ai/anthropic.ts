@@ -1,16 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { env } from "@/lib/env";
 
-// Singleton client instance
-let client: Anthropic | null = null;
-
+// Use MiniMax's Anthropic-compatible endpoint when MINIMAX_API_KEY is set,
+// otherwise fall back to direct Anthropic API.
 export function getAnthropicClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic({
-      apiKey: env.ANTHROPIC_API_KEY,
+  if (env.MINIMAX_API_KEY) {
+    return new Anthropic({
+      apiKey: null,
+      authToken: env.MINIMAX_API_KEY,
+      baseURL: "https://api.minimax.io/anthropic",
     });
   }
-  return client;
+  return new Anthropic({
+    apiKey: env.ANTHROPIC_API_KEY,
+  });
 }
 
 // System prompt for clinical chat
@@ -65,12 +68,12 @@ Provide your analysis in these sections:
 
 Cite evidence for all clinical interpretations.`;
 
-// Model selection
+// Model selection — MiniMax models when MINIMAX_API_KEY is set
+const useMiniMax = !!process.env.MINIMAX_API_KEY;
+
 export const MODELS = {
-  // Primary model for chat and standard analysis
-  standard: "claude-sonnet-4-5-20250929" as const,
-  // Complex multi-lab correlation and deep consult
-  advanced: "claude-opus-4-5-20250514" as const,
-};
+  standard: useMiniMax ? "MiniMax-M2.5" : "claude-sonnet-4-5-20250929",
+  advanced: useMiniMax ? "MiniMax-M2.5" : "claude-opus-4-5-20250514",
+} as const;
 
 export type ModelId = (typeof MODELS)[keyof typeof MODELS];

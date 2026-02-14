@@ -39,7 +39,7 @@ export function FeaturesGrid() {
           </div>
         </ScrollReveal>
 
-        <div className="grid sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {features.map((f, i) => (
             <ScrollReveal key={f.title} delay={i * 100}>
               <div className="h-full p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)]/50 transition-all hover-lift">

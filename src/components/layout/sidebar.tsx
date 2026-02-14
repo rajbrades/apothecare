@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   MessageSquare,
   Stethoscope,
@@ -11,22 +12,14 @@ import {
   ChevronDown,
   Plus,
   Settings,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Archive,
-  Check,
+  Menu,
   X,
 } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Logomark } from "@/components/ui/logomark";
 import { createClient } from "@/lib/supabase/client";
-
-interface ConversationItem {
-  id: string;
-  title: string;
-  updated_at: string;
-}
+import { ConversationEntry, type ConversationItem } from "./sidebar-conversation";
 
 interface SidebarProps {
   practitioner: {
@@ -48,224 +41,7 @@ const navItems = [
   { href: "/patients", icon: Users, label: "Patients" },
 ];
 
-// ─── Conversation Item with Actions ────────────────────────────────
-function ConversationEntry({
-  conv,
-  isActive,
-  onRename,
-  onArchive,
-  onDelete,
-}: {
-  conv: ConversationItem;
-  isActive: boolean;
-  onRename: (id: string, newTitle: string) => Promise<void>;
-  onArchive: (id: string) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
-}) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState(conv.title || "");
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Close menu on outside click
-  useEffect(() => {
-    if (!menuOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-        setConfirmingDelete(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
-
-  // Focus input when renaming starts
-  useEffect(() => {
-    if (isRenaming && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isRenaming]);
-
-  const handleRenameSubmit = useCallback(async () => {
-    const trimmed = renameValue.trim();
-    if (!trimmed || trimmed === (conv.title || "")) {
-      setIsRenaming(false);
-      setRenameValue(conv.title || "");
-      return;
-    }
-    setLoading(true);
-    try {
-      await onRename(conv.id, trimmed);
-    } finally {
-      setLoading(false);
-      setIsRenaming(false);
-    }
-  }, [renameValue, conv.id, conv.title, onRename]);
-
-  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleRenameSubmit();
-    } else if (e.key === "Escape") {
-      setIsRenaming(false);
-      setRenameValue(conv.title || "");
-    }
-  };
-
-  const handleArchive = async () => {
-    setLoading(true);
-    setMenuOpen(false);
-    try {
-      await onArchive(conv.id);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true);
-      return;
-    }
-    setLoading(true);
-    setMenuOpen(false);
-    setConfirmingDelete(false);
-    try {
-      await onDelete(conv.id);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ── Renaming mode ──
-  if (isRenaming) {
-    return (
-      <div className="flex items-center gap-1 px-3 pl-6 py-1">
-        <input
-          ref={inputRef}
-          value={renameValue}
-          onChange={(e) => setRenameValue(e.target.value)}
-          onKeyDown={handleRenameKeyDown}
-          onBlur={handleRenameSubmit}
-          disabled={loading}
-          className="flex-1 min-w-0 px-1.5 py-0.5 text-sm bg-white border border-[var(--color-border-light)] rounded text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] focus:ring-1 focus:ring-[var(--color-brand-200)]"
-          maxLength={100}
-        />
-        <button
-          onClick={handleRenameSubmit}
-          disabled={loading}
-          className="p-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
-          title="Save"
-        >
-          <Check size={14} />
-        </button>
-        <button
-          onClick={() => {
-            setIsRenaming(false);
-            setRenameValue(conv.title || "");
-          }}
-          className="p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-          title="Cancel"
-        >
-          <X size={14} />
-        </button>
-      </div>
-    );
-  }
-
-  // ── Normal mode ──
-  return (
-    <div
-      className={`group relative flex items-center rounded-md transition-colors ${
-        isActive
-          ? "bg-[var(--color-brand-50)]"
-          : "hover:bg-[var(--color-surface-tertiary)]"
-      } ${loading ? "opacity-50 pointer-events-none" : ""}`}
-    >
-      <Link
-        href={`/chat?id=${conv.id}`}
-        className={`flex-1 min-w-0 block px-3 pl-7 py-1.5 text-sm truncate transition-colors ${
-          isActive
-            ? "text-[var(--color-brand-700)] font-medium"
-            : "text-[var(--color-text-secondary)]"
-        }`}
-      >
-        {conv.title || "Untitled"}
-        <span className="block text-[11px] text-[var(--color-text-muted)] mt-0.5">
-          {formatRelativeTime(conv.updated_at)}
-        </span>
-      </Link>
-
-      {/* Three-dot menu trigger */}
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setMenuOpen(!menuOpen);
-            setConfirmingDelete(false);
-          }}
-          className={`p-1 mr-1.5 rounded transition-colors ${
-            menuOpen
-              ? "text-[var(--color-text-primary)] bg-[var(--color-surface-tertiary)]"
-              : "text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 hover:text-[var(--color-text-primary)]"
-          }`}
-          title="Conversation actions"
-        >
-          <MoreHorizontal size={14} />
-        </button>
-
-        {/* Dropdown menu */}
-        {menuOpen && (
-          <div className="absolute right-0 top-full mt-1 w-40 py-1 bg-white rounded-lg shadow-lg border border-[var(--color-border-light)] z-50">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(false);
-                setRenameValue(conv.title || "");
-                setIsRenaming(true);
-              }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <Pencil size={14} />
-              Rename
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleArchive();
-              }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <Archive size={14} />
-              Archive
-            </button>
-            <div className="h-px bg-[var(--color-border-light)] my-1 mx-2" />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm transition-colors ${
-                confirmingDelete
-                  ? "text-red-600 bg-red-50 hover:bg-red-100 font-medium"
-                  : "text-red-500 hover:bg-red-50 hover:text-red-600"
-              }`}
-            >
-              <Trash2 size={14} />
-              {confirmingDelete ? "Confirm delete?" : "Delete"}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── Main Sidebar ──────────────────────────────────────────────────
 export function Sidebar({ practitioner, recentConversations = [], recentVisits = [] }: SidebarProps) {
@@ -274,6 +50,12 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [visitsOpen, setVisitsOpen] = useState(true);
   const [conversationsOpen, setConversationsOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Optimistic local state for conversations
   const [conversations, setConversations] = useState<ConversationItem[]>(recentConversations);
@@ -307,6 +89,9 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
         prev.map((c) => (c.id === id ? { ...c, title: recentConversations.find((r) => r.id === id)?.title || c.title } : c))
       );
       console.error("Failed to rename conversation:", error.message);
+      toast.error("Failed to rename conversation");
+    } else {
+      toast.success("Conversation renamed");
     }
   }, [recentConversations]);
 
@@ -324,7 +109,9 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
       // Revert on failure
       setConversations(recentConversations);
       console.error("Failed to archive conversation:", error.message);
+      toast.error("Failed to archive conversation");
     } else {
+      toast.success("Conversation archived");
       // If we're viewing the archived conversation, navigate away
       if (activeConvId === id) {
         router.push("/chat");
@@ -347,7 +134,9 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
       // Revert on failure
       setConversations(recentConversations);
       console.error("Failed to delete conversation:", error.message);
+      toast.error("Failed to delete conversation");
     } else {
+      toast.success("Conversation deleted");
       // If we're viewing the deleted conversation, navigate away
       if (activeConvId === id) {
         router.push("/chat");
@@ -357,24 +146,54 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
   }, [recentConversations, activeConvId, router]);
 
   return (
-    <aside className="w-[var(--sidebar-width)] h-screen fixed left-0 top-0 bg-[var(--color-surface-secondary)] border-r border-[var(--color-border-light)] flex flex-col z-40">
-      {/* Logo */}
-      <div className="h-[var(--header-height)] flex items-center px-5 border-b border-[var(--color-border-light)]">
+    <>
+      {/* Mobile header bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-[var(--header-height)] bg-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)] flex items-center px-4 z-50">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-1.5 -ml-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="icon-nav" />
+        </button>
+        <Link href="/dashboard" className="flex items-center gap-2 ml-3">
+          <Logomark size="xs" withText />
+        </Link>
+      </div>
+
+      {/* Backdrop overlay for mobile */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/30 z-40 animate-in fade-in duration-200"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`w-[var(--sidebar-width)] h-screen fixed left-0 top-0 bg-[var(--color-surface-secondary)] border-r border-[var(--color-border-light)] flex flex-col z-50 transition-transform duration-200 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      {/* Logo + mobile close */}
+      <div className="h-[var(--header-height)] flex items-center justify-between px-5 border-b border-[var(--color-border-light)]">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <Logomark size="xs" withText />
         </Link>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1.5 -mr-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+          aria-label="Close navigation menu"
+        >
+          <X className="icon-inline" />
+        </button>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {/* Primary CTA */}
-        <Link
-          href="/chat"
-          className="flex items-center justify-center gap-2 w-full px-3 py-2.5 mb-4 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white text-sm font-medium hover:bg-[var(--color-brand-700)] transition-colors shadow-sm"
-        >
-          <Plus className="icon-inline" strokeWidth={2} />
-          New Conversation
-        </Link>
+        <Button asChild className="w-full mb-4 gap-2 shadow-sm" size="sm">
+          <Link href="/chat">
+            <Plus className="icon-inline" strokeWidth={2} />
+            New Conversation
+          </Link>
+        </Button>
 
         {/* Secondary nav */}
         <div className="space-y-0.5 mb-5">
@@ -384,11 +203,10 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive
+                  ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
+                  }`}
               >
                 <item.icon className="icon-nav" strokeWidth={1.5} />
                 {item.label}
@@ -477,20 +295,19 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                 recentVisits.slice(0, 3).map((visit) => {
                   const isVisitActive = pathname === `/visits/${visit.id}`;
                   return (
-                  <Link
-                    key={visit.id}
-                    href={`/visits/${visit.id}`}
-                    className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${
-                      isVisitActive
+                    <Link
+                      key={visit.id}
+                      href={`/visits/${visit.id}`}
+                      className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${isVisitActive
                         ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
                         : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
-                    }`}
-                  >
-                    {visit.chief_complaint || "Visit"}
-                    <span className="block text-[11px] text-[var(--color-text-muted)]">
-                      {new Date(visit.visit_date).toLocaleDateString()}
-                    </span>
-                  </Link>
+                        }`}
+                    >
+                      {visit.chief_complaint || "Visit"}
+                      <span className="block text-[11px] text-[var(--color-text-muted)]">
+                        {new Date(visit.visit_date).toLocaleDateString()}
+                      </span>
+                    </Link>
                   );
                 })
               )}
@@ -504,12 +321,11 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
         <div className="mx-3 mb-3 p-3 rounded-lg bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-brand-50)] border border-[var(--color-gold-200)]">
           <p className="text-xs font-medium text-[var(--color-text-primary)]">Unlock unlimited queries</p>
           <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">Labs, protocols, SOAP notes & more</p>
-          <Link
-            href="/pricing"
-            className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-[var(--color-gold-500)] text-white rounded-md hover:bg-[var(--color-gold-600)] transition-colors"
-          >
-            Upgrade to Pro
-          </Link>
+          <Button asChild variant="gold" size="xs" className="mt-2">
+            <Link href="/pricing">
+              Upgrade to Pro
+            </Link>
+          </Button>
         </div>
       )}
 
@@ -545,20 +361,8 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
         </div>
       </div>
     </aside>
+    </>
   );
 }
 
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}

@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
-  Grid3x3, Pill, MessageSquare,
+  Grid3x3, Pill, MessageSquare, HeartPulse, UserCheck,
 } from "lucide-react";
+import { VisitEditor } from "./editor/visit-editor";
 import { RawNotesInput } from "./raw-notes-input";
 import { SoapSections } from "./soap-sections";
 import { IFMMatrixView } from "./ifm-matrix-view";
 import { ProtocolPanel } from "./protocol-panel";
 import { ExportMenu } from "./export-menu";
 import { useVisitStream } from "@/hooks/use-visit-stream";
-import type { Visit } from "@/types/database";
+import type { Visit, VisitType, IFMMatrix } from "@/types/database";
+import type { JSONContent } from "@tiptap/react";
 
 type Tab = "soap" | "ifm" | "protocol" | "chat";
 
@@ -27,6 +29,20 @@ interface VisitWorkspaceProps {
     } | null;
   };
 }
+
+const VISIT_TYPE_LABELS: Record<string, string> = {
+  soap: "SOAP",
+  follow_up: "Follow-up",
+  history_physical: "H&P",
+  consult: "Consult",
+};
+
+const VISIT_TYPE_ICONS: Record<string, typeof ClipboardList> = {
+  soap: ClipboardList,
+  follow_up: RefreshCcw,
+  history_physical: HeartPulse,
+  consult: UserCheck,
+};
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -41,12 +57,18 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoGenerate = searchParams.get("generate") === "true";
+  const autoTranscribe = searchParams.get("mode") === "transcribe";
 
   const [visit, setVisit] = useState(initialVisit);
   const [activeTab, setActiveTab] = useState<Tab>("soap");
   const [rawNotes, setRawNotes] = useState(visit.raw_notes || "");
-  const [showNotes, setShowNotes] = useState(!visit.subjective);
+  const [showNotes, setShowNotes] = useState(!visit.subjective || autoTranscribe);
   const [saving, setSaving] = useState(false);
+
+  // Track editor content for block editor mode
+  const editorJsonRef = useRef<JSONContent | null>(null);
+  const editorTextRef = useRef<string>("");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const stream = useVisitStream();
   const isReadOnly = visit.status === "completed";
@@ -54,11 +76,20 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
     : null;
 
+  // Determine if this visit uses the block editor
+  // New visits always use block editor; old visits with only raw_notes use legacy textarea
+  const useBlockEditor = visit.template_content != null || !visit.raw_notes;
+
+  const VisitIcon = VISIT_TYPE_ICONS[visit.visit_type] || Stethoscope;
+  const isFollowUp = visit.visit_type === "follow_up";
+
   // Auto-generate on mount if redirected from new visit with notes
   useEffect(() => {
     if (autoGenerate && rawNotes.trim() && visit.status === "draft") {
       stream.generate(visit.id, rawNotes);
-      // Clean the URL param
+    }
+    // Clean URL params on mount
+    if (autoGenerate || autoTranscribe) {
       window.history.replaceState({}, "", `/visits/${visit.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,20 +121,70 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
   }, [stream.protocol.status, stream.protocol.data]);
 
+  // Generate from block editor content
   const handleGenerate = useCallback(() => {
-    if (!rawNotes.trim()) return;
-    stream.generate(visit.id, rawNotes);
-  }, [visit.id, rawNotes, stream]);
+    const text = useBlockEditor ? editorTextRef.current : rawNotes;
+    if (!text.trim()) return;
+
+    // Save editor state before generating
+    if (useBlockEditor && editorJsonRef.current) {
+      fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template_content: editorJsonRef.current,
+          raw_notes: text,
+        }),
+      });
+    }
+
+    stream.generate(visit.id, text);
+  }, [visit.id, rawNotes, stream, useBlockEditor]);
+
+  // Handle block editor content changes (debounced auto-save)
+  const handleEditorContentChange = useCallback(
+    (json: JSONContent, text: string) => {
+      editorJsonRef.current = json;
+      editorTextRef.current = text;
+      setRawNotes(text);
+
+      // Debounced auto-save
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(async () => {
+        setSaving(true);
+        await fetch(`/api/visits/${visit.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            template_content: json,
+            raw_notes: text,
+          }),
+        });
+        setSaving(false);
+      }, 2000);
+    },
+    [visit.id]
+  );
 
   const handleFieldUpdate = useCallback(async (field: string, value: string) => {
     setVisit((prev) => ({ ...prev, [field]: value }));
 
-    // Debounced auto-save
     setSaving(true);
     await fetch(`/api/visits/${visit.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [field]: value }),
+    });
+    setSaving(false);
+  }, [visit.id]);
+
+  const handleMatrixUpdate = useCallback(async (matrix: IFMMatrix) => {
+    setVisit((prev) => ({ ...prev, ifm_matrix: matrix }));
+    setSaving(true);
+    await fetch(`/api/visits/${visit.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ifm_matrix: matrix }),
     });
     setSaving(false);
   }, [visit.id]);
@@ -142,15 +223,14 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           </Link>
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              visit.visit_type === "follow_up"
+              isFollowUp
                 ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
                 : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
             }`}>
-              {visit.visit_type === "follow_up" ? (
-                <RefreshCcw className="w-4.5 h-4.5 text-[var(--color-gold-600)]" strokeWidth={1.5} />
-              ) : (
-                <Stethoscope className="w-4.5 h-4.5 text-[var(--color-brand-600)]" strokeWidth={1.5} />
-              )}
+              <VisitIcon
+                className={`w-4.5 h-4.5 ${isFollowUp ? "text-[var(--color-gold-600)]" : "text-[var(--color-brand-600)]"}`}
+                strokeWidth={1.5}
+              />
             </div>
             <div>
               <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -167,9 +247,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
                     {patientName}
                   </span>
                 )}
-                <span className="capitalize">
-                  {visit.visit_type === "follow_up" ? "Follow-up" : "SOAP"}
-                </span>
+                <span>{VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"}</span>
                 {saving && (
                   <span className="text-[var(--color-brand-500)]">Saving...</span>
                 )}
@@ -197,23 +275,38 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         </div>
       </div>
 
-      {/* Raw notes (collapsible) */}
+      {/* Notes input (collapsible) */}
       {!isReadOnly && (
         <div className="mb-6">
           <button
             onClick={() => setShowNotes(!showNotes)}
             className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors mb-2"
           >
-            {showNotes ? "Hide raw notes" : "Show raw notes"}
+            {showNotes ? "Hide notes" : "Show notes"}
           </button>
           {showNotes && (
             <div className="space-y-3">
-              <RawNotesInput
-                value={rawNotes}
-                onChange={setRawNotes}
-                visitType={visit.visit_type as "soap" | "follow_up"}
-                disabled={stream.isGenerating}
-              />
+              {useBlockEditor ? (
+                <VisitEditor
+                  visitType={visit.visit_type as VisitType}
+                  visitId={visit.id}
+                  initialContent={visit.template_content as JSONContent | null}
+                  autoTranscribe={autoTranscribe}
+                  disabled={stream.isGenerating}
+                  onContentChange={handleEditorContentChange}
+                  onCompleteNote={handleGenerate}
+                />
+              ) : (
+                <RawNotesInput
+                  value={rawNotes}
+                  onChange={setRawNotes}
+                  visitType={visit.visit_type as "soap" | "follow_up" | "history_physical" | "consult"}
+                  visitId={visit.id}
+                  disabled={stream.isGenerating}
+                  initialMode={autoTranscribe ? "transcribe" : undefined}
+                  onCompleteNote={handleGenerate}
+                />
+              )}
               <div className="flex items-center gap-3">
                 {stream.isGenerating ? (
                   <button
@@ -226,11 +319,11 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
                 ) : (
                   <button
                     onClick={handleGenerate}
-                    disabled={!rawNotes.trim()}
+                    disabled={useBlockEditor ? !editorTextRef.current.trim() : !rawNotes.trim()}
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Sparkles className="w-4 h-4" />
-                    {visit.subjective ? "Regenerate" : "Generate SOAP Note"}
+                    {visit.subjective ? "Regenerate" : "Generate Clinical Note"}
                   </button>
                 )}
                 {stream.isGenerating && (
@@ -288,6 +381,8 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           <IFMMatrixView
             matrix={visit.ifm_matrix}
             status={stream.ifm_matrix.status}
+            readOnly={isReadOnly}
+            onUpdate={handleMatrixUpdate}
           />
         )}
         {activeTab === "protocol" && (

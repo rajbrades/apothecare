@@ -52,3 +52,34 @@ export const getSidebarData = cache(async (practitionerId: string) => {
     recentVisits: recentVisits || [],
   };
 });
+
+export const getPatientWithDocuments = cache(async (practitionerId: string, patientId: string) => {
+  const supabase = await createClient();
+  const [{ data: patient }, { data: documents }] = await Promise.all([
+    supabase
+      .from("patients")
+      .select("*")
+      .eq("id", patientId)
+      .eq("practitioner_id", practitionerId)
+      .single(),
+    supabase
+      .from("patient_documents")
+      .select("id, file_name, file_size, document_type, title, status, error_message, uploaded_at, extracted_at")
+      .eq("patient_id", patientId)
+      .eq("practitioner_id", practitionerId)
+      .order("uploaded_at", { ascending: false }),
+  ]);
+
+  return { patient, documents: documents || [] };
+});
+
+export const getPatientCount = cache(async (practitionerId: string) => {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("patients")
+    .select("id", { count: "exact", head: true })
+    .eq("practitioner_id", practitionerId)
+    .eq("is_archived", false);
+
+  return count || 0;
+});

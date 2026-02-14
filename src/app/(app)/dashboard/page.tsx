@@ -4,6 +4,8 @@ import { Dna, Stethoscope, Users } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
+import { createClient } from "@/lib/supabase/server";
+import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 
 export default async function DashboardPage() {
   // These calls are deduplicated by React cache() — the parent (app) layout
@@ -26,6 +28,15 @@ export default async function DashboardPage() {
   const isFree = practitioner?.subscription_tier === "free";
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
+  // Fetch patient list for the patient selector
+  const supabase = await createClient();
+  const { data: patients } = await supabase
+    .from("patients")
+    .select("id, first_name, last_name")
+    .eq("practitioner_id", practitioner.id)
+    .eq("is_archived", false)
+    .order("last_name", { ascending: true });
+
   const suggestedQuestions = [
     "What are evidence-based interventions for elevated zonulin and intestinal permeability?",
     "Compare berberine vs. metformin for insulin resistance in prediabetic patients",
@@ -41,45 +52,7 @@ export default async function DashboardPage() {
 
       {/* Search input */}
       <div className="w-full max-w-2xl mb-6">
-        <form action="/chat" method="GET">
-          <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
-            <input
-              name="q"
-              type="text"
-              placeholder="Ask a clinical question..."
-              className="w-full px-6 py-4 text-base bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-[var(--radius-lg)]"
-              autoFocus
-            />
-            <div className="flex items-center justify-between px-6 pb-3">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)] transition-colors"
-                >
-                  📎 Attach
-                </button>
-                <select className="text-xs text-[var(--color-text-muted)] bg-transparent border border-[var(--color-border-light)] rounded-full px-3 py-1 outline-none">
-                  <option value="">Select Patient</option>
-                </select>
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-600)] hover:border-[var(--color-brand-200)] transition-colors"
-                >
-                  🔬 Deep Consult
-                </button>
-              </div>
-              <button
-                type="submit"
-                className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-700)] transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </form>
+        <DashboardSearch patients={patients || []} />
 
         {/* Query limit indicator for free users */}
         {isFree && (
@@ -137,7 +110,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick action cards */}
-      <div className="flex gap-4 mt-12">
+      <div className="flex flex-wrap justify-center gap-4 mt-12">
         {[
           { href: "/labs", icon: <Dna className="icon-feature" />, label: "Upload Labs" },
           { href: "/visits/new", icon: <Stethoscope className="icon-feature" />, label: "Start Visit" },

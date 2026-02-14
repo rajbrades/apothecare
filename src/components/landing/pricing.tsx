@@ -15,7 +15,7 @@ export function Pricing() {
           </p>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free */}
           <ScrollReveal delay={0}>
             <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">

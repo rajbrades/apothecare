@@ -33,13 +33,16 @@ Functional medicine practitioners spend **30–60 minutes per complex patient ca
 Ask clinical questions and get streaming responses grounded in functional medicine evidence from IFM, A4M, Cleveland Clinic Center for Functional Medicine, and peer-reviewed literature. Every claim is cited with evidence strength indicators (meta-analysis, RCT, clinical guideline, case study).
 
 ### Multi-Modal Lab Interpretation
-Upload blood panels, GI-MAPs, DUTCH tests, and OAT panels. The AI parses, interprets, and correlates findings across all your labs — with both **conventional and functional/optimal reference ranges** displayed side-by-side. No other tool does this.
+Upload blood panels, GI-MAPs, DUTCH tests, and OAT panels. Claude Vision parses lab PDFs, extracts biomarkers, and normalizes results against both **conventional and functional/optimal reference ranges** displayed side-by-side. Drag-and-drop upload with auto-detected vendor and test type. Lab reports linked to patients appear automatically in their Documents tab.
 
 ### Protocol Generation
 AI-generated treatment protocols with supplement dosing, dietary interventions, lifestyle recommendations, and drug-supplement interaction checking — all backed by evidence citations. One-click branded PDF export for patients.
 
-### Clinical Visits
-Document visits with real-time evidence surfacing. Transcribe appointments, generate SOAP notes, and query the evidence base — all in one workflow. Built around the **IFM Matrix** as a navigable clinical framework.
+### Clinical Visits & AI Scribe
+Full visit lifecycle with block-based editor. Four encounter templates (SOAP, H&P, Consultation, Follow-up) pre-populate collapsible sections. **AI Scribe** records provider-patient encounters, transcribes via OpenAI Whisper, then uses Claude to assign content to the appropriate template sections. Live dictation via Web Speech API inserts text at cursor. AI-generated SOAP notes, IFM Matrix mapping, and evidence-based protocols — all streamed via SSE.
+
+### Patient Management
+Create and manage patient profiles with comprehensive clinical data — demographics, medical history, medications, supplements, allergies, and chief complaints. Upload and extract clinical documents (lab reports, intake forms, referrals). Pre-chart view provides an AI-generated clinical summary before encounters.
 
 ### Deep Consult Mode
 Toggle to use Claude Opus for complex multi-system cases, differential diagnoses, and cross-lab correlations. Extended 4096-token responses with advanced clinical reasoning.
@@ -67,7 +70,10 @@ Every biomarker displayed with both conventional and functional/optimal ranges. 
 | **Frontend** | Next.js 15 + TypeScript + Tailwind CSS v4 | App Router, RSC, streaming support |
 | **Database** | Supabase Cloud (PostgreSQL + pgvector) | RLS, vector search for RAG, JSONB for flexible schemas |
 | **Auth** | Supabase Auth | HIPAA BAA on Pro plan, RLS integration, MFA support |
-| **AI** | Anthropic Claude API | Sonnet 4.5 (standard) + Opus 4.5 (deep consult). HIPAA BAA with zero-retention |
+| **AI** | Multi-provider (OpenAI + Anthropic + MiniMax) | OpenAI primary, Anthropic for vision/fallback, MiniMax fallback. HIPAA BAA with zero-retention |
+| **Transcription** | OpenAI Whisper API | Audio transcription for AI Scribe and voice recording |
+| **Lab Parsing** | Anthropic Claude Vision | PDF → biomarker extraction via vision API |
+| **Editor** | Tiptap (ProseMirror) | Block-based editor with custom node extensions for template sections |
 | **Validation** | Zod | Input validation on all API routes |
 | **Icons** | Lucide React | Consistent icon system across all pages |
 | **Fonts** | Newsreader + DM Sans + JetBrains Mono | Loaded via `<link>` preconnect (non-blocking) |
@@ -123,6 +129,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `ANTHROPIC_API_KEY` | Anthropic API key | Yes |
 | `NEXT_PUBLIC_APP_URL` | Application URL (used for CSRF validation) | Yes |
 | `NEXT_PUBLIC_APP_NAME` | Application display name | Yes |
+| `OPENAI_API_KEY` | OpenAI API key (Whisper transcription) | For AI Scribe |
 | `STRIPE_SECRET_KEY` | Stripe secret key | For payments |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | For payments |
 
@@ -132,29 +139,31 @@ Open [http://localhost:3000](http://localhost:3000).
 ┌─────────────────────────────────────────────────────────────┐
 │                        Client (Browser)                      │
 │                    Next.js 15 + React 19                     │
-│              Tailwind CSS v4 + DM Sans + Newsreader          │
+│              Tailwind CSS v4 + Tiptap Block Editor           │
 │              SSE streaming + keyboard shortcuts               │
 └──────────────┬──────────────────────────────┬────────────────┘
                │                              │
                ▼                              ▼
 ┌──────────────────────┐       ┌──────────────────────────────┐
 │   Next.js API Routes │       │     Supabase Auth (JWT)      │
-│   /api/chat/stream   │       │   Session management + MFA    │
-│   /api/chat/history  │       │   Row-Level Security tokens   │
-│   (Zod validated)    │       └──────────────────────────────┘
+│                      │       │   Session management + MFA    │
+│   /api/chat/stream   │       │   Row-Level Security tokens   │
+│   /api/visits/       │       └──────────────────────────────┘
+│   /api/patients/     │
+│   (Zod validated)    │
 │   (CSRF protected)   │
 └──────────┬───────────┘
            │
-     ┌─────┴──────┐
-     ▼            ▼
-┌──────────┐  ┌────────────────────────────────────────────────┐
-│ Anthropic│  │              Supabase Cloud                     │
-│ Claude   │  │  ┌────────────┐  ┌───────────┐  ┌───────────┐ │
-│ API      │  │  │ PostgreSQL │  │  Storage   │  │  Auth      │ │
-│          │  │  │ + pgvector │  │ (Lab PDFs) │  │           │ │
-│ Sonnet   │  │  │ + RLS      │  │ encrypted  │  │           │ │
-│ Opus     │  │  └────────────┘  └───────────┘  └───────────┘ │
-└──────────┘  └────────────────────────────────────────────────┘
+     ┌─────┼──────────┐
+     ▼     ▼          ▼
+┌────────┐ ┌────────┐ ┌───────────────────────────────────────┐
+│Anthropic│ │ OpenAI │ │            Supabase Cloud              │
+│ Claude  │ │Whisper │ │  ┌───────────┐ ┌──────────┐ ┌──────┐ │
+│ API     │ │ API    │ │  │PostgreSQL │ │ Storage  │ │ Auth │ │
+│         │ │        │ │  │+ pgvector │ │(Docs/PDFs│ │      │ │
+│ Sonnet  │ │ Audio  │ │  │+ RLS      │ │encrypted)│ │      │ │
+│ Opus    │ │ → Text │ │  └───────────┘ └──────────┘ └──────┘ │
+└─────────┘ └────────┘ └───────────────────────────────────────┘
 ```
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep dive.
@@ -165,57 +174,56 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep dive.
 src/
 ├── app/
 │   ├── (app)/                       # Route group — shared authenticated layout
-│   │   ├── chat/
-│   │   │   └── page.tsx            # Chat page
-│   │   ├── dashboard/
-│   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
-│   │   │   └── page.tsx            # Dashboard home
+│   │   ├── chat/page.tsx            # Clinical chat
+│   │   ├── dashboard/page.tsx       # Dashboard home
 │   │   ├── labs/
-│   │   │   └── page.tsx            # Labs page (empty state)
+│   │   │   ├── [id]/page.tsx       # Lab report detail (biomarkers, PDF)
+│   │   │   └── page.tsx            # Lab list + upload
 │   │   ├── patients/
-│   │   │   └── page.tsx            # Patients page (empty state)
+│   │   │   ├── [id]/page.tsx       # Patient detail + documents + lab reports
+│   │   │   ├── new/page.tsx        # New patient form
+│   │   │   └── page.tsx            # Patient list
 │   │   ├── visits/
-│   │   │   └── page.tsx            # Visits page (empty state)
+│   │   │   ├── [id]/page.tsx       # Visit workspace (editor + AI)
+│   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
+│   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
-│   ├── api/chat/
-│   │   ├── history/route.ts        # GET conversation messages + pagination
-│   │   ├── route.ts                # DEPRECATED (410) — use /stream
-│   │   └── stream/route.ts         # SSE streaming + Zod + CSRF
-│   ├── auth/
-│   │   ├── callback/route.ts       # OAuth/email callback
-│   │   ├── login/page.tsx          # Login + forgot password
-│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
-│   │   └── register/page.tsx       # Registration
-│   ├── globals.css                 # Design system variables
-│   ├── layout.tsx                  # Root layout (fonts)
-│   └── page.tsx                    # Public landing page
+│   ├── api/
+│   │   ├── chat/                    # stream, history, deprecated route
+│   │   ├── labs/                    # GET/POST list, GET detail, POST review (stub)
+│   │   ├── patients/               # CRUD + documents + extraction
+│   │   └── visits/                  # CRUD + generate + scribe + transcribe + export
+│   ├── auth/                        # Login, register, onboarding, callback
+│   └── page.tsx                     # Public landing page
 ├── components/
-│   ├── chat/
-│   │   ├── chat-input.tsx          # Input + Deep Consult tooltip + shortcuts
-│   │   ├── chat-interface.tsx      # Main chat container
-│   │   └── message-bubble.tsx      # Markdown + rehype-sanitize + actions
-│   └── layout/
-│       └── sidebar.tsx             # Nav + gold accents + upgrade banner
-├── hooks/
-│   └── use-chat.ts                 # SSE streaming hook
+│   ├── chat/                        # Chat UI, biomarker bar, evidence badge
+│   ├── dashboard/                   # Dashboard search
+│   ├── labs/                        # Lab list, card, detail, upload, status badge
+│   ├── landing/                     # 12 landing page components
+│   ├── layout/                      # Sidebar + conversation list
+│   ├── patients/                    # Patient list, form, profile, documents, pre-chart
+│   ├── ui/                          # Button, dropdown, input, label, logomark, sonner
+│   └── visits/                      # Workspace, editor, IFM matrix, protocol, SOAP
+├── hooks/                           # Chat, dictation, audio, speech, visit stream
 ├── lib/
-│   ├── ai/anthropic.ts             # Claude client + system prompts
-│   ├── supabase/
-│   │   ├── client.ts               # Browser client
-│   │   ├── middleware.ts           # Auth middleware
-│   │   └── server.ts              # Server client + standalone service client
-│   └── validations/
-│       └── chat.ts                 # Zod schemas
-├── middleware.ts                    # Root middleware
-└── types/database.ts               # Supabase types
+│   ├── ai/                          # Provider abstraction, Claude, prompts, parsing
+│   ├── api/                         # Shared CSRF validation
+│   ├── editor/                      # Tiptap template section extension
+│   ├── labs/                        # Biomarker normalization, flag mapping
+│   ├── templates/                   # 4 encounter templates + conversion
+│   ├── storage/                     # Patient documents + lab reports storage
+│   ├── supabase/                    # Client, server, middleware, cached queries
+│   └── validations/                 # Zod schemas (chat, visit, patient, document, lab)
+├── middleware.ts                     # Root middleware
+└── types/database.ts                # Supabase types
 ```
 
 ## Database Schema
 
-12 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
+13 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
 
 **Core:** practitioners, patients, conversations, messages
-**Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded)
+**Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking
 
@@ -223,20 +231,26 @@ src/
 
 See [`docs/API.md`](docs/API.md) for the complete reference.
 
-### Primary Endpoint
+### Key Endpoints
 
-**`POST /api/chat/stream`** — Send a clinical query and receive SSE-streamed response.
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/chat/stream` | POST | SSE-streamed clinical chat with Claude |
+| `/api/labs` | GET/POST | List labs / upload lab report PDF |
+| `/api/labs/[id]` | GET | Lab report detail with biomarkers |
+| `/api/patients` | GET/POST | List patients / create patient |
+| `/api/patients/[id]` | GET/PATCH/DELETE | Get / update / archive patient |
+| `/api/patients/[id]/documents` | GET/POST | List / upload patient documents |
+| `/api/patients/[id]/documents/[docId]` | GET/DELETE | Get / delete document |
+| `/api/patients/[id]/documents/[docId]/extract` | POST | AI document extraction |
+| `/api/visits` | GET/POST | List visits / create visit |
+| `/api/visits/[id]` | GET/PATCH | Get / update visit |
+| `/api/visits/[id]/generate` | POST | SSE SOAP/IFM/Protocol generation |
+| `/api/visits/[id]/transcribe` | POST | Audio → Whisper transcription |
+| `/api/visits/[id]/scribe` | POST | AI Scribe (transcript → sections) |
+| `/api/visits/[id]/export` | POST | Export visit document |
 
-Validated with Zod. Protected by CSRF origin checking. Audit-logged with IP + user agent.
-
-```json
-{
-  "message": "Evidence-based interventions for elevated zonulin?",
-  "conversation_id": "uuid (optional)",
-  "patient_id": "uuid (optional)",
-  "is_deep_consult": false
-}
-```
+All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP + user agent.
 
 ## Design System
 

@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getAnthropicClient, CLINICAL_CHAT_SYSTEM_PROMPT, MODELS } from "@/lib/ai/anthropic";
+import { streamCompletion, MODELS } from "@/lib/ai/provider";
+import { CLINICAL_CHAT_SYSTEM_PROMPT } from "@/lib/ai/anthropic";
 import { chatMessageSchema } from "@/lib/validations/chat";
+import { validateCsrf } from "@/lib/api/csrf";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,16 +17,8 @@ function jsonError(message: string, status: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    // CSRF: Validate origin header matches our app's origin exactly.
-    // We compare parsed origins (scheme + host + port) to prevent
-    // prefix-matching bypasses (e.g. "http://localhost:300" matching
-    // "http://localhost:3000").
-    const origin = request.headers.get("origin");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const appOrigin = new URL(appUrl).origin;
-    if (origin && origin !== appOrigin) {
-      return jsonError("Forbidden", 403);
-    }
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
 
     const supabase = await createClient();
     const serviceClient = createServiceClient();
@@ -84,6 +78,7 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get("user-agent") || "unknown";
 
     // Get or create conversation
+    const model = is_deep_consult ? MODELS.advanced : MODELS.standard;
     let convId = conversation_id;
     if (!convId) {
       const { data: newConv, error: convError } = await supabase
@@ -93,7 +88,7 @@ export async function POST(request: NextRequest) {
           patient_id: patient_id || null,
           title: message.slice(0, 100),
           is_deep_consult,
-          model_used: is_deep_consult ? MODELS.advanced : MODELS.standard,
+          model_used: model,
         })
         .select()
         .single();
@@ -144,22 +139,9 @@ export async function POST(request: NextRequest) {
         content: m.content as string,
       }));
 
-    // Stream from Anthropic
-    const anthropic = getAnthropicClient();
-    const model = is_deep_consult ? MODELS.advanced : MODELS.standard;
-
-    const stream = await anthropic.messages.stream({
-      model,
-      max_tokens: is_deep_consult ? 4096 : 2048,
-      system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext,
-      messages,
-    });
-
-    // Create a ReadableStream that sends SSE
+    // Stream response
     const encoder = new TextEncoder();
     let fullContent = "";
-    let inputTokens = 0;
-    let outputTokens = 0;
 
     const readable = new ReadableStream({
       async start(controller) {
@@ -171,30 +153,24 @@ export async function POST(request: NextRequest) {
             )
           );
 
-          for await (const event of stream) {
-            if (event.type === "content_block_delta") {
-              const delta = event.delta;
-              if ("text" in delta) {
-                fullContent += delta.text;
+          const usage = await streamCompletion(
+            {
+              model,
+              maxTokens: is_deep_consult ? 4096 : 2048,
+              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext,
+              messages,
+            },
+            {
+              onText(text) {
+                fullContent += text;
                 controller.enqueue(
                   encoder.encode(
-                    `data: ${JSON.stringify({ type: "text_delta", text: delta.text })}\n\n`
+                    `data: ${JSON.stringify({ type: "text_delta", text })}\n\n`
                   )
                 );
-              }
-            } else if (event.type === "message_start") {
-              inputTokens = event.message.usage?.input_tokens || 0;
-            } else if (event.type === "message_delta") {
-              if ("usage" in event) {
-                outputTokens = (event.usage as { output_tokens: number })?.output_tokens || 0;
-              }
+              },
             }
-          }
-
-          // Get final usage from stream
-          const finalMessage = await stream.finalMessage();
-          inputTokens = finalMessage.usage.input_tokens;
-          outputTokens = finalMessage.usage.output_tokens;
+          );
 
           // Save assistant message
           const { data: savedMessage } = await supabase
@@ -204,8 +180,8 @@ export async function POST(request: NextRequest) {
               role: "assistant" as const,
               content: fullContent,
               citations: [],
-              input_tokens: inputTokens,
-              output_tokens: outputTokens,
+              input_tokens: usage.inputTokens,
+              output_tokens: usage.outputTokens,
             })
             .select()
             .single();
@@ -220,8 +196,8 @@ export async function POST(request: NextRequest) {
             user_agent: userAgent,
             detail: {
               model,
-              input_tokens: inputTokens,
-              output_tokens: outputTokens,
+              input_tokens: usage.inputTokens,
+              output_tokens: usage.outputTokens,
               is_deep_consult,
               has_patient_context: !!patient_id,
             },
@@ -233,7 +209,7 @@ export async function POST(request: NextRequest) {
               `data: ${JSON.stringify({
                 type: "message_complete",
                 message_id: savedMessage?.id,
-                usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+                usage: { input_tokens: usage.inputTokens, output_tokens: usage.outputTokens },
                 queries_remaining:
                   practitioner.subscription_tier === "free"
                     ? Math.max(0, 2 - (practitioner.daily_query_count + 1))

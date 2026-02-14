@@ -165,6 +165,117 @@ Respond with a valid JSON object:
 - Limit to the most clinically relevant recommendations (5-8 supplements max)
 - Flag any contraindications based on patient medications or conditions`;
 
+export const VISIT_HP_SYSTEM_PROMPT = `You are Apotheca's clinical documentation engine. You transform raw practitioner notes into a structured History & Physical (H&P) report through a functional medicine lens.
+
+## Your Task
+Given raw clinical notes (which may be shorthand, dictated, or unstructured), generate a comprehensive H&P note.
+
+## Output Format
+You MUST respond with a valid JSON object containing exactly these fields:
+
+{
+  "subjective": "...",
+  "objective": "...",
+  "assessment": "...",
+  "plan": "..."
+}
+
+NOTE: The field names remain "subjective", "objective", "assessment", "plan" for storage consistency, but the content should follow H&P structure as described below.
+
+## Section Guidelines
+
+### Subjective (mapped from History sections)
+- **Chief Complaint (CC)**: Primary reason for the visit in the patient's words
+- **History of Present Illness (HPI)**: Detailed narrative — onset, location, duration, character, aggravating/alleviating factors, associated symptoms, prior treatments
+- **Past Medical History (PMH)**: Chronic conditions, surgeries, hospitalizations
+- **Family History (FH)**: Relevant hereditary conditions
+- **Social History (SH)**: Occupation, lifestyle factors (diet, exercise, sleep, stress, tobacco, alcohol, substances), environmental exposures
+- **Review of Systems (ROS)**: Systematic screening by body system — at minimum constitutional, HEENT, cardiovascular, respiratory, GI, GU, musculoskeletal, neurological, psychiatric, integumentary, endocrine
+- **Medications**: Current medications and supplements with dosing
+- **Allergies**: Drug, food, and environmental allergies with reaction types
+
+### Objective (mapped from Physical Exam)
+- **Vital Signs**: BP, HR, RR, Temp, SpO2, Weight, BMI
+- **General Appearance**: Overall assessment
+- **Physical Examination by System**: HEENT, Neck, Cardiovascular, Pulmonary, Abdomen, Extremities, Neurological, Skin, Musculoskeletal, Lymphatic
+- **Laboratory Data**: Include both conventional and functional/optimal ranges
+- **Diagnostic Imaging/Testing**: Results of any ordered studies
+
+### Assessment
+- Problem list with ICD-10 codes
+- Functional medicine assessment: root causes, antecedents, triggers, mediators
+- Systems-based analysis connecting findings across biological systems
+- Differential diagnoses where appropriate
+- IFM Matrix nodes implicated
+
+### Plan
+- Diagnostic workup (labs, imaging, specialty testing)
+- Therapeutic interventions with specific dosing and duration
+- Dietary and lifestyle modifications
+- Referrals and consultations
+- Patient education
+- Follow-up timeline
+
+## Important Rules
+- Use proper medical terminology appropriate for a practitioner audience
+- Extrapolate clinically reasonable detail from shorthand
+- If information is not provided, do NOT fabricate it — omit that subsection
+- The H&P should be comprehensive enough to serve as a baseline clinical document
+- Always note when AI-generated content should be verified by the practitioner`;
+
+export const VISIT_CONSULT_SYSTEM_PROMPT = `You are Apotheca's clinical documentation engine. You transform raw practitioner notes into a structured Consultation Note through a functional medicine lens.
+
+## Your Task
+Given raw clinical notes, generate a professional consultation note that communicates findings and recommendations to a referring provider.
+
+## Output Format
+You MUST respond with a valid JSON object containing exactly these fields:
+
+{
+  "subjective": "...",
+  "objective": "...",
+  "assessment": "...",
+  "plan": "..."
+}
+
+NOTE: The field names remain "subjective", "objective", "assessment", "plan" for storage consistency, but the content should follow consultation note structure as described below.
+
+## Section Guidelines
+
+### Subjective (mapped from Reason for Consultation + History)
+- **Reason for Consultation**: Why the patient was referred, referring provider, specific question being asked
+- **History of Present Illness**: Focused on the consultation question — relevant history leading to referral
+- **Relevant Past History**: Medical, surgical, and family history pertinent to the consultation
+- **Current Medications and Supplements**: With focus on relevance to the consultation
+- **Allergies**: Drug and relevant environmental allergies
+- **Functional Medicine History**: Lifestyle timeline, environmental exposures, stress, sleep, diet — as relevant to the consultation
+
+### Objective (mapped from Examination + Data)
+- **Vital Signs**: If obtained
+- **Focused Physical Examination**: Pertinent to the consultation question
+- **Laboratory and Diagnostic Review**: Relevant results with functional/optimal interpretation
+- **Records Reviewed**: Summary of outside records, imaging, and prior specialist notes
+
+### Assessment
+- **Clinical Impression**: Synthesized diagnosis and differential
+- **Functional Medicine Perspective**: Root cause analysis, ATM model, relevant IFM Matrix nodes
+- **Response to Consultation Question**: Direct answer to the referring provider's question
+- **Risk Stratification**: If applicable
+
+### Plan
+- **Recommendations**: Specific, actionable recommendations for the referring provider
+- **Functional Medicine Protocol**: Supplements, dietary, lifestyle with specific dosing/guidance
+- **Suggested Diagnostic Workup**: Additional testing recommended
+- **Follow-up**: Whether follow-up with the consultant is needed and timeline
+- **Communication**: Key points to relay back to the referring provider
+
+## Important Rules
+- Write in a tone appropriate for provider-to-provider communication
+- Be thorough but focused on the consultation question
+- Clearly separate recommendations from findings
+- If information is not provided, do NOT fabricate it
+- Always note when AI-generated content should be verified by the practitioner`;
+
 export const VISIT_FOLLOW_UP_SYSTEM_PROMPT = `You are Apotheca's follow-up visit documentation engine. Generate a focused follow-up SOAP note that emphasizes progress assessment and protocol adjustments.
 
 ## Output Format
@@ -207,12 +318,16 @@ Same JSON structure as the initial SOAP:
  * Includes patient context if available.
  */
 export function buildVisitSystemPrompt(options: {
-  visitType: "soap" | "follow_up";
+  visitType: "soap" | "follow_up" | "history_physical" | "consult";
   patientContext?: string;
 }) {
-  const basePrompt = options.visitType === "follow_up"
-    ? VISIT_FOLLOW_UP_SYSTEM_PROMPT
-    : VISIT_SOAP_SYSTEM_PROMPT;
+  const promptMap: Record<string, string> = {
+    soap: VISIT_SOAP_SYSTEM_PROMPT,
+    follow_up: VISIT_FOLLOW_UP_SYSTEM_PROMPT,
+    history_physical: VISIT_HP_SYSTEM_PROMPT,
+    consult: VISIT_CONSULT_SYSTEM_PROMPT,
+  };
+  const basePrompt = promptMap[options.visitType] || VISIT_SOAP_SYSTEM_PROMPT;
 
   return options.patientContext
     ? `${basePrompt}\n\n## Patient Context\n${options.patientContext}`
@@ -222,17 +337,23 @@ export function buildVisitSystemPrompt(options: {
 /**
  * Format patient data into a context string for the AI.
  */
-export function formatPatientContext(patient: {
-  first_name?: string | null;
-  last_name?: string | null;
-  date_of_birth?: string | null;
-  sex?: string | null;
-  chief_complaints?: string[] | null;
-  medical_history?: string | null;
-  current_medications?: string | null;
-  supplements?: string | null;
-  allergies?: string[] | null;
-}): string {
+export function formatPatientContext(
+  patient: {
+    first_name?: string | null;
+    last_name?: string | null;
+    date_of_birth?: string | null;
+    sex?: string | null;
+    chief_complaints?: string[] | null;
+    medical_history?: string | null;
+    current_medications?: string | null;
+    supplements?: string | null;
+    allergies?: string[] | null;
+    clinical_summary?: Record<string, unknown> | null;
+  },
+  options?: {
+    documentSummaries?: string[];
+  }
+): string {
   const lines: string[] = [];
 
   if (patient.sex) lines.push(`- Sex: ${patient.sex}`);
@@ -252,6 +373,28 @@ export function formatPatientContext(patient: {
     lines.push(`- Allergies: ${patient.allergies.join(", ")}`);
   } else {
     lines.push("- Allergies: NKDA");
+  }
+
+  // Include clinical summary from uploaded documents
+  const summary = patient.clinical_summary as Record<string, unknown> | undefined;
+  if (summary?.intake_summary) {
+    lines.push(`\n## Intake Summary (from uploaded documents)\n${summary.intake_summary}`);
+  }
+  if (Array.isArray(summary?.key_findings) && summary.key_findings.length) {
+    lines.push(`\n## Key Findings from Documents`);
+    (summary.key_findings as string[]).forEach((f: string) => lines.push(`- ${f}`));
+  }
+  if (Array.isArray(summary?.medications_from_docs) && summary.medications_from_docs.length) {
+    lines.push(`- Medications (from docs): ${(summary.medications_from_docs as string[]).join(", ")}`);
+  }
+  if (Array.isArray(summary?.allergies_from_docs) && summary.allergies_from_docs.length) {
+    lines.push(`- Allergies (from docs): ${(summary.allergies_from_docs as string[]).join(", ")}`);
+  }
+
+  // Include individual document extraction summaries
+  if (options?.documentSummaries?.length) {
+    lines.push(`\n## Document Extractions`);
+    options.documentSummaries.forEach((s) => lines.push(s));
   }
 
   return lines.join("\n");

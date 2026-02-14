@@ -2,6 +2,96 @@
 
 All notable changes to Apotheca will be documented in this file.
 
+## [0.9.0] - 2026-02-14
+
+### Added — Lab Reports in Patient Documents
+- **Unified document list**: Patient Documents tab now shows both uploaded documents and lab reports linked to the patient. Lab reports display with a green flask icon, lab vendor/test type metadata, and a "View" link to `/labs/[id]`.
+- **Merged rendering**: `document-list.tsx` uses a discriminated union type (`UnifiedItem`) to merge `patient_documents` and `lab_reports` sorted by date descending.
+
+### Security — CSRF Protection (All Endpoints)
+- **Shared CSRF utility**: Created `src/lib/api/csrf.ts` with `validateCsrf()` function — validates `Origin` header against `NEXT_PUBLIC_APP_URL`.
+- **Applied to all 13 mutating handlers** across 11 route files (POST/PATCH/DELETE). Previously only `/api/chat/stream` had CSRF protection.
+
+### Changed
+- **IFM Matrix editing**: Added inline editing, portal-based modal (`ifm-node-modal.tsx`), and drag-and-drop reordering via `@dnd-kit/core`. Visit workspace wired with `handleMatrixUpdate` callback to persist changes via PATCH API.
+
+## [0.8.0] - 2026-02-14
+
+### Added — Labs Module
+- **Lab upload page**: `/labs` — upload lab report PDFs with vendor/test type selection and optional patient linking. Drag-and-drop file upload zone.
+- **Lab detail page**: `/labs/[id]` — full lab report detail with biomarker results, dual-range bars, signed PDF viewer, and status polling.
+- **Lab list**: Searchable/filterable lab list with status badges (uploading, parsing, complete, error), vendor labels, and patient links.
+- **Lab API endpoints**: `GET/POST /api/labs`, `GET /api/labs/[id]`, `POST /api/labs/[id]/review` (stub).
+- **Lab parsing pipeline**: Claude Vision extracts biomarkers from PDF → normalizes against functional references → calculates flags.
+- **Biomarker normalization**: `src/lib/labs/normalize-biomarkers.ts` — matches extracted biomarkers to reference ranges, calculates conventional + functional flags.
+- **Flag mapping**: `src/lib/labs/flag-mapping.ts` — maps DB flags to component display values.
+- **Lab storage**: `src/lib/storage/lab-reports.ts` — Supabase Storage integration for lab PDFs.
+
+### Added — Multi-Provider AI Abstraction
+- **Provider layer**: `src/lib/ai/provider.ts` — unified `createCompletion()` and `streamCompletion()` functions with automatic failover. OpenAI primary, Anthropic for vision features, MiniMax as fallback.
+- **ANTHROPIC_MODELS constant**: Features always routed through Anthropic API (document vision, lab PDF parsing) regardless of primary provider.
+- **Model routing**: `MODELS` constant maps logical names (standard, deep_consult, vision, scribe) to provider-specific model IDs.
+
+### Added — Dashboard & UI Components
+- **Dashboard search**: `src/components/dashboard/dashboard-search.tsx` — unified search across patients, visits, and labs.
+- **Sidebar refactor**: Extracted `sidebar-conversation.tsx` for conversation list management.
+- **UI components**: `dropdown-menu.tsx` (Radix UI), `input.tsx`, `label.tsx`, `sonner.tsx` (toast notifications).
+
+## [0.7.0] - 2026-02-13
+
+### Added — UI/UX Scalability
+- **Reusable Button component**: `src/components/ui/button.tsx` — type-safe with variants (default, outline, ghost, gold, destructive).
+- **Utility function**: `src/lib/utils.ts` — `cn()` for merging Tailwind classes.
+- **Sidebar refactor**: Replaced ad-hoc button styles with the new `Button` component.
+
+## [0.6.0] - 2026-02-13
+
+### Added — AI Scribe
+- **AI Scribe pipeline**: Record a provider-patient encounter → Whisper transcription → Claude assigns content to template sections → editor auto-populated. Two-step async pipeline with real-time status indicators.
+- **Scribe API endpoint**: `POST /api/visits/[id]/scribe` — accepts transcript, uses Claude to parse into structured section content based on the visit's encounter template. Returns `{ sections: Record<string, string> }`.
+- **Scribe prompts**: `buildScribeSystemPrompt()` dynamically generates a Claude prompt from any template's section definitions. Handles conversational language → clinical documentation conversion with rules for patient vs provider attribution.
+- **Editor population**: `templateToPopulatedContent()` builds Tiptap JSON with sections pre-filled from scribe output. Auto-expands populated sections, leaves empty sections collapsed.
+- **Editor dictation hook**: `useEditorDictation` extended with `scribeRecording()` for the full scribe pipeline, `ScribeStatus` type (`idle` | `transcribing` | `assigning` | `done` | `error`), and `onScribeComplete` callback.
+- **Dictation bar redesign**: "Record" → "AI Scribe" (brand-colored with Sparkles icon), "Dictate" kept as secondary. Processing states shown during transcription and section assignment.
+
+## [0.5.0] - 2026-02-13
+
+### Added — Visits Module & Block Editor
+- **Clinical visits module**: Full visit lifecycle — create, edit, generate AI notes, export. Visit list with status badges, encounter type labels, and linked patient context.
+- **Block-based visit editor**: Tiptap-powered editor with custom `templateSection` nodes. Each section renders as a collapsible block with badge, heading, placeholder, and editable content area.
+- **4 encounter templates**: SOAP (9 sections), History & Physical (12 sections), Consultation (6 sections), Follow-up (6 sections). Each template defines section keys, headings, badges, placeholders, and default collapse state.
+- **Template system**: `src/lib/templates/` — `types.ts` (interfaces), `definitions.ts` (4 templates), `to-editor-content.ts` (template ↔ editor JSON ↔ text conversion utilities).
+- **Custom Tiptap extension**: `templateSection` node with React NodeView rendering collapsible sections styled to match the app's design system.
+- **Editor toolbar**: Minimal formatting toolbar (bold, italic, bullet list, ordered list).
+- **Voice input**: Web Speech API for live dictation (inserts at cursor), MediaRecorder + Whisper for full audio recording.
+- **Audio transcription**: `POST /api/visits/[id]/transcribe` — uploads audio to OpenAI Whisper, returns transcript text.
+- **Visit generation**: `POST /api/visits/[id]/generate` — SSE streaming endpoint that generates SOAP notes, IFM Matrix mapping, and evidence-based protocols from clinical notes.
+- **Visit export**: `POST /api/visits/[id]/export` — generates formatted clinical document export.
+- **New visit page**: `/visits/new` — select patient → select encounter type → launch editor. Includes "+ New Patient" quick-create modal.
+- **Visit workspace**: `/visits/[id]` — block editor + dictation bar + generate button → AI-generated SOAP/IFM/Protocol tabs.
+- **Patient quick-create modal**: Inline patient creation from new visit form (first name, last name, DOB, sex, chief complaints). Auto-selects created patient.
+
+### Added — Patient Management
+- **Patient list page**: `/patients` — searchable patient list with cards showing demographics, chief complaints, and recent visit info.
+- **Patient detail page**: `/patients/[id]` — full patient profile with demographics, medical history, medications, supplements, allergies, clinical summary.
+- **Patient form**: Create and edit patients with comprehensive fields (demographics, medical history, current medications, supplements, allergies).
+- **New patient page**: `/patients/new` — full patient creation form.
+- **Patient documents**: Upload, list, and manage patient documents (lab reports, intake forms, referral letters, imaging reports, prior records).
+- **Document extraction**: AI-powered document content extraction via `POST /api/patients/[id]/documents/[docId]/extract`. Uses Claude to extract and summarize clinical document content.
+- **Pre-chart view**: Pre-encounter patient summary with medical history, medications, recent documents, and AI-generated clinical summary.
+
+### Added — Infrastructure
+- **4 database migrations**: `001_initial_schema.sql`, `002_visits_status.sql` (visit_type, status, ai_protocol columns), `003_patient_documents.sql` (patient_documents table), `004_visit_template_content.sql` (template_content JSONB column).
+- **Visit prompts**: `buildVisitSystemPrompt()` for SOAP/H&P/Consult/Follow-up generation. IFM Matrix and Protocol system prompts.
+- **Zod validations**: `visit.ts` (create/update/generate visit schemas), `patient.ts` (create/update patient), `document.ts` (document upload/extraction).
+- **Patient document storage**: `src/lib/storage/patient-documents.ts` — Supabase Storage integration for encrypted document uploads.
+- **Clinical summary generation**: `src/lib/ai/clinical-summary.ts` — AI-powered patient clinical summary from medical history and documents.
+- **OpenAI Whisper integration**: `src/lib/ai/transcription.ts` — audio file transcription for voice input and AI Scribe.
+
+### Changed
+- **Visit empty state → full module**: `/visits` page upgraded from empty state placeholder to fully functional visit list with create/view/manage capabilities.
+- **Patient empty state → full module**: `/patients` page upgraded from empty state to searchable patient list with full CRUD.
+
 ## [0.4.0] - 2026-02-13
 
 ### Added

@@ -134,7 +134,7 @@ export function FeatureLab() {
   return (
     <section className="py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Text */}
           <ScrollReveal direction="left">
             <div>

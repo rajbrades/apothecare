@@ -2,9 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Stethoscope, RefreshCcw, ArrowLeft, User, Sparkles } from "lucide-react";
+import {
+  Sparkles, FileText, ChevronDown, User, Stethoscope,
+  ClipboardList, HeartPulse, UserCheck, Plus, Circle
+} from "lucide-react";
 import Link from "next/link";
-import { RawNotesInput } from "./raw-notes-input";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import type { VisitType } from "@/lib/validations/visit";
+import { PatientQuickCreate } from "@/components/patients/patient-quick-create";
+import { cn } from "@/lib/utils";
 
 interface PatientOption {
   id: string;
@@ -12,34 +25,35 @@ interface PatientOption {
   last_name: string | null;
 }
 
-export function NewVisitForm({ patients }: { patients: PatientOption[] }) {
+const ENCOUNTER_TYPES: { value: VisitType; label: string; icon: typeof ClipboardList }[] = [
+  { value: "soap", label: "SOAP Note", icon: ClipboardList },
+  { value: "follow_up", label: "Follow-up", icon: Stethoscope },
+  { value: "history_physical", label: "History & Physical", icon: HeartPulse },
+  { value: "consult", label: "Consult Note", icon: UserCheck },
+];
+
+export function NewVisitForm({ patients: initialPatients }: { patients: PatientOption[] }) {
   const router = useRouter();
-  const [visitType, setVisitType] = useState<"soap" | "follow_up">("soap");
+  const [visitType, setVisitType] = useState<VisitType>("soap");
   const [patientId, setPatientId] = useState<string>("");
-  const [chiefComplaint, setChiefComplaint] = useState("");
-  const [rawNotes, setRawNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showNewPatient, setShowNewPatient] = useState(false);
+  const [patients, setPatients] = useState<PatientOption[]>(initialPatients);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rawNotes.trim() && !chiefComplaint.trim()) {
-      setError("Enter a chief complaint or raw notes to continue.");
-      return;
-    }
+  const selectedType = ENCOUNTER_TYPES.find((t) => t.value === visitType)!;
 
+  const createAndNavigate = async (autoTranscribe: boolean) => {
     setSubmitting(true);
     setError("");
 
     try {
-      // Create the visit
       const res = await fetch("/api/visits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           visit_type: visitType,
           patient_id: patientId || null,
-          chief_complaint: chiefComplaint || null,
         }),
       });
 
@@ -49,154 +63,144 @@ export function NewVisitForm({ patients }: { patients: PatientOption[] }) {
       }
 
       const { visit } = await res.json();
-
-      // If raw notes exist, save them before navigating
-      if (rawNotes.trim()) {
-        await fetch(`/api/visits/${visit.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ raw_notes: rawNotes }),
-        });
-      }
-
-      // Navigate to the visit workspace
-      router.push(`/visits/${visit.id}${rawNotes.trim() ? "?generate=true" : ""}`);
-    } catch (err: any) {
-      setError(err.message);
+      router.push(`/visits/${visit.id}${autoTranscribe ? "?mode=transcribe" : ""}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setSubmitting(false);
     }
   };
 
+  const handlePatientCreated = (patient: { id: string; first_name: string | null; last_name: string | null }) => {
+    setPatients((prev) => [...prev, patient]);
+    setPatientId(patient.id);
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Back link */}
-      <Link
-        href="/visits"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to visits
-      </Link>
-
-      <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-1">
-        New Visit
-      </h1>
-      <p className="text-sm text-[var(--color-text-secondary)] mb-8">
-        Enter clinical notes and let AI generate a structured SOAP note with IFM mapping and protocol recommendations.
-      </p>
-
-      {/* Visit type selector */}
-      <div className="mb-6">
-        <label className="block text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-          Visit Type
-        </label>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => setVisitType("soap")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-[var(--radius-md)] border transition-all ${
-              visitType === "soap"
-                ? "border-[var(--color-brand-400)] bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
-                : "border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:border-[var(--color-border)]"
-            }`}
-          >
-            <Stethoscope className="w-4 h-4" />
-            SOAP Note
-          </button>
-          <button
-            type="button"
-            onClick={() => setVisitType("follow_up")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-[var(--radius-md)] border transition-all ${
-              visitType === "follow_up"
-                ? "border-[var(--color-gold-400)] bg-[var(--color-gold-50)] text-[var(--color-gold-700)] font-medium"
-                : "border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:border-[var(--color-border)]"
-            }`}
-          >
-            <RefreshCcw className="w-4 h-4" />
-            Follow-up
-          </button>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
+      {/* Title */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
+          New Visit
+        </h1>
+        <p className="text-sm text-[var(--color-text-secondary)] max-w-md">
+          Apotheca captures your visit and generates a structured clinical note with IFM mapping and protocol recommendations.
+        </p>
       </div>
 
-      {/* Patient selector */}
-      <div className="mb-6">
-        <label className="block text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-          Patient <span className="text-[var(--color-text-muted)] normal-case">(optional)</span>
-        </label>
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-          <select
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] outline-none text-[var(--color-text-primary)] focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all appearance-none"
-          >
-            <option value="">No patient selected</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {[p.first_name, p.last_name].filter(Boolean).join(" ") || "Unnamed"}
-              </option>
+      {/* Encounter type + Patient row */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+        {/* Encounter type dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-[220px] justify-between font-normal"
+            >
+              <div className="flex items-center gap-2">
+                <selectedType.icon className="w-4 h-4 text-[var(--color-brand-600)]" />
+                {selectedType.label}
+              </div>
+              <ChevronDown className="w-4 h-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[220px]">
+            {ENCOUNTER_TYPES.map((type) => (
+              <DropdownMenuItem
+                key={type.value}
+                onClick={() => setVisitType(type.value)}
+                className={cn(
+                  "gap-2",
+                  visitType === type.value && "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                )}
+              >
+                <type.icon className="w-4 h-4" />
+                {type.label}
+              </DropdownMenuItem>
             ))}
-          </select>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Patient selector + New Patient button */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+            <select
+              value={patientId}
+              onChange={(e) => setPatientId(e.target.value)}
+              className="pl-9 pr-8 py-2.5 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] outline-none text-[var(--color-text-primary)] focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all appearance-none min-w-[200px]"
+            >
+              <option value="">No patient</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {[p.first_name, p.last_name].filter(Boolean).join(" ") || "Unnamed"}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setShowNewPatient(true)}
+            variant="outline"
+            className="border-[var(--color-brand-200)] text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] gap-1.5"
+            title="Create new patient"
+          >
+            <Plus className="w-4 h-4" />
+            New
+          </Button>
         </div>
-        {patientId && (
-          <p className="text-[11px] text-[var(--color-brand-600)] mt-1">
-            Patient history, labs, and medications will be included as AI context.
-          </p>
-        )}
       </div>
 
-      {/* Chief complaint */}
-      <div className="mb-6">
-        <label className="block text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-          Chief Complaint
-        </label>
-        <input
-          type="text"
-          value={chiefComplaint}
-          onChange={(e) => setChiefComplaint(e.target.value)}
-          placeholder="e.g., Fatigue, brain fog, weight gain x 6 months"
-          maxLength={500}
-          className="w-full px-4 py-2.5 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all"
-        />
-      </div>
-
-      {/* Raw notes */}
-      <div className="mb-6">
-        <label className="block text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-          Clinical Notes
-        </label>
-        <RawNotesInput
-          value={rawNotes}
-          onChange={setRawNotes}
-          visitType={visitType}
+      {/* Action buttons — Transcribe + Type Notes */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          onClick={() => createAndNavigate(true)}
           disabled={submitting}
-        />
+          size="lg"
+          className="gap-2.5 rounded-full px-8"
+        >
+          <Sparkles className="w-5 h-5" />
+          AI Scribe
+        </Button>
+        <Button
+          onClick={() => createAndNavigate(false)}
+          disabled={submitting}
+          variant="secondary"
+          size="lg"
+          className="gap-2.5 rounded-full px-8"
+        >
+          <FileText className="w-5 h-5" />
+          Type Notes
+        </Button>
       </div>
+
+      {/* Patient context hint */}
+      {patientId && (
+        <p className="text-xs text-[var(--color-brand-600)] mb-4">
+          Patient history, documents, and pre-chart data will be included as AI context.
+        </p>
+      )}
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+        <div className="mb-4 px-4 py-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)] max-w-md">
           {error}
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Sparkles className="w-4 h-4" />
-          {submitting ? "Creating..." : rawNotes.trim() ? "Create & Generate SOAP" : "Create Visit"}
-        </button>
-        <Link
-          href="/visits"
-          className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-        >
-          Cancel
-        </Link>
-      </div>
-    </form>
+      {/* Back link */}
+      <Link
+        href="/visits"
+        className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mt-2"
+      >
+        Back to visits
+      </Link>
+
+      {/* Patient quick-create modal */}
+      <PatientQuickCreate
+        open={showNewPatient}
+        onClose={() => setShowNewPatient(false)}
+        onCreated={handlePatientCreated}
+      />
+    </div>
   );
 }

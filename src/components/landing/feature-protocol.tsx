@@ -33,7 +33,7 @@ export function FeatureProtocol() {
   return (
     <section className="py-20 md:py-28 bg-[var(--color-surface-secondary)]">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Mockup (left on desktop) */}
           <ScrollReveal direction="left" className="order-2 md:order-1">
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">

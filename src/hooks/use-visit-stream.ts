@@ -136,9 +136,12 @@ export function useVisitStream() {
       if (err.name === "AbortError") return;
       setState((prev) => ({
         ...prev,
-        isGenerating: false,
         error: err.message || "Generation failed",
       }));
+    } finally {
+      if (!abortRef.current?.signal.aborted) {
+        setState((prev) => ({ ...prev, isGenerating: false }));
+      }
     }
   }, []);
 

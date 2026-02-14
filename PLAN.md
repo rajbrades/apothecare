@@ -245,11 +245,25 @@ The client hook (`use-visit-stream.ts`) parses each section and updates the corr
 - Identify antecedents, triggers, and mediators
 
 **For Protocol:**
-- Use SOAP + IFM Matrix as context
+- Use SOAP + IFM Matrix as context + consider other matrices such as A4M 
 - Generate evidence-based recommendations across 4 categories
 - Include specific dosing, form, timing, and duration
 - Flag drug-supplement interactions
 - Cite evidence sources
+- Give user option to select specific brands (ie. Apex Energetics, Orthomolecular Products, Designs for Health, etc)
+- Consider API plug-in to make direct recommendations via. fullscript.com
+
+
+---
+
+---
+## Strategic Partnership Features (A4M/IFM)
+
+### Phase 2.5: The Institute Moat
+26. **RAG Update:** Add `source` filtering to `search_evidence` RAG pipeline.
+27. **Institute Mode:** Add toggle to UI to strictly strictly filter RAG by institute (e.g., A4M, IFM).
+28. **Attribution:** Update `EvidenceBadge` to display institute logos.
+29. **Partnership Pilot:** Launch dedicated landing page for first institute pilot.
 
 ---
 
@@ -257,7 +271,6 @@ The client hook (`use-visit-stream.ts`) parses each section and updates the corr
 
 - Telehealth-specific documentation fields
 - E/M coding assistance
-- Voice dictation / audio recording input
 - Visit templates library (custom practitioner templates)
 - Multi-visit trend analysis
 - Visit sharing / referral exports

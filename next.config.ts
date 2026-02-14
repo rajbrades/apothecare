@@ -30,6 +30,9 @@ const cspDirectives = [
   // Connect: self + Supabase (wildcard *.supabase.co covers any project ref)
   "connect-src 'self' https://*.supabase.co",
 
+  // Media: self + blob (for audio recording playback)
+  "media-src 'self' blob:",
+
   // No iframes of this site (HIPAA clickjacking protection)
   "frame-ancestors 'none'",
 
@@ -75,7 +78,7 @@ const securityHeaders = [
   {
     // Opt out of Topics API, etc.
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
+    value: "camera=(), microphone=(self), geolocation=()",
   },
 ];
 

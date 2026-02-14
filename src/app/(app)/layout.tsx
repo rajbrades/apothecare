@@ -45,7 +45,7 @@ export default async function AppLayout({
         recentConversations={recentConversations}
         recentVisits={recentVisits}
       />
-      <main className="ml-[var(--sidebar-width)]">{children}</main>
+      <main className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>
     </div>
   );
 }

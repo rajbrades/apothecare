@@ -14,8 +14,10 @@ export function ChatInterface() {
   const router = useRouter();
   const initialQuery = searchParams.get("q");
   const convId = searchParams.get("id");
+  const initialPatientId = searchParams.get("patient_id");
+  const initialDeepConsult = searchParams.get("deep_consult") === "true";
 
-  const [isDeepConsult, setIsDeepConsult] = useState(false);
+  const [isDeepConsult, setIsDeepConsult] = useState(initialDeepConsult);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
@@ -35,6 +37,7 @@ export function ChatInterface() {
     clearMessages,
   } = useChat({
     conversationId: convId,
+    patientId: initialPatientId,
     isDeepConsult,
     onConversationCreated: (id) => {
       window.history.replaceState(null, "", `/chat?id=${id}`);
@@ -132,7 +135,7 @@ export function ChatInterface() {
               Ask any clinical question — grounded in functional medicine evidence
             </p>
 
-            <div className="w-full max-w-2xl grid grid-cols-2 gap-2.5">
+            <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {suggestedQuestions.map((q) => (
                 <button
                   key={q.text}

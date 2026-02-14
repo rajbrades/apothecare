@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getAnthropicClient, MODELS } from "@/lib/ai/anthropic";
+import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import {
   buildVisitSystemPrompt,
   formatPatientContext,
@@ -8,6 +8,7 @@ import {
   VISIT_PROTOCOL_SYSTEM_PROMPT,
 } from "@/lib/ai/visit-prompts";
 import { generateVisitSchema } from "@/lib/validations/visit";
+import { validateCsrf } from "@/lib/api/csrf";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -24,6 +25,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const { id: visitId } = await params;
     const supabase = await createClient();
     const serviceClient = createServiceClient();
@@ -42,7 +46,7 @@ export async function POST(
     // Fetch visit
     const { data: visit } = await supabase
       .from("visits")
-      .select("*, patients(first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies)")
+      .select("*, patients(first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, clinical_summary)")
       .eq("id", visitId)
       .eq("practitioner_id", practitioner.id)
       .single();
@@ -56,8 +60,25 @@ export async function POST(
 
     const { raw_notes, sections } = parsed.data;
 
-    // Build patient context
-    const patientContext = visit.patients ? formatPatientContext(visit.patients) : undefined;
+    // Build patient context with document summaries
+    let documentSummaries: string[] = [];
+    if (visit.patient_id) {
+      const { data: documents } = await supabase
+        .from("patient_documents")
+        .select("extraction_summary, document_type, title")
+        .eq("patient_id", visit.patient_id)
+        .eq("status", "extracted")
+        .order("uploaded_at", { ascending: false })
+        .limit(10);
+      if (documents?.length) {
+        documentSummaries = documents
+          .filter((d: { extraction_summary: string | null }) => d.extraction_summary)
+          .map((d: { document_type: string; title: string | null; extraction_summary: string | null }) => `[${d.document_type}: ${d.title || "Untitled"}]\n${d.extraction_summary}`);
+      }
+    }
+    const patientContext = visit.patients
+      ? formatPatientContext(visit.patients, { documentSummaries })
+      : undefined;
 
     // Save raw notes to the visit
     await supabase
@@ -65,7 +86,6 @@ export async function POST(
       .update({ raw_notes })
       .eq("id", visitId);
 
-    const anthropic = getAnthropicClient();
     const model = MODELS.standard;
     const encoder = new TextEncoder();
 
@@ -86,37 +106,39 @@ export async function POST(
             });
 
             let soapContent = "";
-            const soapStream = await anthropic.messages.stream({
-              model,
-              max_tokens: 4096,
-              system: soapPrompt,
-              messages: [
-                {
-                  role: "user",
-                  content: `Generate a structured SOAP note from these clinical notes:\n\n${raw_notes}${
-                    visit.chief_complaint ? `\n\nChief Complaint: ${visit.chief_complaint}` : ""
-                  }`,
+            await streamCompletion(
+              {
+                model,
+                maxTokens: 4096,
+                system: soapPrompt,
+                messages: [
+                  {
+                    role: "user",
+                    content: `Generate a structured ${visit.visit_type === "history_physical" ? "History & Physical" :
+                        visit.visit_type === "consult" ? "Consultation Note" :
+                          visit.visit_type === "follow_up" ? "Follow-up SOAP note" :
+                            "SOAP note"
+                      } from these clinical notes:\n\n${raw_notes}${visit.chief_complaint ? `\n\nChief Complaint: ${visit.chief_complaint}` : ""
+                      }`,
+                  },
+                ],
+              },
+              {
+                onText(text) {
+                  soapContent += text;
+                  send({ section: "soap", status: "streaming", text });
                 },
-              ],
-            });
-
-            for await (const event of soapStream) {
-              if (event.type === "content_block_delta" && "text" in event.delta) {
-                soapContent += event.delta.text;
-                send({ section: "soap", status: "streaming", text: event.delta.text });
               }
-            }
+            );
 
             // Parse SOAP JSON
             let soapData: Record<string, string> = {};
             try {
-              // Extract JSON from potential markdown code blocks
               const jsonMatch = soapContent.match(/\{[\s\S]*\}/);
               if (jsonMatch) {
                 soapData = JSON.parse(jsonMatch[0]);
               }
             } catch {
-              // If parsing fails, use the raw content as the full note
               soapData = { subjective: soapContent };
             }
 
@@ -139,24 +161,25 @@ export async function POST(
               send({ section: "ifm_matrix", status: "generating" });
 
               let matrixContent = "";
-              const matrixStream = await anthropic.messages.stream({
-                model,
-                max_tokens: 3000,
-                system: VISIT_IFM_MATRIX_SYSTEM_PROMPT,
-                messages: [
-                  {
-                    role: "user",
-                    content: `Map these SOAP note findings to the IFM Matrix:\n\n${JSON.stringify(soapData, null, 2)}`,
+              await streamCompletion(
+                {
+                  model,
+                  maxTokens: 3000,
+                  system: VISIT_IFM_MATRIX_SYSTEM_PROMPT,
+                  messages: [
+                    {
+                      role: "user",
+                      content: `Map these SOAP note findings to the IFM Matrix:\n\n${JSON.stringify(soapData, null, 2)}`,
+                    },
+                  ],
+                },
+                {
+                  onText(text) {
+                    matrixContent += text;
+                    send({ section: "ifm_matrix", status: "streaming", text });
                   },
-                ],
-              });
-
-              for await (const event of matrixStream) {
-                if (event.type === "content_block_delta" && "text" in event.delta) {
-                  matrixContent += event.delta.text;
-                  send({ section: "ifm_matrix", status: "streaming", text: event.delta.text });
                 }
-              }
+              );
 
               let matrixData = {};
               try {
@@ -177,26 +200,26 @@ export async function POST(
               send({ section: "protocol", status: "generating" });
 
               let protocolContent = "";
-              const protocolStream = await anthropic.messages.stream({
-                model,
-                max_tokens: 4096,
-                system: VISIT_PROTOCOL_SYSTEM_PROMPT,
-                messages: [
-                  {
-                    role: "user",
-                    content: `Generate evidence-based protocol recommendations based on this clinical assessment:\n\nSOAP Note:\n${JSON.stringify(soapData, null, 2)}${
-                      patientContext ? `\n\nPatient Context:\n${patientContext}` : ""
-                    }`,
+              await streamCompletion(
+                {
+                  model,
+                  maxTokens: 4096,
+                  system: VISIT_PROTOCOL_SYSTEM_PROMPT,
+                  messages: [
+                    {
+                      role: "user",
+                      content: `Generate evidence-based protocol recommendations based on this clinical assessment:\n\nSOAP Note:\n${JSON.stringify(soapData, null, 2)}${patientContext ? `\n\nPatient Context:\n${patientContext}` : ""
+                        }`,
+                    },
+                  ],
+                },
+                {
+                  onText(text) {
+                    protocolContent += text;
+                    send({ section: "protocol", status: "streaming", text });
                   },
-                ],
-              });
-
-              for await (const event of protocolStream) {
-                if (event.type === "content_block_delta" && "text" in event.delta) {
-                  protocolContent += event.delta.text;
-                  send({ section: "protocol", status: "streaming", text: event.delta.text });
                 }
-              }
+              );
 
               let protocolData = {};
               try {
@@ -235,8 +258,9 @@ export async function POST(
           controller.close();
         } catch (err) {
           console.error("Visit generation stream error:", err);
+          const errorMessage = err instanceof Error ? err.message : "Generation interrupted";
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: "Generation interrupted" })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: errorMessage })}\n\n`)
           );
           controller.close();
         }

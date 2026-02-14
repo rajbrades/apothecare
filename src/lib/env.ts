@@ -25,8 +25,12 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: requiredString,
   SUPABASE_SERVICE_ROLE_KEY: requiredString,
 
-  // ── Anthropic ─────────────────────────────────────────────────────────
-  ANTHROPIC_API_KEY: z.string().optional(),
+  // ── Anthropic / MiniMax ──────────────────────────────────────────────
+  ANTHROPIC_API_KEY: z.string().trim().optional(),
+  MINIMAX_API_KEY: z.string().trim().optional(),
+
+  // ── OpenAI (Whisper transcription) ───────────────────────────────────
+  OPENAI_API_KEY: z.string().trim().optional(),
 
   // ── Stripe ────────────────────────────────────────────────────────────
   STRIPE_SECRET_KEY: z.string().optional(),

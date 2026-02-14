@@ -173,7 +173,7 @@ export default function OnboardingPage() {
                 <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   License Type *
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {licenseOptions.map((opt) => (
                     <button
                       key={opt.value}
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
 
               {/* License Number + State */}
               {licenseType && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                       License Number

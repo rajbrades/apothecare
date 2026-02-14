@@ -1,6 +1,6 @@
 # Apotheca — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 13, 2026.
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 
 ---
 
@@ -60,12 +60,103 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 13, 2026.
 
 ---
 
+## Clinical Visits Module ✅ COMPLETE
+
+- [x] **Feature:** Visit list page — searchable visit list with status badges, encounter types, linked patients
+- [x] **Feature:** New visit page — select patient, select encounter type, launch editor
+- [x] **Feature:** Visit workspace — block editor + dictation + generate flow + SOAP/IFM/Protocol tabs
+- [x] **Feature:** Block-based editor — Tiptap with custom `templateSection` nodes (collapsible sections with badges, placeholders)
+- [x] **Feature:** 4 encounter templates — SOAP (9 sections), H&P (12 sections), Consult (6 sections), Follow-up (6 sections)
+- [x] **Feature:** Visit generation — SSE streaming SOAP notes, IFM Matrix mapping, protocol recommendations
+- [x] **Feature:** Visit export — formatted clinical document export
+- [x] **Feature:** Voice input — Web Speech API for live dictation, MediaRecorder for audio recording
+- [x] **Feature:** Audio transcription — OpenAI Whisper integration for recorded audio
+- [x] **Feature:** AI Scribe — record encounter → Whisper transcription → Claude section assignment → auto-populate editor
+- [x] **Feature:** Patient quick-create modal — inline patient creation from new visit form
+- [x] **DB:** Migration 002 — visit_type, status, ai_protocol columns
+- [x] **DB:** Migration 004 — template_content JSONB column for block editor persistence
+
+## Patient Management ✅ COMPLETE
+
+- [x] **Feature:** Patient list page — searchable patient cards with demographics and chief complaints
+- [x] **Feature:** Patient detail page — full profile with medical history, medications, supplements, allergies
+- [x] **Feature:** Patient create/edit form — comprehensive demographics and medical fields
+- [x] **Feature:** Patient documents — upload, list, and manage clinical documents (lab reports, intake forms, referral letters, imaging, prior records)
+- [x] **Feature:** Document extraction — AI-powered content extraction and summarization via Claude
+- [x] **Feature:** Pre-chart view — pre-encounter patient summary with history, medications, documents
+- [x] **DB:** Migration 003 — patient_documents table
+
+---
+
+## Labs Module ✅ COMPLETE
+
+- [x] **Feature:** Lab upload page — drag-and-drop PDF upload with vendor/test type/patient selection
+- [x] **Feature:** Lab detail page — biomarker results with dual-range bars, signed PDF viewer, status polling
+- [x] **Feature:** Lab list — searchable/filterable with status badges, vendor labels, patient links
+- [x] **Feature:** Lab API — `GET/POST /api/labs`, `GET /api/labs/[id]`, `POST /api/labs/[id]/review` (stub)
+- [x] **Feature:** Lab parsing pipeline — Claude Vision PDF extraction → biomarker normalization → flag calculation
+- [x] **Feature:** Biomarker normalization — reference matching, conventional + functional flag computation
+- [x] **Feature:** Lab reports in patient Documents tab — unified display merging both data sources
+
+## Multi-Provider AI ✅ COMPLETE
+
+- [x] **Feature:** Provider abstraction layer — `createCompletion()` + `streamCompletion()` with automatic failover
+- [x] **Feature:** OpenAI primary, Anthropic for vision features, MiniMax as fallback
+- [x] **Feature:** `ANTHROPIC_MODELS` constant for features always using Anthropic API
+
+## IFM Matrix Editing ✅ COMPLETE
+
+- [x] **Feature:** Inline node editing — click to edit findings directly
+- [x] **Feature:** Portal-based modal for detailed node editing
+- [x] **Feature:** Drag-and-drop reordering via `@dnd-kit/core`
+- [x] **Feature:** Visit workspace wiring — `handleMatrixUpdate` persists via PATCH API
+
+## Security Hardening (Partial)
+
+- [x] **Security:** CSRF protection on all 13 mutating endpoints (shared `validateCsrf()` utility)
+- [ ] **Security:** Rate limiting on AI endpoints (unbounded cost exposure)
+- [ ] **Security:** Filename sanitization on storage paths
+- [ ] **Security:** Search parameter escaping for PostgREST
+
+## UI/UX Scalability Task List (Ongoing)
+
+- [x] **Refactor:** Create reusable `Button` component
+- [x] **Refactor:** Update Sidebar to use `Button` component
+- [x] **Refactor:** Update `NewVisitForm` to use `Button` component
+- [x] **Refactor:** Create reusable `Input` & `Label` components
+- [x] **Refactor:** Create reusable `DropdownMenu` component (Radix UI)
+- [x] **Refactor:** Update Sidebar & NewVisitForm to use `DropdownMenu`
+- [x] **Feature:** Implement Toast Notifications (Sonner)
+- [ ] **Refactor:** Update `PatientForm` input fields
+
+---
+
 ## Supplement Intelligence (Core Feature)
 
 - [ ] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
 - [ ] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
 - [ ] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
 - [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
+
+---
+
+## Patient Education & Engagement
+
+- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews (podcast style) and slide decks (PDF/PPTX) explaining the "Why" behind the protocol.
+- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to specific functional medicine interventions (e.g., "How to do a Castor Oil Pack", "Understanding SIBO").
+
+---
+
+## Practice Analytics
+
+- [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy (based on follow-up changes), and supplement trends.
+- [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, and Deep Consult usage stats.
+
+---
+
+## Strategy & Pricing
+
+- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service (autonomous literature review using advanced reasoning models).
 
 ---
 

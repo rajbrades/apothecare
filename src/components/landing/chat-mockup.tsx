@@ -200,7 +200,7 @@ export function ChatMockup() {
             </div>
 
             {/* Chat content */}
-            <div className="p-6 space-y-6 min-h-[320px] md:min-h-[380px]">
+            <div className="p-4 sm:p-6 space-y-6 min-h-[280px] sm:min-h-[320px] md:min-h-[380px]">
               {/* User message */}
               <div className="flex justify-end">
                 <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tr-md bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] text-sm text-[var(--color-text-primary)] leading-relaxed">

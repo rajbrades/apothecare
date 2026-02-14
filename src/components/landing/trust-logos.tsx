@@ -19,7 +19,7 @@ export function TrustLogos() {
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+          <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12">
             {partners.map((p) => (
               <div
                 key={p.name}

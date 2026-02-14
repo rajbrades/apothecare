@@ -1,6 +1,6 @@
 # Apotheca — Project Summary & Handoff Document
 
-**Last updated:** February 13, 2026
+**Last updated:** February 14, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -21,7 +21,10 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 | Framework | Next.js 15, TypeScript, App Router |
 | Styling | Tailwind CSS 4, CSS custom properties |
 | Database | Supabase (PostgreSQL + Auth + RLS) |
-| AI | Anthropic Claude API (Sonnet 4 standard, Opus for Deep Consult) |
+| AI | Multi-provider: OpenAI (primary), Anthropic Claude (vision + fallback), MiniMax (fallback) |
+| Transcription | OpenAI Whisper API (audio → text for AI Scribe) |
+| Lab Parsing | Anthropic Claude Vision (PDF → biomarker extraction) |
+| Editor | Tiptap (ProseMirror) — block-based with custom node extensions |
 | Deployment | Vercel (auto-deploy from main branch) |
 | Fonts | Newsreader (display), DM Sans (body), JetBrains Mono (data) |
 | Icons | Lucide React |
@@ -38,22 +41,50 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 src/
 ├── app/
 │   ├── (app)/                       # Route group — shared authenticated layout
-│   │   ├── chat/
-│   │   │   └── page.tsx            # Chat page
+│   │   ├── chat/page.tsx            # Clinical chat
 │   │   ├── dashboard/
 │   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
 │   │   │   └── page.tsx            # Dashboard home
 │   │   ├── labs/
-│   │   │   └── page.tsx            # Labs page (empty state)
+│   │   │   ├── [id]/page.tsx       # Lab report detail (biomarkers, PDF viewer)
+│   │   │   ├── loading.tsx         # Lab list loading skeleton
+│   │   │   └── page.tsx            # Lab list + upload
 │   │   ├── patients/
-│   │   │   └── page.tsx            # Patients page (empty state)
+│   │   │   ├── [id]/page.tsx       # Patient detail + documents + lab reports
+│   │   │   ├── new/page.tsx        # New patient form
+│   │   │   └── page.tsx            # Patient list
 │   │   ├── visits/
-│   │   │   └── page.tsx            # Visits page (empty state)
+│   │   │   ├── [id]/page.tsx       # Visit workspace (editor + AI generation)
+│   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
+│   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
-│   ├── api/chat/
-│   │   ├── history/route.ts        # GET conversation messages + pagination
-│   │   ├── route.ts                # DEPRECATED — returns 410
-│   │   └── stream/route.ts         # SSE streaming chat endpoint
+│   ├── api/
+│   │   ├── chat/
+│   │   │   ├── history/route.ts    # GET conversation messages + pagination
+│   │   │   ├── route.ts            # DEPRECATED (410)
+│   │   │   └── stream/route.ts     # SSE streaming chat endpoint
+│   │   ├── labs/
+│   │   │   ├── [id]/
+│   │   │   │   ├── review/route.ts # POST lab review (stub 501)
+│   │   │   │   └── route.ts        # GET single lab report
+│   │   │   └── route.ts            # GET list / POST upload
+│   │   ├── patients/
+│   │   │   ├── [id]/
+│   │   │   │   ├── documents/
+│   │   │   │   │   ├── [docId]/
+│   │   │   │   │   │   ├── extract/route.ts  # POST re-trigger extraction
+│   │   │   │   │   │   └── route.ts          # GET/DELETE document
+│   │   │   │   │   └── route.ts              # GET list / POST upload
+│   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
+│   │   │   └── route.ts            # GET list / POST create
+│   │   └── visits/
+│   │       ├── [id]/
+│   │       │   ├── export/route.ts     # POST export visit
+│   │       │   ├── generate/route.ts   # POST SSE SOAP/IFM/Protocol generation
+│   │       │   ├── scribe/route.ts     # POST AI Scribe (transcript → sections)
+│   │       │   ├── transcribe/route.ts # POST audio → Whisper transcription
+│   │       │   └── route.ts            # GET/PATCH visit
+│   │       └── route.ts                # GET list / POST create
 │   ├── auth/
 │   │   ├── callback/route.ts       # OAuth/email callback
 │   │   ├── login/page.tsx          # Login with forgot password
@@ -64,37 +95,116 @@ src/
 │   └── page.tsx                    # Landing page (public)
 ├── components/
 │   ├── chat/
-│   │   ├── chat-input.tsx          # Input bar + Deep Consult tooltip + keyboard shortcuts
+│   │   ├── biomarker-range-bar.tsx # Dual-range biomarker visualization
+│   │   ├── chat-input.tsx          # Input bar + Deep Consult tooltip + shortcuts
 │   │   ├── chat-interface.tsx      # Main chat container
+│   │   ├── evidence-badge.tsx      # Color-coded evidence level badges
 │   │   └── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
-│   └── layout/
-│       └── sidebar.tsx             # Elevated New Conversation + gold accents
+│   ├── dashboard/
+│   │   └── dashboard-search.tsx    # Unified search across patients, visits, labs
+│   ├── landing/                    # 12 landing page components (hero, features, pricing, etc.)
+│   ├── labs/
+│   │   ├── lab-list-client.tsx     # Searchable/filterable lab list
+│   │   ├── lab-report-card.tsx     # Lab report card for list view
+│   │   ├── lab-report-detail.tsx   # Lab detail with biomarkers + PDF viewer
+│   │   ├── lab-status-badge.tsx    # Lab status indicator
+│   │   └── lab-upload.tsx          # Lab upload form with drag-and-drop
+│   ├── layout/
+│   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner
+│   │   └── sidebar-conversation.tsx # Conversation list management
+│   ├── patients/
+│   │   ├── document-list.tsx       # Unified document + lab report list
+│   │   ├── document-upload.tsx     # Document upload form
+│   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
+│   │   ├── patient-form.tsx        # Full patient create/edit form
+│   │   ├── patient-list-client.tsx # Searchable patient list
+│   │   ├── patient-profile.tsx     # Patient detail view
+│   │   ├── patient-quick-create.tsx # Inline patient creation modal
+│   │   └── pre-chart-view.tsx      # Pre-encounter patient summary
+│   ├── ui/
+│   │   ├── button.tsx              # Reusable button component (variants)
+│   │   ├── dropdown-menu.tsx       # Radix UI dropdown menu
+│   │   ├── input.tsx               # Reusable input component
+│   │   ├── label.tsx               # Reusable label component
+│   │   ├── logomark.tsx            # SVG logomark
+│   │   ├── reset-countdown.tsx     # Query reset timer
+│   │   └── sonner.tsx              # Toast notifications
+│   └── visits/
+│       ├── audio-recorder.tsx      # Audio recording component
+│       ├── editor/
+│       │   ├── dictation-bar.tsx       # Dictation + AI Scribe controls
+│       │   ├── editor-toolbar.tsx      # Bold, italic, lists toolbar
+│       │   ├── template-section-node.tsx # Collapsible section NodeView
+│       │   └── visit-editor.tsx        # Main Tiptap editor wrapper
+│       ├── ifm-node-modal.tsx      # IFM Matrix node editing modal
+│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs
+│       ├── new-visit-form.tsx      # Patient + encounter type selector
+│       ├── voice-input.tsx         # Voice input component
+│       ├── soap-sections.tsx       # SOAP note display tabs
+│       ├── ifm-matrix-view.tsx     # IFM Matrix visualization + inline editing + DnD
+│       ├── protocol-panel.tsx      # Protocol recommendations panel
+│       └── export-menu.tsx         # Visit export options
 ├── hooks/
-│   └── use-chat.ts                 # SSE streaming hook
+│   ├── use-chat.ts                 # SSE streaming hook (chat)
+│   ├── use-editor-dictation.ts     # Dictation + AI Scribe → editor bridge
+│   ├── use-audio-recorder.ts       # MediaRecorder wrapper
+│   ├── use-speech-recognition.ts   # Web Speech API wrapper
+│   ├── use-visit-stream.ts         # Visit generation SSE hook
+│   └── use-keyboard-shortcuts.ts   # Global keyboard shortcuts
 ├── lib/
-│   ├── ai/anthropic.ts             # Claude client + system prompt + models
+│   ├── ai/
+│   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS constant
+│   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
+│   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
+│   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts
+│   │   ├── transcription.ts        # OpenAI Whisper integration
+│   │   ├── clinical-summary.ts     # Patient clinical summary generation
+│   │   ├── document-extraction.ts  # Document content extraction
+│   │   ├── document-extraction-prompts.ts  # Extraction prompt templates
+│   │   ├── lab-parsing.ts          # Lab PDF parsing via Claude Vision
+│   │   └── lab-parsing-prompts.ts  # Lab parsing prompt templates
+│   ├── api/
+│   │   └── csrf.ts                 # Shared CSRF validation utility
+│   ├── editor/
+│   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
+│   ├── labs/
+│   │   ├── normalize-biomarkers.ts # Biomarker reference matching + flag calculation
+│   │   └── flag-mapping.ts         # DB flag → component display mapping
+│   ├── templates/
+│   │   ├── types.ts                # TemplateSectionDef, EncounterTemplate
+│   │   ├── definitions.ts          # 4 encounter templates (SOAP, H&P, Consult, Follow-up)
+│   │   └── to-editor-content.ts    # Template ↔ editor JSON ↔ text conversion
+│   ├── storage/
+│   │   ├── patient-documents.ts    # Patient document Storage integration
+│   │   └── lab-reports.ts          # Lab report Storage integration
 │   ├── supabase/
+│   │   ├── cached-queries.ts       # React cache() for layout queries
 │   │   ├── client.ts               # Browser client
 │   │   ├── middleware.ts           # Auth middleware + route protection
 │   │   └── server.ts              # Server client + standalone service client
+│   ├── utils.ts                    # cn() — Tailwind class merging utility
 │   └── validations/
-│       └── chat.ts                 # Zod schemas for chat API
+│       ├── chat.ts                 # Chat API schemas
+│       ├── visit.ts                # Visit create/update/generate schemas
+│       ├── patient.ts              # Patient create/update schemas
+│       ├── document.ts             # Document upload/extraction schemas
+│       └── lab.ts                  # Lab upload/list schemas
 ├── middleware.ts                    # Root middleware
 └── types/database.ts               # Supabase type definitions
 ```
 
 ---
 
-## Database Schema (12 tables, all with RLS)
+## Database Schema (14 tables, all with RLS)
 
 **Core:** practitioners, patients, conversations, messages
-**Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded)
+**Clinical:** visits, lab_reports, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migration:** Already executed in Supabase SQL Editor (001_initial_schema.sql).
+**Migrations:** 4 applied in Supabase SQL Editor (see "Database Migrations" section below).
 
 ---
 
@@ -163,23 +273,114 @@ src/
 10. ✅ Environment validation with Zod schemas
 11. ✅ Logomark SVG component
 
+### Session 7 — Patient Management (Feb 13, 2026)
+
+**Full patient module:**
+1. ✅ Patient list page with search and demographics cards
+2. ✅ Patient detail page with medical history, medications, supplements, allergies
+3. ✅ Patient create/edit form with comprehensive clinical fields
+4. ✅ Patient document upload, list, and management (lab reports, intake forms, referral letters, imaging, prior records)
+5. ✅ AI-powered document extraction and summarization via Claude
+6. ✅ Pre-chart view — pre-encounter patient summary with history, medications, recent documents
+7. ✅ Patient API endpoints: GET/POST /api/patients, GET/PATCH /api/patients/[id], documents CRUD + extraction
+8. ✅ Migration 003 — patient_documents table
+9. ✅ Zod validations for patient and document operations
+
+### Session 8 — Clinical Visits & Block Editor (Feb 13, 2026)
+
+**Full visit module with Tiptap block editor:**
+1. ✅ Visit list page with status badges, encounter types, linked patients
+2. ✅ New visit page — patient selector + encounter type → launch editor
+3. ✅ Visit workspace — block editor + dictation + AI generation + SOAP/IFM/Protocol tabs
+4. ✅ Tiptap block editor with custom `templateSection` node (collapsible sections with badges, placeholders)
+5. ✅ 4 encounter templates — SOAP (9 sections), H&P (12 sections), Consult (6 sections), Follow-up (6 sections)
+6. ✅ Template system — definitions, interfaces, and template ↔ editor JSON ↔ text conversion utilities
+7. ✅ Editor toolbar (bold, italic, bullet list, ordered list)
+8. ✅ Voice input — Web Speech API for live dictation, MediaRecorder for audio recording
+9. ✅ Audio transcription via OpenAI Whisper API
+10. ✅ Visit generation — SSE streaming SOAP notes, IFM Matrix mapping, evidence-based protocols
+11. ✅ Visit export
+12. ✅ Patient quick-create modal on new visit page
+13. ✅ Migrations 002 (visit columns) + 004 (template_content JSONB)
+
+### Session 9 — AI Scribe (Feb 13, 2026)
+
+**AI Scribe pipeline:**
+1. ✅ AI Scribe endpoint: POST /api/visits/[id]/scribe — transcript → Claude section assignment → structured JSON
+2. ✅ `buildScribeSystemPrompt()` — dynamic prompt from template section definitions
+3. ✅ `templateToPopulatedContent()` — builds Tiptap JSON with sections pre-filled from scribe output
+4. ✅ `useEditorDictation` extended with `scribeRecording()` and `ScribeStatus` state machine
+5. ✅ Dictation bar redesign — "Record" → "AI Scribe" (brand-colored, Sparkles icon), status indicators
+6. ✅ Full pipeline: record → Whisper transcription → Claude assigns to sections → editor auto-populated
+
+### Session 10 — UI/UX Scalability (Feb 13, 2026)
+
+**Scalability Refactor:**
+1. ✅ Created `src/components/ui/button.tsx` — Reusable, type-safe button component with variants (default, outline, ghost, gold, destructive)
+2. ✅ Created `src/lib/utils.ts` — Standard utility for merging Tailwind classes (`cn`)
+3. ✅ Refactored `Sidebar` — Replaced ad-hoc button styles with the new `Button` component
+4. ✅ Verified component consistency via `test-components` page
+
+### Session 11 — Labs Module (Feb 14, 2026)
+
+**Full lab interpretation pipeline:**
+1. ✅ Lab upload page — `/labs` with drag-and-drop file upload, vendor/test type selection, patient linking
+2. ✅ Lab detail page — `/labs/[id]` with biomarker results, dual-range bars, signed PDF viewer, status polling
+3. ✅ Lab list — searchable/filterable with status badges, vendor labels, patient links
+4. ✅ Lab API endpoints — `GET/POST /api/labs`, `GET /api/labs/[id]`, `POST /api/labs/[id]/review` (stub)
+5. ✅ Lab parsing pipeline — Claude Vision extracts biomarkers from PDF → normalizes against functional references
+6. ✅ Biomarker normalization — `normalize-biomarkers.ts` matches extracted biomarkers to reference ranges
+7. ✅ Flag mapping — `flag-mapping.ts` maps DB flags to component display values
+8. ✅ Lab storage — `storage/lab-reports.ts` Supabase Storage integration
+
+### Session 12 — Multi-Provider AI & Dashboard (Feb 14, 2026)
+
+**Multi-provider AI abstraction:**
+1. ✅ Provider layer — `src/lib/ai/provider.ts` with unified `createCompletion()` and `streamCompletion()`
+2. ✅ Automatic failover — OpenAI primary, Anthropic for vision features, MiniMax as fallback
+3. ✅ `ANTHROPIC_MODELS` constant — features always routed through Anthropic (document vision, lab parsing)
+4. ✅ Dashboard search — `dashboard-search.tsx` unified search across patients, visits, labs
+5. ✅ Sidebar refactor — extracted `sidebar-conversation.tsx`
+6. ✅ UI components — `dropdown-menu.tsx` (Radix), `input.tsx`, `label.tsx`, `sonner.tsx` (toasts)
+
+### Session 13 — IFM Matrix Editing (Feb 14, 2026)
+
+**Editable IFM Matrix:**
+1. ✅ Inline editing — click any IFM Matrix node to edit findings directly
+2. ✅ Portal-based modal — `ifm-node-modal.tsx` for detailed node editing
+3. ✅ Drag-and-drop reordering — `@dnd-kit/core` for reordering findings within nodes
+4. ✅ Visit workspace wiring — `handleMatrixUpdate` callback persists changes via PATCH API
+
+### Session 14 — Lab Reports in Documents + CSRF (Feb 14, 2026)
+
+**Lab reports in patient Documents tab:**
+1. ✅ Patient detail page queries `lab_reports` alongside `patient_documents` via `Promise.all`
+2. ✅ Unified document list — discriminated union type (`UnifiedItem`) merges both sources
+3. ✅ Lab reports render with green flask icon, vendor/test type metadata, status badge
+4. ✅ "View" links to `/labs/[id]` (no delete/re-extract — managed from Labs page)
+
+**CSRF protection (all endpoints):**
+5. ✅ Shared CSRF utility — `src/lib/api/csrf.ts` with `validateCsrf()` function
+6. ✅ Applied to all 13 mutating handlers across 11 route files
+7. ✅ Replaced inline CSRF in `/api/chat/stream` with shared utility
+
 ---
 
 ## What Needs To Be Done Next
 
-### P3 — Performance & Polish
-- [ ] **ReactMarkdown streaming debounce** — Currently rebuilds full AST on every stream delta. Use simpler renderer during streaming, switch to ReactMarkdown on completion.
-- [ ] **Page transition animations** — Framer Motion for route transitions
-- [ ] **Dark mode** — Full theme toggle with system preference detection
-- [ ] **Image optimization** — Next.js Image component for all landing page assets
-- [ ] **Conversation pinning** — Allow pinning important conversations to sidebar top
+### Supplement Intelligence (Core Feature)
+- [ ] **Supplement review module** — evaluate current supplements against medical history, labs, clinical goals
+- [ ] **Interaction safety checker** — flag contraindications and adverse effects
+- [ ] **Brand-specific formulary** — preferred supplement brands with SKUs and dosing
+- [ ] **Fullscript integration** — dispensary connection, protocol-to-cart workflow
 
-### Lab Interpretation Pipeline (Sprint 3)
-- [ ] **Lab upload endpoint** — Multipart form handling + Supabase Storage encryption
-- [ ] **Claude Vision integration** — PDF parsing and vendor detection
-- [ ] **Biomarker extraction** — OCR + normalization pipeline
-- [ ] **Dual-range visualization** — Interactive charts with conventional + functional ranges
-- [ ] **Multi-lab correlation** — Cross-lab pattern analysis with Opus
+### Codebase Review Fixes (from docs/CODEBASE-REVIEW.md)
+- [ ] Rate limiting on AI endpoints (Security CRITICAL)
+- [ ] Fix `select("*")` over-fetching on hot paths (Performance)
+- [ ] Install Vitest + write P0 tests (Test Coverage)
+- [ ] Parallelize visit generation AI calls (Performance)
+- [ ] Mobile sidebar drawer (Usability)
+- [ ] Accessibility pass (ARIA roles, focus trapping)
 
 ### Backlog
 - OAuth providers (Google, Apple)
@@ -188,7 +389,6 @@ src/
 - Analytics (PostHog)
 - Accessibility audit (WCAG 2.1 AA)
 - SEO + Open Graph images
-- Rate limiting middleware
 - Prompt injection detection
 
 ---
@@ -222,21 +422,34 @@ NEXT_PUBLIC_SUPABASE_URL=https://qcjuosldesbgqkregztn.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 ANTHROPIC_API_KEY=sk-ant-api03-...
+OPENAI_API_KEY=sk-proj-...
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME=Apotheca
 ```
 
+**Note:** `OPENAI_API_KEY` is required for AI Scribe (Whisper audio transcription). Get it from [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
+
 ⚠️ **Supabase Key Format Note:** When copying keys from Supabase dashboard, strip the `sb_publishable_` prefix from anon keys and the `sb_secret_` prefix from service role keys. The actual keys are the JWT strings that follow these prefixes.
 
 ---
+
+## Database Migrations
+
+4 migrations must be applied in order in Supabase SQL Editor:
+
+1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
+2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
+3. `003_patient_documents.sql` — patient_documents table for document management
+4. `004_visit_template_content.sql` — template_content JSONB column for block editor persistence
 
 ## Known Issues / Gotchas
 
 1. **Supabase uses `vector` not `pgvector`** for the extension name
 2. **Service role key is new-format** (`sb_secret_...`) not JWT — use `createClient` from `@supabase/supabase-js`, not `createServerClient` from `@supabase/ssr`
 3. **Evidence badge and biomarker components exist** but are not yet wired to Claude API responses. The next step is to update the system prompt to return structured citations and render them using the `<EvidenceBadge>` component.
-4. **ReactMarkdown streaming performance** — Full AST rebuild on every token. Consider simpler renderer during streaming phase.
-5. **Conversation management UI** is functional but could use optimistic updates for better UX.
+4. **AI Scribe requires OpenAI API key** — Whisper transcription uses `OPENAI_API_KEY`. Without it, the Record/AI Scribe feature will fail with "OPENAI_API_KEY is not configured".
+5. **Block editor backward compatibility** — Visits with `template_content: null` (created before the editor) fall back to the legacy textarea. New visits always use the block editor.
+6. **Web Speech API** (live dictation) only works in Chrome/Edge. Safari and Firefox have limited support.
 
 ---
 

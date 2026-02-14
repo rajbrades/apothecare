@@ -1,10 +1,19 @@
 import { z } from "zod";
 
 // ── Create Visit ────────────────────────────────────────────────────────
+export const VISIT_TYPES = [
+  "soap",
+  "follow_up",
+  "history_physical",
+  "consult",
+] as const;
+
+export type VisitType = (typeof VISIT_TYPES)[number];
+
 export const createVisitSchema = z.object({
-  visit_type: z.enum(["soap", "follow_up"]).default("soap"),
+  visit_type: z.enum(VISIT_TYPES).default("soap"),
   patient_id: z.string().uuid("Invalid patient ID").nullable().optional(),
-  chief_complaint: z.string().max(500, "Chief complaint too long").optional(),
+  chief_complaint: z.string().max(500, "Chief complaint too long").nullable().optional(),
   visit_date: z.string().datetime({ offset: true }).optional(),
 });
 
@@ -20,9 +29,10 @@ export const updateVisitSchema = z.object({
   plan: z.string().max(20000).nullable().optional(),
   status: z.enum(["draft", "completed"]).optional(),
   patient_id: z.string().uuid("Invalid patient ID").nullable().optional(),
-  visit_type: z.enum(["soap", "follow_up"]).optional(),
+  visit_type: z.enum(VISIT_TYPES).optional(),
   ifm_matrix: z.record(z.unknown()).optional(),
   ai_protocol: z.record(z.unknown()).optional(),
+  template_content: z.record(z.unknown()).nullable().optional(),
 });
 
 export type UpdateVisitInput = z.infer<typeof updateVisitSchema>;
