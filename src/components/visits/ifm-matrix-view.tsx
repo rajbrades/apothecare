@@ -89,7 +89,7 @@ function DraggableFinding({
             if (e.key === "Escape") onCancelEdit();
           }}
           onBlur={() => onSaveEdit(editValue)}
-          className="flex-1 text-[11px] leading-snug px-1 py-0.5 border border-[var(--color-brand-500)] rounded-[var(--radius-sm)] bg-white outline-none"
+          className="flex-1 text-[11px] leading-snug px-1 py-0.5 border border-[var(--color-brand-500)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none"
         />
       </li>
     );
@@ -259,7 +259,7 @@ function MatrixNode({
               }
             }}
             rows={3}
-            className="w-full text-[11px] italic px-1 py-1 border border-[var(--color-brand-500)] rounded-[var(--radius-sm)] bg-white outline-none resize-none"
+            className="w-full text-[11px] italic px-1 py-1 border border-[var(--color-brand-500)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none resize-none"
           />
         </div>
       )}
@@ -502,7 +502,7 @@ export function IFMMatrixView({ matrix, status, readOnly = false, onUpdate }: IF
 
         <DragOverlay>
           {activeDragId && activeDragText ? (
-            <div className="px-2.5 py-1 text-[11px] font-medium bg-white border border-[var(--color-brand-300)] rounded-full shadow-lg text-[var(--color-text-primary)]">
+            <div className="px-2.5 py-1 text-[11px] font-medium bg-[var(--color-surface)] border border-[var(--color-brand-300)] rounded-full shadow-lg text-[var(--color-text-primary)]">
               {activeDragText}
             </div>
           ) : null}

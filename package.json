@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:migrate": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql",
     "db:reset": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql"
   },
@@ -45,10 +47,12 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
     "eslint": "^9.0.0",
     "eslint-config-next": "15.1.0",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.18"
   }
 }

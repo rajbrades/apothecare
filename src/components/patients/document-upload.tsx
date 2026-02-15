@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import type { DocumentType, DocumentStatus } from "@/types/database";
 
 interface DocumentUploadProps {
@@ -71,12 +72,15 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
 
       const { document } = await res.json();
       onUploaded(document);
+      toast.success("Document uploaded — extraction starting");
       setTitle("");
 
       // Reset file input
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }

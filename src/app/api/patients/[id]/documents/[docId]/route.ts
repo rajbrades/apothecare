@@ -29,7 +29,7 @@ export async function GET(
 
     const { data: document, error } = await supabase
       .from("patient_documents")
-      .select("*")
+      .select("id, patient_id, file_name, file_size, file_type, storage_path, document_type, document_date, title, status, extracted_text, extracted_data, extraction_summary, error_message, uploaded_at, extracted_at")
       .eq("id", docId)
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)

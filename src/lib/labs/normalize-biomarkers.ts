@@ -1,4 +1,6 @@
 import type { BiomarkerFlag, BiomarkerReference } from "@/types/database";
+
+type BiomarkerReferenceSlim = Pick<BiomarkerReference, "biomarker_code" | "biomarker_name" | "category" | "conventional_low" | "conventional_high" | "conventional_unit" | "functional_low" | "functional_high">;
 import type { ExtractedBiomarker } from "@/lib/ai/lab-parsing-prompts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -72,8 +74,8 @@ function normalizeCode(input: string): string {
  */
 export function matchBiomarkerReference(
   extracted: ExtractedBiomarker,
-  references: BiomarkerReference[]
-): BiomarkerReference | null {
+  references: BiomarkerReferenceSlim[]
+): BiomarkerReferenceSlim | null {
   const code = normalizeCode(extracted.code);
 
   // Tier 1: Exact code match
@@ -179,9 +181,9 @@ export async function normalizeBiomarkers(
   // Fetch all reference ranges
   const { data: references } = await supabaseClient
     .from("biomarker_references")
-    .select("*");
+    .select("biomarker_code, biomarker_name, category, conventional_low, conventional_high, conventional_unit, functional_low, functional_high");
 
-  const refList: BiomarkerReference[] = references || [];
+  const refList: BiomarkerReferenceSlim[] = references || [];
 
   const inserts = [];
   let matchedCount = 0;

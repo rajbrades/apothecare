@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, FileText, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
 import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
@@ -152,13 +153,16 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   const handleRetry = useCallback(async () => {
     setRetrying(true);
     try {
-      // Re-upload triggers a re-parse (simplified: just refetch for now)
-      const res = await fetch(`/api/labs/${report.id}`);
-      if (res.ok) {
+      const res = await fetch(`/api/labs/${report.id}/reparse`, { method: "POST" });
+      if (!res.ok) {
         const data = await res.json();
-        setReport(data.report);
-        setBiomarkers(data.biomarkers);
+        throw new Error(data.error || "Failed to start re-parse");
       }
+      toast.success("Re-parsing started");
+      // Update local state to show processing
+      setReport((prev) => ({ ...prev, status: "parsing" as LabReportStatus }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start re-parse");
     } finally {
       setRetrying(false);
     }
@@ -246,7 +250,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             <button
               onClick={handleRetry}
               disabled={retrying}
-              className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-white border border-red-200 rounded-[var(--radius-md)] hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-[var(--color-surface)] border border-red-200 rounded-[var(--radius-md)] hover:bg-red-50 transition-colors disabled:opacity-50"
             >
               <RefreshCcw className={`w-3 h-3 ${retrying ? "animate-spin" : ""}`} />
               {retrying ? "Retrying..." : "Retry"}

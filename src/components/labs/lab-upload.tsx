@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 
 interface PatientOption {
   id: string;
@@ -101,8 +102,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
       if (fileInputRef.current) fileInputRef.current.value = "";
 
       onUploaded();
+      toast.success("Lab report uploaded — parsing starting");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }

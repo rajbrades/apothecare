@@ -86,7 +86,7 @@ function SortableFinding({ id, value, onChange, onRemove }: SortableFindingProps
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 text-sm px-2 py-1.5 border border-[var(--color-border-light)] rounded-[var(--radius-sm)] bg-white focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)]"
+        className="flex-1 text-sm px-2 py-1.5 border border-[var(--color-border-light)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)]"
         placeholder="Enter finding..."
       />
       <button
@@ -191,7 +191,7 @@ export function IFMNodeModal({
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
     >
-      <div className="bg-white rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-light)]">
           <div>
@@ -277,7 +277,7 @@ export function IFMNodeModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full text-sm px-3 py-2 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-white focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)] resize-none"
+              className="w-full text-sm px-3 py-2 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)] resize-none"
               placeholder="Clinical reasoning and interpretation..."
             />
           </div>

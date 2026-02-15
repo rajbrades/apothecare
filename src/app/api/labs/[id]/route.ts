@@ -28,7 +28,7 @@ export async function GET(
     // Fetch lab report with ownership check
     const { data: report, error } = await supabase
       .from("lab_reports")
-      .select("*, patients(first_name, last_name, date_of_birth, sex)")
+      .select("id, practitioner_id, patient_id, visit_id, lab_vendor, test_type, test_name, collection_date, raw_file_url, raw_file_name, raw_file_size, status, error_message, parsing_model, parsing_confidence, created_at, updated_at, patients(first_name, last_name, date_of_birth, sex)")
       .eq("id", reportId)
       .eq("practitioner_id", practitioner.id)
       .single();
@@ -38,7 +38,7 @@ export async function GET(
     // Fetch biomarker results
     const { data: biomarkers } = await supabase
       .from("biomarker_results")
-      .select("*")
+      .select("id, biomarker_code, biomarker_name, category, value, unit, conventional_low, conventional_high, conventional_flag, functional_low, functional_high, functional_flag, interpretation, clinical_significance, collection_date")
       .eq("lab_report_id", reportId)
       .order("category", { ascending: true })
       .order("biomarker_name", { ascending: true });

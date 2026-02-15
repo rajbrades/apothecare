@@ -247,7 +247,7 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
     panel.biomarkers.filter((b) => b.flag !== "optimal" && b.flag !== "normal").length;
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden bg-white my-3 biomarker-panel-entrance">
+    <div className="rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
       {/* Panel header */}
       <button
         type="button"

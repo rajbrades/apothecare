@@ -21,7 +21,7 @@ export const getPractitioner = cache(async (authUserId: string) => {
   const supabase = await createClient();
   const { data: practitioner } = await supabase
     .from("practitioners")
-    .select("*")
+    .select("id, full_name, email, subscription_tier, subscription_status, daily_query_count, daily_query_reset_at, default_note_template, verification_status, practice_name, specialty_focus")
     .eq("auth_user_id", authUserId)
     .single();
   return practitioner;
@@ -58,7 +58,7 @@ export const getPatientWithDocuments = cache(async (practitionerId: string, pati
   const [{ data: patient }, { data: documents }] = await Promise.all([
     supabase
       .from("patients")
-      .select("*")
+      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, is_archived, created_at, updated_at")
       .eq("id", patientId)
       .eq("practitioner_id", practitionerId)
       .single(),

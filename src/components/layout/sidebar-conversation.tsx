@@ -130,7 +130,7 @@ export function ConversationEntry({
                     onKeyDown={handleRenameKeyDown}
                     onBlur={handleRenameSubmit}
                     disabled={loading}
-                    className="flex-1 min-w-0 px-1.5 py-0.5 text-sm bg-white border border-[var(--color-border-light)] rounded text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] focus:ring-1 focus:ring-[var(--color-brand-200)]"
+                    className="flex-1 min-w-0 px-1.5 py-0.5 text-sm bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] focus:ring-1 focus:ring-[var(--color-brand-200)]"
                     maxLength={100}
                 />
                 <button

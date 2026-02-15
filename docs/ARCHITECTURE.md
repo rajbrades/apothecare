@@ -100,11 +100,12 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
 2. User clicks "Generate" → editorContentToText(json) flattens to labeled text
 3. Save template_content (JSON) + raw_notes (text) via PATCH /api/visits/[id]
 4. POST /api/visits/[id]/generate { raw_notes, sections: ["soap","ifm_matrix","protocol"] }
-5. CSRF + Zod validation → Auth → fetch visit + patient context
+5. CSRF + Zod validation + rate limit check → Auth → fetch visit + patient context
 6. Phase 1 (SOAP): Claude Sonnet streams SOAP note → parsed into S/O/A/P sections → saved
-7. Phase 2 (IFM): Claude maps SOAP findings to IFM Matrix nodes → saved as JSONB
-8. Phase 3 (Protocol): Claude generates evidence-based protocol → saved
-9. Each phase streams SSE events: { section, status, text/data }
+7. Phase 2 (parallel): IFM Matrix + Protocol run via Promise.all after SOAP completes
+   - IFM: Claude maps SOAP findings to IFM Matrix nodes → saved as JSONB
+   - Protocol: Claude generates evidence-based protocol → saved
+8. Each phase streams SSE events: { section, status, text/data }
 10. Client receives SSE stream via useVisitStream hook → populates SOAP/IFM/Protocol tabs
 11. Audit log entry with IP, user agent, sections generated
 ```
@@ -154,8 +155,10 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
 5. Biomarker normalization: match to biomarker_references table
 6. Flag calculation: conventional + functional flags (optimal/normal/borderline/out-of-range/critical)
 7. Results saved to biomarker_results table, status → "complete"
-8. Lab detail page polls status, displays dual-range bars when ready
+8. Lab detail page polls status (3s interval), displays dual-range bars when ready
 9. If patient_id linked, lab appears in patient's Documents tab automatically
+10. On failure: status → "error", retry via POST /api/labs/[id]/reparse re-triggers pipeline
+11. Stuck job cleanup: GET /api/admin/cleanup-stuck-jobs marks jobs stuck >15min as error
 ```
 
 **Key files:**
@@ -206,12 +209,13 @@ The AI layer uses a provider abstraction (`src/lib/ai/provider.ts`) that routes 
 Layer 1: Network     → TLS 1.3 everywhere
 Layer 2: Auth        → Supabase JWT, MFA available, session refresh middleware
 Layer 3: CSRF        → Origin header validation on all mutating endpoints (shared validateCsrf())
-Layer 4: Validation  → Zod schemas on all API inputs
-Layer 5: Database    → Row-Level Security, practitioners see only their own data
-Layer 6: XSS         → rehype-sanitize on all markdown rendering
-Layer 7: AI          → Zero-retention BAA, PHI stripped where possible
-Layer 8: Audit       → Every PHI access logged with IP, user agent, resource ID
-Layer 9: Service     → Service role client is standalone (no cookie inheritance)
+Layer 4: Rate Limit  → Per-action, tier-aware daily limits on all AI endpoints (checkRateLimit())
+Layer 5: Validation  → Zod schemas on all API inputs
+Layer 6: Database    → Row-Level Security, practitioners see only their own data
+Layer 7: XSS         → rehype-sanitize on all markdown rendering
+Layer 8: AI          → Zero-retention BAA, PHI stripped where possible
+Layer 9: Audit       → Every PHI access logged with IP, user agent, resource ID
+Layer 10: Service    → Service role client is standalone (no cookie inheritance)
 ```
 
 ### Service Client Isolation
@@ -256,15 +260,18 @@ src/
 │   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/
+│   │   ├── admin/
+│   │   │   └── cleanup-stuck-jobs/route.ts  # GET mark stuck jobs as error (cron)
 │   │   ├── chat/
 │   │   │   ├── history/route.ts    # GET conversation messages + pagination
 │   │   │   ├── route.ts            # DEPRECATED (410)
 │   │   │   └── stream/route.ts     # SSE streaming chat endpoint
 │   │   ├── labs/
 │   │   │   ├── [id]/
-│   │   │   │   ├── review/route.ts # POST lab review (stub 501)
-│   │   │   │   └── route.ts        # GET single lab report
-│   │   │   └── route.ts            # GET list / POST upload
+│   │   │   │   ├── reparse/route.ts # POST re-trigger lab parsing
+│   │   │   │   ├── review/route.ts  # POST lab review (stub 501)
+│   │   │   │   └── route.ts         # GET single lab report
+│   │   │   └── route.ts             # GET list / POST upload
 │   │   ├── patients/
 │   │   │   ├── [id]/
 │   │   │   │   ├── documents/
@@ -360,7 +367,8 @@ src/
 │   │   ├── lab-parsing.ts          # Lab PDF parsing via Claude Vision
 │   │   └── lab-parsing-prompts.ts  # Lab parsing prompt templates
 │   ├── api/
-│   │   └── csrf.ts                 # Shared CSRF validation utility
+│   │   ├── csrf.ts                 # Shared CSRF validation utility
+│   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
 │   ├── labs/
@@ -388,9 +396,37 @@ src/
 ├── middleware.ts                    # Root middleware
 └── types/database.ts               # Supabase type definitions
 
+tests/
+├── auth/
+│   └── sanitize-redirect.test.ts   # Open redirect prevention (11 tests)
+├── lib/
+│   ├── api/
+│   │   └── csrf.test.ts            # CSRF validation (5 tests)
+│   ├── labs/
+│   │   └── normalize-biomarkers.test.ts  # Biomarker flags + matching (21 tests)
+│   └── validations/
+│       ├── chat.test.ts            # Chat schemas (11 tests)
+│       ├── document.test.ts        # Document schemas (8 tests)
+│       ├── lab.test.ts             # Lab schemas (13 tests)
+│       ├── patient.test.ts         # Patient schemas (11 tests)
+│       └── visit.test.ts           # Visit schemas (16 tests)
+
 supabase/migrations/
 ├── 001_initial_schema.sql          # 12 core tables + RLS + audit logging
 ├── 002_visits_status.sql           # visit_type, status, ai_protocol columns
 ├── 003_patient_documents.sql       # patient_documents table
 └── 004_visit_template_content.sql  # template_content JSONB column
 ```
+
+## Test Infrastructure
+
+**Runner:** Vitest v4.0 with `@/` path alias resolution
+**Command:** `npm test` (vitest run) / `npm run test:watch` (vitest)
+**Coverage:** 8 test files, 96 tests — P0 clinical logic + all validation schemas + security utilities
+
+| Category | Files | Tests |
+|---|---|---|
+| Biomarker flag calculation (P0 clinical) | 1 | 21 |
+| Validation schemas (chat, patient, visit, lab, document) | 5 | 59 |
+| CSRF validation | 1 | 5 |
+| Redirect sanitization | 1 | 11 |

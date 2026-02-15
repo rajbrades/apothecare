@@ -33,7 +33,7 @@ export async function GET(
 
     const { data: patient, error } = await supabase
       .from("patients")
-      .select("*")
+      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, is_archived, created_at, updated_at")
       .eq("id", id)
       .eq("practitioner_id", practitioner.id)
       .single();

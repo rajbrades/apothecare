@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FileText, Trash2, RefreshCcw, ExternalLink, Loader2, FlaskConical } from "lucide-react";
+import { toast } from "sonner";
 import { ExtractionStatusBadge } from "./extraction-status-badge";
 import type { LabReportItem } from "./patient-profile";
 
@@ -80,9 +81,13 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
     setReextracting(docId);
     setDocStatuses((prev) => ({ ...prev, [docId]: "extracting" }));
     try {
-      await fetch(`/api/patients/${patientId}/documents/${docId}/extract`, { method: "POST" });
-      // Start polling
+      const res = await fetch(`/api/patients/${patientId}/documents/${docId}/extract`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to start re-extraction");
+      toast.success("Re-extraction started");
       pollStatus(docId);
+    } catch {
+      toast.error("Failed to start re-extraction");
+      setDocStatuses((prev) => ({ ...prev, [docId]: "error" }));
     } finally {
       setReextracting(null);
     }

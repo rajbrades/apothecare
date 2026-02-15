@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     if (patient_id) {
       const { data: patient } = await supabase
         .from("patients")
-        .select("*")
+        .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
         .eq("id", patient_id)
         .single();
 
