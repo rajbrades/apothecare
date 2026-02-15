@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus, Users } from "lucide-react";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
+import { escapePostgrestPattern } from "@/lib/search";
 import { PatientListClient } from "@/components/patients/patient-list-client";
 
 export default async function PatientsPage({
@@ -28,7 +29,8 @@ export default async function PatientsPage({
     .limit(20);
 
   if (search) {
-    query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
+    const escaped = escapePostgrestPattern(search);
+    query = query.or(`first_name.ilike.%${escaped}%,last_name.ilike.%${escaped}%`);
   }
 
   const { data: patients } = await query;

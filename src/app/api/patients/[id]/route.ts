@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { updatePatientSchema } from "@/lib/validations/patient";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -22,7 +23,7 @@ async function getAuthPractitioner(supabase: ReturnType<typeof createClient> ext
 
 // ── GET /api/patients/[id] — Fetch single patient with document count ───
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -39,6 +40,14 @@ export async function GET(
       .single();
 
     if (error || !patient) return jsonError("Patient not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient",
+      resourceId: id,
+    });
 
     // Fetch document count
     const { count } = await supabase

@@ -4,6 +4,8 @@ import { uploadDocumentSchema, documentListQuerySchema } from "@/lib/validations
 import { buildStoragePath, uploadToStorage } from "@/lib/storage/patient-documents";
 import { extractDocumentContent } from "@/lib/ai/document-extraction";
 import { validateCsrf } from "@/lib/api/csrf";
+import { sanitizeFilename } from "@/lib/sanitize";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -58,6 +60,14 @@ export async function GET(
 
     const { data: documents, error } = await query;
     if (error) return jsonError("Failed to fetch documents", 500);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient_document",
+      detail: { patient_id: patientId, list: true, count: documents?.length || 0 },
+    });
 
     return NextResponse.json({ documents: documents || [] });
   } catch {
@@ -138,7 +148,7 @@ export async function POST(
       .insert({
         practitioner_id: practitioner.id,
         patient_id: patientId,
-        file_name: file.name,
+        file_name: sanitizeFilename(file.name),
         file_size: file.size,
         file_type: file.type,
         storage_path: "", // Will update after upload

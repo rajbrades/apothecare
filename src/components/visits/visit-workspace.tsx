@@ -8,8 +8,23 @@ import {
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
   Grid3x3, Pill, MessageSquare, HeartPulse, UserCheck,
 } from "lucide-react";
-import { VisitEditor } from "./editor/visit-editor";
+import dynamic from "next/dynamic";
 import { RawNotesInput } from "./raw-notes-input";
+
+const VisitEditor = dynamic(
+  () => import("./editor/visit-editor").then((mod) => ({ default: mod.VisitEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+          <div className="w-4 h-4 border-2 border-[var(--color-brand-300)] border-t-transparent rounded-full animate-spin" />
+          Loading editor...
+        </div>
+      </div>
+    ),
+  }
+);
 import { SoapSections } from "./soap-sections";
 import { IFMMatrixView } from "./ifm-matrix-view";
 import { ProtocolPanel } from "./protocol-panel";
@@ -340,16 +355,20 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
 
       {/* Error */}
       {stream.error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+        <div role="alert" className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
           {stream.error}
         </div>
       )}
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
+      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
+            role="tab"
+            aria-selected={activeTab === key}
+            aria-controls={`tabpanel-${key}`}
+            id={`tab-${key}`}
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === key
@@ -364,7 +383,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       </div>
 
       {/* Tab content */}
-      <div className="min-h-[400px]">
+      <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} className="min-h-[400px]">
         {activeTab === "soap" && (
           <SoapSections
             subjective={visit.subjective || ""}

@@ -53,13 +53,14 @@
 ~~Blocks dark mode readiness. Should be `bg-[var(--color-surface)]`.~~
 - **Fixed:** Replaced all 16 `bg-white` instances with `bg-[var(--color-surface)]` across 10 files. One intentional instance in `final-cta.tsx` (white button on dark background) left as-is.
 
-### 9. Accessibility Gaps (Usability HIGH)
-- No focus trapping in modals (patient-quick-create, deep consult popover)
-- No `role="alert"` on error messages
-- No ARIA tab roles on tab bars
-- No skip-nav link
-- Chat action bar invisible to keyboard users (`opacity-0 group-hover:opacity-100` with no focus trigger)
-- `<label>` elements missing `htmlFor` in patient-form, lab-upload, document-upload
+### 9. ~~Accessibility Gaps~~ (Usability HIGH) — FIXED
+~~- No focus trapping in modals (patient-quick-create, deep consult popover)~~
+~~- No `role="alert"` on error messages~~
+~~- No ARIA tab roles on tab bars~~
+~~- No skip-nav link~~
+~~- Chat action bar invisible to keyboard users (`opacity-0 group-hover:opacity-100` with no focus trigger)~~
+~~- `<label>` elements missing `htmlFor` in patient-form, lab-upload, document-upload~~
+- **Fixed:** `useFocusTrap` hook applied to modals; `role="alert"` on 5 error divs; `role="tablist"`/`role="tab"`/`aria-selected` on visit tabs; `htmlFor`/`id` on ~22 fields; skip-nav link; `focus-within:opacity-100` on chat action bar
 
 ### 10. ~~Fire-and-Forget AI Without Backpressure~~ (Performance HIGH + Security) — MITIGATED
 ~~Lab parsing and document extraction are fire-and-forget promises. On Vercel, these can be silently abandoned after HTTP response, leaving reports permanently stuck in "parsing" status.~~
@@ -77,12 +78,12 @@
 |---|----------|---------|---------|
 | S1 | ~~CRITICAL~~ FIXED | ~~CSRF protection only on chat stream; missing on 11+ mutating endpoints~~ Shared `validateCsrf()` applied to all 13 handlers | `src/lib/api/csrf.ts` + all POST/PATCH/DELETE routes |
 | S2 | ~~CRITICAL~~ FIXED | ~~No rate limiting on AI/file endpoints (unbounded API cost exposure)~~ Dedicated `rate_limits` table + `checkRateLimit()` on all 5 AI endpoints | `src/lib/api/rate-limit.ts` + generate, scribe, transcribe, labs POST, extract POST |
-| S3 | HIGH | SQL filter injection via unsanitized search params in ilike/or filters | `patients/route.ts:39`, `visits/route.ts:41`, `patients/page.tsx:31` |
-| S4 | HIGH | No filename sanitization on file storage paths (path traversal risk) | `storage/lab-reports.ts:17`, `storage/patient-documents.ts:15` |
+| S3 | ~~HIGH~~ FIXED | ~~SQL filter injection via unsanitized search params in ilike/or filters~~ `escapePostgrestPattern()` applied to all search inputs | `src/lib/search.ts` + `patients/route.ts`, `visits/route.ts`, `patients/page.tsx` |
+| S4 | ~~HIGH~~ FIXED | ~~No filename sanitization on file storage paths (path traversal risk)~~ `sanitizeFilename()` applied to all storage paths and DB inserts | `src/lib/sanitize.ts` + `storage/lab-reports.ts`, `storage/patient-documents.ts`, upload routes |
 | S5 | HIGH | Error messages leak internal details to clients | `scribe/route.ts:174`, `transcribe/route.ts:125`, `visits/route.ts:95` |
-| S6 | HIGH | Visit export endpoint (full PHI) has no audit log | `visits/[id]/export/route.ts` |
+| S6 | ~~HIGH~~ FIXED | ~~Visit export endpoint (full PHI) has no audit log~~ Added `action: "export"` audit log | `visits/[id]/export/route.ts` |
 | S7 | MEDIUM | Scribe endpoint lacks Zod schema validation (no max length on transcript) | `visits/[id]/scribe/route.ts:58-61` |
-| S8 | MEDIUM | READ operations on individual PHI records not audit logged | 6 GET endpoints |
+| S8 | ~~MEDIUM~~ FIXED | ~~READ operations on individual PHI records not audit logged~~ Fire-and-forget `auditLog()` on all 10 GET endpoints | `src/lib/api/audit.ts` + all GET routes |
 | S9 | MEDIUM | Supabase error message leaked to client on visit creation | `visits/route.ts:95` |
 | S10 | MEDIUM | Console.error may log PHI in cloud environments | 12 instances across API routes |
 | S11 | MEDIUM | Service client singleton pattern (design awareness note) | `supabase/server.ts:41-51` |
@@ -124,7 +125,7 @@
 | P9 | MEDIUM | Unbounded biomarker references fetch with `select("*")` | `normalize-biomarkers.ts:180-182` |
 | P10 | MEDIUM | Chat history fetches up to 50 messages in one request | `use-chat.ts:5`, `chat/history/route.ts:39` |
 | P11 | MEDIUM | Large system prompts on every chat message (no prompt caching) | `anthropic.ts`, `visit-prompts.ts`, `lab-parsing-prompts.ts` |
-| P12 | MEDIUM | TipTap editor loaded eagerly (~150KB+) even on read-only visits | `visit-editor.tsx`, `visit-workspace.tsx:11` |
+| P12 | ~~MEDIUM~~ FIXED | ~~TipTap editor loaded eagerly (~150KB+) even on read-only visits~~ Lazy-loaded via `next/dynamic` with `ssr: false` | `visit-workspace.tsx` |
 | P13 | MEDIUM | react-markdown + rehype-sanitize in client bundle (~40-60KB) | `message-bubble.tsx` |
 | P14 | MEDIUM | Dashboard fetches ALL patients (no `.limit()`) | `dashboard/page.tsx:33-38` |
 | P15 | LOW | Audit log writes are blocking (not fire-and-forget) | ~15 locations across API routes |
@@ -148,11 +149,11 @@
 
 ## TEST COVERAGE
 
-### Current Status: 96 Tests Passing (Vitest)
+### Current Status: 113 Tests Passing (Vitest)
 
 | Category | Status |
 |---|---|
-| Unit tests (*.test.ts) | **8 files, 96 tests** |
+| Unit tests (*.test.ts) | **10 files, 113 tests** |
 | Test runner | **Vitest v4.0** |
 | E2E framework (Playwright/Cypress) | Not installed |
 | `package.json` "test" script | `vitest run` |
@@ -215,9 +216,9 @@ Covers remaining API routes and E2E flows (Playwright).
 | U6 | HIGH | Failed conversation history load shows no retry option | `use-chat.ts:221-222` |
 | U7 | HIGH | No breadcrumbs anywhere -- back navigation loses context | `visit-workspace.tsx:206-212` |
 | U8 | HIGH | Patient form has NO required field indicators -- empty records can be created | `patient-form.tsx:102-228` |
-| U9 | HIGH | No focus trapping in modals (patient-quick-create, deep consult popover) | `patient-quick-create.tsx:85-238` |
-| U10 | HIGH | Error messages lack `role="alert"` -- screen readers won't announce | All form pages |
-| U11 | HIGH | Tab bars missing `role="tab"`, `aria-selected`, `role="tablist"` | `visit-workspace.tsx:338-353` |
+| U9 | ~~HIGH~~ FIXED | ~~No focus trapping in modals~~ `useFocusTrap` hook applied to patient-quick-create + ifm-node-modal | `patient-quick-create.tsx`, `ifm-node-modal.tsx` |
+| U10 | ~~HIGH~~ FIXED | ~~Error messages lack `role="alert"`~~ Added to 5 error divs | All form pages |
+| U11 | ~~HIGH~~ FIXED | ~~Tab bars missing `role="tab"`, `aria-selected`, `role="tablist"`~~ Full ARIA tab pattern | `visit-workspace.tsx` |
 | U12 | HIGH | Chat suggested questions grid `grid-cols-2` with no mobile fallback | `chat-interface.tsx:138` |
 | U13 | HIGH | "Chat" tab in visit workspace is a dead end ("Coming in next update") | `visit-workspace.tsx:381-389` |
 | U14 | HIGH | Dead links: `/settings` and `/pricing` routes don't exist | `sidebar.tsx:316-321, 286-288` |
@@ -226,12 +227,12 @@ Covers remaining API routes and E2E flows (Playwright).
 | U17 | MEDIUM | No regeneration confirmation -- overwrites edited SOAP notes | `visit-workspace.tsx:309-316` |
 | U18 | MEDIUM | Auto-save has no error handling -- fails silently | `visit-workspace.tsx:153-166` |
 | U19 | MEDIUM | "Dashboard" not in sidebar nav -- only accessible via logo click | `sidebar.tsx:36-40` |
-| U20 | MEDIUM | Chat action bar invisible to keyboard users | `message-bubble.tsx:176-204` |
+| U20 | ~~MEDIUM~~ FIXED | ~~Chat action bar invisible to keyboard users~~ Added `focus-within:opacity-100` | `message-bubble.tsx` |
 | U21 | MEDIUM | Biomarker status communicated by color alone (no icon/pattern alternative) | `globals.css:43-49` |
 | U22 | MEDIUM | No loading.tsx for patients page | `src/app/(app)/patients/` |
 | U23 | ~~MEDIUM~~ FIXED | ~~Lab retry button just re-fetches state~~ Now calls `POST /api/labs/[id]/reparse` + shows toast + polls | `lab-report-detail.tsx` |
 | U24 | MEDIUM | Lab filter empty state has no "Clear filters" button | `lab-list-client.tsx:152-156` |
-| U25 | MEDIUM | `<label>` elements missing `htmlFor` in patient-form, lab-upload | Multiple files |
+| U25 | ~~MEDIUM~~ FIXED | ~~`<label>` elements missing `htmlFor`~~ Added `htmlFor`/`id` to ~22 fields across 4 components | `patient-form.tsx`, `patient-quick-create.tsx`, `lab-upload.tsx`, `document-upload.tsx` |
 | U26 | MEDIUM | State field on onboarding accepts free text (no US state validation) | `onboarding/page.tsx:213-220` |
 
 ### What's Working Well
@@ -353,8 +354,8 @@ Weakness: Range calculation produces disproportionate bars for extreme outliers 
 10. ~~Replace `bg-white` with `bg-[var(--color-surface)]`~~ — DONE (16 instances across 10 files)
 
 ### Sprint 3
-11. Filename sanitization on storage paths
-12. Search parameter escaping for PostgREST
-13. Accessibility pass (ARIA roles, focus trapping, label associations)
-14. Lazy-load TipTap editor
-15. Add audit logging for PHI reads + export
+11. ~~Filename sanitization on storage paths~~ — DONE (shared `sanitizeFilename()` in `src/lib/sanitize.ts` applied to `buildStoragePath()`, `buildLabStoragePath()`, and DB inserts; 11 tests)
+12. ~~Search parameter escaping for PostgREST~~ — DONE (shared `escapePostgrestPattern()` in `src/lib/search.ts` escaping `%`, `_`, `\`; applied to patients list, visits list, patients page; 6 tests)
+13. ~~Accessibility pass (ARIA roles, focus trapping, label associations)~~ — DONE (focus trapping via `useFocusTrap` hook in patient-quick-create + ifm-node-modal; `role="alert"` on 5 error divs; `role="tablist"`/`role="tab"`/`aria-selected` on visit tabs; `htmlFor`/`id` on ~22 form fields; skip-nav link in layout; `focus-within:opacity-100` on chat action bar)
+14. ~~Lazy-load TipTap editor~~ — DONE (`next/dynamic` with `ssr: false` + loading skeleton in visit-workspace.tsx)
+15. ~~Add audit logging for PHI reads + export~~ — DONE (shared `auditLog()` fire-and-forget helper in `src/lib/api/audit.ts`; read audit logs on all 10 GET endpoints; `action: "export"` on visit export route)

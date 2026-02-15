@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createPatientSchema, patientListQuerySchema } from "@/lib/validations/patient";
 import { validateCsrf } from "@/lib/api/csrf";
+import { escapePostgrestPattern } from "@/lib/search";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -37,11 +39,20 @@ export async function GET(request: NextRequest) {
 
     if (cursor) query = query.lt("updated_at", cursor);
     if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
+      const escaped = escapePostgrestPattern(search);
+      query = query.or(`first_name.ilike.%${escaped}%,last_name.ilike.%${escaped}%`);
     }
 
     const { data: patients, error } = await query;
     if (error) return jsonError("Failed to fetch patients", 500);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient",
+      detail: { list: true, count: patients?.length || 0, search: search || null },
+    });
 
     const nextCursor = patients && patients.length === limit
       ? patients[patients.length - 1].updated_at

@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getSignedUrl, deleteFromStorage } from "@/lib/storage/patient-documents";
 import { rebuildPatientClinicalSummary } from "@/lib/ai/clinical-summary";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -10,7 +11,7 @@ function jsonError(message: string, status: number) {
 
 // ── GET /api/patients/[id]/documents/[docId] — Single document ──────────
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; docId: string }> }
 ) {
   try {
@@ -36,6 +37,15 @@ export async function GET(
       .single();
 
     if (error || !document) return jsonError("Document not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient_document",
+      resourceId: docId,
+      detail: { patient_id: patientId },
+    });
 
     // Generate signed URL for PDF viewing
     let signedUrl: string | null = null;

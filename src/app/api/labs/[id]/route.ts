@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage/lab-reports";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -8,7 +9,7 @@ function jsonError(message: string, status: number) {
 
 // ── GET /api/labs/[id] — Get single lab report with biomarker results ──
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -34,6 +35,14 @@ export async function GET(
       .single();
 
     if (error || !report) return jsonError("Lab report not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "lab_report",
+      resourceId: reportId,
+    });
 
     // Fetch biomarker results
     const { data: biomarkers } = await supabase

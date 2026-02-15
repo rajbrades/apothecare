@@ -5,6 +5,8 @@ import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports"
 import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { sanitizeFilename } from "@/lib/sanitize";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -55,7 +57,17 @@ export async function GET(request: NextRequest) {
       ? labs[labs.length - 1].created_at
       : null;
 
-    return NextResponse.json({ labs: labs || [], nextCursor });
+    const labList = labs || [];
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "lab_report",
+      detail: { list: true, count: labList.length },
+    });
+
+    return NextResponse.json({ labs: labList, nextCursor });
   } catch {
     return jsonError("Internal server error", 500);
   }
@@ -133,7 +145,7 @@ export async function POST(request: NextRequest) {
         test_name: parsed.data.test_name || null,
         collection_date: parsed.data.collection_date || null,
         raw_file_url: "",
-        raw_file_name: file.name,
+        raw_file_name: sanitizeFilename(file.name),
         raw_file_size: file.size,
         parsed_data: {},
         status: "uploading",
