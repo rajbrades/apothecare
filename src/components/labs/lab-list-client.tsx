@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { LabReportCard } from "./lab-report-card";
 import { LabUpload } from "./lab-upload";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
@@ -107,6 +108,12 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
     });
   };
 
+  const handleDelete = (id: string) => {
+    setLabs((prev) => prev.filter((l) => l.id !== id));
+    toast.success("Lab report deleted");
+    router.refresh();
+  };
+
   return (
     <div className="space-y-4">
       {/* Upload section */}
@@ -145,7 +152,7 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
       {/* Lab list */}
       <div className="space-y-2">
         {labs.map((lab) => (
-          <LabReportCard key={lab.id} report={lab} />
+          <LabReportCard key={lab.id} report={lab} onDelete={handleDelete} />
         ))}
       </div>
 

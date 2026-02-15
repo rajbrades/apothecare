@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getSignedUrl } from "@/lib/storage/lab-reports";
+import { getSignedUrl, deleteFromStorage } from "@/lib/storage/lab-reports";
+import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
@@ -67,6 +68,75 @@ export async function GET(
       biomarkers: biomarkers || [],
       pdfUrl,
     });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
+
+// ── DELETE /api/labs/[id] — Delete a lab report and its biomarker results ──
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
+    const { id: reportId } = await params;
+    const supabase = await createClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return jsonError("Unauthorized", 401);
+
+    const { data: practitioner } = await supabase
+      .from("practitioners")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+    if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    // Verify ownership
+    const { data: report } = await supabase
+      .from("lab_reports")
+      .select("id, raw_file_url")
+      .eq("id", reportId)
+      .eq("practitioner_id", practitioner.id)
+      .single();
+
+    if (!report) return jsonError("Lab report not found", 404);
+
+    // Delete file from storage (non-fatal if already removed)
+    if (report.raw_file_url) {
+      try {
+        await deleteFromStorage(report.raw_file_url);
+      } catch {
+        // Storage deletion is non-fatal
+      }
+    }
+
+    // Delete biomarker results first (FK constraint)
+    await supabase
+      .from("biomarker_results")
+      .delete()
+      .eq("lab_report_id", reportId);
+
+    // Delete the lab report record
+    const { error: deleteError } = await supabase
+      .from("lab_reports")
+      .delete()
+      .eq("id", reportId);
+
+    if (deleteError) return jsonError("Failed to delete lab report", 500);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "delete",
+      resourceType: "lab_report",
+      resourceId: reportId,
+    });
+
+    return NextResponse.json({ success: true });
   } catch {
     return jsonError("Internal server error", 500);
   }

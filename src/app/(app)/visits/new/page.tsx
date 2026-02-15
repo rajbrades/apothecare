@@ -17,7 +17,8 @@ export default async function NewVisitPage() {
     .select("id, first_name, last_name")
     .eq("practitioner_id", practitioner.id)
     .eq("is_archived", false)
-    .order("last_name", { ascending: true });
+    .order("last_name", { ascending: true })
+    .limit(500);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">

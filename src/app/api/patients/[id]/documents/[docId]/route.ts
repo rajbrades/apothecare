@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl, deleteFromStorage } from "@/lib/storage/patient-documents";
 import { rebuildPatientClinicalSummary } from "@/lib/ai/clinical-summary";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -74,7 +74,6 @@ export async function DELETE(
 
     const { id: patientId, docId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -114,17 +113,12 @@ export async function DELETE(
       console.error("Clinical summary rebuild failed:", err);
     });
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "delete",
-      resource_type: "patient_document",
-      resource_id: docId,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient_document",
+      resourceId: docId,
       detail: { patient_id: patientId },
     });
 

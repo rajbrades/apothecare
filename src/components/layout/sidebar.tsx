@@ -36,6 +36,7 @@ interface SidebarProps {
 }
 
 const navItems = [
+  { href: "/dashboard", icon: MessageSquare, label: "Dashboard" },
   { href: "/visits", icon: Stethoscope, label: "Visits" },
   { href: "/labs", icon: FlaskConical, label: "Labs" },
   { href: "/patients", icon: Users, label: "Patients" },
@@ -321,10 +322,8 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
         <div className="mx-3 mb-3 p-3 rounded-lg bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-brand-50)] border border-[var(--color-gold-200)]">
           <p className="text-xs font-medium text-[var(--color-text-primary)]">Unlock unlimited queries</p>
           <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">Labs, protocols, SOAP notes & more</p>
-          <Button asChild variant="gold" size="xs" className="mt-2">
-            <Link href="/pricing">
-              Upgrade to Pro
-            </Link>
+          <Button variant="gold" size="xs" className="mt-2" onClick={() => toast.info("Pro upgrade coming soon")}>
+            Upgrade to Pro
           </Button>
         </div>
       )}
@@ -352,12 +351,13 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
               {practitioner.email}
             </p>
           </div>
-          <Link
-            href="/settings"
+          <button
+            onClick={() => toast.info("Settings coming soon")}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            aria-label="Settings"
           >
             <Settings className="icon-inline" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useChat } from "@/hooks/use-chat";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
-import { ArrowRight, Leaf, Loader2 } from "lucide-react";
+import { ArrowRight, Leaf, Loader2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 
@@ -35,6 +35,8 @@ export function ChatInterface() {
     loadConversation,
     loadMoreMessages,
     clearMessages,
+    retry,
+    retryLoadHistory,
   } = useChat({
     conversationId: convId,
     patientId: initialPatientId,
@@ -185,17 +187,25 @@ export function ChatInterface() {
 
             {/* Error display */}
             {error && (
-              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div role="alert" className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <span className="text-red-500 text-lg">!</span>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-red-800">{error}</p>
-                  {error.includes("query limit") && (
+                  {error.includes("query limit") ? (
                     <Link
                       href="/pricing"
                       className="text-sm text-[var(--color-brand-700)] font-medium hover:underline mt-1 inline-block"
                     >
                       Upgrade to Pro for unlimited queries
                     </Link>
+                  ) : (
+                    <button
+                      onClick={error.includes("conversation history") ? retryLoadHistory : retry}
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Retry
+                    </button>
                   )}
                 </div>
               </div>

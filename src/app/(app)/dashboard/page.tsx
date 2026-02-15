@@ -35,7 +35,8 @@ export default async function DashboardPage() {
     .select("id, first_name, last_name")
     .eq("practitioner_id", practitioner.id)
     .eq("is_archived", false)
-    .order("last_name", { ascending: true });
+    .order("last_name", { ascending: true })
+    .limit(500);
 
   const suggestedQuestions = [
     "What are evidence-based interventions for elevated zonulin and intestinal permeability?",

@@ -280,7 +280,7 @@ export default function OnboardingPage() {
                   setStep(2);
                 }}
                 disabled={!licenseType}
-                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -356,7 +356,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleComplete}
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-50"
                 >
                   {loading ? "Setting up..." : "Launch Apotheca →"}
                 </button>

@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import { CLINICAL_CHAT_SYSTEM_PROMPT } from "@/lib/ai/anthropic";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,7 +22,6 @@ export async function POST(request: NextRequest) {
     if (csrfError) return csrfError;
 
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Verify authentication
     const {
@@ -72,10 +72,6 @@ export async function POST(request: NextRequest) {
       return jsonError(parsed.error.issues[0].message, 400);
     }
     const { message, conversation_id, patient_id, is_deep_consult } = parsed.data;
-
-    // Capture request metadata for audit
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
 
     // Get or create conversation
     const model = is_deep_consult ? MODELS.advanced : MODELS.standard;
@@ -186,14 +182,12 @@ export async function POST(request: NextRequest) {
             .select()
             .single();
 
-          // Audit log
-          await serviceClient.from("audit_logs").insert({
-            practitioner_id: practitioner.id,
-            action: "query" as const,
-            resource_type: "conversation",
-            resource_id: convId,
-            ip_address: clientIp,
-            user_agent: userAgent,
+          auditLog({
+            request,
+            practitionerId: practitioner.id,
+            action: "query",
+            resourceType: "conversation",
+            resourceId: convId ?? undefined,
             detail: {
               model,
               input_tokens: usage.inputTokens,

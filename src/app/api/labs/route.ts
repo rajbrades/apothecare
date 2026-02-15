@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { uploadLabSchema, labListQuerySchema } from "@/lib/validations/lab";
 import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports";
 import { parseLabReport } from "@/lib/ai/lab-parsing";
@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
     if (csrfError) return csrfError;
 
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -175,17 +174,12 @@ export async function POST(request: NextRequest) {
       .update({ raw_file_url: storagePath })
       .eq("id", report.id);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "upload",
-      resource_type: "lab_report",
-      resource_id: report.id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "lab_report",
+      resourceId: report.id,
       detail: {
         patient_id: patientId,
         file_name: file.name,

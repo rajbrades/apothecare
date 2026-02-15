@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { updatePatientSchema } from "@/lib/validations/patient";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
@@ -72,7 +72,6 @@ export async function PATCH(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -90,16 +89,12 @@ export async function PATCH(
 
     if (error) return jsonError("Failed to update patient", 500);
 
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "update",
-      resource_type: "patient",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient",
+      resourceId: id,
       detail: { fields_updated: Object.keys(parsed.data) },
     });
 
@@ -120,7 +115,6 @@ export async function DELETE(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -132,16 +126,12 @@ export async function DELETE(
 
     if (error) return jsonError("Failed to archive patient", 500);
 
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "delete",
-      resource_type: "patient",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient",
+      resourceId: id,
     });
 
     return NextResponse.json({ success: true });

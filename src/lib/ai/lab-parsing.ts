@@ -116,12 +116,14 @@ export async function parseLabReport(
       })
       .eq("id", reportId);
 
-    // Audit log
-    await serviceClient.from("audit_logs").insert({
+    // Audit log (fire-and-forget)
+    serviceClient.from("audit_logs").insert({
       practitioner_id: practitionerId,
       action: "generate",
       resource_type: "lab_report",
       resource_id: reportId,
+      ip_address: "background",
+      user_agent: "background",
       detail: {
         patient_id: patientId,
         parsing_model: ANTHROPIC_MODELS.vision,
@@ -131,6 +133,8 @@ export async function parseLabReport(
         lab_vendor: parsedData.lab_vendor,
         test_type: parsedData.test_type,
       },
+    }).then(() => {}).catch((err: unknown) => {
+      console.error("Audit log write failed:", err);
     });
   } catch (err) {
     console.error("Lab parsing error:", err);

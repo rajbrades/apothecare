@@ -37,6 +37,25 @@ export async function GET(request: NextRequest) {
 
     const { conversation_id, cursor, limit } = parsed.data;
 
+    // Verify conversation ownership
+    if (!practitioner) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", conversation_id)
+      .eq("practitioner_id", practitioner.id)
+      .single();
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 }
+      );
+    }
+
     // Build query — fetch limit + 1 to determine if more messages exist
     let query = supabase
       .from("messages")

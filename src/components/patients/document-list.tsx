@@ -24,6 +24,7 @@ interface DocumentListProps {
   documents: DocumentItem[];
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
+  onLabDeleted?: (labId: string) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -61,7 +62,7 @@ function formatTestType(type: string): string {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted }: DocumentListProps) {
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reextracting, setReextracting] = useState<string | null>(null);
   const [docStatuses, setDocStatuses] = useState<Record<string, string>>({});
@@ -72,6 +73,20 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
     try {
       await fetch(`/api/patients/${patientId}/documents/${docId}`, { method: "DELETE" });
       onDeleted(docId);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleDeleteLab = async (labId: string) => {
+    if (!confirm("Delete this lab report and all its biomarker results? This cannot be undone.")) return;
+    setDeleting(labId);
+    try {
+      const res = await fetch(`/api/labs/${labId}`, { method: "DELETE" });
+      if (res.ok) {
+        onLabDeleted?.(labId);
+        toast.success("Lab report deleted");
+      }
     } finally {
       setDeleting(null);
     }
@@ -179,6 +194,14 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
+                <button
+                  onClick={() => handleDeleteLab(lab.id)}
+                  disabled={deleting === lab.id}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors disabled:opacity-50"
+                  title="Delete lab report"
+                >
+                  {deleting === lab.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
               </div>
             </div>
           );

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { createCompletion, MODELS } from "@/lib/ai/provider";
 import { buildScribeSystemPrompt } from "@/lib/ai/scribe-prompts";
 import { ENCOUNTER_TEMPLATES } from "@/lib/templates/definitions";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { scribeSchema } from "@/lib/validations/visit";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -32,7 +34,6 @@ export async function POST(
 
     const { id: visitId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Auth
     const {
@@ -64,12 +65,13 @@ export async function POST(
     if (visit.status === "completed")
       return jsonError("Cannot modify a completed visit", 409);
 
-    // Parse input
+    // Parse and validate input
     const body = await request.json();
-    const transcript = body.transcript as string;
-    if (!transcript || transcript.trim().length < 10) {
-      return jsonError("Transcript must be at least 10 characters", 400);
+    const parsed = scribeSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonError(parsed.error.issues[0]?.message ?? "Invalid input", 400);
     }
+    const { transcript } = parsed.data;
 
     // Get template sections for this visit type
     const visitType = visit.visit_type || "soap";
@@ -151,19 +153,12 @@ export async function POST(
       .update({ raw_notes: transcript })
       .eq("id", visitId);
 
-    // Audit log
-    const clientIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "generate",
-      resource_type: "visit",
-      resource_id: visitId,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "visit",
+      resourceId: visitId,
       detail: {
         action: "scribe",
         visit_type: visitType,
@@ -175,8 +170,6 @@ export async function POST(
     return NextResponse.json({ sections: filteredSections });
   } catch (error) {
     console.error("Scribe error:", error);
-    const message =
-      error instanceof Error ? error.message : "Scribe processing failed";
-    return jsonError(message, 500);
+    return jsonError("Scribe processing failed", 500);
   }
 }

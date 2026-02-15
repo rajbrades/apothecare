@@ -11,7 +11,8 @@ type AuditAction =
   | "logout"
   | "upload"
   | "query"
-  | "generate";
+  | "generate"
+  | "transcribe";
 
 interface AuditLogParams {
   request: NextRequest;

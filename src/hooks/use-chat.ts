@@ -41,6 +41,8 @@ export function useChat(options: UseChatOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingContentRef = useRef<string>("");
   const nextCursorRef = useRef<string | null>(null);
+  const lastFailedContentRef = useRef<string | null>(null);
+  const failedConvIdRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -48,6 +50,7 @@ export function useChat(options: UseChatOptions = {}) {
 
       setError(null);
       setIsLoading(true);
+      lastFailedContentRef.current = null;
 
       // Add user message
       const userMessage: ChatMessage = {
@@ -181,6 +184,7 @@ export function useChat(options: UseChatOptions = {}) {
             err instanceof Error ? err.message : "Something went wrong";
           setError(errorMessage);
           options.onError?.(errorMessage);
+          lastFailedContentRef.current = content.trim();
 
           // Remove the empty assistant message on error
           setMessages((prev) => {
@@ -220,6 +224,7 @@ export function useChat(options: UseChatOptions = {}) {
         nextCursorRef.current = data.nextCursor ?? null;
       } catch {
         setError("Failed to load conversation history");
+        failedConvIdRef.current = convId;
       }
     },
     []
@@ -254,6 +259,28 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [conversationId, isLoadingMore]);
 
+  const retry = useCallback(() => {
+    const content = lastFailedContentRef.current;
+    if (!content) return;
+    // Remove the failed user message before resending
+    setMessages((prev) => {
+      const last = prev[prev.length - 1];
+      if (last?.role === "user" && last.content === content) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+    sendMessage(content);
+  }, [sendMessage]);
+
+  const retryLoadHistory = useCallback(() => {
+    const convId = failedConvIdRef.current;
+    if (!convId) return;
+    failedConvIdRef.current = null;
+    setError(null);
+    loadConversation(convId);
+  }, [loadConversation]);
+
   const clearMessages = useCallback(() => {
     setMessages([]);
     setConversationId(null);
@@ -273,5 +300,7 @@ export function useChat(options: UseChatOptions = {}) {
     loadConversation,
     loadMoreMessages,
     clearMessages,
+    retry,
+    retryLoadHistory,
   };
 }

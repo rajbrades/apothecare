@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import {
   buildVisitSystemPrompt,
@@ -10,6 +10,7 @@ import {
 import { generateVisitSchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -31,7 +32,6 @@ export async function POST(
 
     const { id: visitId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Auth
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -255,17 +255,12 @@ export async function POST(
             await Promise.all(tasks);
           }
 
-          // Audit log
-          const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-          const userAgent = request.headers.get("user-agent") || "unknown";
-
-          await serviceClient.from("audit_logs").insert({
-            practitioner_id: practitioner.id,
+          auditLog({
+            request,
+            practitionerId: practitioner.id,
             action: "generate",
-            resource_type: "visit",
-            resource_id: visitId,
-            ip_address: clientIp,
-            user_agent: userAgent,
+            resourceType: "visit",
+            resourceId: visitId,
             detail: { sections, visit_type: visit.visit_type, has_patient: !!visit.patient_id },
           });
 

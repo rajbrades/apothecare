@@ -46,9 +46,10 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
-export function PatientProfile({ patient, documents: initialDocs, labReports, visits }: PatientProfileProps) {
+export function PatientProfile({ patient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [documents, setDocuments] = useState(initialDocs);
+  const [labReports, setLabReports] = useState(initialLabs);
 
   const name = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || "Unnamed Patient";
   const age = getAge(patient.date_of_birth);
@@ -66,6 +67,10 @@ export function PatientProfile({ patient, documents: initialDocs, labReports, vi
 
   const handleDocumentDeleted = (docId: string) => {
     setDocuments((prev) => prev.filter((d) => d.id !== docId));
+  };
+
+  const handleLabDeleted = (labId: string) => {
+    setLabReports((prev) => prev.filter((l) => l.id !== labId));
   };
 
   return (
@@ -165,6 +170,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports, vi
               documents={documents}
               labReports={labReports}
               onDeleted={handleDocumentDeleted}
+              onLabDeleted={handleLabDeleted}
             />
           </div>
         )}

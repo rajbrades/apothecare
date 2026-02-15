@@ -103,12 +103,12 @@ export function PatientForm() {
         {/* Name row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="pf-first-name" className={labelClass}>First Name</label>
-            <input id="pf-first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="First name" />
+            <label htmlFor="pf-first-name" className={labelClass}>First Name <span className="text-red-400">*</span></label>
+            <input id="pf-first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="First name" required />
           </div>
           <div>
-            <label htmlFor="pf-last-name" className={labelClass}>Last Name</label>
-            <input id="pf-last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="Last name" />
+            <label htmlFor="pf-last-name" className={labelClass}>Last Name <span className="text-red-400">*</span></label>
+            <input id="pf-last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="Last name" required />
           </div>
         </div>
 

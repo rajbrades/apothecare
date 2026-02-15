@@ -80,15 +80,15 @@
 | S2 | ~~CRITICAL~~ FIXED | ~~No rate limiting on AI/file endpoints (unbounded API cost exposure)~~ Dedicated `rate_limits` table + `checkRateLimit()` on all 5 AI endpoints | `src/lib/api/rate-limit.ts` + generate, scribe, transcribe, labs POST, extract POST |
 | S3 | ~~HIGH~~ FIXED | ~~SQL filter injection via unsanitized search params in ilike/or filters~~ `escapePostgrestPattern()` applied to all search inputs | `src/lib/search.ts` + `patients/route.ts`, `visits/route.ts`, `patients/page.tsx` |
 | S4 | ~~HIGH~~ FIXED | ~~No filename sanitization on file storage paths (path traversal risk)~~ `sanitizeFilename()` applied to all storage paths and DB inserts | `src/lib/sanitize.ts` + `storage/lab-reports.ts`, `storage/patient-documents.ts`, upload routes |
-| S5 | HIGH | Error messages leak internal details to clients | `scribe/route.ts:174`, `transcribe/route.ts:125`, `visits/route.ts:95` |
+| S5 | ~~HIGH~~ FIXED | ~~Error messages leak internal details to clients~~ Replaced `error.message` passthrough with static error strings | `scribe/route.ts`, `transcribe/route.ts`, `visits/route.ts` |
 | S6 | ~~HIGH~~ FIXED | ~~Visit export endpoint (full PHI) has no audit log~~ Added `action: "export"` audit log | `visits/[id]/export/route.ts` |
-| S7 | MEDIUM | Scribe endpoint lacks Zod schema validation (no max length on transcript) | `visits/[id]/scribe/route.ts:58-61` |
+| S7 | ~~MEDIUM~~ FIXED | ~~Scribe endpoint lacks Zod schema validation (no max length on transcript)~~ Added `scribeSchema` with 100K char max | `validations/visit.ts`, `visits/[id]/scribe/route.ts` |
 | S8 | ~~MEDIUM~~ FIXED | ~~READ operations on individual PHI records not audit logged~~ Fire-and-forget `auditLog()` on all 10 GET endpoints | `src/lib/api/audit.ts` + all GET routes |
-| S9 | MEDIUM | Supabase error message leaked to client on visit creation | `visits/route.ts:95` |
+| S9 | ~~MEDIUM~~ FIXED | ~~Supabase error message leaked to client on visit creation~~ Replaced with static "Failed to create visit" | `visits/route.ts` |
 | S10 | MEDIUM | Console.error may log PHI in cloud environments | 12 instances across API routes |
 | S11 | MEDIUM | Service client singleton pattern (design awareness note) | `supabase/server.ts:41-51` |
-| S12 | LOW | Chat history missing conversation ownership check | `chat/history/route.ts:34-38` |
-| S13 | LOW | Stub review route missing auth check | `labs/[id]/review/route.ts:4` |
+| S12 | ~~LOW~~ FIXED | ~~Chat history missing conversation ownership check~~ Added `practitioner_id` verification on conversations table | `chat/history/route.ts` |
+| S13 | ~~LOW~~ FIXED | ~~Stub review route missing auth check~~ Added CSRF validation + auth check | `labs/[id]/review/route.ts` |
 | S14 | LOW | Untyped Supabase clients reduce compile-time safety | `supabase/server.ts:6-7` |
 
 ### What's Working Well
@@ -121,14 +121,14 @@
 | P5 | HIGH | Redundant auth + practitioner lookup on every API call (N+1) | All API route handlers |
 | P6 | ~~HIGH~~ MITIGATED | ~~Fire-and-forget AI without job queue~~ Added reparse endpoint, fixed retry button, added stuck job cleanup cron | `labs/[id]/reparse/route.ts`, `admin/cleanup-stuck-jobs/route.ts` |
 | P7 | ~~HIGH~~ FIXED | ~~`parsed_data` JSONB included in lab list query~~ Removed from select | `labs/route.ts` |
-| P8 | MEDIUM | 3s polling without backoff, max attempts, or visibility check | `lab-report-detail.tsx:133-149` |
+| P8 | ~~MEDIUM~~ FIXED | ~~3s polling without backoff, max attempts, or visibility check~~ setTimeout-based with exponential backoff (3s→15s max) + `document.hidden` skip | `lab-report-detail.tsx` |
 | P9 | MEDIUM | Unbounded biomarker references fetch with `select("*")` | `normalize-biomarkers.ts:180-182` |
 | P10 | MEDIUM | Chat history fetches up to 50 messages in one request | `use-chat.ts:5`, `chat/history/route.ts:39` |
 | P11 | MEDIUM | Large system prompts on every chat message (no prompt caching) | `anthropic.ts`, `visit-prompts.ts`, `lab-parsing-prompts.ts` |
 | P12 | ~~MEDIUM~~ FIXED | ~~TipTap editor loaded eagerly (~150KB+) even on read-only visits~~ Lazy-loaded via `next/dynamic` with `ssr: false` | `visit-workspace.tsx` |
 | P13 | MEDIUM | react-markdown + rehype-sanitize in client bundle (~40-60KB) | `message-bubble.tsx` |
-| P14 | MEDIUM | Dashboard fetches ALL patients (no `.limit()`) | `dashboard/page.tsx:33-38` |
-| P15 | LOW | Audit log writes are blocking (not fire-and-forget) | ~15 locations across API routes |
+| P14 | ~~MEDIUM~~ FIXED | ~~Dashboard fetches ALL patients (no `.limit()`)~~ Added `.limit(500)` to all 3 patient dropdown queries | `dashboard/page.tsx`, `labs/page.tsx`, `visits/new/page.tsx` |
+| P15 | ~~LOW~~ FIXED | ~~Audit log writes are blocking (not fire-and-forget)~~ Converted 13 route files to shared `auditLog()` helper; 2 lib files use `.then().catch()` pattern | All mutating API routes + `document-extraction.ts`, `lab-parsing.ts` |
 | P16 | LOW | No `Cache-Control` headers on list API responses | All GET list endpoints |
 | P17 | LOW | No `unstable_cache` for cross-request sidebar caching | `cached-queries.ts` |
 | P18 | LOW | Chat page is pure client component with no server prefetching | `chat/page.tsx` |
@@ -209,27 +209,27 @@ Covers remaining API routes and E2E flows (Playwright).
 | # | Severity | Issue | File |
 |---|----------|-------|------|
 | U1 | ~~CRITICAL~~ DONE | ~~No mobile sidebar~~ Already implemented: hamburger, slide-in drawer, backdrop, auto-close on route change | `sidebar.tsx` |
-| U2 | CRITICAL | No `<nav>` landmark with `aria-label` wrapping sidebar navigation | `sidebar.tsx` |
+| U2 | ~~CRITICAL~~ DONE | ~~No `<nav>` landmark with `aria-label` wrapping sidebar navigation~~ Already present in sidebar.tsx (line 190) | `sidebar.tsx` |
 | U3 | ~~HIGH~~ FIXED | ~~No success toast after lab upload~~ Added sonner toasts to lab upload, document upload, and re-extract | `lab-upload.tsx`, `document-upload.tsx`, `document-list.tsx` |
 | U4 | HIGH | Upload section defaults to collapsed on empty labs page | `lab-upload.tsx:50` |
-| U5 | HIGH | No retry button on chat errors -- user must retype | `chat-interface.tsx:186-202` |
-| U6 | HIGH | Failed conversation history load shows no retry option | `use-chat.ts:221-222` |
+| U5 | ~~HIGH~~ FIXED | ~~No retry button on chat errors -- user must retype~~ Added retry button with `RotateCcw` icon + `lastFailedContentRef` tracking | `chat-interface.tsx`, `use-chat.ts` |
+| U6 | ~~HIGH~~ FIXED | ~~Failed conversation history load shows no retry option~~ Added `retryLoadHistory()` + `failedConvIdRef` tracking | `use-chat.ts`, `chat-interface.tsx` |
 | U7 | HIGH | No breadcrumbs anywhere -- back navigation loses context | `visit-workspace.tsx:206-212` |
-| U8 | HIGH | Patient form has NO required field indicators -- empty records can be created | `patient-form.tsx:102-228` |
+| U8 | ~~HIGH~~ FIXED | ~~Patient form has NO required field indicators -- empty records can be created~~ Added red asterisk to First/Last Name labels + `required` attribute on inputs | `patient-form.tsx` |
 | U9 | ~~HIGH~~ FIXED | ~~No focus trapping in modals~~ `useFocusTrap` hook applied to patient-quick-create + ifm-node-modal | `patient-quick-create.tsx`, `ifm-node-modal.tsx` |
 | U10 | ~~HIGH~~ FIXED | ~~Error messages lack `role="alert"`~~ Added to 5 error divs | All form pages |
 | U11 | ~~HIGH~~ FIXED | ~~Tab bars missing `role="tab"`, `aria-selected`, `role="tablist"`~~ Full ARIA tab pattern | `visit-workspace.tsx` |
 | U12 | HIGH | Chat suggested questions grid `grid-cols-2` with no mobile fallback | `chat-interface.tsx:138` |
 | U13 | HIGH | "Chat" tab in visit workspace is a dead end ("Coming in next update") | `visit-workspace.tsx:381-389` |
-| U14 | HIGH | Dead links: `/settings` and `/pricing` routes don't exist | `sidebar.tsx:316-321, 286-288` |
-| U15 | HIGH | Hover state bug on register/onboarding CTAs (hover = base color) | `register/page.tsx`, `onboarding/page.tsx` |
+| U14 | ~~HIGH~~ FIXED | ~~Dead links: `/settings` and `/pricing` routes don't exist~~ Replaced with buttons + toast notifications | `sidebar.tsx` |
+| U15 | ~~HIGH~~ FIXED | ~~Hover state bug on register/onboarding CTAs (hover = base color)~~ Changed `hover:bg-[var(--color-brand-700)]` to `hover:bg-[var(--color-brand-800)]` | `register/page.tsx`, `onboarding/page.tsx` |
 | U16 | HIGH | No inline validation on any form (server-side only) | Multiple files |
 | U17 | MEDIUM | No regeneration confirmation -- overwrites edited SOAP notes | `visit-workspace.tsx:309-316` |
 | U18 | MEDIUM | Auto-save has no error handling -- fails silently | `visit-workspace.tsx:153-166` |
-| U19 | MEDIUM | "Dashboard" not in sidebar nav -- only accessible via logo click | `sidebar.tsx:36-40` |
+| U19 | ~~MEDIUM~~ FIXED | ~~"Dashboard" not in sidebar nav -- only accessible via logo click~~ Added as first item in `navItems` array | `sidebar.tsx` |
 | U20 | ~~MEDIUM~~ FIXED | ~~Chat action bar invisible to keyboard users~~ Added `focus-within:opacity-100` | `message-bubble.tsx` |
 | U21 | MEDIUM | Biomarker status communicated by color alone (no icon/pattern alternative) | `globals.css:43-49` |
-| U22 | MEDIUM | No loading.tsx for patients page | `src/app/(app)/patients/` |
+| U22 | ~~MEDIUM~~ FIXED | ~~No loading.tsx for patients page~~ Added loading skeleton with shimmer cards | `src/app/(app)/patients/loading.tsx` |
 | U23 | ~~MEDIUM~~ FIXED | ~~Lab retry button just re-fetches state~~ Now calls `POST /api/labs/[id]/reparse` + shows toast + polls | `lab-report-detail.tsx` |
 | U24 | MEDIUM | Lab filter empty state has no "Clear filters" button | `lab-list-client.tsx:152-156` |
 | U25 | ~~MEDIUM~~ FIXED | ~~`<label>` elements missing `htmlFor`~~ Added `htmlFor`/`id` to ~22 fields across 4 components | `patient-form.tsx`, `patient-quick-create.tsx`, `lab-upload.tsx`, `document-upload.tsx` |
@@ -359,3 +359,19 @@ Weakness: Range calculation produces disproportionate bars for extreme outliers 
 13. ~~Accessibility pass (ARIA roles, focus trapping, label associations)~~ — DONE (focus trapping via `useFocusTrap` hook in patient-quick-create + ifm-node-modal; `role="alert"` on 5 error divs; `role="tablist"`/`role="tab"`/`aria-selected` on visit tabs; `htmlFor`/`id` on ~22 form fields; skip-nav link in layout; `focus-within:opacity-100` on chat action bar)
 14. ~~Lazy-load TipTap editor~~ — DONE (`next/dynamic` with `ssr: false` + loading skeleton in visit-workspace.tsx)
 15. ~~Add audit logging for PHI reads + export~~ — DONE (shared `auditLog()` fire-and-forget helper in `src/lib/api/audit.ts`; read audit logs on all 10 GET endpoints; `action: "export"` on visit export route)
+
+### Sprint 4
+16. ~~Chat retry on errors (U5+U6)~~ — DONE (`retry()` + `retryLoadHistory()` in `use-chat.ts`; retry button with error-type routing in `chat-interface.tsx`)
+17. ~~Scrub leaked error messages (S5+S9)~~ — DONE (replaced `error.message` passthrough with static strings in scribe, transcribe, visits POST)
+18. ~~Scribe Zod schema (S7)~~ — DONE (`scribeSchema` with 100K char max in `validations/visit.ts`; applied in scribe route)
+19. ~~Chat history ownership check (S12)~~ — DONE (verify `conversation.practitioner_id` before returning messages)
+20. ~~Stub review auth (S13)~~ — DONE (added CSRF + auth check to `labs/[id]/review/route.ts`)
+21. ~~Convert blocking audit writes to fire-and-forget (P15)~~ — DONE (13 route files converted to shared `auditLog()` helper; 2 lib files use `.then().catch()` pattern)
+22. ~~Add `.limit(500)` to unbounded patient dropdown queries (P14)~~ — DONE (dashboard, labs, visits/new)
+23. ~~Lab polling backoff + visibility check (P8)~~ — DONE (setTimeout-based with exponential backoff 3s→15s max + `document.hidden` skip)
+24. ~~Sidebar `<nav>` landmark (U2)~~ — ALREADY PRESENT (sidebar.tsx line 190)
+25. ~~Dashboard in sidebar nav (U19)~~ — DONE (added as first navItem)
+26. ~~Remove dead sidebar links (U14)~~ — DONE (replaced `/settings` and `/pricing` links with buttons + toast notifications)
+27. ~~Required field indicators on patient form (U8)~~ — DONE (red asterisk on First/Last Name labels + `required` attribute on inputs)
+28. ~~Hover state bug on register/onboarding CTAs (U15)~~ — DONE (changed `hover:bg-[var(--color-brand-700)]` to `hover:bg-[var(--color-brand-800)]`)
+29. ~~Add loading.tsx for patients page (U22)~~ — DONE (shimmer skeleton matching visits/labs pattern)

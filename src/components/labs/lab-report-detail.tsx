@@ -130,24 +130,42 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
   const isProcessing = PROCESSING_STATUSES.includes(report.status);
 
-  // Poll while processing
+  // Poll while processing — with backoff and visibility check
   useEffect(() => {
     if (!isProcessing) return;
 
-    const interval = setInterval(async () => {
+    let delay = 3000;
+    const MAX_DELAY = 15000;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      // Skip poll when tab is hidden
+      if (document.hidden) {
+        timeoutId = setTimeout(poll, delay);
+        return;
+      }
+
       try {
         const res = await fetch(`/api/labs/${report.id}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setReport(data.report);
-        setBiomarkers(data.biomarkers);
-        if (data.pdfUrl) setPdfUrl(data.pdfUrl);
+        if (!res.ok) {
+          delay = Math.min(delay * 1.5, MAX_DELAY);
+        } else {
+          const data = await res.json();
+          setReport(data.report);
+          setBiomarkers(data.biomarkers);
+          if (data.pdfUrl) setPdfUrl(data.pdfUrl);
+          delay = 3000; // Reset on success
+        }
       } catch {
-        // Ignore polling errors
+        delay = Math.min(delay * 1.5, MAX_DELAY);
       }
-    }, 3000);
 
-    return () => clearInterval(interval);
+      timeoutId = setTimeout(poll, delay);
+    };
+
+    timeoutId = setTimeout(poll, delay);
+
+    return () => clearTimeout(timeoutId);
   }, [report.id, isProcessing]);
 
   const handleRetry = useCallback(async () => {

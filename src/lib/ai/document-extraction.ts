@@ -113,17 +113,21 @@ export async function extractDocumentContent(
     // Rebuild patient clinical summary
     await rebuildPatientClinicalSummary(patientId, practitionerId);
 
-    // Audit log
-    await serviceClient.from("audit_logs").insert({
+    // Audit log (fire-and-forget)
+    serviceClient.from("audit_logs").insert({
       practitioner_id: practitionerId,
       action: "generate",
       resource_type: "patient_document",
       resource_id: documentId,
+      ip_address: "background",
+      user_agent: "background",
       detail: {
         patient_id: patientId,
         extraction_model: ANTHROPIC_MODELS.vision,
         has_structured_data: Object.keys(extractedData).length > 0,
       },
+    }).then(() => {}).catch((err: unknown) => {
+      console.error("Audit log write failed:", err);
     });
   } catch (err) {
     console.error("Document extraction error:", err);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { createVisitSchema, visitListQuerySchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
 import { escapePostgrestPattern } from "@/lib/search";
@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
     if (csrfError) return csrfError;
 
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -108,20 +107,15 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Supabase insert error:", error);
-      return jsonError(error.message || "Failed to create visit", 500);
+      return jsonError("Failed to create visit", 500);
     }
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "create",
-      resource_type: "visit",
-      resource_id: visit.id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "visit",
+      resourceId: visit.id,
       detail: { visit_type, has_patient: !!patient_id },
     });
 
