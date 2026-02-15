@@ -110,6 +110,20 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-40px)]">
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm px-6 pt-4 pb-2">
+        <Link
+          href="/dashboard"
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          Dashboard
+        </Link>
+        <span className="text-[var(--color-text-muted)]">&gt;</span>
+        <span className="text-[var(--color-text-primary)]">
+          {conversationId ? "Conversation" : "New Chat"}
+        </span>
+      </nav>
+
       {/* Evidence banner */}
       <div className="flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
         <Leaf size={12} className="text-[var(--color-brand-500)]" />

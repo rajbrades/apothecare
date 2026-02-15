@@ -12,6 +12,7 @@ export function PatientForm() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState<string>("");
   const [chiefComplaints, setChiefComplaints] = useState<string[]>([]);
@@ -104,11 +105,35 @@ export function PatientForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="pf-first-name" className={labelClass}>First Name <span className="text-red-400">*</span></label>
-            <input id="pf-first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="First name" required />
+            <input
+              id="pf-first-name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, firstName: true }))}
+              className={inputClass}
+              placeholder="First name"
+              required
+            />
+            {touched.firstName && !firstName.trim() && (
+              <p className="text-xs text-red-500 mt-1">First name is required</p>
+            )}
           </div>
           <div>
             <label htmlFor="pf-last-name" className={labelClass}>Last Name <span className="text-red-400">*</span></label>
-            <input id="pf-last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="Last name" required />
+            <input
+              id="pf-last-name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, lastName: true }))}
+              className={inputClass}
+              placeholder="Last name"
+              required
+            />
+            {touched.lastName && !lastName.trim() && (
+              <p className="text-xs text-red-500 mt-1">Last name is required</p>
+            )}
           </div>
         </div>
 

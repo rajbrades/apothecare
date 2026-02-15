@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, FileText, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -202,14 +202,17 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
-      {/* Back link */}
-      <Link
-        href="/labs"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Labs
-      </Link>
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-6">
+        <Link
+          href="/labs"
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          Labs
+        </Link>
+        <span className="text-[var(--color-text-muted)]">&gt;</span>
+        <span className="text-[var(--color-text-primary)]">{displayName}</span>
+      </nav>
 
       {/* Header */}
       <div className="mb-6">

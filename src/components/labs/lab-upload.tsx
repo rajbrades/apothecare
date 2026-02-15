@@ -13,6 +13,7 @@ interface PatientOption {
 interface LabUploadProps {
   patients: PatientOption[];
   onUploaded: () => void;
+  defaultExpanded?: boolean;
 }
 
 const LAB_VENDORS = [
@@ -47,8 +48,8 @@ const TEST_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export function LabUpload({ patients, onUploaded }: LabUploadProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function LabUpload({ patients, onUploaded, defaultExpanded = false }: LabUploadProps) {
+  const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);

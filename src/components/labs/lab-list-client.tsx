@@ -117,7 +117,7 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
   return (
     <div className="space-y-4">
       {/* Upload section */}
-      <LabUpload patients={patients} onUploaded={handleUploaded} />
+      <LabUpload patients={patients} onUploaded={handleUploaded} defaultExpanded={initialLabs.length === 0} />
 
       {/* Filters */}
       <div className="flex items-center gap-3">
@@ -157,9 +157,26 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
       </div>
 
       {labs.length === 0 && !loading && (
-        <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
-          No lab reports match your filters.
-        </p>
+        <div className="text-center py-8">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {statusFilter || testTypeFilter
+              ? "No lab reports match your filters."
+              : "No lab reports yet. Upload your first report above."}
+          </p>
+          {(statusFilter || testTypeFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("");
+                setTestTypeFilter("");
+                setTimeout(() => applyFilters(), 0);
+              }}
+              className="mt-2 text-sm font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       )}
 
       {hasMore && (

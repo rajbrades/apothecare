@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, User, Calendar, FileText, ClipboardList,
+  User, Calendar, FileText, ClipboardList,
   Stethoscope, Upload,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
@@ -75,14 +75,17 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-6">
-      {/* Header */}
-      <Link
-        href="/patients"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to patients
-      </Link>
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-4">
+        <Link
+          href="/patients"
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          Patients
+        </Link>
+        <span className="text-[var(--color-text-muted)]">&gt;</span>
+        <span className="text-[var(--color-text-primary)]">{name}</span>
+      </nav>
 
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">

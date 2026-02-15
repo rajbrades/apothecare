@@ -16,6 +16,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState("");
   const [chiefComplaints, setChiefComplaints] = useState<string[]>([]);
@@ -71,6 +72,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
   const resetForm = () => {
     setFirstName("");
     setLastName("");
+    setTouched({});
     setDob("");
     setSex("");
     setChiefComplaints([]);
@@ -133,10 +135,14 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  onBlur={() => setTouched((prev) => ({ ...prev, firstName: true }))}
                   className={inputClass}
                   placeholder="First name"
                   autoFocus
                 />
+                {touched.firstName && !firstName.trim() && !lastName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">First or last name is required</p>
+                )}
               </div>
               <div>
                 <label htmlFor="pqc-last-name" className={labelClass}>Last Name</label>
@@ -145,9 +151,13 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  onBlur={() => setTouched((prev) => ({ ...prev, lastName: true }))}
                   className={inputClass}
                   placeholder="Last name"
                 />
+                {touched.lastName && !lastName.trim() && !firstName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">First or last name is required</p>
+                )}
               </div>
             </div>
 

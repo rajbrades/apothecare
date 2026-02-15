@@ -57,6 +57,13 @@ const FLAG_LABELS: Record<BiomarkerFlag, string> = {
   critical: "Critical",
 };
 
+/** Returns a directional prefix for accessibility (e.g. "↑" for high, "↓" for low, "✓" for optimal) */
+function flagPrefix(flag: BiomarkerFlag, value: number, functionalLow: number, functionalHigh: number): string {
+  if (flag === "optimal" || flag === "normal") return "\u2713";
+  const midpoint = (functionalLow + functionalHigh) / 2;
+  return value >= midpoint ? "\u2191" : "\u2193";
+}
+
 function TrendIndicator({ current, previous }: { current: number; previous: number }) {
   const diff = current - previous;
   const pctChange = Math.abs((diff / previous) * 100);
@@ -144,7 +151,7 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
               backgroundColor: `color-mix(in srgb, ${flagColor} 12%, transparent)`,
             }}
           >
-            {FLAG_LABELS[flag]}
+            {flagPrefix(flag, value, functionalLow, functionalHigh)} {FLAG_LABELS[flag]}
           </span>
         </div>
       </div>

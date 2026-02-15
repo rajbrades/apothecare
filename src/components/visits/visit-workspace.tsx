@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Calendar, User, Sparkles, Check, RotateCcw,
+  Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
-  Grid3x3, Pill, MessageSquare, HeartPulse, UserCheck,
+  Grid3x3, Pill, HeartPulse, UserCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { RawNotesInput } from "./raw-notes-input";
 
 const VisitEditor = dynamic(
@@ -33,7 +34,7 @@ import { useVisitStream } from "@/hooks/use-visit-stream";
 import type { Visit, VisitType, IFMMatrix } from "@/types/database";
 import type { JSONContent } from "@tiptap/react";
 
-type Tab = "soap" | "ifm" | "protocol" | "chat";
+type Tab = "soap" | "ifm" | "protocol";
 
 interface VisitWorkspaceProps {
   visit: Visit & {
@@ -141,6 +142,15 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
     if (!text.trim()) return;
 
+    // Confirm before overwriting existing SOAP content
+    const hasExistingContent = !!(visit.subjective || visit.objective || visit.assessment || visit.plan);
+    if (hasExistingContent) {
+      const confirmed = window.confirm(
+        "This will regenerate all SOAP sections and overwrite any manual edits. Continue?"
+      );
+      if (!confirmed) return;
+    }
+
     // Save editor state before generating
     if (useBlockEditor && editorJsonRef.current) {
       fetch(`/api/visits/${visit.id}`, {
@@ -154,7 +164,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
 
     stream.generate(visit.id, text);
-  }, [visit.id, rawNotes, stream, useBlockEditor]);
+  }, [visit.id, rawNotes, stream, useBlockEditor, visit.subjective, visit.objective, visit.assessment, visit.plan]);
 
   // Handle block editor content changes (debounced auto-save)
   const handleEditorContentChange = useCallback(
@@ -167,14 +177,18 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(async () => {
         setSaving(true);
-        await fetch(`/api/visits/${visit.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            template_content: json,
-            raw_notes: text,
-          }),
-        });
+        try {
+          await fetch(`/api/visits/${visit.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              template_content: json,
+              raw_notes: text,
+            }),
+          });
+        } catch {
+          toast.error("Failed to save changes. Your edits are preserved locally.");
+        }
         setSaving(false);
       }, 2000);
     },
@@ -221,7 +235,6 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     { key: "soap", label: "SOAP Note", icon: ClipboardList },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
     { key: "protocol", label: "Protocol", icon: Pill },
-    { key: "chat", label: "Chat", icon: MessageSquare },
   ];
 
   return (
@@ -229,13 +242,29 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <Link
-            href="/visits"
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to visits
-          </Link>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-3">
+            <Link
+              href="/visits"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              Visits
+            </Link>
+            {patientName && (
+              <>
+                <span className="text-[var(--color-text-muted)]">&gt;</span>
+                <Link
+                  href={`/patients/${visit.patients?.id}`}
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                >
+                  {patientName}
+                </Link>
+              </>
+            )}
+            <span className="text-[var(--color-text-muted)]">&gt;</span>
+            <span className="text-[var(--color-text-primary)]">
+              {new Date(visit.visit_date).toLocaleDateString()}
+            </span>
+          </nav>
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
               isFollowUp
@@ -409,16 +438,6 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             protocol={visit.ai_protocol}
             status={stream.protocol.status}
           />
-        )}
-        {activeTab === "chat" && (
-          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
-            <MessageSquare className="w-8 h-8 mb-3 opacity-50" />
-            <p className="text-sm mb-2">Visit Chat</p>
-            <p className="text-xs text-center max-w-sm">
-              Ask follow-up questions about this visit. AI will have full context of the SOAP note, IFM mapping, and protocol.
-            </p>
-            <p className="text-xs mt-3 text-[var(--color-brand-600)]">Coming in next update</p>
-          </div>
         )}
       </div>
     </div>
