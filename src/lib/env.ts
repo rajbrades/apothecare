@@ -42,6 +42,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: requiredUrl,
   NEXT_PUBLIC_APP_NAME: requiredString.default("Apotheca"),
 
+  // ── Admin ─────────────────────────────────────────────────────────────
+  ADMIN_EMAILS: z.string().optional(), // Comma-separated list of emails
+
   // ── Database (used by CLI migration scripts, optional at runtime) ────
   DATABASE_URL: z.string().optional(),
 });

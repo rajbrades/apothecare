@@ -98,13 +98,20 @@ export async function PATCH(
 
     if (error) return jsonError("Failed to update visit", 500);
 
+    let action: "update" | "sign" | "unlock" = "update";
+    if (parsed.data.status === "completed" && existing.status !== "completed") {
+      action = "sign";
+    } else if (parsed.data.status === "draft" && existing.status === "completed") {
+      action = "unlock";
+    }
+
     auditLog({
       request,
       practitionerId: practitioner.id,
-      action: "update",
+      action,
       resourceType: "visit",
       resourceId: id,
-      detail: { fields_updated: Object.keys(parsed.data) },
+      detail: { fields_updated: Object.keys(parsed.data), previous_status: existing.status },
     });
 
     return NextResponse.json({ visit });

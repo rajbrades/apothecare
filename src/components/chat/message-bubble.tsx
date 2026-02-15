@@ -2,10 +2,28 @@
 
 import { memo } from "react";
 import ReactMarkdown from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
-import { Copy, Star, Share2, FileDown } from "lucide-react";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import { Copy, Star, Share2, FileDown, ExternalLink } from "lucide-react";
 import { LogoAvatar } from "@/components/ui/logomark";
 import type { ChatMessage } from "@/hooks/use-chat";
+
+/**
+ * Convert plain [Author, Year] citations to Google Scholar markdown links.
+ * Skips citations that are already markdown links (followed by `(`).
+ */
+function processCitations(content: string): string {
+  return content.replace(
+    /\[([^\]]+?,\s*\d{4}[a-z]?)\](?!\()/g,
+    (_match, citation: string) => {
+      const searchTerms = citation
+        .replace(/et\s+al\.?/g, "")
+        .replace(/[,.\s]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+      return `[${citation}](https://scholar.google.com/scholar?q=${encodeURIComponent(searchTerms)})`;
+    }
+  );
+}
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -79,8 +97,32 @@ export const MessageBubble = memo(function MessageBubble({
             ) : (
               <div className="prose-apotheca">
                 <ReactMarkdown
-                  rehypePlugins={[rehypeSanitize]}
+                  rehypePlugins={[[rehypeSanitize, {
+                    ...defaultSchema,
+                    attributes: {
+                      ...defaultSchema.attributes,
+                      a: [...(defaultSchema.attributes?.a || []), "target", "rel"],
+                    },
+                  }]]}
                   components={{
+                    a: ({ href, children }) => {
+                      const isCitation = href?.includes("doi.org/") || href?.includes("scholar.google.com/scholar");
+                      return (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={
+                            isCitation
+                              ? "inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
+                              : "text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline underline-offset-2 transition-colors"
+                          }
+                        >
+                          {children}
+                          {isCitation && <ExternalLink className="inline w-3 h-3 flex-shrink-0" />}
+                        </a>
+                      );
+                    },
                     p: ({ children }) => (
                       <p className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] mb-3 last:mb-0">
                         {children}
@@ -166,7 +208,7 @@ export const MessageBubble = memo(function MessageBubble({
                     ),
                   }}
                 >
-                  {message.content}
+                  {processCitations(message.content)}
                 </ReactMarkdown>
               </div>
             )}

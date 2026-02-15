@@ -27,7 +27,7 @@ Apotheca is a Next.js 15 application using the App Router with React Server Comp
 │  CSRF protected          │   │  ┌─────────────────────────────────┐│
 │  Audit logged (IP+UA)    │   │  │  PostgreSQL 17 + pgvector       ││
 │                          │   │  │  Row-Level Security              ││
-└──────────┬───────────────┘   │  │  13 tables + audit logs          ││
+└──────────┬───────────────┘   │  │  16 tables + audit logs          ││
            │                   │  │  17 seeded biomarkers             ││
      ┌─────┼──────────┐       │  └─────────────────────────────────┘│
      ▼     ▼          ▼       │  HIPAA: Supabase Pro BAA             │
@@ -58,6 +58,57 @@ Vercel's HIPAA BAA requires Enterprise at $3,000+/month. AWS Amplify supports Ne
 ### Why Anthropic Claude (not OpenAI)?
 
 Anthropic offers a HIPAA BAA with zero data retention — patient data sent via the API is never stored or used for training. Claude's extended thinking capability (Deep Consult mode) produces more thorough clinical reasoning.
+
+### Supplement Review Flow (Current Implementation)
+
+```
+1. Practitioner navigates to /supplements, selects a patient
+2. POST /api/supplements/review { patient_id }
+3. CSRF + Zod validation + rate limit check → Auth → fetch patient (supplements, meds, allergies, history)
+4. Fetch latest 50 biomarker results for lab correlation
+5. Fetch practitioner's brand preferences (prioritized in prompt)
+6. Build system prompt: SUPPLEMENT_REVIEW_SYSTEM_PROMPT + brand prefs + patient context + lab context
+7. Insert supplement_reviews row (status: generating)
+8. Stream AI response via SSE with events: review_id, text_delta, review_complete, error
+9. Parse JSON: items[] (keep/modify/discontinue per supplement) + additions[] (new recs) + summary
+10. Update row (status: complete, review_data JSONB)
+11. Audit log with IP, user agent, patient_id
+12. Client receives SSE stream via useSupplementReview hook → renders detail cards
+```
+
+**Key files:**
+- `src/lib/ai/supplement-prompts.ts` — Review + interaction system prompts, `buildSupplementReviewPrompt()`, `formatLabContextForReview()`
+- `src/lib/validations/supplement.ts` — Zod schemas + `SUPPORTED_BRANDS` const
+- `src/hooks/use-supplement-review.ts` — SSE streaming hook (mirrors `use-visit-stream.ts`)
+
+### Interaction Check Flow (Current Implementation)
+
+```
+1. Practitioner enters supplements + optional medications (or auto-fills from patient)
+2. POST /api/supplements/interactions { supplements, medications?, patient_id? }
+3. CSRF + Zod validation + rate limit check → Auth
+4. Optional patient fetch for context enrichment
+5. Insert interaction_checks row
+6. Stream AI response with events: check_id, text_delta, check_complete, error
+7. Parse JSON: interactions[] (severity-coded pairwise results) + summary
+8. Update row with result_data JSONB
+9. Audit log
+```
+
+**Key files:**
+- `src/hooks/use-interaction-check.ts` — SSE streaming hook
+- `src/components/supplements/interaction-result-card.tsx` — Severity-coded result cards
+
+### Brand Formulary (Current Implementation)
+
+```
+1. Practitioner toggles preferred brands from SUPPORTED_BRANDS list
+2. Can add custom brands not in the default list
+3. PUT /api/supplements/brands { brands: [...] }
+4. Preferences saved to practitioner_brand_preferences table
+5. Active brands are injected into supplement review prompts as soft hints
+6. AI prioritizes (but is not restricted to) preferred brands in recommendations
+```
 
 ## Data Flow Patterns
 
@@ -199,6 +250,8 @@ The AI layer uses a provider abstraction (`src/lib/ai/provider.ts`) that routes 
 | IFM Matrix mapping | OpenAI (primary) | gpt-4o | 3,000 |
 | Protocol generation | OpenAI (primary) | gpt-4o | 4,096 |
 | AI Scribe (section assignment) | OpenAI (primary) | gpt-4o | 4,096 |
+| Supplement review | OpenAI (primary) | gpt-4o | 4,096 |
+| Interaction check | OpenAI (primary) | gpt-4o | 4,096 |
 | Audio transcription | OpenAI Whisper | whisper-1 | N/A |
 
 ## Security Architecture
@@ -246,6 +299,10 @@ src/
 │   │   ├── dashboard/
 │   │   │   ├── layout.tsx          # Dashboard layout (trust banner)
 │   │   │   └── page.tsx            # Dashboard home
+│   │   ├── supplements/
+│   │   │   ├── page.tsx            # Supplements hub (reviews, interactions, brands)
+│   │   │   ├── loading.tsx         # Loading skeleton
+│   │   │   └── review/[id]/page.tsx # Supplement review detail
 │   │   ├── labs/
 │   │   │   ├── [id]/page.tsx       # Lab report detail (biomarkers, PDF viewer)
 │   │   │   ├── loading.tsx         # Lab list loading skeleton
@@ -262,6 +319,13 @@ src/
 │   ├── api/
 │   │   ├── admin/
 │   │   │   └── cleanup-stuck-jobs/route.ts  # GET mark stuck jobs as error (cron)
+│   │   ├── supplements/
+│   │   │   ├── review/
+│   │   │   │   ├── route.ts         # POST SSE supplement review generation
+│   │   │   │   └── [id]/route.ts    # GET single review detail
+│   │   │   ├── reviews/route.ts     # GET list reviews (cursor paginated)
+│   │   │   ├── interactions/route.ts # POST SSE interaction check
+│   │   │   └── brands/route.ts      # GET/PUT brand preferences
 │   │   ├── chat/
 │   │   │   ├── history/route.ts    # GET conversation messages + pagination
 │   │   │   ├── route.ts            # DEPRECATED (410)
@@ -312,6 +376,16 @@ src/
 │   │   ├── lab-report-detail.tsx   # Lab detail with biomarkers + PDF viewer
 │   │   ├── lab-status-badge.tsx    # Lab status indicator
 │   │   └── lab-upload.tsx          # Lab upload form with drag-and-drop
+│   ├── supplements/
+│   │   ├── supplements-page-client.tsx  # Tab container (Reviews, Interactions, Brands)
+│   │   ├── review-tab.tsx               # Patient selector + generation + past reviews
+│   │   ├── supplement-review-detail.tsx # Per-supplement cards with action badges
+│   │   ├── supplement-review-stream.tsx # Streaming display during generation
+│   │   ├── review-status-badge.tsx      # Status indicator (complete/generating/error/pending)
+│   │   ├── interaction-checker.tsx      # Supplements + medications input + results
+│   │   ├── interaction-result-card.tsx  # Severity-coded interaction cards
+│   │   ├── brand-formulary.tsx          # Brand preference toggles + custom brands
+│   │   └── fullscript-stub-button.tsx   # Fullscript integration placeholder
 │   ├── landing/                    # 12 landing page components
 │   ├── layout/
 │   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner
@@ -353,12 +427,15 @@ src/
 │   ├── use-editor-dictation.ts     # Dictation + AI Scribe → editor bridge
 │   ├── use-audio-recorder.ts       # MediaRecorder wrapper
 │   ├── use-speech-recognition.ts   # Web Speech API wrapper
-│   └── use-visit-stream.ts         # Visit generation SSE hook
+│   ├── use-visit-stream.ts         # Visit generation SSE hook
+│   ├── use-supplement-review.ts    # Supplement review SSE hook
+│   └── use-interaction-check.ts    # Interaction check SSE hook
 ├── lib/
 │   ├── ai/
 │   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS constant
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
+│   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts
 │   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts
 │   │   ├── transcription.ts        # OpenAI Whisper integration
 │   │   ├── clinical-summary.ts     # Patient clinical summary generation
@@ -367,6 +444,7 @@ src/
 │   │   ├── lab-parsing.ts          # Lab PDF parsing via Claude Vision
 │   │   └── lab-parsing-prompts.ts  # Lab parsing prompt templates
 │   ├── api/
+│   │   ├── audit.ts                # Shared fire-and-forget audit logging
 │   │   ├── csrf.ts                 # Shared CSRF validation utility
 │   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
 │   ├── editor/
@@ -392,7 +470,8 @@ src/
 │       ├── visit.ts                # Visit create/update/generate schemas
 │       ├── patient.ts              # Patient create/update schemas
 │       ├── document.ts             # Document upload/extraction schemas
-│       └── lab.ts                  # Lab upload/list schemas
+│       ├── lab.ts                  # Lab upload/list schemas
+│       └── supplement.ts           # Supplement review/interaction/brand schemas
 ├── middleware.ts                    # Root middleware
 └── types/database.ts               # Supabase type definitions
 
@@ -415,7 +494,9 @@ supabase/migrations/
 ├── 001_initial_schema.sql          # 12 core tables + RLS + audit logging
 ├── 002_visits_status.sql           # visit_type, status, ai_protocol columns
 ├── 003_patient_documents.sql       # patient_documents table
-└── 004_visit_template_content.sql  # template_content JSONB column
+├── 004_visit_template_content.sql  # template_content JSONB column
+├── 005_rate_limits.sql             # Rate limit table + RPC
+└── 006_supplements.sql             # 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
 ```
 
 ## Test Infrastructure

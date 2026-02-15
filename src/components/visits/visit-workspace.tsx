@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
-  Grid3x3, Pill, HeartPulse, UserCheck,
+  Grid3x3, Pill, HeartPulse, UserCheck, Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -231,6 +231,18 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
   }, [visit.id, visit.status, router]);
 
+  const handleDelete = useCallback(async () => {
+    if (!window.confirm("Are you sure you want to delete this visit? This cannot be undone.")) return;
+
+    const res = await fetch(`/api/visits/${visit.id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Visit deleted");
+      router.push("/visits");
+    } else {
+      toast.error("Failed to delete visit");
+    }
+  }, [visit.id, router]);
+
   const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
     { key: "soap", label: "SOAP Note", icon: ClipboardList },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
@@ -266,11 +278,10 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             </span>
           </nav>
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isFollowUp
-                ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
-                : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
-            }`}>
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isFollowUp
+              ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
+              : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
+              }`}>
               <VisitIcon
                 className={`w-4.5 h-4.5 ${isFollowUp ? "text-[var(--color-gold-600)]" : "text-[var(--color-brand-600)]"}`}
                 strokeWidth={1.5}
@@ -301,19 +312,27 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {!isReadOnly && (
+            <button
+              onClick={handleDelete}
+              className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-[var(--radius-md)] transition-colors border border-transparent hover:border-red-200"
+              title="Delete Visit"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           <ExportMenu visit={visit} />
           <button
             onClick={handleStatusToggle}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${
-              visit.status === "completed"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-            }`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${visit.status === "completed"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              }`}
           >
             {visit.status === "completed" ? (
-              <><RotateCcw className="w-3 h-3" /> Reopen</>
+              <><RotateCcw className="w-3 h-3" /> Unlock & Edit</>
             ) : (
-              <><Check className="w-3 h-3" /> Mark Complete</>
+              <><Check className="w-3 h-3" /> Sign & Lock Note</>
             )}
           </button>
         </div>
@@ -399,11 +418,10 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             aria-controls={`tabpanel-${key}`}
             id={`tab-${key}`}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              activeTab === key
-                ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
-                : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-            }`}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === key
+              ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
+              : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+              }`}
           >
             <Icon className="w-4 h-4" />
             {label}

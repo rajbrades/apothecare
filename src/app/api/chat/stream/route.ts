@@ -5,6 +5,7 @@ import { CLINICAL_CHAT_SYSTEM_PROMPT } from "@/lib/ai/anthropic";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
+import { extractCitations, resolveCitations, applyCitationLinks } from "@/lib/citations/resolve";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -168,13 +169,32 @@ export async function POST(request: NextRequest) {
             }
           );
 
-          // Save assistant message
+          // Resolve citations via CrossRef (best-effort, non-blocking on failure)
+          let resolvedContent = fullContent;
+          try {
+            const citations = extractCitations(fullContent);
+            if (citations.length > 0) {
+              const resolvedMap = await resolveCitations(citations);
+              resolvedContent = applyCitationLinks(fullContent, resolvedMap);
+
+              // Send resolved content to client so it can update the message
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "citations_resolved", content: resolvedContent })}\n\n`
+                )
+              );
+            }
+          } catch (err) {
+            console.warn("[Citations] Resolution failed, saving unresolved text:", err);
+          }
+
+          // Save assistant message (with resolved citations if available)
           const { data: savedMessage } = await supabase
             .from("messages")
             .insert({
               conversation_id: convId,
               role: "assistant" as const,
-              content: fullContent,
+              content: resolvedContent,
               citations: [],
               input_tokens: usage.inputTokens,
               output_tokens: usage.outputTokens,

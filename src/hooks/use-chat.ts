@@ -141,6 +141,21 @@ export function useChat(options: UseChatOptions = {}) {
                   });
                   break;
 
+                case "citations_resolved":
+                  // Replace message content with DOI-linked citations
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        content: event.content,
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
+
                 case "message_complete":
                   setMessages((prev) => {
                     const updated = [...prev];

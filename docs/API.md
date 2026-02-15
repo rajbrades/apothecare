@@ -542,6 +542,175 @@ Generate AI clinical review for a lab report. Currently returns `501 Not Impleme
 
 ---
 
+### `POST /api/supplements/review` ✅ Implemented
+
+Generate an AI-powered supplement review for a patient. Returns SSE stream.
+
+**Input Validation:** Zod schema (`lib/validations/supplement.ts`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `patient_id` | UUID | Yes | Valid patient UUID owned by practitioner |
+
+**Response:** Server-Sent Events stream
+
+```
+data: {"type":"review_id","id":"review_uuid"}
+
+data: {"type":"text_delta","content":"{\n  \"items\": [..."}
+
+data: {"type":"review_complete","data":{"items":[...],"additions":[...],"summary":"..."}}
+```
+
+**Notes:**
+- Patient must have supplements on file
+- Review evaluates each current supplement with action (keep/modify/discontinue)
+- Additions section recommends new supplements (max 5-8)
+- Brand preferences injected as soft hints in the AI prompt
+- Latest 50 biomarker results included for correlation
+- Rate limited: 5/day (free), 50/day (pro)
+
+---
+
+### `GET /api/supplements/review/[id]` ✅ Implemented
+
+Get a single supplement review with patient data.
+
+**Response (200):**
+```json
+{
+  "review": {
+    "id": "uuid",
+    "patient_id": "uuid",
+    "status": "complete",
+    "review_data": {
+      "items": [
+        {
+          "name": "Vitamin D3",
+          "current_dosage": "5000 IU daily",
+          "action": "keep",
+          "rationale": "Supports immune function...",
+          "evidence_level": "meta_analysis",
+          "recommended_dosage": "5000 IU",
+          "recommended_form": "softgel",
+          "recommended_timing": "With largest meal",
+          "recommended_brand": "Pure Encapsulations",
+          "interactions": [],
+          "biomarker_correlations": ["25-OH Vitamin D"]
+        }
+      ],
+      "additions": [],
+      "summary": "Overall well-constructed supplement regimen..."
+    },
+    "created_at": "2026-02-15T10:00:00Z",
+    "patients": { "first_name": "Jane", "last_name": "Smith" }
+  }
+}
+```
+
+**Security:** Practitioner ownership check + audit log.
+
+---
+
+### `GET /api/supplements/reviews` ✅ Implemented
+
+List supplement reviews with cursor-based pagination.
+
+**Query Parameters:**
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `cursor` | ISO timestamp | No | — | Pagination cursor (created_at) |
+| `limit` | number | No | 20 | Number of results (max: 100) |
+| `patient_id` | UUID | No | — | Filter by patient |
+
+**Response (200):**
+```json
+{
+  "reviews": [
+    {
+      "id": "uuid",
+      "patient_id": "uuid",
+      "status": "complete",
+      "review_data": { "summary": "..." },
+      "created_at": "2026-02-15T10:00:00Z",
+      "patients": { "first_name": "Jane", "last_name": "Smith" }
+    }
+  ],
+  "nextCursor": "2026-02-15T10:00:00Z"
+}
+```
+
+---
+
+### `POST /api/supplements/interactions` ✅ Implemented
+
+Check for interactions between supplements and medications. Returns SSE stream.
+
+**Input Validation:** Zod schema (`lib/validations/supplement.ts`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `supplements` | string | Yes | 1–5,000 characters |
+| `medications` | string | No | Max 5,000 characters |
+| `patient_id` | UUID | No | Valid patient UUID |
+
+**Response:** Server-Sent Events stream
+
+```
+data: {"type":"check_id","id":"check_uuid"}
+
+data: {"type":"text_delta","content":"{\n  \"interactions\": [..."}
+
+data: {"type":"check_complete","data":{"interactions":[...],"summary":"..."}}
+```
+
+**Notes:**
+- Checks CYP450, P-glycoprotein, pharmacodynamic, and timing-dependent interactions
+- Severity levels: critical, caution, safe, unknown
+- Rate limited: 10/day (free), 100/day (pro)
+
+---
+
+### `GET /api/supplements/brands` ✅ Implemented
+
+Get practitioner's brand preferences.
+
+**Response (200):**
+```json
+{
+  "brands": [
+    { "brand_name": "Pure Encapsulations", "is_active": true, "priority": 0 },
+    { "brand_name": "Thorne", "is_active": false, "priority": 1 }
+  ]
+}
+```
+
+---
+
+### `PUT /api/supplements/brands` ✅ Implemented
+
+Save practitioner's brand preferences.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `brands` | array | Yes | Array of { brand_name, is_active, priority } |
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+**Security:** CSRF protected, audit logged.
+
+---
+
 ### `POST /api/protocols/generate` 🔲 Planned
 
 Generate treatment protocol from lab reviews, visits, or chat context.
@@ -556,10 +725,10 @@ Handle Stripe subscription events.
 
 ## Rate Limits
 
-| Tier | Chat Queries | Lab Uploads | Protocols |
-|---|---|---|---|
-| Free | 2/day | 0 | 0 |
-| Pro | Unlimited* | 100/month | 50/month |
+| Tier | Chat Queries | Lab Uploads | Supplement Reviews | Interaction Checks | Protocols |
+|---|---|---|---|---|---|
+| Free | 2/day | 0 | 5/day | 10/day | 0 |
+| Pro | Unlimited* | 100/month | 50/day | 100/day | 50/month |
 
 *Soft rate limits on Pro prevent abuse (500 queries/day warning threshold).
 

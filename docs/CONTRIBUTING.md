@@ -155,7 +155,7 @@ touch supabase/migrations/002_description.sql
 
 ### Migration Rules
 
-1. Migrations are numbered sequentially: `001_`, `002_`, `003_`
+1. Migrations are numbered sequentially: `001_`, `002_`, ..., `006_`
 2. Each migration is idempotent where possible (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`)
 3. Never modify a migration that has already been applied to production
 4. Destructive changes (DROP, ALTER COLUMN type) require a separate migration with a rollback plan

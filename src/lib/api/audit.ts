@@ -12,7 +12,9 @@ type AuditAction =
   | "upload"
   | "query"
   | "generate"
-  | "transcribe";
+  | "transcribe"
+  | "sign"
+  | "unlock";
 
 interface AuditLogParams {
   request: NextRequest;
@@ -53,7 +55,7 @@ export function auditLog({
       user_agent: userAgent,
       detail: detail || {},
     })
-    .then(() => {})
+    .then(() => { })
     .catch((err: unknown) => {
       console.error("Audit log write failed:", err);
     });

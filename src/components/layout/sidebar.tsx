@@ -8,12 +8,14 @@ import {
   Stethoscope,
   FlaskConical,
   Users,
+  Pill,
   Star,
   ChevronDown,
   Plus,
   Settings,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -39,6 +41,7 @@ const navItems = [
   { href: "/dashboard", icon: MessageSquare, label: "Dashboard" },
   { href: "/visits", icon: Stethoscope, label: "Visits" },
   { href: "/labs", icon: FlaskConical, label: "Labs" },
+  { href: "/supplements", icon: Pill, label: "Supplements" },
   { href: "/patients", icon: Users, label: "Patients" },
 ];
 
@@ -172,195 +175,195 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
       )}
 
       <aside className={`w-[var(--sidebar-width)] h-screen fixed left-0 top-0 bg-[var(--color-surface-secondary)] border-r border-[var(--color-border-light)] flex flex-col z-50 transition-transform duration-200 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
-      {/* Logo + mobile close */}
-      <div className="h-[var(--header-height)] flex items-center justify-between px-5 border-b border-[var(--color-border-light)]">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <Logomark size="xs" withText />
-        </Link>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1.5 -mr-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
-          aria-label="Close navigation menu"
-        >
-          <X className="icon-inline" />
-        </button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {/* Primary CTA */}
-        <Button asChild className="w-full mb-4 gap-2 shadow-sm" size="sm">
-          <Link href="/chat">
-            <Plus className="icon-inline" strokeWidth={2} />
-            New Conversation
+        {/* Logo + mobile close */}
+        <div className="h-[var(--header-height)] flex items-center justify-between px-5 border-b border-[var(--color-border-light)]">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <Logomark size="xs" withText />
           </Link>
-        </Button>
-
-        {/* Secondary nav */}
-        <div className="space-y-0.5 mb-5">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive
-                  ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
-                  }`}
-              >
-                <item.icon className="icon-nav" strokeWidth={1.5} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="h-px bg-[var(--color-border-light)] mx-2 mb-4" />
-
-        {/* Recent Conversations */}
-        <div className="mb-3">
           <button
-            onClick={() => setConversationsOpen(!conversationsOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden p-1.5 -mr-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+            aria-label="Close navigation menu"
           >
-            <MessageSquare size={12} />
-            Conversations
-            <ChevronDown
-              size={12}
-              className={`ml-auto transition-transform ${conversationsOpen ? "" : "-rotate-90"}`}
-            />
+            <X className="icon-inline" />
           </button>
-          {conversationsOpen && (
-            <div className="mt-1 space-y-0.5">
-              {conversations.length === 0 ? (
-                <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
-                  No conversations yet
-                </p>
-              ) : (
-                conversations.slice(0, 5).map((conv) => (
-                  <ConversationEntry
-                    key={conv.id}
-                    conv={conv}
-                    isActive={activeConvId === conv.id}
-                    onRename={handleRename}
-                    onArchive={handleArchive}
-                    onDelete={handleDelete}
-                  />
-                ))
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Favorites */}
-        <div className="mb-3">
-          <button
-            onClick={() => setFavoritesOpen(!favoritesOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
-          >
-            <Star size={12} />
-            Favorites
-            <ChevronDown
-              size={12}
-              className={`ml-auto transition-transform ${favoritesOpen ? "" : "-rotate-90"}`}
-            />
-          </button>
-          {favoritesOpen && (
-            <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
-              Star responses to save them here
-            </p>
-          )}
-        </div>
-
-        {/* Recent Visits */}
-        <div className="mb-3">
-          <button
-            onClick={() => setVisitsOpen(!visitsOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
-          >
-            <Stethoscope size={12} />
-            Visits
-            <ChevronDown
-              size={12}
-              className={`ml-auto transition-transform ${visitsOpen ? "" : "-rotate-90"}`}
-            />
-          </button>
-          {visitsOpen && (
-            <div className="mt-1 space-y-0.5">
-              {recentVisits.length === 0 ? (
-                <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
-                  No visits yet
-                </p>
-              ) : (
-                recentVisits.slice(0, 3).map((visit) => {
-                  const isVisitActive = pathname === `/visits/${visit.id}`;
-                  return (
-                    <Link
-                      key={visit.id}
-                      href={`/visits/${visit.id}`}
-                      className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${isVisitActive
-                        ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
-                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
-                        }`}
-                    >
-                      {visit.chief_complaint || "Visit"}
-                      <span className="block text-[11px] text-[var(--color-text-muted)]">
-                        {new Date(visit.visit_date).toLocaleDateString()}
-                      </span>
-                    </Link>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* Upgrade banner for free users */}
-      {!isPro && (
-        <div className="mx-3 mb-3 p-3 rounded-lg bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-brand-50)] border border-[var(--color-gold-200)]">
-          <p className="text-xs font-medium text-[var(--color-text-primary)]">Unlock unlimited queries</p>
-          <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">Labs, protocols, SOAP notes & more</p>
-          <Button variant="gold" size="xs" className="mt-2" onClick={() => toast.info("Pro upgrade coming soon")}>
-            Upgrade to Pro
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          {/* Primary CTA */}
+          <Button asChild className="w-full mb-4 gap-2 shadow-sm" size="sm">
+            <Link href="/chat">
+              <Plus className="icon-inline" strokeWidth={2} />
+              New Conversation
+            </Link>
           </Button>
-        </div>
-      )}
 
-      {/* User profile */}
-      <div className="border-t border-[var(--color-border-light)] px-3 py-3">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-brand-100)] flex items-center justify-center">
-            <span className="text-sm font-medium text-[var(--color-brand-700)]">
-              {practitioner.full_name?.charAt(0) || "?"}
-            </span>
+          {/* Secondary nav */}
+          <div className="space-y-0.5 mb-5">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive
+                    ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
+                    }`}
+                >
+                  <item.icon className="icon-nav" strokeWidth={1.5} />
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                {practitioner.full_name}
+
+          <div className="h-px bg-[var(--color-border-light)] mx-2 mb-4" />
+
+          {/* Recent Conversations */}
+          <div className="mb-3">
+            <button
+              onClick={() => setConversationsOpen(!conversationsOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              <MessageSquare size={12} />
+              Conversations
+              <ChevronDown
+                size={12}
+                className={`ml-auto transition-transform ${conversationsOpen ? "" : "-rotate-90"}`}
+              />
+            </button>
+            {conversationsOpen && (
+              <div className="mt-1 space-y-0.5">
+                {conversations.length === 0 ? (
+                  <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
+                    No conversations yet
+                  </p>
+                ) : (
+                  conversations.slice(0, 5).map((conv) => (
+                    <ConversationEntry
+                      key={conv.id}
+                      conv={conv}
+                      isActive={activeConvId === conv.id}
+                      onRename={handleRename}
+                      onArchive={handleArchive}
+                      onDelete={handleDelete}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Favorites */}
+          <div className="mb-3">
+            <button
+              onClick={() => setFavoritesOpen(!favoritesOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              <Star size={12} />
+              Favorites
+              <ChevronDown
+                size={12}
+                className={`ml-auto transition-transform ${favoritesOpen ? "" : "-rotate-90"}`}
+              />
+            </button>
+            {favoritesOpen && (
+              <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
+                Star responses to save them here
               </p>
-              {isPro && (
-                <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-[var(--color-gold-100)] text-[var(--color-gold-700)] rounded">
-                  Pro
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-[var(--color-text-muted)] truncate">
-              {practitioner.email}
-            </p>
+            )}
           </div>
-          <button
-            onClick={() => toast.info("Settings coming soon")}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Settings"
-          >
-            <Settings className="icon-inline" />
-          </button>
+
+          {/* Recent Visits */}
+          <div className="mb-3">
+            <button
+              onClick={() => setVisitsOpen(!visitsOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider w-full hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              <Stethoscope size={12} />
+              Visits
+              <ChevronDown
+                size={12}
+                className={`ml-auto transition-transform ${visitsOpen ? "" : "-rotate-90"}`}
+              />
+            </button>
+            {visitsOpen && (
+              <div className="mt-1 space-y-0.5">
+                {recentVisits.length === 0 ? (
+                  <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
+                    No visits yet
+                  </p>
+                ) : (
+                  recentVisits.slice(0, 3).map((visit) => {
+                    const isVisitActive = pathname === `/visits/${visit.id}`;
+                    return (
+                      <Link
+                        key={visit.id}
+                        href={`/visits/${visit.id}`}
+                        className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${isVisitActive
+                          ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                          : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+                          }`}
+                      >
+                        {visit.chief_complaint || "Visit"}
+                        <span className="block text-[11px] text-[var(--color-text-muted)]">
+                          {new Date(visit.visit_date).toLocaleDateString()}
+                        </span>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        </nav>
+
+        {/* Upgrade banner for free users */}
+        {!isPro && (
+          <div className="mx-3 mb-3 p-3 rounded-lg bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-brand-50)] border border-[var(--color-gold-200)]">
+            <p className="text-xs font-medium text-[var(--color-text-primary)]">Unlock unlimited queries</p>
+            <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">Labs, protocols, SOAP notes & more</p>
+            <Button variant="gold" size="xs" className="mt-2" onClick={() => toast.info("Pro upgrade coming soon")}>
+              Upgrade to Pro
+            </Button>
+          </div>
+        )}
+
+        {/* User profile */}
+        <div className="border-t border-[var(--color-border-light)] px-3 py-3">
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-8 h-8 rounded-full bg-[var(--color-brand-100)] flex items-center justify-center">
+              <span className="text-sm font-medium text-[var(--color-brand-700)]">
+                {practitioner.full_name?.charAt(0) || "?"}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                  {practitioner.full_name}
+                </p>
+                {isPro && (
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-[var(--color-gold-100)] text-[var(--color-gold-700)] rounded">
+                    Pro
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--color-text-muted)] truncate">
+                {practitioner.email}
+              </p>
+            </div>
+            <button
+              onClick={() => toast.info("Settings coming soon")}
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+              aria-label="Settings"
+            >
+              <Settings className="icon-inline" />
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }

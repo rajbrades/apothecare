@@ -274,4 +274,24 @@ The client hook (`use-visit-stream.ts`) parses each section and updates the corr
 - Visit templates library (custom practitioner templates)
 - Multi-visit trend analysis
 - Visit sharing / referral exports
+- Visit sharing / referral exports
 - FHIR/HL7 integration
+
+---
+
+## Future "WOW" Features (Visual & AI)
+
+### 1. The Living Matrix (Dynamic Visualization)
+- **Concept:** Interactive, animated IFM Matrix where nodes light up as AI detects findings.
+- **Tech:** D3.js or React Flow visualization connected to the streaming AI parser.
+- **Impact:** Turns a static PDF concept into a living clinical brain.
+
+### 2. "Time Travel" Patient Timeline
+- **Concept:** Horizontal scrollable timeline of patient's life history (antibiotics, trauma, symptoms).
+- **Tech:** Vis.js timeline component populated from "History of Present Illness" parsing.
+- **Impact:** Instant pattern recognition for root cause analysis.
+
+### 3. Clinical Co-pilot (Second Opinion)
+- **Concept:** Sidebar that proactively surfaces PubMed/Institute research based on current note context.
+- **Tech:** RAG pipeline running in background, querying vector DB with current paragraph.
+- **Impact:** "Super-researcher" capability without leaving the workflow.

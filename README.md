@@ -41,6 +41,9 @@ AI-generated treatment protocols with supplement dosing, dietary interventions, 
 ### Clinical Visits & AI Scribe
 Full visit lifecycle with block-based editor. Four encounter templates (SOAP, H&P, Consultation, Follow-up) pre-populate collapsible sections. **AI Scribe** records provider-patient encounters, transcribes via OpenAI Whisper, then uses Claude to assign content to the appropriate template sections. Live dictation via Web Speech API inserts text at cursor. AI-generated SOAP notes, IFM Matrix mapping, and evidence-based protocols — all streamed via SSE.
 
+### Supplement Intelligence
+AI-powered supplement review evaluates each supplement in a patient's regimen with evidence-based recommendations — keep, modify, or discontinue — plus suggested additions. Built-in interaction checker flags drug-supplement and supplement-supplement interactions with severity-coded results (critical, caution, safe, unknown). Brand formulary lets practitioners set preferred brands that the AI prioritizes in recommendations. Fullscript integration coming soon.
+
 ### Patient Management
 Create and manage patient profiles with comprehensive clinical data — demographics, medical history, medications, supplements, allergies, and chief complaints. Upload and extract clinical documents (lab reports, intake forms, referrals). Pre-chart view provides an AI-generated clinical summary before encounters.
 
@@ -176,6 +179,9 @@ src/
 │   ├── (app)/                       # Route group — shared authenticated layout
 │   │   ├── chat/page.tsx            # Clinical chat
 │   │   ├── dashboard/page.tsx       # Dashboard home
+│   │   ├── supplements/
+│   │   │   ├── page.tsx            # Supplements hub (reviews, interactions, brands)
+│   │   │   └── review/[id]/page.tsx # Review detail
 │   │   ├── labs/
 │   │   │   ├── [id]/page.tsx       # Lab report detail (biomarkers, PDF)
 │   │   │   └── page.tsx            # Lab list + upload
@@ -190,6 +196,7 @@ src/
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/
 │   │   ├── chat/                    # stream, history, deprecated route
+│   │   ├── supplements/             # review (SSE), reviews list, interactions (SSE), brands
 │   │   ├── labs/                    # GET/POST list, GET detail, POST review (stub)
 │   │   ├── patients/               # CRUD + documents + extraction
 │   │   └── visits/                  # CRUD + generate + scribe + transcribe + export
@@ -198,13 +205,14 @@ src/
 ├── components/
 │   ├── chat/                        # Chat UI, biomarker bar, evidence badge
 │   ├── dashboard/                   # Dashboard search
+│   ├── supplements/                 # Review detail, interaction checker, brand formulary
 │   ├── labs/                        # Lab list, card, detail, upload, status badge
 │   ├── landing/                     # 12 landing page components
 │   ├── layout/                      # Sidebar + conversation list
 │   ├── patients/                    # Patient list, form, profile, documents, pre-chart
 │   ├── ui/                          # Button, dropdown, input, label, logomark, sonner
 │   └── visits/                      # Workspace, editor, IFM matrix, protocol, SOAP
-├── hooks/                           # Chat, dictation, audio, speech, visit stream
+├── hooks/                           # Chat, dictation, audio, speech, visit stream, supplements
 ├── lib/
 │   ├── ai/                          # Provider abstraction, Claude, prompts, parsing
 │   ├── api/                         # Shared CSRF validation
@@ -213,17 +221,18 @@ src/
 │   ├── templates/                   # 4 encounter templates + conversion
 │   ├── storage/                     # Patient documents + lab reports storage
 │   ├── supabase/                    # Client, server, middleware, cached queries
-│   └── validations/                 # Zod schemas (chat, visit, patient, document, lab)
+│   └── validations/                 # Zod schemas (chat, visit, patient, document, lab, supplement)
 ├── middleware.ts                     # Root middleware
 └── types/database.ts                # Supabase types
 ```
 
 ## Database Schema
 
-13 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
+16 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
+**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking
 
@@ -248,6 +257,11 @@ See [`docs/API.md`](docs/API.md) for the complete reference.
 | `/api/visits/[id]/generate` | POST | SSE SOAP/IFM/Protocol generation |
 | `/api/visits/[id]/transcribe` | POST | Audio → Whisper transcription |
 | `/api/visits/[id]/scribe` | POST | AI Scribe (transcript → sections) |
+| `/api/supplements/review` | POST | SSE supplement review generation |
+| `/api/supplements/review/[id]` | GET | Supplement review detail |
+| `/api/supplements/reviews` | GET | List supplement reviews |
+| `/api/supplements/interactions` | POST | SSE interaction safety check |
+| `/api/supplements/brands` | GET/PUT | Get / save brand preferences |
 | `/api/visits/[id]/export` | POST | Export visit document |
 
 All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP + user agent.
@@ -280,6 +294,8 @@ Optimal (green) · Normal (blue) · Borderline (amber) · Out of Range (red) · 
 |---|---|---|
 | **Price** | $0 | $89/month |
 | Clinical queries | 2/day | Unlimited |
+| Supplement reviews | 5/day | 50/day |
+| Interaction checks | 10/day | 100/day |
 | Evidence sources | PubMed only | All (A4M, IFM, premium) |
 | Deep Consult | — | ✓ |
 | Lab interpretation | — | ✓ |

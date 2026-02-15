@@ -375,3 +375,20 @@ Weakness: Range calculation produces disproportionate bars for extreme outliers 
 27. ~~Required field indicators on patient form (U8)~~ — DONE (red asterisk on First/Last Name labels + `required` attribute on inputs)
 28. ~~Hover state bug on register/onboarding CTAs (U15)~~ — DONE (changed `hover:bg-[var(--color-brand-700)]` to `hover:bg-[var(--color-brand-800)]`)
 29. ~~Add loading.tsx for patients page (U22)~~ — DONE (shimmer skeleton matching visits/labs pattern)
+
+### Sprint 5
+30. ~~Breadcrumbs~~ — DONE
+31. ~~Inline validation~~ — DONE
+32. ~~UX polish~~ — DONE
+
+### Sprint 6 — Supplement Intelligence Module
+33. ~~Database migration (006_supplements.sql)~~ — DONE (3 enums: supplement_review_status, interaction_severity, supplement_action; 3 tables: supplement_reviews, interaction_checks, practitioner_brand_preferences; all with RLS)
+34. ~~TypeScript types~~ — DONE (8 new types/interfaces in database.ts: SupplementReviewStatus, InteractionSeverity, SupplementAction, InteractionWarning, SupplementReviewItem, SupplementReviewData, InteractionResult, InteractionCheckData, PractitionerBrandPreference)
+35. ~~Validation schemas + AI prompts~~ — DONE (supplement.ts with 6 schemas + SUPPORTED_BRANDS; supplement-prompts.ts with review + interaction system prompts)
+36. ~~Rate limit config~~ — DONE (supplement_review: 5/50 per day free/pro; interaction_check: 10/100 per day free/pro)
+37. ~~5 API routes~~ — DONE (POST /api/supplements/review SSE, GET /api/supplements/review/[id], GET /api/supplements/reviews, POST /api/supplements/interactions SSE, GET+PUT /api/supplements/brands)
+38. ~~2 React hooks~~ — DONE (useSupplementReview, useInteractionCheck — both follow use-visit-stream.ts SSE pattern)
+39. ~~Sidebar nav~~ — DONE (Pill icon + "Supplements" between Labs and Patients)
+40. ~~3 page routes~~ — DONE (/supplements server page, /supplements/loading.tsx skeleton, /supplements/review/[id] detail page with breadcrumb)
+41. ~~9 client components~~ — DONE (supplements-page-client, review-tab, supplement-review-detail, supplement-review-stream, review-status-badge, interaction-checker, interaction-result-card, brand-formulary, fullscript-stub-button)
+42. ~~Visit workspace UX~~ — DONE (renamed "Mark Complete" → "Sign & Lock Note", "Reopen" → "Unlock & Edit"; added sign/unlock audit actions)

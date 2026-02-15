@@ -179,16 +179,16 @@ Progress Since Last Visit, Current Symptoms, Protocol Adherence, New Labs & Find
     - Read-only (regenerate to update)
 ```
 
-### 5.7 Mark Visit Complete
+### 5.7 Sign & Lock Visit
 
 ```
-  1. Click "Mark Complete" button in workspace header
+  1. Click "Sign & Lock Note" button in workspace header
   2. Visit status changes to "completed"
   3. Editor becomes read-only
-  4. "Reopen" button appears to reverse
+  4. "Unlock & Edit" button appears to reverse
 ```
 
-**Constraint:** Completed visits cannot be modified (transcribe, scribe, generate all return 409).
+**Constraint:** Signed visits cannot be modified (transcribe, scribe, generate all return 409). Sign/unlock actions are audit logged.
 
 ### 5.8 Export Visit
 

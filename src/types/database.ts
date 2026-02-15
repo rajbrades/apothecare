@@ -19,6 +19,9 @@ export type VisitStatus = "draft" | "completed";
 export type VisitType = "soap" | "follow_up" | "history_physical" | "consult";
 export type DocumentType = "intake_form" | "health_history" | "lab_report" | "imaging" | "referral" | "consent" | "insurance" | "other";
 export type DocumentStatus = "uploading" | "uploaded" | "extracting" | "extracted" | "error";
+export type SupplementReviewStatus = "pending" | "generating" | "complete" | "error";
+export type InteractionSeverity = "critical" | "caution" | "safe" | "unknown";
+export type SupplementAction = "keep" | "modify" | "discontinue" | "add";
 
 // ===========================================
 // Table Row Types
@@ -261,6 +264,97 @@ export interface BiomarkerReference {
 }
 
 // ===========================================
+// Supplement Intelligence Types
+// ===========================================
+
+export interface InteractionWarning {
+  type: "drug_supplement" | "supplement_supplement" | "supplement_condition";
+  severity: InteractionSeverity;
+  substance_a: string;
+  substance_b: string;
+  mechanism: string;
+  clinical_significance: string;
+  recommendation: string;
+}
+
+export interface SupplementReviewItem {
+  name: string;
+  current_dosage?: string;
+  action: SupplementAction;
+  rationale: string;
+  evidence_level?: EvidenceLevel;
+  recommended_dosage?: string;
+  recommended_form?: string;
+  recommended_timing?: string;
+  recommended_duration?: string;
+  recommended_brand?: string;
+  fullscript_product_id?: string;
+  interactions: InteractionWarning[];
+  biomarker_correlations?: string[];
+}
+
+export interface SupplementReviewData {
+  items: SupplementReviewItem[];
+  additions: SupplementReviewItem[];
+  summary: string;
+}
+
+export interface SupplementReview {
+  id: string;
+  practitioner_id: string;
+  patient_id: string;
+  status: SupplementReviewStatus;
+  review_data: SupplementReviewData;
+  raw_ai_text: string | null;
+  model_used: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InteractionResult {
+  severity: InteractionSeverity;
+  substance_a: string;
+  substance_b: string;
+  interaction_type: "drug_supplement" | "supplement_supplement" | "supplement_condition";
+  mechanism: string;
+  clinical_significance: string;
+  recommendation: string;
+  evidence_level?: EvidenceLevel;
+}
+
+export interface InteractionCheckData {
+  interactions: InteractionResult[];
+  summary: string;
+}
+
+export interface InteractionCheck {
+  id: string;
+  practitioner_id: string;
+  patient_id: string | null;
+  supplements_input: string;
+  medications_input: string;
+  result_data: InteractionCheckData;
+  raw_ai_text: string | null;
+  model_used: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  created_at: string;
+}
+
+export interface PractitionerBrandPreference {
+  id: string;
+  practitioner_id: string;
+  brand_name: string;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ===========================================
 // Supabase Database type (for client typing)
 // ===========================================
 
@@ -315,6 +409,21 @@ export interface Database {
         Row: BiomarkerReference;
         Insert: Omit<BiomarkerReference, "id" | "last_updated">;
         Update: Partial<Omit<BiomarkerReference, "id">>;
+      };
+      supplement_reviews: {
+        Row: SupplementReview;
+        Insert: Omit<SupplementReview, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<SupplementReview, "id" | "created_at">>;
+      };
+      interaction_checks: {
+        Row: InteractionCheck;
+        Insert: Omit<InteractionCheck, "id" | "created_at">;
+        Update: Partial<Omit<InteractionCheck, "id" | "created_at">>;
+      };
+      practitioner_brand_preferences: {
+        Row: PractitionerBrandPreference;
+        Insert: Omit<PractitionerBrandPreference, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<PractitionerBrandPreference, "id" | "created_at">>;
       };
     };
     Functions: {
