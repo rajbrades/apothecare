@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
@@ -130,8 +130,20 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [fullName, setFullName] = useState("");
+
   const router = useRouter();
   const supabase = createClient();
+
+  // Pre-fill name from OAuth metadata (Google provides "name", email/password provides "full_name")
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata) {
+        const name = user.user_metadata.full_name || user.user_metadata.name || "";
+        if (name) setFullName(name);
+      }
+    });
+  }, [supabase]);
 
   const selectedLicense = licenseOptions.find((l) => l.value === licenseType);
 
@@ -160,7 +172,7 @@ export default function OnboardingPage() {
         .insert({
           auth_user_id: user.id,
           email: user.email!,
-          full_name: user.user_metadata?.full_name || user.email!,
+          full_name: fullName || user.user_metadata?.full_name || user.user_metadata?.name || user.email!,
           license_type: licenseType as LicenseType,
           license_number: licenseNumber || null,
           license_state: licenseState || null,

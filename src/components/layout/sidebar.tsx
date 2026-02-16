@@ -380,6 +380,18 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
             >
               <Settings className="icon-inline" />
             </button>
+            <button
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                router.push("/auth/login");
+                router.refresh();
+              }}
+              className="text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
+              aria-label="Sign out"
+            >
+              <LogOut className="icon-inline" />
+            </button>
           </div>
         </div>
       </aside>

@@ -5,6 +5,7 @@ import { CLINICAL_CHAT_SYSTEM_PROMPT } from "@/lib/ai/anthropic";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 import { extractCitations, resolveCitations, applyCitationLinks } from "@/lib/citations/resolve";
 
 export const runtime = "nodejs";
@@ -73,6 +74,14 @@ export async function POST(request: NextRequest) {
       return jsonError(parsed.error.issues[0].message, 400);
     }
     const { message, conversation_id, patient_id, is_deep_consult } = parsed.data;
+
+    // Prompt injection detection
+    validateInputSafety(message, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "conversation",
+      resourceId: conversation_id ?? undefined,
+    });
 
     // Get or create conversation
     const model = is_deep_consult ? MODELS.advanced : MODELS.standard;
@@ -254,6 +263,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Your message was blocked by our safety filter. Please rephrase your question.", 400);
+    }
     console.error("Chat stream error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,

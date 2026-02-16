@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
+import { GoogleSignIn, OAuthDivider } from "@/components/auth/google-sign-in";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -68,6 +69,8 @@ export default function RegisterPage() {
 
         {/* Form */}
         <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
+          <GoogleSignIn onError={setError} />
+          <OAuthDivider />
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
               <label

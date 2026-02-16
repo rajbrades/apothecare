@@ -14,7 +14,9 @@ type AuditAction =
   | "generate"
   | "transcribe"
   | "sign"
-  | "unlock";
+  | "unlock"
+  | "prompt_injection_blocked"
+  | "prompt_injection_warning";
 
 interface AuditLogParams {
   request: NextRequest;

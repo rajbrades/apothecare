@@ -6,6 +6,7 @@ import { interactionCheckSchema } from "@/lib/validations/supplement";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -52,6 +53,14 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
     const { supplements, medications, patient_id } = parsed.data;
+
+    // Prompt injection detection
+    const textToScan = [supplements, medications].filter(Boolean).join(" ");
+    validateInputSafety(textToScan, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "interaction_check",
+    });
 
     // If patient_id provided, fetch patient data to enrich context
     let patientContext = "";
@@ -197,6 +206,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Input blocked by safety filter. Please rephrase.", 400);
+    }
     console.error("Interaction check error:", error);
     return jsonError("Internal server error", 500);
   }

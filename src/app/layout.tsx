@@ -2,10 +2,17 @@ import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+const siteTitle = "Apotheca — AI Clinical Decision Support for Functional Medicine";
+const siteDescription =
+  "Evidence-based clinical decision support powered by AI. Built for MDs, DOs, NPs, PAs, DCs, and NDs practicing functional and integrative medicine.";
+
 export const metadata: Metadata = {
-  title: "Apotheca — AI Clinical Decision Support for Functional Medicine",
-  description:
-    "Evidence-based clinical decision support powered by AI. Built for MDs, DOs, NPs, PAs, DCs, and NDs practicing functional and integrative medicine.",
+  metadataBase: new URL("https://apotheca.ai"),
+  title: {
+    default: siteTitle,
+    template: "%s | Apotheca",
+  },
+  description: siteDescription,
   keywords: [
     "functional medicine",
     "clinical decision support",
@@ -15,6 +22,21 @@ export const metadata: Metadata = {
     "IFM",
     "A4M",
   ],
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    siteName: "Apotheca",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

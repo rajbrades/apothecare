@@ -7,6 +7,7 @@ import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { scribeSchema } from "@/lib/validations/visit";
 import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -72,6 +73,14 @@ export async function POST(
       return jsonError(parsed.error.issues[0]?.message ?? "Invalid input", 400);
     }
     const { transcript } = parsed.data;
+
+    // Prompt injection detection
+    validateInputSafety(transcript, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "visit",
+      resourceId: visitId,
+    });
 
     // Get template sections for this visit type
     const visitType = visit.visit_type || "soap";
@@ -169,6 +178,9 @@ export async function POST(
 
     return NextResponse.json({ sections: filteredSections });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Input blocked by safety filter. Please rephrase.", 400);
+    }
     console.error("Scribe error:", error);
     return jsonError("Scribe processing failed", 500);
   }

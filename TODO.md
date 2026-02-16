@@ -1,6 +1,6 @@
 # Apotheca — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
@@ -111,12 +111,12 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 - [x] **Feature:** Drag-and-drop reordering via `@dnd-kit/core`
 - [x] **Feature:** Visit workspace wiring — `handleMatrixUpdate` persists via PATCH API
 
-## Security Hardening (Partial)
+## Security Hardening ✅ COMPLETE
 
 - [x] **Security:** CSRF protection on all 13 mutating endpoints (shared `validateCsrf()` utility)
-- [ ] **Security:** Rate limiting on AI endpoints (unbounded cost exposure)
-- [ ] **Security:** Filename sanitization on storage paths
-- [ ] **Security:** Search parameter escaping for PostgREST
+- [x] **Security:** Rate limiting on all AI endpoints (Sprint 3 — per-tier limits)
+- [x] **Security:** Filename sanitization on storage paths (Sprint 3)
+- [x] **Security:** Search parameter escaping for PostgREST (Sprint 3)
 
 ## UI/UX Scalability Task List (Ongoing)
 
@@ -127,12 +127,13 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 - [x] **Refactor:** Create reusable `DropdownMenu` component (Radix UI)
 - [x] **Refactor:** Update Sidebar & NewVisitForm to use `DropdownMenu`
 - [x] **Feature:** Implement Toast Notifications (Sonner)
-- [ ] **Refactor:** Update `PatientForm` input fields
+- [x] **Refactor:** Update `PatientForm` input fields
 
 ---
 
-## Supplement Intelligence (Core Feature)
+## Supplement Intelligence (Core Feature) — In Progress
 
+- [x] **Feature:** Supplement search page — searchable supplement database with AI-powered lookup
 - [ ] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
 - [ ] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
 - [ ] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
@@ -160,15 +161,29 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 
 ---
 
+## Sprint 7 — UX Fixes & Polish (Feb 16) ✅ COMPLETE
+
+- [x] **Fix:** Lab parsing resilience — retry logic with model fallback (Opus → Sonnet) for transient 429/529/503 errors
+- [x] **Fix:** Null unit constraint violation in biomarker results insert
+- [x] **Fix:** IFM Matrix and Protocol tabs now show saved data on page load (idle stream status was blocking render)
+- [x] **Fix:** Conversation switching — clicking sidebar conversations now loads correctly
+- [x] **Fix:** Sidebar refreshes after visit deletion
+- [x] **UI:** Lab report section titles in ALL CAPS with enhanced panel headers (accent bar, gradient, pill badges)
+- [x] **UI:** Sidebar visit labels show patient name + visit type + short date instead of generic "Visit"
+- [x] **Feature:** Citation hyperlinks — server-side CrossRef DOI resolution for clinical chat citations
+- [x] **Fix:** Citation encoding bug — `encodeURIComponent` double-encoding in Google Scholar fallback URLs
+
+---
+
 ## Backlog
 
-- [ ] OAuth providers (Google, Apple) for registration
+- [x] OAuth providers (Google) for registration — Apple deferred
 - [ ] Mobile responsive pass on all pages
 - [ ] PWA support for mobile practitioners
-- [ ] Error boundary components for graceful failures
+- [x] Error boundary components for graceful failures
 - [ ] Analytics integration (PostHog or Mixpanel)
 - [ ] A/B testing framework for landing page conversion
 - [ ] Accessibility audit (WCAG 2.1 AA)
-- [ ] SEO optimization — meta tags, Open Graph images, structured data
-- [ ] Rate limiting middleware (beyond daily query count)
-- [ ] Prompt injection detection layer before Claude API calls
+- [x] SEO optimization — meta tags, Open Graph images, structured data
+- [x] Rate limiting middleware (beyond daily query count) — per-endpoint, per-tier rate limiting
+- [x] Prompt injection detection layer before Claude API calls

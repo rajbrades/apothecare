@@ -11,6 +11,7 @@ import { generateVisitSchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -65,6 +66,14 @@ export async function POST(
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
     const { raw_notes, sections } = parsed.data;
+
+    // Prompt injection detection
+    validateInputSafety(raw_notes, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "visit",
+      resourceId: visitId,
+    });
 
     // Build patient context with document summaries
     let documentSummaries: string[] = [];
@@ -286,6 +295,9 @@ export async function POST(
       },
     });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Input blocked by safety filter. Please rephrase.", 400);
+    }
     console.error("Visit generate error:", error);
     return jsonError("Internal server error", 500);
   }
