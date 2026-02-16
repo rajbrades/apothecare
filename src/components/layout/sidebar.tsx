@@ -33,7 +33,9 @@ interface SidebarProps {
   recentVisits?: Array<{
     id: string;
     visit_date: string;
+    visit_type: string;
     chief_complaint: string | null;
+    patients?: { first_name: string | null; last_name: string | null } | null;
   }>;
 }
 
@@ -298,18 +300,35 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                 ) : (
                   recentVisits.slice(0, 3).map((visit) => {
                     const isVisitActive = pathname === `/visits/${visit.id}`;
+                    const patientName = visit.patients
+                      ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
+                      : null;
+                    const visitTypeLabel: Record<string, string> = {
+                      soap: "SOAP",
+                      follow_up: "Follow-up",
+                      history_physical: "H&P",
+                      consult: "Consult",
+                    };
+                    const typeLabel = visitTypeLabel[visit.visit_type] || "Visit";
+                    const title = patientName
+                      ? visit.chief_complaint
+                        ? `${patientName} — ${visit.chief_complaint}`
+                        : patientName
+                      : visit.chief_complaint || "Visit";
+                    const subtitle = `${typeLabel} · ${new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+
                     return (
                       <Link
                         key={visit.id}
                         href={`/visits/${visit.id}`}
-                        className={`block px-3 pl-7 py-1.5 text-sm rounded-md truncate transition-colors ${isVisitActive
+                        className={`block px-3 pl-7 py-1.5 rounded-md transition-colors ${isVisitActive
                           ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
                           : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
                           }`}
                       >
-                        {visit.chief_complaint || "Visit"}
+                        <span className="block text-sm truncate">{title}</span>
                         <span className="block text-[11px] text-[var(--color-text-muted)]">
-                          {new Date(visit.visit_date).toLocaleDateString()}
+                          {subtitle}
                         </span>
                       </Link>
                     );

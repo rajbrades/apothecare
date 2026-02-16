@@ -40,7 +40,7 @@ export const getSidebarData = cache(async (practitionerId: string) => {
         .limit(5),
       supabase
         .from("visits")
-        .select("id, visit_date, chief_complaint")
+        .select("id, visit_date, visit_type, chief_complaint, patients(first_name, last_name)")
         .eq("practitioner_id", practitionerId)
         .eq("is_archived", false)
         .order("visit_date", { ascending: false })
