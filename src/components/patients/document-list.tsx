@@ -175,7 +175,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                     <span>&middot;</span>
                     <span>{formatTestType(lab.test_type)}</span>
                     <span>&middot;</span>
-                    <span>{formatFileSize(lab.raw_file_size)}</span>
+                    {lab.raw_file_size != null && <span>{formatFileSize(lab.raw_file_size)}</span>}
                     <span>&middot;</span>
                     <span>{new Date(lab.created_at).toLocaleDateString()}</span>
                     <ExtractionStatusBadge status={mappedStatus} />

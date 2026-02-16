@@ -4,14 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   User, Calendar, FileText, ClipboardList,
-  Stethoscope, Upload,
+  Stethoscope, Upload, FlaskConical,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PreChartView } from "./pre-chart-view";
+import { LabReportCard } from "@/components/labs/lab-report-card";
 import type { Patient, PatientDocument } from "@/types/database";
+import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 
-type Tab = "overview" | "documents" | "prechart" | "visits";
+type Tab = "overview" | "documents" | "labs" | "prechart" | "visits";
 
 interface VisitItem {
   id: string;
@@ -23,13 +25,14 @@ interface VisitItem {
 
 export interface LabReportItem {
   id: string;
-  raw_file_name: string;
-  raw_file_size: number;
-  lab_vendor: string;
-  test_type: string;
+  raw_file_name: string | null;
+  raw_file_size: number | null;
+  lab_vendor: LabVendor;
+  test_type: LabTestType;
   test_name: string | null;
-  status: string;
+  status: LabReportStatus;
   error_message: string | null;
+  is_archived?: boolean;
   created_at: string;
   collection_date: string | null;
 }
@@ -56,7 +59,8 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
 
   const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
     { key: "overview", label: "Overview", icon: User },
-    { key: "documents", label: `Documents (${documents.length + labReports.length})`, icon: FileText },
+    { key: "documents", label: `Documents (${documents.length})`, icon: FileText },
+    { key: "labs", label: `Labs (${labReports.length})`, icon: FlaskConical },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
   ];
@@ -175,6 +179,38 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
               onDeleted={handleDocumentDeleted}
               onLabDeleted={handleLabDeleted}
             />
+          </div>
+        )}
+
+        {activeTab === "labs" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-[var(--color-text-muted)]">
+                {labReports.length} lab report{labReports.length !== 1 ? "s" : ""}
+              </p>
+              <Link
+                href={`/labs?patient_id=${patient.id}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload Lab
+              </Link>
+            </div>
+            {labReports.length === 0 ? (
+              <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
+                No lab reports for this patient yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {labReports.map((lab) => (
+                  <LabReportCard
+                    key={lab.id}
+                    report={lab}
+                    onDelete={handleLabDeleted}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

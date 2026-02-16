@@ -40,9 +40,10 @@ export default async function PatientDetailPage({
       .limit(10),
     supabase
       .from("lab_reports")
-      .select("id, raw_file_name, raw_file_size, lab_vendor, test_type, test_name, status, error_message, created_at, collection_date")
+      .select("id, raw_file_name, raw_file_size, lab_vendor, test_type, test_name, status, error_message, is_archived, created_at, collection_date")
       .eq("patient_id", id)
       .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
       .order("created_at", { ascending: false }),
   ]);
 

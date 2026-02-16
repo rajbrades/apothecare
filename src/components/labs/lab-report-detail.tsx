@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -42,6 +42,7 @@ interface ReportData {
   status: LabReportStatus;
   error_message: string | null;
   raw_file_url: string;
+  is_archived?: boolean;
   parsed_data?: { qualitative_results?: ParsedQualitativeResult[] } | null;
   patients?: { first_name: string | null; last_name: string | null; date_of_birth: string | null; sex: string | null } | null;
 }
@@ -74,6 +75,25 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+const MAX_TITLE_LENGTH = 80;
+
+/** Split a long semicolon-delimited test name into a short title + panel list */
+function parseTestName(testName: string | null): { shortName: string; panels: string[] | null } {
+  if (!testName) return { shortName: "Lab Report", panels: null };
+  if (testName.length <= MAX_TITLE_LENGTH && !testName.includes(";")) {
+    return { shortName: testName, panels: null };
+  }
+
+  const parts = testName.split(/;\s*/);
+  if (parts.length <= 1) {
+    // No semicolons but still long — truncate
+    return { shortName: testName.slice(0, MAX_TITLE_LENGTH) + "\u2026", panels: null };
+  }
+
+  const shortName = parts[0];
+  return { shortName, panels: parts };
 }
 
 // Human-readable titles for GI-MAP sections (matching the PDF headings)
@@ -235,6 +255,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
   const [pdfUrl, setPdfUrl] = useState(initialPdfUrl);
   const [retrying, setRetrying] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const isArchived = report.is_archived ?? false;
 
   const isProcessing = PROCESSING_STATUSES.includes(report.status);
 
@@ -294,12 +316,31 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
     }
   }, [report.id]);
 
+  const handleArchive = useCallback(async () => {
+    setArchiving(true);
+    try {
+      const res = await fetch(`/api/labs/${report.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_archived: !isArchived }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      setReport((prev) => ({ ...prev, is_archived: !isArchived }));
+      toast.success(isArchived ? "Lab report unarchived" : "Lab report archived");
+    } catch {
+      toast.error("Failed to update archive status");
+    } finally {
+      setArchiving(false);
+    }
+  }, [report.id, isArchived]);
+
   const patientName = report.patients
     ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ")
     : null;
 
   const vendorLabel = VENDOR_LABELS[report.lab_vendor] || report.lab_vendor;
-  const displayName = report.test_name || "Lab Report";
+  const { shortName: displayName, panels: testPanels } = parseTestName(report.test_name);
+  const [panelsExpanded, setPanelsExpanded] = useState(false);
 
   const isGiMap = report.lab_vendor === "diagnostic_solutions";
   const qualitativeResults = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
@@ -336,6 +377,29 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               {report.collection_date && ` \u00B7 ${formatDate(report.collection_date)}`}
               {patientName && ` \u00B7 ${patientName}`}
             </p>
+            {testPanels && (
+              <div className="mt-2">
+                <button
+                  onClick={() => setPanelsExpanded(!panelsExpanded)}
+                  className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                >
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${panelsExpanded ? "rotate-180" : ""}`} />
+                  {testPanels.length} panels included
+                </button>
+                {panelsExpanded && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {testPanels.map((panel, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 text-xs bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border-light)]"
+                      >
+                        {panel}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <LabStatusBadge status={report.status} />
         </div>
@@ -363,6 +427,14 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               {retrying ? "Re-parsing..." : "Re-parse Report"}
             </button>
           )}
+          <button
+            onClick={handleArchive}
+            disabled={archiving}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
+          >
+            {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : isArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+            {isArchived ? "Unarchive" : "Archive"}
+          </button>
         </div>
       </div>
 

@@ -35,20 +35,27 @@ export async function GET(request: NextRequest) {
     const parsed = labListQuerySchema.safeParse(params);
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
-    const { cursor, limit, status, test_type, lab_vendor, patient_id } = parsed.data;
+    const { cursor, limit, status, test_type, lab_vendor, patient_id, search, include_archived } = parsed.data;
 
     let query = supabase
       .from("lab_reports")
-      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, error_message, created_at, updated_at, patients(first_name, last_name)")
+      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, error_message, is_archived, created_at, updated_at, patients(first_name, last_name)")
       .eq("practitioner_id", practitioner.id)
       .order("created_at", { ascending: false })
       .limit(limit);
+
+    if (!include_archived) query = query.eq("is_archived", false);
 
     if (status) query = query.eq("status", status);
     if (test_type) query = query.eq("test_type", test_type);
     if (lab_vendor) query = query.eq("lab_vendor", lab_vendor);
     if (patient_id) query = query.eq("patient_id", patient_id);
     if (cursor) query = query.lt("created_at", cursor);
+    if (search) {
+      // Search across test_name and raw_file_name (patient name filtering done client-side from joined data)
+      const term = `%${search}%`;
+      query = query.or(`test_name.ilike.${term},raw_file_name.ilike.${term}`);
+    }
 
     const { data: labs, error } = await query;
     if (error) return jsonError("Failed to fetch lab reports", 500);

@@ -141,3 +141,51 @@ export async function DELETE(
     return jsonError("Internal server error", 500);
   }
 }
+
+// ── PATCH /api/labs/[id] — Archive or unarchive a lab report ──
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
+    const { id: reportId } = await params;
+    const supabase = await createClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return jsonError("Unauthorized", 401);
+
+    const { data: practitioner } = await supabase
+      .from("practitioners")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+    if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    const body = await request.json();
+    const isArchived = body.is_archived;
+    if (typeof isArchived !== "boolean") return jsonError("is_archived must be a boolean", 400);
+
+    const { error: updateError } = await supabase
+      .from("lab_reports")
+      .update({ is_archived: isArchived })
+      .eq("id", reportId)
+      .eq("practitioner_id", practitioner.id);
+
+    if (updateError) return jsonError("Failed to update lab report", 500);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: isArchived ? "archive" : "unarchive",
+      resourceType: "lab_report",
+      resourceId: reportId,
+    });
+
+    return NextResponse.json({ success: true, is_archived: isArchived });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
