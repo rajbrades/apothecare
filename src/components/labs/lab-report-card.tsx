@@ -2,9 +2,29 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FlaskConical, Calendar, User, FileText, Trash2, Loader2 } from "lucide-react";
+import {
+  FlaskConical, Calendar, User, FileText, Trash2, Loader2,
+  Droplets, Bug, TestTubes, Pill, Wheat, Dna, Biohazard, Leaf,
+  type LucideIcon,
+} from "lucide-react";
 import { LabStatusBadge } from "./lab-status-badge";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
+
+const TEST_TYPE_VISUALS: Record<string, { icon: LucideIcon; bg: string; border: string; text: string }> = {
+  blood_panel:     { icon: Droplets,      bg: "bg-rose-50",    border: "border-rose-200",   text: "text-rose-600" },
+  stool_analysis:  { icon: Bug,           bg: "bg-teal-50",    border: "border-teal-200",   text: "text-teal-600" },
+  saliva_hormone:  { icon: FlaskConical,  bg: "bg-violet-50",  border: "border-violet-200", text: "text-violet-600" },
+  urine_hormone:   { icon: FlaskConical,  bg: "bg-violet-50",  border: "border-violet-200", text: "text-violet-600" },
+  organic_acids:   { icon: TestTubes,     bg: "bg-amber-50",   border: "border-amber-200",  text: "text-amber-600" },
+  micronutrient:   { icon: Pill,          bg: "bg-amber-50",   border: "border-amber-200",  text: "text-amber-600" },
+  food_sensitivity:{ icon: Wheat,         bg: "bg-orange-50",  border: "border-orange-200", text: "text-orange-600" },
+  genetic:         { icon: Dna,           bg: "bg-indigo-50",  border: "border-indigo-200", text: "text-indigo-600" },
+  mycotoxin:       { icon: Biohazard,     bg: "bg-red-50",     border: "border-red-200",    text: "text-red-600" },
+  environmental:   { icon: Leaf,          bg: "bg-emerald-50", border: "border-emerald-200",text: "text-emerald-600" },
+  other:           { icon: FileText,      bg: "bg-gray-50",    border: "border-gray-200",   text: "text-gray-500" },
+};
+
+const DEFAULT_VISUAL = TEST_TYPE_VISUALS.other;
 
 interface LabReportCardProps {
   report: {
@@ -73,6 +93,8 @@ export function LabReportCard({ report, onDelete }: LabReportCardProps) {
 
   const displayName = report.test_name || TEST_TYPE_LABELS[report.test_type] || "Lab Report";
   const vendorLabel = VENDOR_LABELS[report.lab_vendor] || report.lab_vendor;
+  const visual = TEST_TYPE_VISUALS[report.test_type] || DEFAULT_VISUAL;
+  const IconComponent = visual.icon;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -96,8 +118,8 @@ export function LabReportCard({ report, onDelete }: LabReportCardProps) {
         className="flex items-start gap-4 flex-1 min-w-0"
       >
         {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]">
-          <FlaskConical className="w-5 h-5 text-[var(--color-brand-600)]" strokeWidth={1.5} />
+        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${visual.bg} border ${visual.border}`}>
+          <IconComponent className={`w-5 h-5 ${visual.text}`} strokeWidth={1.5} />
         </div>
 
         {/* Content */}

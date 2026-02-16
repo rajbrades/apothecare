@@ -5,7 +5,7 @@ import { FileText, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
-import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
+import type { BiomarkerData, BiomarkerPanelData, QualitativeData } from "@/components/chat/biomarker-range-bar";
 import { LabStatusBadge } from "./lab-status-badge";
 import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
 import type { LabReportStatus, LabVendor, BiomarkerFlag as DbFlag } from "@/types/database";
@@ -26,6 +26,13 @@ interface BiomarkerRow {
   interpretation: string | null;
 }
 
+interface ParsedQualitativeResult {
+  name: string;
+  result: string;
+  reference: string;
+  category: string;
+}
+
 interface ReportData {
   id: string;
   test_name: string | null;
@@ -35,6 +42,7 @@ interface ReportData {
   status: LabReportStatus;
   error_message: string | null;
   raw_file_url: string;
+  parsed_data?: { qualitative_results?: ParsedQualitativeResult[] } | null;
   patients?: { first_name: string | null; last_name: string | null; date_of_birth: string | null; sex: string | null } | null;
 }
 
@@ -68,8 +76,74 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function buildPanels(biomarkers: BiomarkerRow[], labSource: string, collectedDate?: string | null): BiomarkerPanelData[] {
-  const groups = new Map<string, BiomarkerData[]>();
+// Human-readable titles for GI-MAP sections (matching the PDF headings)
+const GI_MAP_SECTION_TITLES: Record<string, string> = {
+  bacterial_pathogens: "BACTERIAL PATHOGENS",
+  parasitic_pathogens: "PARASITIC PATHOGENS",
+  viral_pathogens: "VIRAL PATHOGENS",
+  h_pylori: "H. PYLORI",
+  commensal_bacteria: "COMMENSAL / KEYSTONE BACTERIA",
+  bacterial_phyla: "BACTERIAL PHYLA",
+  dysbiotic_overgrowth_bacteria: "DYSBIOTIC & OVERGROWTH BACTERIA",
+  commensal_overgrowth_microbes: "COMMENSAL OVERGROWTH MICROBES",
+  inflammatory_autoimmune_bacteria: "INFLAMMATORY & AUTOIMMUNE-RELATED BACTERIA",
+  commensal_inflammatory_bacteria: "COMMENSAL INFLAMMATORY & AUTOIMMUNE-RELATED BACTERIA",
+  normal_flora: "NORMAL FLORA",
+  dysbiotic_bacteria: "DYSBIOTIC BACTERIA",
+  fungi_yeast: "FUNGI / YEAST",
+  parasites: "PARASITES",
+  worms: "WORMS",
+  intestinal_health: "INTESTINAL HEALTH",
+};
+
+// GI-MAP section display order (matches the PDF report layout)
+const GI_MAP_SECTION_ORDER = [
+  // Pathogens
+  "bacterial_pathogens",
+  "parasitic_pathogens",
+  "viral_pathogens",
+  // H. pylori
+  "h_pylori",
+  // Commensal / Keystone Bacteria
+  "commensal_bacteria",
+  "bacterial_phyla",
+  // Opportunistic / Overgrowth Microbes
+  "dysbiotic_overgrowth_bacteria",
+  "commensal_overgrowth_microbes",
+  "inflammatory_autoimmune_bacteria",
+  "commensal_inflammatory_bacteria",
+  // Legacy fallbacks (in case old data uses these)
+  "normal_flora",
+  "dysbiotic_bacteria",
+  // Fungi, Parasites, Worms
+  "fungi_yeast",
+  "parasites",
+  "worms",
+  // Intestinal Health
+  "intestinal_health",
+];
+
+function isQualitativeFlagged(result: string, reference: string): boolean {
+  const r = result.toLowerCase().trim();
+  const ref = reference.toLowerCase().trim();
+  // "Detected" when reference is "Not Detected" → flagged
+  if (ref.includes("not detected") && !r.includes("not detected") && r.includes("detected")) return true;
+  // "Positive" when reference is "Negative" → flagged
+  if (ref.includes("negative") && r.includes("positive")) return true;
+  // Result doesn't match reference (generic)
+  if (r !== ref && ref === "not detected" && r !== "not detected") return true;
+  return false;
+}
+
+function buildPanels(
+  biomarkers: BiomarkerRow[],
+  labSource: string,
+  collectedDate?: string | null,
+  qualitativeResults?: ParsedQualitativeResult[],
+  isGiMap?: boolean,
+): BiomarkerPanelData[] {
+  const numericGroups = new Map<string, BiomarkerData[]>();
+  const qualGroups = new Map<string, QualitativeData[]>();
 
   for (const b of biomarkers) {
     const category = b.category || "Uncategorized";
@@ -91,33 +165,67 @@ function buildPanels(biomarkers: BiomarkerRow[], labSource: string, collectedDat
       note: b.interpretation || undefined,
     };
 
-    if (!groups.has(category)) groups.set(category, []);
-    groups.get(category)!.push(biomarkerData);
+    if (!numericGroups.has(category)) numericGroups.set(category, []);
+    numericGroups.get(category)!.push(biomarkerData);
   }
 
-  // Sort categories alphabetically, but put "Uncategorized" last
-  const sortedCategories = [...groups.keys()].sort((a, b) => {
-    if (a === "Uncategorized") return 1;
-    if (b === "Uncategorized") return -1;
-    return a.localeCompare(b);
-  });
+  // Group qualitative results by category
+  if (qualitativeResults) {
+    for (const q of qualitativeResults) {
+      const category = q.category || "Uncategorized";
+      const qualData: QualitativeData = {
+        name: q.name,
+        result: q.result,
+        reference: q.reference,
+        flagged: isQualitativeFlagged(q.result, q.reference),
+      };
+
+      if (!qualGroups.has(category)) qualGroups.set(category, []);
+      qualGroups.get(category)!.push(qualData);
+    }
+  }
+
+  // Merge all category keys
+  const allCategories = new Set([...numericGroups.keys(), ...qualGroups.keys()]);
+
+  // Sort: GI-MAP uses defined clinical order, others use alphabetical
+  let sortedCategories: string[];
+  if (isGiMap) {
+    sortedCategories = [...allCategories].sort((a, b) => {
+      const idxA = GI_MAP_SECTION_ORDER.indexOf(a);
+      const idxB = GI_MAP_SECTION_ORDER.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      if (a === "Uncategorized") return 1;
+      if (b === "Uncategorized") return -1;
+      return a.localeCompare(b);
+    });
+  } else {
+    sortedCategories = [...allCategories].sort((a, b) => {
+      if (a === "Uncategorized") return 1;
+      if (b === "Uncategorized") return -1;
+      return a.localeCompare(b);
+    });
+  }
 
   return sortedCategories.map((category) => {
-    const markers = groups.get(category)!;
-    const flagCount = markers.filter((m) => m.flag !== "optimal" && m.flag !== "normal").length;
+    const markers = numericGroups.get(category) || [];
+    const qualitative = qualGroups.get(category) || [];
+    const numericFlagCount = markers.filter((m) => m.flag !== "optimal" && m.flag !== "normal").length;
+    const qualFlagCount = qualitative.filter((q) => q.flagged).length;
 
-    // Format category name to ALL CAPS
-    const title = category
-      .split("_")
-      .join(" ")
-      .toUpperCase();
+    const title = (isGiMap && GI_MAP_SECTION_TITLES[category])
+      ? GI_MAP_SECTION_TITLES[category]
+      : category.split("_").join(" ").toUpperCase();
 
     return {
       title,
       labSource,
       collectedDate: collectedDate ? formatDate(collectedDate) : undefined,
-      flagCount,
+      flagCount: numericFlagCount + qualFlagCount,
       biomarkers: markers,
+      qualitativeResults: qualitative.length > 0 ? qualitative : undefined,
     };
   });
 }
@@ -193,12 +301,14 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   const vendorLabel = VENDOR_LABELS[report.lab_vendor] || report.lab_vendor;
   const displayName = report.test_name || "Lab Report";
 
-  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date);
-  const totalBiomarkers = biomarkers.length;
+  const isGiMap = report.lab_vendor === "diagnostic_solutions";
+  const qualitativeResults = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
+  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date, qualitativeResults, isGiMap);
+  const totalBiomarkers = biomarkers.length + qualitativeResults.length;
   const flaggedCount = biomarkers.filter((b) => {
     const flag = b.functional_flag || b.conventional_flag;
     return flag && flag !== "optimal" && flag !== "normal";
-  }).length;
+  }).length + qualitativeResults.filter((q) => isQualitativeFlagged(q.result, q.reference)).length;
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -242,6 +352,16 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               <FileText className="w-4 h-4" />
               View Original PDF
             </a>
+          )}
+          {report.status === "complete" && (
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
+            >
+              <RefreshCcw className={`w-4 h-4 ${retrying ? "animate-spin" : ""}`} />
+              {retrying ? "Re-parsing..." : "Re-parse Report"}
+            </button>
           )}
         </div>
       </div>
@@ -293,8 +413,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
       {/* Biomarker panels */}
       {report.status === "complete" && panels.length > 0 && (
         <div className="space-y-4">
-          {panels.map((panel) => (
-            <BiomarkerPanel key={panel.title} panel={panel} />
+          {panels.map((panel, idx) => (
+            <BiomarkerPanel key={`${panel.title}-${idx}`} panel={panel} />
           ))}
         </div>
       )}

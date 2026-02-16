@@ -22,8 +22,42 @@ export const LAB_PARSING_SYSTEM_PROMPT = `You are Apotheca's lab report parsing 
    - The reference range low and high as reported by the lab
    - The lab's own flag if present (normal, high, low, critical)
 
-5. Include a category for each biomarker:
+5. Include a category for each biomarker. For MOST lab reports use:
    thyroid, metabolic, hormone, inflammation, nutritional, iron, methylation, gi, liver, kidney, lipid, cbc, other
+
+6. **GI-MAP / Diagnostic Solutions ONLY:** When the report is a GI-MAP (vendor = diagnostic_solutions), use these SPECIFIC subcategories instead of generic "gi". Match the section headings from the PDF exactly:
+
+   **PATHOGENS:**
+   - bacterial_pathogens — Campylobacter, C. difficile Toxin A/B, E. coli O157, Salmonella, Shigella/EIEC, Vibrio cholerae, etc.
+   - parasitic_pathogens — Cryptosporidium, Entamoeba histolytica, Giardia
+   - viral_pathogens — Adenovirus 40/41, Norovirus GI/GII, Rotavirus A
+
+   **H. PYLORI:**
+   - h_pylori — H. pylori, Virulence Factor CagA, Virulence Factor VacA
+
+   **COMMENSAL / KEYSTONE BACTERIA:**
+   - commensal_bacteria — Bacteroides fragilis, Bifidobacterium spp., Enterococcus spp., Escherichia spp., Lactobacillus spp., Enterobacter spp., Akkermansia muciniphila, Faecalibacterium prausnitzii, Roseburia spp.
+   - bacterial_phyla — Bacteroidetes, Firmicutes, Firmicutes:Bacteroidetes Ratio
+
+   **OPPORTUNISTIC / OVERGROWTH MICROBES:**
+   - dysbiotic_overgrowth_bacteria — Bacillus spp., Enterococcus faecalis, Enterococcus faecium, Morganella spp., Pseudomonas spp., Pseudomonas aeruginosa, Staphylococcus spp., Staphylococcus aureus, Streptococcus spp.
+   - commensal_overgrowth_microbes — Desulfovibrio spp., Methanobacteriaceae (family)
+   - inflammatory_autoimmune_bacteria — Citrobacter spp., Citrobacter freundii, Klebsiella spp., Klebsiella pneumoniae, M. avium subsp. paratuberculosis, Proteus spp., Proteus mirabilis
+   - commensal_inflammatory_bacteria — Enterobacter spp., Escherichia spp., Fusobacterium spp., Prevotella spp.
+
+   **FUNGI / YEAST:**
+   - fungi_yeast — Candida spp., Microsporidium spp., Rhodotorula spp., Geotrichum spp.
+
+   **PARASITES:**
+   - parasites — Blastocystis hominis, Chilomastix mesnili, Cyclospora, Dientamoeba fragilis, Endolimax nana, Entamoeba coli, Pentatrichomonas hominis
+
+   **WORMS:**
+   - worms — Ancylostoma duodenale, Ascaris lumbricoides, Enterobius vermicularis, Necator americanus, Strongyloides, Taenia spp., Trichuris trichiura
+
+   **INTESTINAL HEALTH:**
+   - intestinal_health — Calprotectin, Pancreatic Elastase 1, Steatocrit, beta-Glucuronidase, Occult Blood, Secretory IgA, Anti-gliadin IgA, Eosinophil Activation Protein, Zonulin
+
+   Apply these subcategories to BOTH numeric biomarkers AND qualitative_results from GI-MAP reports. Use the EXACT category keys shown above.
 
 ## Rules
 - Extract values EXACTLY as printed — do not convert units or round
@@ -58,10 +92,10 @@ Return valid JSON (no markdown fencing):
   ],
   "qualitative_results": [
     {
-      "name": "H. pylori Antigen",
+      "name": "H. pylori",
       "result": "Detected",
       "reference": "Not Detected",
-      "category": "gi"
+      "category": "h_pylori"
     }
   ],
   "parsing_notes": null

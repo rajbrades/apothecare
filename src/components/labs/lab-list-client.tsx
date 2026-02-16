@@ -61,6 +61,7 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
   // Filters
   const [statusFilter, setStatusFilter] = useState("");
   const [testTypeFilter, setTestTypeFilter] = useState("");
+  const [patientFilter, setPatientFilter] = useState("");
 
   const fetchLabs = useCallback(async (cursor?: string) => {
     const params = new URLSearchParams();
@@ -68,11 +69,12 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
     params.set("limit", "20");
     if (statusFilter) params.set("status", statusFilter);
     if (testTypeFilter) params.set("test_type", testTypeFilter);
+    if (patientFilter) params.set("patient_id", patientFilter);
 
     const res = await fetch(`/api/labs?${params}`);
     if (!res.ok) return null;
     return res.json();
-  }, [statusFilter, testTypeFilter]);
+  }, [statusFilter, testTypeFilter, patientFilter]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore || labs.length === 0) return;
@@ -120,12 +122,29 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
       <LabUpload patients={patients} onUploaded={handleUploaded} defaultExpanded={initialLabs.length === 0} />
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        {patients.length > 0 && (
+          <select
+            value={patientFilter}
+            onChange={(e) => {
+              setPatientFilter(e.target.value);
+              setTimeout(() => applyFilters(), 0);
+            }}
+            className="px-3 py-1.5 text-xs rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-secondary)]"
+          >
+            <option value="">All Patients</option>
+            {patients.map((p) => (
+              <option key={p.id} value={p.id}>
+                {[p.first_name, p.last_name].filter(Boolean).join(" ") || "Unnamed"}
+              </option>
+            ))}
+          </select>
+        )}
+
         <select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
-            // We need to trigger re-fetch after state update
             setTimeout(() => applyFilters(), 0);
           }}
           className="px-3 py-1.5 text-xs rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-secondary)]"
@@ -159,16 +178,17 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
       {labs.length === 0 && !loading && (
         <div className="text-center py-8">
           <p className="text-sm text-[var(--color-text-muted)]">
-            {statusFilter || testTypeFilter
+            {statusFilter || testTypeFilter || patientFilter
               ? "No lab reports match your filters."
               : "No lab reports yet. Upload your first report above."}
           </p>
-          {(statusFilter || testTypeFilter) && (
+          {(statusFilter || testTypeFilter || patientFilter) && (
             <button
               type="button"
               onClick={() => {
                 setStatusFilter("");
                 setTestTypeFilter("");
+                setPatientFilter("");
                 setTimeout(() => applyFilters(), 0);
               }}
               className="mt-2 text-sm font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
