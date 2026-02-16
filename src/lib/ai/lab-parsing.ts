@@ -32,31 +32,58 @@ export async function parseLabReport(
     const base64Pdf = pdfBuffer.toString("base64");
     pdfBuffer = null; // FREE MEMORY IMMEDIATELY
 
-    // Send to Claude Vision for extraction
-    const response = await anthropic.messages.create({
-      model: ANTHROPIC_MODELS.vision,
-      max_tokens: 8192,
-      system: LAB_PARSING_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: {
-                type: "base64",
-                media_type: "application/pdf",
-                data: base64Pdf,
+    // Send to Claude Vision for extraction (retry with fallback on transient errors)
+    const models = [ANTHROPIC_MODELS.vision, ANTHROPIC_MODELS.standard];
+    let response: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null;
+    let lastError: unknown = null;
+
+    for (const model of models) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          response = await anthropic.messages.create({
+            model,
+            max_tokens: 8192,
+            system: LAB_PARSING_SYSTEM_PROMPT,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "document",
+                    source: {
+                      type: "base64",
+                      media_type: "application/pdf",
+                      data: base64Pdf,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text: "Extract all biomarker data from this lab report. Return valid JSON.",
+                  },
+                ],
               },
-            },
-            {
-              type: "text",
-              text: "Extract all biomarker data from this lab report. Return valid JSON.",
-            },
-          ],
-        },
-      ],
-    });
+            ],
+          });
+          break; // Success — exit retry loop
+        } catch (err: unknown) {
+          lastError = err;
+          const status = (err as { status?: number }).status;
+          const isTransient = status === 429 || status === 529 || status === 503;
+          if (isTransient && attempt === 0) {
+            // Wait before retry (2s first attempt)
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          if (isTransient) break; // Move to fallback model
+          throw err; // Non-transient error — don't retry
+        }
+      }
+      if (response) break; // Got a response — stop trying models
+    }
+
+    if (!response) {
+      throw lastError || new Error("All models failed for lab parsing");
+    }
 
     // Parse extraction result
     const textContent = response.content.find((c) => c.type === "text");
@@ -77,6 +104,7 @@ export async function parseLabReport(
     }
 
     // Update lab report with parsed metadata
+    const usedModel = response.model || ANTHROPIC_MODELS.vision;
     const collectionDate = parsedData.collection_date || null;
     await serviceClient
       .from("lab_reports")
@@ -86,7 +114,7 @@ export async function parseLabReport(
         test_type: parsedData.test_type || "other",
         test_name: parsedData.test_name || null,
         collection_date: collectionDate,
-        parsing_model: ANTHROPIC_MODELS.vision,
+        parsing_model: usedModel,
       })
       .eq("id", reportId);
 
@@ -126,7 +154,7 @@ export async function parseLabReport(
       user_agent: "background",
       detail: {
         patient_id: patientId,
-        parsing_model: ANTHROPIC_MODELS.vision,
+        parsing_model: usedModel,
         biomarkers_extracted: normResult.totalCount,
         biomarkers_matched: normResult.matchedCount,
         biomarkers_flagged: normResult.flaggedCount,

@@ -259,35 +259,36 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)] flex items-center justify-between hover:bg-[var(--color-surface-tertiary)] transition-colors"
+        className="w-full px-4 py-3.5 border-b border-[var(--color-border-light)] bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] flex items-center justify-between hover:from-[var(--color-brand-100)] hover:to-[var(--color-surface-tertiary)] transition-all"
       >
-        <div className="text-left">
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
-            {panel.title}
-          </h3>
-          {(panel.labSource || panel.collectedDate) && (
-            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-              {panel.labSource}
-              {panel.labSource && panel.collectedDate && " \u00B7 "}
-              {panel.collectedDate}
-            </p>
-          )}
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-1 h-8 rounded-full bg-[var(--color-brand-400)] flex-shrink-0" />
+          <div>
+            <h3 className="text-[13px] font-bold tracking-wide text-[var(--color-text-primary)] font-[var(--font-display)]">
+              {panel.title}
+            </h3>
+            {(panel.labSource || panel.collectedDate) && (
+              <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                {panel.labSource}
+                {panel.labSource && panel.collectedDate && " \u00B7 "}
+                {panel.collectedDate}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {flaggedCount > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--color-biomarker-borderline)]/10">
               <span className="w-2 h-2 rounded-full bg-[var(--color-biomarker-borderline)]" />
-              <span className="text-[11px] text-[var(--color-text-muted)]">
+              <span className="text-[11px] font-medium text-[var(--color-biomarker-borderline)]">
                 {flaggedCount} {flaggedCount === 1 ? "flag" : "flags"}
               </span>
             </div>
           )}
-          {compact && (
-            isExpanded ? (
-              <ChevronUp size={14} className="text-[var(--color-text-muted)]" />
-            ) : (
-              <ChevronDown size={14} className="text-[var(--color-text-muted)]" />
-            )
+          {isExpanded ? (
+            <ChevronUp size={16} className="text-[var(--color-text-muted)]" />
+          ) : (
+            <ChevronDown size={16} className="text-[var(--color-text-muted)]" />
           )}
         </div>
       </button>

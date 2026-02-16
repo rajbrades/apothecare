@@ -106,11 +106,11 @@ function buildPanels(biomarkers: BiomarkerRow[], labSource: string, collectedDat
     const markers = groups.get(category)!;
     const flagCount = markers.filter((m) => m.flag !== "optimal" && m.flag !== "normal").length;
 
-    // Format category name to title case
+    // Format category name to ALL CAPS
     const title = category
       .split("_")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+      .join(" ")
+      .toUpperCase();
 
     return {
       title,
@@ -292,7 +292,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
       {/* Biomarker panels */}
       {report.status === "complete" && panels.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {panels.map((panel) => (
             <BiomarkerPanel key={panel.title} panel={panel} />
           ))}
