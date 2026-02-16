@@ -273,10 +273,11 @@ interface IFMMatrixViewProps {
   matrix: IFMMatrix | Record<string, unknown> | null;
   status: "idle" | "generating" | "streaming" | "complete" | "error";
   readOnly?: boolean;
+  hasSoapNote?: boolean;
   onUpdate?: (matrix: IFMMatrix) => void;
 }
 
-export function IFMMatrixView({ matrix, status, readOnly = false, onUpdate }: IFMMatrixViewProps) {
+export function IFMMatrixView({ matrix, status, readOnly = false, hasSoapNote = false, onUpdate }: IFMMatrixViewProps) {
   const isGenerating = status === "generating" || status === "streaming";
 
   // Edit state
@@ -446,10 +447,14 @@ export function IFMMatrixView({ matrix, status, readOnly = false, onUpdate }: IF
     );
   }
 
-  if (status === "idle" || !matrix) {
+  if (!matrix) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
-        <p className="text-sm">Generate a SOAP note to populate the IFM Matrix</p>
+        <p className="text-sm">
+          {hasSoapNote
+            ? "IFM Matrix has not been generated yet. Regenerate the SOAP note to populate it."
+            : "Generate a SOAP note to populate the IFM Matrix"}
+        </p>
       </div>
     );
   }

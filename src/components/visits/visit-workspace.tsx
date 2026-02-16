@@ -448,6 +448,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             matrix={visit.ifm_matrix}
             status={stream.ifm_matrix.status}
             readOnly={isReadOnly}
+            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
             onUpdate={handleMatrixUpdate}
           />
         )}
@@ -455,6 +456,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           <ProtocolPanel
             protocol={visit.ai_protocol}
             status={stream.protocol.status}
+            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
           />
         )}
       </div>
