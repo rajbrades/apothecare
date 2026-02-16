@@ -21,6 +21,7 @@ export function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
+  const loadedConvIdRef = useRef<string | null>(null);
 
   const {
     messages,
@@ -61,12 +62,18 @@ export function ChatInterface() {
     });
   }, [loadMoreMessages]);
 
-  // Load existing conversation
+  // Load conversation when convId changes (including switching between conversations)
   useEffect(() => {
-    if (convId && !messages.length) {
+    if (convId && convId !== loadedConvIdRef.current) {
+      loadedConvIdRef.current = convId;
+      clearMessages();
       loadConversation(convId);
+    } else if (!convId && loadedConvIdRef.current) {
+      // Navigated to new chat (no id)
+      loadedConvIdRef.current = null;
+      clearMessages();
     }
-  }, [convId, loadConversation, messages.length]);
+  }, [convId, loadConversation, clearMessages]);
 
   // Auto-send initial query from suggested questions
   useEffect(() => {
