@@ -238,6 +238,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     if (res.ok) {
       toast.success("Visit deleted");
       router.push("/visits");
+      router.refresh();
     } else {
       toast.error("Failed to delete visit");
     }
