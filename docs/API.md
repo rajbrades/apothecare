@@ -29,7 +29,7 @@ All mutating endpoints (POST/PATCH/DELETE) validate the `Origin` header against 
 
 ### `POST /api/chat/stream` ✅ Implemented
 
-Send a clinical query and receive an SSE-streamed AI response.
+Send a clinical query and receive an SSE-streamed AI response with configurable clinical lens, evidence source filtering, and file attachments.
 
 **Input Validation:** Zod schema (`lib/validations/chat.ts`)
 
@@ -40,28 +40,48 @@ Send a clinical query and receive an SSE-streamed AI response.
 | `message` | string | Yes | 1–10,000 characters |
 | `conversation_id` | UUID | No | Valid UUID or null. Creates new if omitted. |
 | `patient_id` | UUID | No | Valid UUID or null. Injects patient context. |
-| `is_deep_consult` | boolean | No | Default: false. Routes to Opus model. |
+| `is_deep_consult` | boolean | No | Default: false. Routes to advanced model. |
+| `clinical_lens` | enum | No | `"functional"` (default), `"conventional"`, or `"both"`. Modifies system prompt perspective. |
+| `source_filter` | string[] | No | Array of source IDs (e.g., `["ifm", "pubmed", "cochrane"]`). Restricts evidence citations. Max 20. |
+| `attachments` | object[] | No | Array of `ChatAttachment` objects with `extracted_text` for injection into message context. |
 
 **Example Request:**
 ```json
 {
   "message": "What are evidence-based interventions for elevated zonulin and intestinal permeability?",
   "patient_id": "a1b2c3d4-...",
-  "is_deep_consult": false
+  "is_deep_consult": false,
+  "clinical_lens": "both",
+  "source_filter": ["ifm", "a4m", "pubmed"],
+  "attachments": [{ "id": "...", "name": "lab-results.pdf", "size": 524288, "extracted_text": "..." }]
 }
 ```
 
 **Response:** Server-Sent Events stream
 
 ```
-data: {"type":"conversation_id","id":"conv_uuid"}
+data: {"type":"conversation_id","conversation_id":"conv_uuid"}
 
-data: {"type":"delta","content":"Elevated "}
+data: {"type":"text_delta","text":"Elevated "}
 
-data: {"type":"delta","content":"zonulin indicates "}
+data: {"type":"text_delta","text":"zonulin indicates "}
 
-data: {"type":"done","usage":{"input_tokens":1250,"output_tokens":890},"queries_remaining":1}
+data: {"type":"citations_resolved","content":"...full text with DOI links..."}
+
+data: {"type":"message_complete","message_id":"msg_uuid","usage":{"input_tokens":1250,"output_tokens":890},"queries_remaining":1}
+
+data: [DONE]
 ```
+
+**Clinical Lens Behavior:**
+- `"functional"` (default) — Standard functional medicine perspective (no addendum)
+- `"conventional"` — Appends conventional/standard-of-care system prompt addendum
+- `"both"` — Appends comparison format: Conventional Approach / Functional Approach / Clinical Synthesis
+
+**Source Filter Behavior:**
+- When omitted or all sources selected — no filtering (Full Spectrum)
+- When subset selected — system prompt addendum restricts/prioritizes citations to selected sources
+- Available source IDs: `ifm`, `a4m`, `cleveland_clinic`, `pubmed`, `cochrane`, `aafp`, `acp`, `endocrine_society`, `acg`
 
 **Error Responses:**
 
@@ -77,8 +97,40 @@ data: {"type":"done","usage":{"input_tokens":1250,"output_tokens":890},"queries_
 **Notes:**
 - `queries_remaining` is `null` for Pro subscribers (unlimited)
 - Conversation title auto-generated from first message (first 100 chars)
-- Deep Consult routes to Claude Opus with 4096 max tokens
-- Standard queries route to Claude Sonnet with 2048 max tokens
+- Deep Consult routes to advanced model with 4096 max tokens
+- Standard queries route to standard model with 2048 max tokens
+- Prompt injection detection runs before processing (returns 400 if blocked)
+- Citations are resolved via CrossRef DOI lookup (best-effort, non-blocking)
+
+---
+
+### `POST /api/chat/attachments` ✅ Implemented
+
+Upload a file for chat attachment. Returns metadata with extracted text (for PDFs).
+
+**Request:** `multipart/form-data`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `file` | File | Yes | PDF or image file. Max 10MB. Accepted: `.pdf`, `.jpg`, `.jpeg`, `.png` |
+
+**Response (200):**
+```json
+{
+  "id": "attach_uuid",
+  "name": "lab-results.pdf",
+  "size": 524288,
+  "type": "application/pdf",
+  "url": "storage-path/filename.pdf",
+  "extracted_text": "Extracted text content from PDF..."
+}
+```
+
+**Notes:**
+- Maximum 5 attachments per message (enforced client-side)
+- PDF text extraction runs server-side
+- Extracted text is injected into the user message content when sent to AI
+- Attachment metadata (without extracted_text) is saved with the user message
 
 ---
 
@@ -745,11 +797,14 @@ Every endpoint that accesses PHI inserts a row into `audit_logs`:
   "ip_address": "192.168.1.1",
   "user_agent": "Mozilla/5.0...",
   "detail": {
-    "model": "claude-sonnet-4-5-20250929",
+    "model": "gpt-4o",
     "input_tokens": 1250,
     "output_tokens": 890,
     "is_deep_consult": false,
-    "has_patient_context": true
+    "clinical_lens": "functional",
+    "source_filter": [],
+    "has_patient_context": true,
+    "attachment_count": 0
   }
 }
 ```

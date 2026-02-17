@@ -27,7 +27,7 @@ Apotheca is a Next.js 15 application using the App Router with React Server Comp
 │  CSRF protected          │   │  ┌─────────────────────────────────┐│
 │  Audit logged (IP+UA)    │   │  │  PostgreSQL 17 + pgvector       ││
 │                          │   │  │  Row-Level Security              ││
-└──────────┬───────────────┘   │  │  16 tables + audit logs          ││
+└──────────┬───────────────┘   │  │  16+ tables + audit logs          ││
            │                   │  │  17 seeded biomarkers             ││
      ┌─────┼──────────┐       │  └─────────────────────────────────┘│
      ▼     ▼          ▼       │  HIPAA: Supabase Pro BAA             │
@@ -128,20 +128,29 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
 ### Clinical Chat Flow (Current Implementation)
 
 ```
-1. POST /api/chat/stream { message, conversation_id?, patient_id?, is_deep_consult? }
+1. POST /api/chat/stream { message, conversation_id?, patient_id?, is_deep_consult?,
+                           clinical_lens?, source_filter?, attachments? }
 2. CSRF: Validate Origin header against NEXT_PUBLIC_APP_URL
-3. Zod: Validate input schema (message 1-10k chars, UUIDs, boolean)
-4. Auth: Verify Supabase JWT → extract auth_user_id
-5. Fetch practitioner record (subscription_tier, query count)
-6. RPC: check_and_increment_query() → returns false if over limit
-7. If conversation_id is null → create new conversation record
-8. If patient_id → load patient context (medications, allergies, history)
-9. Fetch conversation history (last 20 messages)
-10. Build prompt: system prompt + patient context + conversation history
-11. Call Anthropic Claude API via SSE streaming (Sonnet or Opus)
-12. Save user message + assistant response to messages table
-13. Insert audit_log entry (action: 'query', ip_address, user_agent)
-14. Stream response tokens to client via Server-Sent Events
+3. Zod: Validate input schema (message 1-10k chars, UUIDs, boolean, lens enum, source array)
+4. Prompt injection detection: validateInputSafety() checks for injection patterns
+5. Auth: Verify Supabase JWT → extract auth_user_id
+6. Fetch practitioner record (subscription_tier, query count)
+7. RPC: check_and_increment_query() → returns false if over limit
+8. If conversation_id is null → create new conversation record
+9. If patient_id → load patient context (medications, allergies, history)
+10. If attachments → inject extracted text into user message content
+11. Fetch conversation history (last 20 messages)
+12. Build system prompt:
+    a. CLINICAL_CHAT_SYSTEM_PROMPT + patient context
+    b. + CONVENTIONAL_LENS_ADDENDUM (if lens = "conventional")
+       OR COMPARISON_LENS_ADDENDUM (if lens = "both")
+    c. + buildSourceFilterAddendum() (if non-default source selection)
+13. Call AI provider via SSE streaming (standard or advanced model)
+14. Resolve citations via CrossRef DOI lookup (best-effort)
+15. Save user message + assistant response (with resolved citations) to messages table
+16. Insert audit_log entry (action: 'query', ip_address, user_agent,
+    clinical_lens, source_filter, attachment_count)
+17. Stream response tokens to client via Server-Sent Events
 ```
 
 ### Visit Generation Flow (Current Implementation)
@@ -327,6 +336,7 @@ src/
 │   │   │   ├── interactions/route.ts # POST SSE interaction check
 │   │   │   └── brands/route.ts      # GET/PUT brand preferences
 │   │   ├── chat/
+│   │   │   ├── attachments/route.ts # POST file upload for chat attachments
 │   │   │   ├── history/route.ts    # GET conversation messages + pagination
 │   │   │   ├── route.ts            # DEPRECATED (410)
 │   │   │   └── stream/route.ts     # SSE streaming chat endpoint
@@ -364,12 +374,13 @@ src/
 ├── components/
 │   ├── chat/
 │   │   ├── biomarker-range-bar.tsx # Dual-range biomarker visualization
-│   │   ├── chat-input.tsx          # Input + Deep Consult tooltip + shortcuts
+│   │   ├── chat-input.tsx          # Input + Deep Consult + Clinical Lens + Sources + shortcuts
 │   │   ├── chat-interface.tsx      # Main chat container
 │   │   ├── evidence-badge.tsx      # Color-coded evidence level badges
-│   │   └── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
+│   │   ├── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
+│   │   └── source-filter-popover.tsx # Evidence source preset/toggle popover
 │   ├── dashboard/
-│   │   └── dashboard-search.tsx    # Unified search across patients, visits, labs
+│   │   └── dashboard-search.tsx    # Search bar with Clinical Lens, Sources, Deep Consult, Attachments
 │   ├── labs/
 │   │   ├── lab-list-client.tsx     # Searchable/filterable lab list
 │   │   ├── lab-report-card.tsx     # Lab report card for list view
@@ -432,8 +443,9 @@ src/
 │   └── use-interaction-check.ts    # Interaction check SSE hook
 ├── lib/
 │   ├── ai/
-│   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS constant
+│   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
+│   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
 │   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts
 │   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts
@@ -496,7 +508,9 @@ supabase/migrations/
 ├── 003_patient_documents.sql       # patient_documents table
 ├── 004_visit_template_content.sql  # template_content JSONB column
 ├── 005_rate_limits.sql             # Rate limit table + RPC
-└── 006_supplements.sql             # 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
+├── 006_supplements.sql             # 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
+├── 007_lab_enhancements.sql        # Lab search, archival, smart titles
+└── 008_chat_attachments.sql        # chat_attachments storage bucket
 ```
 
 ## Test Infrastructure

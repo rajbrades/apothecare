@@ -131,12 +131,13 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
-## Supplement Intelligence (Core Feature) — In Progress
+## Supplement Intelligence (Core Feature) — Complete (Phase 1)
 
 - [x] **Feature:** Supplement search page — searchable supplement database with AI-powered lookup
-- [ ] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
-- [ ] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
-- [ ] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
+- [x] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
+- [x] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
+- [x] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
+- [x] **Feature:** Strict brand filtering mode — Toggle between soft hints ("prioritize these brands") and strict mode ("ONLY recommend from selected brands")
 - [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
 
 ---
@@ -184,13 +185,21 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
-## Clinical Lens Enhancements
+## Clinical Lens & Source Filtering ✅ COMPLETE (Phase 1)
 
+- [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both perspectives via cycling chip in chat input and dashboard
+- [x] **Feature:** Conventional lens addendum — Standard-of-care system prompt when lens is "Conventional"
+- [x] **Feature:** Comparison lens addendum — Side-by-side Conventional vs Functional format when lens is "Both"
+- [x] **Feature:** Evidence source filter UI — "Sources" chip with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
+- [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
+- [x] **Feature:** Lens and sources operate independently (no auto-sync)
+
+### Remaining Enhancements
 - [ ] **Feature:** Structured Comparison Card — Instead of inline markdown for "Both" lens mode, have the AI return structured JSON that renders as a visual comparison card: two side-by-side panels ("Conventional" / "Functional/Integrative") with bullet points, plus a "Clinical Synthesis" section below. Requires a custom rendering component and structured output prompting.
 
 ---
 
-## Evidence Source Filtering — In Progress
+## Evidence Source Filtering — Phase 2 (RAG & Persistence)
 
 - [x] **Feature:** Source filter UI — "Sources" chip in chat input and dashboard search with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
 - [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
@@ -198,6 +207,30 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [ ] **Feature:** RAG retrieval integration — Wire source filter into `search_evidence()` RPC for vector-based retrieval from `evidence_documents` / `evidence_chunks` tables
 - [ ] **Feature:** Evidence ingestion pipeline — Build document ingestion (PubMed, IFM, A4M source material) with embedding generation for RAG knowledge base
 - [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
+
+---
+
+## Sprint 8 — Biomarker Timeline & Chat Enhancements (Feb 16) ✅ COMPLETE
+
+- [x] **Feature:** Biomarker timeline API — `GET /api/patients/[id]/biomarkers/timeline` endpoint returning biomarker history grouped by code
+- [x] **Feature:** Biomarker timeline chart — Recharts line chart with functional/conventional range bands, data point click-to-navigate
+- [x] **Feature:** Patient profile "Lab Trends" tab with biomarker selector dropdown
+- [x] **Feature:** `previousValue` populated on biomarker range bars from historical data
+- [x] **Feature:** Chat file attachments — PDF/image upload (max 5 files, 10MB each), text extraction, attachment chips
+- [x] **Feature:** Chat attachment API — `POST /api/chat/attachments` with file storage and text extraction
+- [x] **DB:** Migration 008 — `chat_attachments` storage bucket
+
+---
+
+## Sprint 9 — Clinical Lens, Source Filtering, Brand Filtering (Feb 17) ✅ COMPLETE
+
+- [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both cycling chip
+- [x] **Feature:** Conventional + Comparison lens system prompt addendums in `anthropic.ts`
+- [x] **Feature:** Evidence Source Filtering — Sources chip + popover with 3 presets and 9 individual source toggles
+- [x] **Feature:** Source filter prompt addendum — restricts/prioritizes selected evidence sources in AI responses
+- [x] **Feature:** Strict brand filtering mode — toggle between soft hints and strict-only brand recommendations
+- [x] **Feature:** Dashboard search handoff — clinical lens and source filter preserved via URL params
+- [x] **Feature:** Lens and sources operate as independent controls
 
 ---
 

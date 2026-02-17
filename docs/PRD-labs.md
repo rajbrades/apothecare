@@ -2,8 +2,8 @@
 
 **Product:** Apotheca
 **Module:** Labs
-**Status:** Draft — Proposed
-**Last Updated:** 2026-02-16
+**Status:** Phase 2 — Partially Implemented (Sprint 7-8)
+**Last Updated:** 2026-02-17
 
 ---
 
@@ -32,7 +32,7 @@ The Lab Results module currently supports PDF upload, AI-powered parsing (Claude
 
 ---
 
-## 4. Feature: Lab Type Icons & Color Coding
+## 4. Feature: Lab Type Icons & Color Coding ✅ COMPLETE
 
 ### 4.1 Problem
 Every lab card shows the same generic flask icon. When a practitioner has 50+ reports, visual differentiation is critical for quick scanning.
@@ -58,13 +58,13 @@ Map each `test_type` to a unique Lucide icon and a subtle background color tint 
 - `src/components/labs/lab-report-card.tsx` — icon/color lookup map, apply to icon badge
 
 ### 4.4 Acceptance Criteria
-- [ ] Each test type renders a distinct icon
-- [ ] Icon badge has a color-tinted background matching the type
-- [ ] Fallback to generic `FileText` + gray for unknown types
+- [x] Each test type renders a distinct icon
+- [x] Icon badge has a color-tinted background matching the type
+- [x] Fallback to generic `FileText` + gray for unknown types
 
 ---
 
-## 5. Feature: Patient Filter & Search
+## 5. Feature: Patient Filter & Search ✅ COMPLETE
 
 ### 5.1 Problem
 The lab list has status and test type filters but no way to filter by patient. The `patients` data is already passed to `LabListClient` (used by the upload form) but not used for filtering.
@@ -82,15 +82,15 @@ Add a search input that matches against test name, vendor label, and patient nam
 - `src/app/api/labs/route.ts` — add `patient_id` and `search` query params to GET handler
 
 ### 5.4 Acceptance Criteria
-- [ ] Patient dropdown shows all practitioner's patients, "All Patients" default
-- [ ] Selecting a patient filters the list to only their reports
-- [ ] Text search filters by test name, vendor, or patient name (debounced, 300ms)
-- [ ] Filters compose (patient + status + type + search all work together)
+- [x] Patient dropdown shows all practitioner's patients, "All Patients" default
+- [x] Selecting a patient filters the list to only their reports
+- [x] Text search filters by test name, vendor, or patient name (debounced, 300ms)
+- [x] Filters compose (patient + status + type + search all work together)
 - [ ] URL params preserved for shareability/bookmarking (optional, nice-to-have)
 
 ---
 
-## 6. Feature: Lab Archival
+## 6. Feature: Lab Archival ✅ COMPLETE
 
 ### 6.1 Problem
 Labs persist indefinitely. Over months/years, the active list becomes unmanageable. Practitioners need a way to declutter without permanently deleting data.
@@ -125,15 +125,15 @@ ALTER TABLE lab_reports ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT false;
 - `src/components/labs/lab-list-client.tsx` — "Show Archived" toggle
 
 ### 6.5 Acceptance Criteria
-- [ ] Archive button visible on complete lab cards
-- [ ] Archived labs hidden from default list view
-- [ ] "Show Archived" filter reveals archived labs (visually dimmed)
-- [ ] Unarchive action restores lab to active list
-- [ ] Archived labs still accessible via direct URL
+- [x] Archive button visible on complete lab cards
+- [x] Archived labs hidden from default list view
+- [x] "Show Archived" filter reveals archived labs (visually dimmed)
+- [x] Unarchive action restores lab to active list
+- [x] Archived labs still accessible via direct URL
 
 ---
 
-## 7. Feature: Biomarker Timeline (Single Patient)
+## 7. Feature: Biomarker Timeline (Single Patient) ✅ COMPLETE
 
 ### 7.1 Problem
 Practitioners upload multiple labs for the same patient over months. There's no way to see how a specific biomarker (e.g., TSH, Vitamin D, hs-CRP) trends over time. This is one of the most requested features in functional medicine software.
@@ -170,12 +170,12 @@ The existing `BiomarkerRangeBar` component already supports `previousValue` for 
 - `src/components/labs/lab-report-detail.tsx` — populate `previousValue` from history
 
 ### 7.5 Acceptance Criteria
-- [ ] API returns biomarker history grouped by code for a given patient
-- [ ] Timeline chart renders with functional/conventional range bands
-- [ ] Biomarker selector shows all available biomarkers for the patient
-- [ ] Clicking a data point navigates to the source lab report
-- [ ] `previousValue` populated on biomarker range bars when history exists
-- [ ] Handles edge cases: single data point (no line, just dot), missing dates
+- [x] API returns biomarker history grouped by code for a given patient
+- [x] Timeline chart renders with functional/conventional range bands (Recharts)
+- [x] Biomarker selector shows all available biomarkers for the patient
+- [x] Clicking a data point navigates to the source lab report
+- [x] `previousValue` populated on biomarker range bars when history exists
+- [x] Handles edge cases: single data point (no line, just dot), missing dates
 
 ---
 
@@ -227,7 +227,7 @@ Practitioners have no visibility into patterns across their patient population. 
 
 ---
 
-## 9. Feature: Enhanced Patient Profile Labs Section
+## 9. Feature: Enhanced Patient Profile Labs Section ✅ COMPLETE
 
 ### 9.1 Problem
 Labs are currently buried under a "Documents" tab on the patient profile, mixed with other uploaded documents. There's no dedicated lab experience on the patient page.
@@ -244,25 +244,25 @@ Labs are currently buried under a "Documents" tab on the patient profile, mixed 
 - `src/components/patients/patient-labs-tab.tsx` — new component
 
 ### 9.4 Acceptance Criteria
-- [ ] "Labs" tab appears on patient profile
-- [ ] Shows all lab reports for the patient with type-specific icons
-- [ ] Summary bar shows report count, flag count, last lab date
-- [ ] "Upload Lab" button pre-selects the current patient
-- [ ] Link to biomarker timeline view
+- [x] "Labs" tab appears on patient profile
+- [x] Shows all lab reports for the patient with type-specific icons
+- [x] Summary bar shows report count, flag count, last lab date
+- [x] "Upload Lab" button pre-selects the current patient
+- [x] Link to biomarker timeline view
 
 ---
 
 ## 10. Implementation Priority
 
-| Priority | Feature | Effort | Impact |
-|---|---|---|---|
-| **P0** | Lab Type Icons & Colors | Small (1-2 hrs) | High — immediate visual improvement |
-| **P0** | Patient Filter on Lab List | Small (1-2 hrs) | High — critical missing filter |
-| **P1** | Text Search | Small (2-3 hrs) | Medium — quality of life |
-| **P1** | Lab Archival | Medium (4-6 hrs) | Medium — data management |
-| **P1** | Patient Profile Labs Tab | Medium (3-4 hrs) | High — patient-centric workflow |
-| **P2** | Biomarker Timeline | Large (8-12 hrs) | Very High — signature feature |
-| **P3** | Practice Analytics Dashboard | Large (12-16 hrs) | High — differentiator |
+| Priority | Feature | Effort | Impact | Status |
+|---|---|---|---|---|
+| **P0** | Lab Type Icons & Colors | Small (1-2 hrs) | High — immediate visual improvement | ✅ Done |
+| **P0** | Patient Filter on Lab List | Small (1-2 hrs) | High — critical missing filter | ✅ Done |
+| **P1** | Text Search | Small (2-3 hrs) | Medium — quality of life | ✅ Done |
+| **P1** | Lab Archival | Medium (4-6 hrs) | Medium — data management | ✅ Done |
+| **P1** | Patient Profile Labs Tab | Medium (3-4 hrs) | High — patient-centric workflow | ✅ Done |
+| **P2** | Biomarker Timeline | Large (8-12 hrs) | Very High — signature feature | ✅ Done |
+| **P3** | Practice Analytics Dashboard | Large (12-16 hrs) | High — differentiator | Planned |
 
 ---
 
