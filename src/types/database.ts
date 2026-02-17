@@ -468,3 +468,13 @@ export interface Database {
     };
   };
 }
+
+// Chat attachment metadata (stored in messages.attachments JSONB)
+export interface ChatAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  storage_path: string;
+  extracted_text?: string; // transient — included in prompt, not persisted
+}

@@ -1,27 +1,52 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useChat } from "@/hooks/use-chat";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ArrowRight, Leaf, Loader2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
+import { ALL_SOURCE_IDS, type SourceId } from "@/lib/ai/source-filter";
+import type { ChatAttachment } from "@/types/database";
 
 export function ChatInterface() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const initialQuery = searchParams.get("q");
   const convId = searchParams.get("id");
   const initialPatientId = searchParams.get("patient_id");
   const initialDeepConsult = searchParams.get("deep_consult") === "true";
+  const initialLens = searchParams.get("clinical_lens") as "functional" | "conventional" | "both" | null;
+  const attachKey = searchParams.get("attach_key");
+  const initialSourceFilter = searchParams.get("source_filter");
 
   const [isDeepConsult, setIsDeepConsult] = useState(initialDeepConsult);
+  const [clinicalLens, setClinicalLens] = useState<"functional" | "conventional" | "both">(initialLens || "functional");
+  const [selectedSources, setSelectedSources] = useState<SourceId[]>(
+    initialSourceFilter ? initialSourceFilter.split(",") as SourceId[] : [...ALL_SOURCE_IDS]
+  );
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
   const loadedConvIdRef = useRef<string | null>(null);
+
+  // Load attachments from sessionStorage (dashboard handoff)
+  useEffect(() => {
+    if (attachKey) {
+      try {
+        const stored = sessionStorage.getItem(attachKey);
+        if (stored) {
+          const parsed = JSON.parse(stored) as ChatAttachment[];
+          setPendingAttachments(parsed);
+          sessionStorage.removeItem(attachKey);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [attachKey]);
 
   const {
     messages,
@@ -42,7 +67,11 @@ export function ChatInterface() {
     conversationId: convId,
     patientId: initialPatientId,
     isDeepConsult,
+    clinicalLens,
+    selectedSources,
     onConversationCreated: (id) => {
+      // Mark as loaded so the convId watcher doesn't clear+reload mid-stream
+      loadedConvIdRef.current = id;
       window.history.replaceState(null, "", `/chat?id=${id}`);
     },
   });
@@ -75,13 +104,16 @@ export function ChatInterface() {
     }
   }, [convId, loadConversation, clearMessages]);
 
-  // Auto-send initial query from suggested questions
+  // Auto-send initial query from suggested questions (with attachments if from dashboard)
   useEffect(() => {
     if (initialQuery && !initialQuerySentRef.current && !convId) {
+      // Wait for pending attachments to load from sessionStorage if attach_key present
+      if (attachKey && pendingAttachments.length === 0) return;
       initialQuerySentRef.current = true;
-      sendMessage(initialQuery);
+      sendMessage(initialQuery, pendingAttachments.length ? pendingAttachments : undefined);
+      setPendingAttachments([]);
     }
-  }, [initialQuery, convId, sendMessage]);
+  }, [initialQuery, convId, sendMessage, attachKey, pendingAttachments]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -244,7 +276,15 @@ export function ChatInterface() {
         isLoading={isLoading}
         isDeepConsult={isDeepConsult}
         onToggleDeepConsult={() => setIsDeepConsult(!isDeepConsult)}
+        clinicalLens={clinicalLens}
+        onCycleClinicalLens={() => {
+          const next = clinicalLens === "functional" ? "both" : clinicalLens === "both" ? "conventional" : "functional";
+          setClinicalLens(next);
+        }}
+        selectedSources={selectedSources}
+        onChangeSources={setSelectedSources}
         queriesRemaining={queriesRemaining}
+        initialAttachments={pendingAttachments}
       />
     </div>
   );

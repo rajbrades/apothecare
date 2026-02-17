@@ -41,6 +41,29 @@ export const CLINICAL_CHAT_SYSTEM_PROMPT = `You are Apotheca, an AI clinical dec
 - Flag when evidence is limited, conflicting, or primarily based on expert consensus vs. RCTs
 - If a question falls outside functional medicine scope, acknowledge this and provide the best available evidence`;
 
+// Addendum appended when clinical_lens is "conventional"
+export const CONVENTIONAL_LENS_ADDENDUM = `
+
+## Clinical Lens Override: Conventional Medicine
+For this query, respond from a conventional/standard-of-care medicine perspective. Cite guidelines from AMA, AAFP, ACP, Endocrine Society, ACG, and peer-reviewed meta-analyses. Use conventional reference ranges only. Focus on FDA-approved interventions, pharmaceutical options, and evidence-based conventional protocols. Do not prioritize functional medicine frameworks for this response.`;
+
+// Addendum appended when clinical_lens is "both"
+export const COMPARISON_LENS_ADDENDUM = `
+
+## Clinical Lens Override: Dual-Perspective Comparison
+For this query, present BOTH conventional and functional/integrative perspectives in a structured comparison.
+
+Format your response as:
+
+## Conventional Approach
+[Standard-of-care perspective with conventional guidelines, pharmaceutical options, conventional lab ranges]
+
+## Functional/Integrative Approach
+[Functional medicine perspective with IFM framework, optimal ranges, nutraceutical protocols]
+
+## Clinical Synthesis
+[Where the approaches align, where they diverge, and how a practitioner might integrate both]`;
+
 // System prompt for lab interpretation
 export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apotheca's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.
 

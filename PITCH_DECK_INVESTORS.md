@@ -71,18 +71,52 @@
 
 ---
 
-## Slide 7: Market Size
+## Slide 7: Market Size & Opportunity
 **Headline:** The Shift to Root-Cause Medicine.
 **Body:**
-*   **TAM:** $100B+ Global Market for Integrative Health.
-*   **Growth:** Functional Medicine is growing 2x faster than primary care.
+*   **TAM (Global):** ~$180B for Complementary/Alternative Medicine (CAM).
+*   **CAGR:** Growing at ~24% annually (Projected to hit $500B+ by 2034).
+*   **Longevity Sector:** Currently at $80B Global, growing at ~10% because of high-ticket consumer services (Function Health).
 *   **Target:** 100,000+ Private Practice MDs, DOs, NDs, and DCs.
-**Visual:** Graph showing the rising trend of "Functional Medicine" search terms and market spend.
-**Speaker Notes:** "This isn't niche anymore. Patients are demanding root-cause resolution. The supply of doctors is the bottleneck. We open that bottleneck."
+**Visual:** Graph showing the rising trend of "Functional Medicine" vs "Primary Care Decline".
+**Speaker Notes:** "The market is exploding. Functional medicine is growing 2x faster than primary care. It's an $180B global industry bottlenecked by a lack of providers. We open that bottleneck."
 
 ---
 
-## Slide 8: New Feature: Patient Education Studio
+## Slide 8: Competitive Landscape
+**Headline:** We Digitize the Brain, They Digitize the Paperwork.
+**Visual:** A 2x2 Quadrant Matrix.
+*   **X-Axis:** "Admin Focused" (Left) vs "Clinical Intelligence" (Right).
+*   **Y-Axis:** "Low Impact" (Bottom) vs "High Impact" (Top).
+*   **Quadrants:**
+    *   **Bottom Left (EMRs):** Cerbo, Charm (Administrative burden).
+    *   **Top Left (Logistics):** Rupa Health, Fullscript (Ordering only).
+    *   **Top Right (Apotheca):** The only "Active Reasoning Engine."
+**Body:**
+*   **EMRs (Cerbo):** Great filing cabinets, but don't help you think.
+*   **Logistics (Rupa/Fullscript):** Great pipes, but don't help you diagnose.
+*   **Consumer (Function Health):** Great data access, but bypasses the doctor.
+*   **Apotheca:** We empower the doctor with AI reasoning to close the gap.
+**Speaker Notes:** "Everyone else is building better filing cabinets or faster pipes. We are building a better brain. We don't compete with the EMR on admin; we compete on clinical value."
+
+---
+
+## Slide 9: Financial Projections
+**Headline:** The Path to $100M ARR.
+**Body:**
+*   **Revenue Model:** SaaS ($99/mo) + Marketplace (10% Take Rate).
+*   **Unit Economics:** For every 1 doctor we onboard (= $1k SaaS), we activate ~$25k in supplement GMV (= $2.5k Marketplace Revenue).
+*   **Projection:**
+    *   **Year 1:** Build & Seed (50 Beta Users).
+    *   **Year 2:** Launch & Scale ($850k ARR).
+    *   **Year 3:** Growth ($4.4M ARR).
+    *   **Year 5:** Dominate ($44M ARR).
+**Visual:** Bar chart showing SaaS revenue as the base, and Marketplace revenue growing exponentially on top.
+**Speaker Notes:** "Our model is unique because the SaaS pays for aquisition, but the Marketplace drives the venture returns. We are planting the seeds for a massive transaction engine."
+
+---
+
+## Slide 10: New Feature: Patient Education Studio
 **Headline:** Viral Growth Loop.
 **Body:**
 *   **Product-Led Growth:** Every protocol sent includes AI-generated **Audio Overviews** and **Visual Guides** for the patient.
@@ -92,7 +126,7 @@
 
 ---
 
-## Slide 9: Traction & Roadmap
+## Slide 11: Traction & Roadmap
 **Headline:** Phase 1 Complete. Scaling to Revenue.
 **Body:**
 *   **Now (Phase 1):** Core CDSS, Scribe, Matrix Mapping (Live).
@@ -103,7 +137,7 @@
 
 ---
 
-## Slide 10: The Team
+## Slide 12: The Team
 **Headline:** Built by Experts.
 **Body:**
 *   **Founder/CEO:** [Your Name] - [Your Background].
@@ -114,7 +148,7 @@
 
 ---
 
-## Slide 11: The Ask
+## Slide 13: The Ask
 **Headline:** Fueling the Revolution.
 **Body:**
 *   **Raising:** $[Amount] Seed Round.
@@ -127,7 +161,7 @@
 
 ---
 
-## Slide 12: Contact
+## Slide 14: Contact
 **Headline:** Join Us.
 **Body:**
 *   Ryan Brady

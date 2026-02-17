@@ -175,6 +175,32 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
+## Design & Interaction Refinements (Feb 16 Audit)
+
+- [ ] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
+- [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
+- [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
+- [ ] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
+
+---
+
+## Clinical Lens Enhancements
+
+- [ ] **Feature:** Structured Comparison Card — Instead of inline markdown for "Both" lens mode, have the AI return structured JSON that renders as a visual comparison card: two side-by-side panels ("Conventional" / "Functional/Integrative") with bullet points, plus a "Clinical Synthesis" section below. Requires a custom rendering component and structured output prompting.
+
+---
+
+## Evidence Source Filtering — In Progress
+
+- [x] **Feature:** Source filter UI — "Sources" chip in chat input and dashboard search with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
+- [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
+- [ ] **Feature:** "Save as Default" — Persist practitioner's preferred source preset to `preferred_evidence_sources` column
+- [ ] **Feature:** RAG retrieval integration — Wire source filter into `search_evidence()` RPC for vector-based retrieval from `evidence_documents` / `evidence_chunks` tables
+- [ ] **Feature:** Evidence ingestion pipeline — Build document ingestion (PubMed, IFM, A4M source material) with embedding generation for RAG knowledge base
+- [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
+
+---
+
 ## Backlog
 
 - [x] OAuth providers (Google) for registration — Apple deferred
