@@ -195,7 +195,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Lens and sources operate independently (no auto-sync)
 
 ### Remaining Enhancements
-- [ ] **Feature:** Structured Comparison Card — Instead of inline markdown for "Both" lens mode, have the AI return structured JSON that renders as a visual comparison card: two side-by-side panels ("Conventional" / "Functional/Integrative") with bullet points, plus a "Clinical Synthesis" section below. Requires a custom rendering component and structured output prompting.
+- [x] **Feature:** Structured Comparison Card — Client-side markdown parsing renders "Both" lens responses as a two-column visual card: blue Conventional panel, teal Functional panel, gold Clinical Synthesis. Shared markdown config, staggered entrance animations, mobile-responsive stacking. Falls back to regular markdown if structure not detected.
 
 ---
 

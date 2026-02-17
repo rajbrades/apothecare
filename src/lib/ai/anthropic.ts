@@ -53,7 +53,7 @@ export const COMPARISON_LENS_ADDENDUM = `
 ## Clinical Lens Override: Dual-Perspective Comparison
 For this query, present BOTH conventional and functional/integrative perspectives in a structured comparison.
 
-Format your response as:
+Format your response using EXACTLY these three section headers (do not rename or reorder them):
 
 ## Conventional Approach
 [Standard-of-care perspective with conventional guidelines, pharmaceutical options, conventional lab ranges]

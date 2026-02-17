@@ -225,7 +225,7 @@ Covers remaining API routes and E2E flows (Playwright).
 | U15 | ~~HIGH~~ FIXED | ~~Hover state bug on register/onboarding CTAs (hover = base color)~~ Changed `hover:bg-[var(--color-brand-700)]` to `hover:bg-[var(--color-brand-800)]` | `register/page.tsx`, `onboarding/page.tsx` |
 | U16 | HIGH | No inline validation on any form (server-side only) | Multiple files |
 | U17 | MEDIUM | No regeneration confirmation -- overwrites edited SOAP notes | `visit-workspace.tsx:309-316` |
-| U18 | MEDIUM | Auto-save has no error handling -- fails silently | `visit-workspace.tsx:153-166` |
+| U18 | ~~MEDIUM~~ FIXED | ~~Auto-save has no error handling -- fails silently~~ Added toast error notifications on save failure | `visit-workspace.tsx` |
 | U19 | ~~MEDIUM~~ FIXED | ~~"Dashboard" not in sidebar nav -- only accessible via logo click~~ Added as first item in `navItems` array | `sidebar.tsx` |
 | U20 | ~~MEDIUM~~ FIXED | ~~Chat action bar invisible to keyboard users~~ Added `focus-within:opacity-100` | `message-bubble.tsx` |
 | U21 | MEDIUM | Biomarker status communicated by color alone (no icon/pattern alternative) | `globals.css:43-49` |

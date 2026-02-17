@@ -10,40 +10,38 @@
 
 | Dimension | Critical/High | Medium | Low/Info | Overall |
 |---|---|---|---|---|
-| **Security** | 0 | 3 | 7 | Strong |
+| **Security** | 0 | 1 remaining (2 fixed) | 7 | Strong |
 | **Performance** | 8 | 7 | 4 | Needs Work |
 | **Test Coverage** | — | — | — | Critical Gap (0% API/component coverage) |
-| **Usability** | 12 | 11 | 6 | Moderate Issues |
-| **UI Design** | 3 | 4 | 9 | Foundation Strong, Gaps in Consistency |
+| **Usability** | 0 remaining (6 fixed) | 9 remaining (2 fixed) | 6 | Improved |
+| **UI Design** | 0 remaining (3+1 fixed) | 3 | 9 | Foundation Strong, P0 Resolved |
 
-**Top-Level Takeaways:**
-1. Security is solid — no critical issues, consistent auth/CSRF/validation patterns
-2. Performance has real issues — patient prefetch bloat, stream blocking, re-render storms
+**Top-Level Takeaways (Updated Feb 17):**
+1. Security is solid — 2 of 3 medium issues fixed (lab search escaping, SSE error leak)
+2. Performance still needs work — patient prefetch bloat, stream blocking, re-render storms
 3. Test coverage is the biggest risk — 10 test files total, 0% API route coverage for a HIPAA app
-4. UX has several silent-failure patterns that could cause data loss
-5. Design system foundation is strong but has inconsistencies (hardcoded colors, undefined tokens)
+4. ~~UX had silent-failure patterns~~ All critical UX issues resolved (save failures, delete confirmations, search debounce)
+5. ~~Design system had undefined tokens~~ All P0 design issues fixed (button focus, Sonner, size variants, destructive variant)
 
 ---
 
 ## 1. Security Audit
 
-### Overall: STRONG (0 Critical, 0 High, 3 Medium, 4 Low, 3 Info)
+### Overall: STRONG (0 Critical, 0 High, 1 Medium remaining, 4 Low, 3 Info) — 2 of 3 Medium FIXED
 
 The codebase demonstrates consistent security practices across all 26 API routes.
 
 ### Medium Findings
 
-**S-M1: Unescaped Search Input in Lab Reports List Query**
-- **File:** `src/app/api/labs/route.ts:54-57`
-- Lab search doesn't call `escapePostgrestPattern()` unlike patients/visits routes
-- Not SQL injection (Supabase parameterizes), but breaks search semantics (`%` matches all)
-- **Fix:** Add `escapePostgrestPattern` to lab search term
+**S-M1: ~~Unescaped Search Input in Lab Reports List Query~~ FIXED**
+- **File:** `src/app/api/labs/route.ts`
+- ~~Lab search doesn't call `escapePostgrestPattern()` unlike patients/visits routes~~
+- Fixed: Added `escapePostgrestPattern()` to lab search term
 
-**S-M2: Internal Error Messages Leaked to Client in SSE Streams**
-- **Files:** `src/app/api/visits/[id]/generate/route.ts:281`, `src/app/api/supplements/review/route.ts:220`, `src/app/api/supplements/interactions/route.ts:190`
-- Error catch blocks send `err.message` directly to client — may expose API URLs, model names, table names
-- `chat/stream/route.ts` correctly uses generic "Stream interrupted"
-- **Fix:** Replace `err.message` with generic error in all 3 files
+**S-M2: ~~Internal Error Messages Leaked to Client in SSE Streams~~ FIXED**
+- **Files:** `src/app/api/visits/[id]/generate/route.ts`, `src/app/api/supplements/review/route.ts`, `src/app/api/supplements/interactions/route.ts`
+- ~~Error catch blocks send `err.message` directly to client~~
+- Fixed: All 3 SSE streams now send generic "Generation interrupted" error message
 
 **S-M3: Supplement Review Fetches All Data Before Ownership Check**
 - **File:** `src/app/api/supplements/review/[id]/route.ts:35-46`
@@ -203,37 +201,37 @@ The codebase demonstrates consistent security practices across all 26 API routes
 
 ## 4. Usability Audit
 
-### Overall: MODERATE ISSUES (4 Critical, 8 Major, 11 Minor, 6 Nice-to-have)
+### Overall: IMPROVED (0 Critical remaining, 6 Major remaining, 9 Minor remaining, 6 Nice-to-have) — 4 Critical + 2 Major + 2 Minor FIXED
 
 ### Critical UX Issues
 
-**U-C1: Silent Save Failures on Visit SOAP/Matrix Edits**
-- **Files:** `src/components/visits/visit-workspace.tsx:148-155` (`handleFieldUpdate`), `:157-163` (`handleMatrixUpdate`)
-- Optimistic update with no error handling — user thinks edits saved when they may not have
-- **Fix:** Add `.catch()` with `toast.error("Failed to save")`
+**U-C1: ~~Silent Save Failures on Visit SOAP/Matrix Edits~~ FIXED**
+- **Files:** `src/components/visits/visit-workspace.tsx`
+- ~~Optimistic update with no error handling~~
+- Fixed: Added try/catch with `toast.error()` on both `handleFieldUpdate` and `handleMatrixUpdate`
 
-**U-C2: Visit Deletion Has No Confirmation from List View**
-- **File:** `src/components/visits/visit-list-client.tsx:30-34`
-- One-click destructive delete with no confirm dialog (contrast: workspace has `window.confirm`)
-- **Fix:** Add confirmation dialog
+**U-C2: ~~Visit Deletion Has No Confirmation from List View~~ FIXED**
+- **File:** `src/components/visits/visit-list-client.tsx`
+- ~~One-click destructive delete with no confirm dialog~~
+- Fixed: Wired `ConfirmDialog` component with danger variant for visit deletion
 
-**U-C3: Patient Search Requires Enter Key with No Indication**
-- **File:** `src/components/patients/patient-list-client.tsx:47-53`
-- No debounce-on-type, no search button, no hint — users type and wait
-- **Fix:** Add debounced search-on-type (like lab list does)
+**U-C3: ~~Patient Search Requires Enter Key with No Indication~~ FIXED**
+- **File:** `src/components/patients/patient-list-client.tsx`
+- ~~No debounce-on-type, no search button, no hint~~
+- Fixed: Added 300ms debounced search-on-type with clear button and empty-state "Clear search" link
 
-**U-C4: Dashboard "Refresh" Button Does Nothing**
-- **File:** `src/app/(app)/dashboard/page.tsx:87-93`
-- Rendered button with no `onClick` handler
-- **Fix:** Implement rotation or remove button
+**U-C4: ~~Dashboard "Refresh" Button Does Nothing~~ FIXED**
+- **File:** `src/app/(app)/dashboard/page.tsx`
+- ~~Rendered button with no `onClick` handler~~
+- Fixed: Removed broken refresh button entirely
 
 ### Major Friction
 
 - **U-M1:** No loading/disabled state on visit status toggle — `visit-workspace.tsx:165-175`
 - **U-M2:** Error alerts on auth pages missing `role="alert"` — `login/page.tsx:78-80`, `register/page.tsx:68-70`
 - **U-M3:** No `autoFocus` on patient form first field — `patient-form.tsx:86`
-- **U-M4:** Missing error boundaries for detail pages (`visits/[id]/`, `labs/[id]/`, `patients/[id]/`)
-- **U-M5:** No loading.tsx for detail pages (visits, patients, labs, supplement review `[id]` routes)
+- **U-M4:** ~~Missing error boundaries for detail pages~~ FIXED — Added `error.tsx` for visits/[id], labs/[id], patients/[id]
+- **U-M5:** ~~No loading.tsx for detail pages~~ FIXED — Added `loading.tsx` for visits/[id], labs/[id], patients/[id], supplements/review/[id]
 - **U-M6:** Patient profile tabs not keyboard-navigable (missing `role="tablist"`, arrow keys)
 - **U-M7:** No unsaved changes warning when navigating away from visit workspace
 - **U-M8:** Chat source filter popover has no click-outside-to-close handler
@@ -241,7 +239,7 @@ The codebase demonstrates consistent security practices across all 26 API routes
 ### Minor Polish
 - **U-P1:** Inconsistent breadcrumb separators (`>` instead of chevron icon)
 - **U-P2:** "Archive" button actually calls DELETE endpoint — misleading terminology
-- **U-P3:** No "Clear search" button on patient search empty state
+- **U-P3:** ~~No "Clear search" button on patient search empty state~~ FIXED — Added clear button + empty-state "Clear search" link
 - **U-P4:** Onboarding form labels missing `htmlFor`
 - **U-P5:** Select dropdowns missing accessible labels in lab list and dashboard
 - **U-P6:** Login/register buttons lack loading spinners (text changes but no spinner icon)
@@ -271,24 +269,24 @@ The codebase demonstrates consistent security practices across all 26 API routes
 
 ## 5. UI Design Audit
 
-### Overall: FOUNDATION STRONG, GAPS IN CONSISTENCY
+### Overall: FOUNDATION STRONG — ALL P0 ISSUES FIXED
 
-### P0 — Fix Now (Broken Functionality)
+### P0 — ~~Fix Now~~ ALL FIXED
 
-**D-P0-1: Button Focus Ring Tokens Undefined**
-- **File:** `src/components/ui/button.tsx:7`
-- Uses `ring-offset-background` and `ring-ring` — shadcn/ui tokens NOT defined in CSS variables
-- Focus states may be invisible
-- **Fix:** Define these tokens or replace with CSS variable equivalents
+**D-P0-1: ~~Button Focus Ring Tokens Undefined~~ FIXED**
+- **File:** `src/components/ui/button.tsx`
+- ~~Uses `ring-offset-background` and `ring-ring` — undefined tokens~~
+- Fixed: Replaced with `ring-[var(--color-brand-500)]` and `ring-offset-[var(--color-surface)]`
 
-**D-P0-2: Sonner Toast Tokens Undefined**
-- **File:** `src/components/ui/sonner.tsx:14,17,19`
-- Uses `border-border`, `text-primary-foreground`, `bg-muted` — undefined tokens
-- **Fix:** Map to CSS variable system
+**D-P0-2: ~~Sonner Toast Tokens Undefined~~ FIXED**
+- **File:** `src/components/ui/sonner.tsx`
+- ~~Uses `border-border`, `text-primary-foreground`, `bg-muted` — undefined tokens~~
+- Fixed: Mapped to `border-[var(--color-border)]`, `text-white`, `bg-[var(--color-surface-tertiary)]`, `text-[var(--color-text-secondary)]`
 
-**D-P0-3: Button Size Variants Use `rounded-md` Instead of Token**
-- **File:** `src/components/ui/button.tsx:24-25`
-- `sm` and `lg` sizes use `rounded-md` while default uses `rounded-[var(--radius-md)]`
+**D-P0-3: ~~Button Size Variants Use `rounded-md` Instead of Token~~ FIXED**
+- **File:** `src/components/ui/button.tsx`
+- ~~`sm` and `lg` sizes use `rounded-md`~~
+- Fixed: All sizes now use `rounded-[var(--radius-md)]`
 
 ### P1 — Fix Soon
 
@@ -306,8 +304,9 @@ The codebase demonstrates consistent security practices across all 26 API routes
 - No `--color-danger`, `--color-warning`, `--color-success`, `--color-info`
 - Status/severity colors inconsistent across components
 
-**D-P1-4: Button `destructive` Variant Has Dead `dark:` Code**
-- `button.tsx:13` — `dark:bg-red-900` etc. but dark mode is disabled
+**D-P1-4: ~~Button `destructive` Variant Has Dead `dark:` Code~~ FIXED**
+- ~~`button.tsx:13` — `dark:bg-red-900` etc. but dark mode is disabled~~
+- Fixed: Simplified to `bg-red-500 text-white hover:bg-red-600`
 
 ### P2 — Component Library Improvements
 
@@ -343,23 +342,23 @@ The codebase demonstrates consistent security practices across all 26 API routes
 
 ## 6. Cross-Cutting Priority Recommendations
 
-### Immediate (Before Next Demo)
-1. **Fix silent save failures** on visit workspace (U-C1)
-2. **Add visit deletion confirmation** from list view (U-C2)
-3. **Fix button focus ring tokens** (D-P0-1)
-4. **Fix Sonner toast tokens** (D-P0-2)
-5. **Escape lab search input** (S-M1)
-6. **Generic error messages** in SSE streams (S-M2)
+### Immediate (Before Next Demo) — ALL FIXED
+1. ~~**Fix silent save failures** on visit workspace (U-C1)~~ FIXED
+2. ~~**Add visit deletion confirmation** from list view (U-C2)~~ FIXED
+3. ~~**Fix button focus ring tokens** (D-P0-1)~~ FIXED
+4. ~~**Fix Sonner toast tokens** (D-P0-2)~~ FIXED
+5. ~~**Escape lab search input** (S-M1)~~ FIXED
+6. ~~**Generic error messages** in SSE streams (S-M2)~~ FIXED
 
-### High Priority (This Sprint)
+### High Priority (This Sprint) — 4 of 8 FIXED
 7. **Lazy-load patient selector** on dashboard/labs/supplements (P-C1)
 8. **Fix citation resolution blocking stream** (P-C2)
 9. **Stabilize useChat options** to prevent re-render storm (P-C3)
 10. **Remove raw_notes from visits list** query (P-H3)
-11. **Add loading.tsx** for all `[id]` detail routes (U-M5)
-12. **Add error boundaries** for detail pages (U-M4)
-13. **Debounced patient search** (U-C3)
-14. **Fix/remove dashboard Refresh button** (U-C4)
+11. ~~**Add loading.tsx** for all `[id]` detail routes (U-M5)~~ FIXED
+12. ~~**Add error boundaries** for detail pages (U-M4)~~ FIXED
+13. ~~**Debounced patient search** (U-C3)~~ FIXED
+14. ~~**Fix/remove dashboard Refresh button** (U-C4)~~ FIXED
 
 ### Medium Priority (Next Sprint)
 15. **Middleware double-auth** optimization (P-H1)
