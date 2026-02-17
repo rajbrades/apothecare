@@ -7,14 +7,41 @@ import { useRouter } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
 import { GoogleSignIn, OAuthDivider } from "@/components/auth/google-sign-in";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   const router = useRouter();
   const supabase = createClient();
+
+  const validateEmail = (value: string) => {
+    if (value && !EMAIL_REGEX.test(value)) {
+      setFieldErrors((prev) => ({ ...prev, email: "Please enter a valid email address" }));
+    } else {
+      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+    }
+  };
+
+  const validatePassword = (value: string) => {
+    if (value && value.length < 8) {
+      setFieldErrors((prev) => ({ ...prev, password: "Password must be at least 8 characters" }));
+    } else {
+      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+    }
+  };
+
+  const validateFullName = (value: string) => {
+    if (value && value.trim().length < 2) {
+      setFieldErrors((prev) => ({ ...prev, fullName: "Please enter your full name" }));
+    } else {
+      setFieldErrors((prev) => ({ ...prev, fullName: undefined }));
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +110,16 @@ export default function RegisterPage() {
                 id="fullName"
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => { setFullName(e.target.value); setFieldErrors((prev) => ({ ...prev, fullName: undefined })); }}
+                onBlur={(e) => validateFullName(e.target.value)}
                 placeholder="Dr. Jane Smith"
                 required
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                aria-invalid={!!fieldErrors.fullName}
+                className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:ring-2 transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] ${fieldErrors.fullName ? "border-red-400 focus:border-red-400 focus:ring-red-100" : "border-[var(--color-border)] focus:border-[var(--color-brand-400)] focus:ring-[var(--color-brand-100)]"}`}
               />
+              {fieldErrors.fullName && (
+                <p role="alert" className="mt-1 text-xs text-red-600">{fieldErrors.fullName}</p>
+              )}
             </div>
 
             <div>
@@ -101,11 +133,16 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
+                onBlur={(e) => validateEmail(e.target.value)}
                 placeholder="you@practice.com"
                 required
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                aria-invalid={!!fieldErrors.email}
+                className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:ring-2 transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] ${fieldErrors.email ? "border-red-400 focus:border-red-400 focus:ring-red-100" : "border-[var(--color-border)] focus:border-[var(--color-brand-400)] focus:ring-[var(--color-brand-100)]"}`}
               />
+              {fieldErrors.email && (
+                <p role="alert" className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -119,16 +156,21 @@ export default function RegisterPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
+                onBlur={(e) => validatePassword(e.target.value)}
                 placeholder="Min. 8 characters"
                 required
                 minLength={8}
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                aria-invalid={!!fieldErrors.password}
+                className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:ring-2 transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] ${fieldErrors.password ? "border-red-400 focus:border-red-400 focus:ring-red-100" : "border-[var(--color-border)] focus:border-[var(--color-brand-400)] focus:ring-[var(--color-brand-100)]"}`}
               />
+              {fieldErrors.password && (
+                <p role="alert" className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+              )}
             </div>
 
             {error && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+              <div role="alert" className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}

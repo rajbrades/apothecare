@@ -228,7 +228,7 @@ The codebase demonstrates consistent security practices across all 26 API routes
 ### Major Friction
 
 - **U-M1:** No loading/disabled state on visit status toggle — `visit-workspace.tsx:165-175`
-- **U-M2:** Error alerts on auth pages missing `role="alert"` — `login/page.tsx:78-80`, `register/page.tsx:68-70`
+- **U-M2:** ~~Error alerts on auth pages missing `role="alert"`~~ FIXED — Added `role="alert"` to login + register error divs
 - **U-M3:** No `autoFocus` on patient form first field — `patient-form.tsx:86`
 - **U-M4:** ~~Missing error boundaries for detail pages~~ FIXED — Added `error.tsx` for visits/[id], labs/[id], patients/[id]
 - **U-M5:** ~~No loading.tsx for detail pages~~ FIXED — Added `loading.tsx` for visits/[id], labs/[id], patients/[id], supplements/review/[id]

@@ -223,8 +223,8 @@ Covers remaining API routes and E2E flows (Playwright).
 | U13 | HIGH | "Chat" tab in visit workspace is a dead end ("Coming in next update") | `visit-workspace.tsx:381-389` |
 | U14 | ~~HIGH~~ FIXED | ~~Dead links: `/settings` and `/pricing` routes don't exist~~ Replaced with buttons + toast notifications | `sidebar.tsx` |
 | U15 | ~~HIGH~~ FIXED | ~~Hover state bug on register/onboarding CTAs (hover = base color)~~ Changed `hover:bg-[var(--color-brand-700)]` to `hover:bg-[var(--color-brand-800)]` | `register/page.tsx`, `onboarding/page.tsx` |
-| U16 | HIGH | No inline validation on any form (server-side only) | Multiple files |
-| U17 | MEDIUM | No regeneration confirmation -- overwrites edited SOAP notes | `visit-workspace.tsx:309-316` |
+| U16 | ~~HIGH~~ FIXED | ~~No inline validation on any form (server-side only)~~ Added inline email/password/name validation on blur with field-level errors on login + register; patient form already had inline validation | Multiple files |
+| U17 | ~~MEDIUM~~ FIXED | ~~No regeneration confirmation -- overwrites edited SOAP notes~~ Replaced `window.confirm()` with designed `ConfirmDialog` (warning variant) | `visit-workspace.tsx` |
 | U18 | ~~MEDIUM~~ FIXED | ~~Auto-save has no error handling -- fails silently~~ Added toast error notifications on save failure | `visit-workspace.tsx` |
 | U19 | ~~MEDIUM~~ FIXED | ~~"Dashboard" not in sidebar nav -- only accessible via logo click~~ Added as first item in `navItems` array | `sidebar.tsx` |
 | U20 | ~~MEDIUM~~ FIXED | ~~Chat action bar invisible to keyboard users~~ Added `focus-within:opacity-100` | `message-bubble.tsx` |

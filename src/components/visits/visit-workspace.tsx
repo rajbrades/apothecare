@@ -138,19 +138,26 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
   }, [stream.protocol.status, stream.protocol.data]);
 
+  // Regeneration confirmation state
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
     if (!text.trim()) return;
 
-    // Confirm before overwriting existing SOAP content
+    // Show confirmation dialog before overwriting existing SOAP content
     const hasExistingContent = !!(visit.subjective || visit.objective || visit.assessment || visit.plan);
     if (hasExistingContent) {
-      const confirmed = window.confirm(
-        "This will regenerate all SOAP sections and overwrite any manual edits. Continue?"
-      );
-      if (!confirmed) return;
+      setShowRegenConfirm(true);
+      return;
     }
+
+    doGenerate();
+  }, [rawNotes, useBlockEditor, visit.subjective, visit.objective, visit.assessment, visit.plan]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const doGenerate = useCallback(() => {
+    const text = useBlockEditor ? editorTextRef.current : rawNotes;
 
     // Save editor state before generating
     if (useBlockEditor && editorJsonRef.current) {
@@ -165,7 +172,8 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
 
     stream.generate(visit.id, text);
-  }, [visit.id, rawNotes, stream, useBlockEditor, visit.subjective, visit.objective, visit.assessment, visit.plan]);
+    setShowRegenConfirm(false);
+  }, [visit.id, rawNotes, stream, useBlockEditor]);
 
   // Handle block editor content changes (debounced auto-save)
   const handleEditorContentChange = useCallback(
@@ -472,6 +480,16 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           />
         )}
       </div>
+
+      <ConfirmDialog
+        open={showRegenConfirm}
+        onConfirm={doGenerate}
+        onCancel={() => setShowRegenConfirm(false)}
+        title="Regenerate clinical note?"
+        description="This will overwrite all SOAP sections, IFM Matrix, and Protocol recommendations with new AI-generated content. Any manual edits will be lost."
+        confirmLabel="Regenerate"
+        variant="warning"
+      />
     </div>
   );
 }
