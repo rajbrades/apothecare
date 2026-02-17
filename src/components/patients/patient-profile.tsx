@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList,
-  Stethoscope, Upload, FlaskConical,
+  Stethoscope, Upload, FlaskConical, Loader2,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
@@ -12,6 +13,18 @@ import { PreChartView } from "./pre-chart-view";
 import { LabReportCard } from "@/components/labs/lab-report-card";
 import type { Patient, PatientDocument } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
+
+const BiomarkerTimeline = dynamic(
+  () => import("@/components/labs/biomarker-timeline").then((m) => m.BiomarkerTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
 
 type Tab = "overview" | "documents" | "labs" | "prechart" | "visits";
 
@@ -51,6 +64,7 @@ function getAge(dob: string | null): number | null {
 
 export function PatientProfile({ patient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [labView, setLabView] = useState<"reports" | "trends">("reports");
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
 
@@ -184,32 +198,63 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
 
         {activeTab === "labs" && (
           <div className="space-y-4">
+            {/* Sub-view toggle: Reports / Trends */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--color-text-muted)]">
-                {labReports.length} lab report{labReports.length !== 1 ? "s" : ""}
-              </p>
-              <Link
-                href={`/labs?patient_id=${patient.id}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Upload Lab
-              </Link>
-            </div>
-            {labReports.length === 0 ? (
-              <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
-                No lab reports for this patient yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {labReports.map((lab) => (
-                  <LabReportCard
-                    key={lab.id}
-                    report={lab}
-                    onDelete={handleLabDeleted}
-                  />
-                ))}
+              <div className="flex items-center gap-1 p-0.5 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)]">
+                <button
+                  onClick={() => setLabView("reports")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+                    labView === "reports"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  Reports ({labReports.length})
+                </button>
+                <button
+                  onClick={() => setLabView("trends")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+                    labView === "trends"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  Trends
+                </button>
               </div>
+              {labView === "reports" && (
+                <Link
+                  href={`/labs?patient_id=${patient.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload Lab
+                </Link>
+              )}
+            </div>
+
+            {labView === "reports" && (
+              <>
+                {labReports.length === 0 ? (
+                  <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
+                    No lab reports for this patient yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {labReports.map((lab) => (
+                      <LabReportCard
+                        key={lab.id}
+                        report={lab}
+                        onDelete={handleLabDeleted}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {labView === "trends" && (
+              <BiomarkerTimeline patientId={patient.id} />
             )}
           </div>
         )}

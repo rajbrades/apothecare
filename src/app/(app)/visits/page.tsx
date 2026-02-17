@@ -34,7 +34,7 @@ export default async function VisitsPage({
   const { data: visits } = await query;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-4xl mx-auto px-6 pt-12 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

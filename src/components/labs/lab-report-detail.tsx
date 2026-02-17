@@ -51,6 +51,7 @@ interface LabReportDetailProps {
   report: ReportData;
   biomarkers: BiomarkerRow[];
   pdfUrl: string | null;
+  previousValues?: Record<string, number>;
 }
 
 const VENDOR_LABELS: Partial<Record<LabVendor, string>> = {
@@ -161,6 +162,7 @@ function buildPanels(
   collectedDate?: string | null,
   qualitativeResults?: ParsedQualitativeResult[],
   isGiMap?: boolean,
+  previousValues?: Record<string, number>,
 ): BiomarkerPanelData[] {
   const numericGroups = new Map<string, BiomarkerData[]>();
   const qualGroups = new Map<string, QualitativeData[]>();
@@ -183,6 +185,7 @@ function buildPanels(
       functionalHigh: b.functional_high ?? b.conventional_high ?? b.value * 2,
       flag,
       note: b.interpretation || undefined,
+      previousValue: previousValues?.[b.biomarker_code],
     };
 
     if (!numericGroups.has(category)) numericGroups.set(category, []);
@@ -250,7 +253,7 @@ function buildPanels(
   });
 }
 
-export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl }: LabReportDetailProps) {
+export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl, previousValues }: LabReportDetailProps) {
   const [report, setReport] = useState(initialReport);
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
   const [pdfUrl, setPdfUrl] = useState(initialPdfUrl);
@@ -344,7 +347,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
   const isGiMap = report.lab_vendor === "diagnostic_solutions";
   const qualitativeResults = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
-  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date, qualitativeResults, isGiMap);
+  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date, qualitativeResults, isGiMap, previousValues);
   const totalBiomarkers = biomarkers.length + qualitativeResults.length;
   const flaggedCount = biomarkers.filter((b) => {
     const flag = b.functional_flag || b.conventional_flag;

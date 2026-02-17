@@ -34,13 +34,13 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow focus-within:shadow-[var(--shadow-elevated)] focus-within:border-[var(--color-brand-300)]">
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border-2 border-[var(--color-border)] shadow-[var(--shadow-elevated)] hover:border-[var(--color-brand-400)] transition-all focus-within:border-[var(--color-brand-400)] focus-within:shadow-[0_4px_20px_-4px_rgba(13,148,121,0.15)]">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask a clinical question..."
-          className="w-full px-4 sm:px-6 py-4 text-base bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-[var(--radius-lg)]"
+          className="w-full px-4 sm:px-6 py-4 text-base bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] rounded-[var(--radius-lg)]"
           autoFocus
         />
         <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 pb-3">
@@ -48,7 +48,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
           <button
             type="button"
             disabled
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] opacity-50 cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border)] opacity-50 cursor-not-allowed"
             title="File attachment coming soon"
           >
             <Paperclip className="w-3 h-3" />
@@ -59,7 +59,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
           <select
             value={patientId}
             onChange={(e) => setPatientId(e.target.value)}
-            className="text-xs text-[var(--color-text-muted)] bg-transparent border border-[var(--color-border-light)] rounded-full px-3 py-1.5 outline-none hover:border-[var(--color-brand-300)] transition-colors cursor-pointer"
+            className="text-xs text-[var(--color-text-secondary)] bg-transparent border border-[var(--color-border)] rounded-full px-3 py-1.5 outline-none hover:border-[var(--color-brand-300)] transition-colors cursor-pointer"
           >
             <option value="">Select Patient</option>
             {patients.map((p) => (
@@ -76,7 +76,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
               isDeepConsult
                 ? "bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border-[var(--color-gold-300)]"
-                : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-gold-50)] hover:text-[var(--color-gold-700)] hover:border-[var(--color-gold-200)]"
+                : "text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-gold-50)] hover:text-[var(--color-gold-700)] hover:border-[var(--color-gold-200)]"
             }`}
           >
             <Microscope className="w-3 h-3" />

@@ -86,10 +86,10 @@ export function ChatInput({
     <div className="border-t border-[var(--color-border-light)] bg-[var(--color-surface)] px-6 py-4">
       <div className="max-w-3xl mx-auto">
         <div
-          className={`relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border transition-all chat-input-glow ${
+          className={`relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border-2 transition-all chat-input-glow ${
             disabled
               ? "border-[var(--color-border-light)] opacity-60"
-              : "border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] focus-within:shadow-[var(--shadow-elevated)] focus-within:border-[var(--color-brand-300)]"
+              : "border-[var(--color-border)] shadow-[var(--shadow-elevated)] hover:border-[var(--color-brand-400)] focus-within:border-[var(--color-brand-400)] focus-within:shadow-[0_4px_20px_-4px_rgba(13,148,121,0.15)]"
           }`}
         >
           <textarea

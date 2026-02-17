@@ -36,6 +36,28 @@ export default async function LabDetailPage({
     .order("category", { ascending: true })
     .order("biomarker_name", { ascending: true });
 
+  // Build map of previous values per biomarker_code
+  let previousValues: Record<string, number> = {};
+  if (report.patient_id && report.collection_date && biomarkers && biomarkers.length > 0) {
+    const biomarkerCodes = biomarkers.map((b: any) => b.biomarker_code);
+
+    const { data: previousResults } = await supabase
+      .from("biomarker_results")
+      .select("biomarker_code, value, collection_date")
+      .eq("patient_id", report.patient_id)
+      .neq("lab_report_id", id)
+      .in("biomarker_code", biomarkerCodes)
+      .lt("collection_date", report.collection_date)
+      .order("collection_date", { ascending: false });
+
+    // Take the most recent previous value per biomarker_code
+    for (const result of previousResults || []) {
+      if (!(result.biomarker_code in previousValues)) {
+        previousValues[result.biomarker_code] = result.value;
+      }
+    }
+  }
+
   // Generate signed URL for the original PDF
   let pdfUrl: string | null = null;
   if (report.raw_file_url) {
@@ -51,6 +73,7 @@ export default async function LabDetailPage({
       report={report}
       biomarkers={biomarkers || []}
       pdfUrl={pdfUrl}
+      previousValues={previousValues}
     />
   );
 }
