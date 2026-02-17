@@ -78,13 +78,20 @@ export async function POST(request: NextRequest) {
       .order("lab_reports(collection_date)", { ascending: false })
       .limit(50);
 
-    // Fetch brand preferences
+    // Fetch brand preferences (includes __strict_mode__ meta row)
     const { data: brandPrefs } = await supabase
       .from("practitioner_brand_preferences")
-      .select("brand_name, priority")
+      .select("brand_name, priority, is_active")
       .eq("practitioner_id", practitioner.id)
-      .eq("is_active", true)
       .order("priority", { ascending: true });
+
+    const strictMode = brandPrefs?.some(
+      (b: any) => b.brand_name === "__strict_mode__" && b.is_active
+    ) ?? false;
+    const activeBrands = (brandPrefs || []).filter(
+      (b: any) => b.brand_name !== "__strict_mode__" && b.is_active
+    );
+    const brandNames = activeBrands.map((b: any) => b.brand_name);
 
     // Build context
     const patientContext = formatPatientContext(patient);
@@ -98,12 +105,12 @@ export async function POST(request: NextRequest) {
         collection_date: b.lab_reports?.collection_date || null,
       }))
     );
-    const brandNames = (brandPrefs || []).map((b: any) => b.brand_name);
 
     const systemPrompt = buildSupplementReviewPrompt({
       patientContext,
       labContext: labContext || undefined,
       brandPreferences: brandNames.length ? brandNames : undefined,
+      strictBrandMode: strictMode,
     });
 
     // Insert review row with status 'generating'

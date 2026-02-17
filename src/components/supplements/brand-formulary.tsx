@@ -13,6 +13,7 @@ interface BrandPreference {
 
 export function BrandFormulary() {
   const [brands, setBrands] = useState<BrandPreference[]>([]);
+  const [strictMode, setStrictMode] = useState(false);
   const [customBrand, setCustomBrand] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,7 @@ export function BrandFormulary() {
         const res = await fetch("/api/supplements/brands");
         if (res.ok) {
           const data = await res.json();
+          setStrictMode(data.strict_mode ?? false);
           // Merge saved preferences with supported brands
           const savedBrands: BrandPreference[] = data.brands || [];
           const merged: BrandPreference[] = SUPPORTED_BRANDS.map(
@@ -107,6 +109,7 @@ export function BrandFormulary() {
             is_active: b.is_active,
             priority: idx,
           })),
+          strict_mode: strictMode,
         }),
       });
 
@@ -123,7 +126,7 @@ export function BrandFormulary() {
     } finally {
       setSaving(false);
     }
-  }, [brands]);
+  }, [brands, strictMode]);
 
   if (loading) {
     return (
@@ -166,14 +169,14 @@ export function BrandFormulary() {
               {/* Toggle checkbox */}
               <button
                 onClick={() => toggleBrand(brand.brand_name)}
-                className={`w-5 h-5 flex items-center justify-center border rounded-[var(--radius-sm)] transition-colors ${
+                className={`w-[18px] h-[18px] flex items-center justify-center border-2 rounded transition-colors ${
                   brand.is_active
                     ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)] text-white"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)]"
+                    : "border-[var(--color-text-muted)] bg-[var(--color-surface)]"
                 }`}
                 aria-label={`${brand.is_active ? "Deactivate" : "Activate"} ${brand.brand_name}`}
               >
-                {brand.is_active && <Check className="w-3 h-3" />}
+                {brand.is_active && <Check className="w-3 h-3" strokeWidth={3} />}
               </button>
 
               <span
@@ -228,6 +231,32 @@ export function BrandFormulary() {
             Add
           </button>
         </div>
+      </div>
+
+      {/* Strict mode toggle */}
+      <div className="p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-[var(--color-surface-secondary)]">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <button
+            onClick={() => setStrictMode((prev) => !prev)}
+            className={`mt-0.5 w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center border-2 rounded transition-colors ${
+              strictMode
+                ? "bg-[var(--color-brand-600)] border-[var(--color-brand-600)] text-white"
+                : "border-[var(--color-text-muted)] bg-[var(--color-surface)]"
+            }`}
+            aria-label={strictMode ? "Disable strict brand mode" : "Enable strict brand mode"}
+          >
+            {strictMode && <Check className="w-3 h-3" strokeWidth={3} />}
+          </button>
+          <div>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              Only recommend from selected brands
+            </span>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              When enabled, reviews will exclusively use your selected brands.
+              When off, selected brands are prioritized but others may be suggested.
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Save button */}

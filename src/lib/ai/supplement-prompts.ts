@@ -115,11 +115,15 @@ export function buildSupplementReviewPrompt(options: {
   patientContext: string;
   labContext?: string;
   brandPreferences?: string[];
+  strictBrandMode?: boolean;
 }): string {
   let prompt = SUPPLEMENT_REVIEW_SYSTEM_PROMPT;
 
   if (options.brandPreferences?.length) {
-    prompt += `\n\n## Preferred Brands (prioritize these when recommending)\n${options.brandPreferences.map((b, i) => `${i + 1}. ${b}`).join("\n")}`;
+    const heading = options.strictBrandMode
+      ? "## Required Brands (ONLY recommend from this list — do NOT suggest other brands)"
+      : "## Preferred Brands (prioritize these when recommending)";
+    prompt += `\n\n${heading}\n${options.brandPreferences.map((b, i) => `${i + 1}. ${b}`).join("\n")}`;
   }
 
   return prompt;

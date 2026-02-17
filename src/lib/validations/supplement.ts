@@ -43,6 +43,7 @@ export type BrandPreferenceInput = z.infer<typeof brandPreferenceSchema>;
 
 export const updateBrandPreferencesSchema = z.object({
   brands: z.array(brandPreferenceSchema).max(20),
+  strict_mode: z.boolean().optional(),
 });
 export type UpdateBrandPreferencesInput = z.infer<typeof updateBrandPreferencesSchema>;
 
