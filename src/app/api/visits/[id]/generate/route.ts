@@ -278,9 +278,8 @@ export async function POST(
           controller.close();
         } catch (err) {
           console.error("Visit generation stream error:", err);
-          const errorMessage = err instanceof Error ? err.message : "Generation interrupted";
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: errorMessage })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: "Generation interrupted" })}\n\n`)
           );
           controller.close();
         }

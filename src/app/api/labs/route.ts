@@ -6,6 +6,7 @@ import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { sanitizeFilename } from "@/lib/sanitize";
+import { escapePostgrestPattern } from "@/lib/search";
 import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
     if (cursor) query = query.lt("created_at", cursor);
     if (search) {
       // Search across test_name and raw_file_name (patient name filtering done client-side from joined data)
-      const term = `%${search}%`;
+      const escaped = escapePostgrestPattern(search);
+      const term = `%${escaped}%`;
       query = query.or(`test_name.ilike.${term},raw_file_name.ilike.${term}`);
     }
 

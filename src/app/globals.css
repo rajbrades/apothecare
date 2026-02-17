@@ -153,6 +153,17 @@ html.dark {
 
 /* Google Fonts loaded via <link> in root layout for performance */
 
+/* Dialog animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* Base styles */
 body {
   font-family: var(--font-body);

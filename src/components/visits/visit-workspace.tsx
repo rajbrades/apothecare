@@ -11,6 +11,7 @@ import {
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { RawNotesInput } from "./raw-notes-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const VisitEditor = dynamic(
   () => import("./editor/visit-editor").then((mod) => ({ default: mod.VisitEditor })),
@@ -199,22 +200,32 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     setVisit((prev) => ({ ...prev, [field]: value }));
 
     setSaving(true);
-    await fetch(`/api/visits/${visit.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    } catch {
+      toast.error("Failed to save changes. Your edits are preserved locally.");
+    }
     setSaving(false);
   }, [visit.id]);
 
   const handleMatrixUpdate = useCallback(async (matrix: IFMMatrix) => {
     setVisit((prev) => ({ ...prev, ifm_matrix: matrix }));
     setSaving(true);
-    await fetch(`/api/visits/${visit.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ifm_matrix: matrix }),
-    });
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ifm_matrix: matrix }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    } catch {
+      toast.error("Failed to save IFM Matrix. Your edits are preserved locally.");
+    }
     setSaving(false);
   }, [visit.id]);
 

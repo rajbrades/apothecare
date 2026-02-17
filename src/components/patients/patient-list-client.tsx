@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, Calendar, ChevronRight, Loader2, Search } from "lucide-react";
+import { User, Calendar, ChevronRight, Loader2, Search, X } from "lucide-react";
 
 interface PatientItem {
   id: string;
@@ -40,11 +40,13 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
     }
   }, [cursor, loading, search]);
 
-  const handleSearch = useCallback(async () => {
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearch = useCallback(async (term: string) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.set("search", search);
+      if (term) params.set("search", term);
       const res = await fetch(`/api/patients?${params}`);
       const data = await res.json();
       setPatients(data.patients);
@@ -52,7 +54,16 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, []);
+
+  // Debounced search on typing (300ms)
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(search);
+    }, 300);
+    return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
+  }, [search, handleSearch]);
 
   const getAge = (dob: string | null) => {
     if (!dob) return null;
@@ -69,10 +80,17 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Search patients..."
-            className="w-full pl-10 pr-4 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
+            className="w-full pl-10 pr-8 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -129,9 +147,19 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
       )}
 
       {patients.length === 0 && !loading && (
-        <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
-          No patients found
-        </p>
+        <div className="text-center py-8">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            No patients found
+          </p>
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="mt-2 text-xs text-[var(--color-brand-600)] hover:underline"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

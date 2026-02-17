@@ -186,11 +186,9 @@ export async function POST(request: NextRequest) {
         } catch (err) {
           console.error("Interaction check stream error:", err);
 
-          const errorMessage =
-            err instanceof Error ? err.message : "Generation interrupted";
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: "error", error: errorMessage })}\n\n`
+              `data: ${JSON.stringify({ type: "error", error: "Generation interrupted" })}\n\n`
             )
           );
           controller.close();

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { VisitListCard } from "./visit-list-card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface VisitItem {
   id: string;
@@ -19,6 +20,8 @@ export function VisitListClient({ initialVisits }: { initialVisits: VisitItem[] 
   const [visits, setVisits] = useState<VisitItem[]>(initialVisits);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialVisits.length === 20);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore || visits.length === 0) return;
@@ -34,13 +37,17 @@ export function VisitListClient({ initialVisits }: { initialVisits: VisitItem[] 
     setLoading(false);
   }, [loading, hasMore, visits]);
 
-  const handleArchive = useCallback(async (id: string) => {
-    const res = await fetch(`/api/visits/${id}`, { method: "DELETE" });
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/visits/${deleteTarget}`, { method: "DELETE" });
     if (res.ok) {
-      setVisits((prev) => prev.filter((v) => v.id !== id));
+      setVisits((prev) => prev.filter((v) => v.id !== deleteTarget));
       router.refresh();
     }
-  }, [router]);
+    setDeleting(false);
+    setDeleteTarget(null);
+  }, [deleteTarget, router]);
 
   return (
     <div className="space-y-2">
@@ -48,7 +55,7 @@ export function VisitListClient({ initialVisits }: { initialVisits: VisitItem[] 
         <VisitListCard
           key={visit.id}
           visit={visit}
-          onArchive={handleArchive}
+          onDelete={(id) => setDeleteTarget(id)}
         />
       ))}
 
@@ -61,6 +68,16 @@ export function VisitListClient({ initialVisits }: { initialVisits: VisitItem[] 
           {loading ? "Loading..." : "Load more visits"}
         </button>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        title="Delete this visit?"
+        description="This will permanently remove the visit note and all associated data. This action cannot be undone."
+        confirmLabel="Delete Visit"
+        loading={deleting}
+      />
     </div>
   );
 }
