@@ -4,7 +4,7 @@ import { ScrollReveal } from "./scroll-reveal";
 
 export function Pricing() {
   return (
-    <section className="py-20 md:py-28">
+    <section className="py-12 md:py-16">
       <div className="max-w-3xl mx-auto px-6">
         <ScrollReveal>
           <h2 className="text-2xl md:text-3xl font-bold text-center text-[var(--color-text-primary)] mb-3 font-[var(--font-display)]">

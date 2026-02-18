@@ -132,11 +132,11 @@ function BiomarkerRow({
 
 export function FeatureLab() {
   return (
-    <section className="py-20 md:py-28">
+    <section className="py-12 md:py-16">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Text */}
-          <ScrollReveal direction="left">
+          <ScrollReveal direction="none">
             <div>
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
                 <Dna className="icon-feature text-[var(--color-brand-600)]" />
@@ -167,7 +167,7 @@ export function FeatureLab() {
           </ScrollReveal>
 
           {/* Mockup */}
-          <ScrollReveal direction="right">
+          <ScrollReveal direction="none">
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">
               {/* Panel header */}
               <div className="px-5 py-4 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">

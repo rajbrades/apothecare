@@ -4,7 +4,7 @@ import { ScrollReveal } from "./scroll-reveal";
 export function FinalCta() {
   return (
     <section className="bg-[var(--color-brand-950)]">
-      <div className="max-w-4xl mx-auto px-6 py-20 md:py-24 text-center">
+      <div className="max-w-4xl mx-auto px-6 py-14 md:py-16 text-center">
         <ScrollReveal>
           <h2 className="text-2xl md:text-3xl font-bold text-white font-[var(--font-display)] mb-4">
             Ready to elevate your clinical practice?
