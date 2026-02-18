@@ -211,7 +211,7 @@ export function ReviewTab({ patients, initialReviews }: ReviewTabProps) {
                 <Link
                   key={review.id}
                   href={`/supplements/review/${review.id}`}
-                  className="block p-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:shadow-sm transition-all"
+                  className="block p-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:shadow-[var(--shadow-card)] transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>

@@ -33,7 +33,7 @@ export function TrustLogos() {
                   height={p.h}
                   unoptimized
                 />
-                <span className="text-[9px] text-[var(--color-text-muted)] uppercase tracking-widest">
+                <span className="block text-center text-[9px] text-[var(--color-text-muted)] uppercase tracking-widest">
                   {p.subtitle}
                 </span>
               </div>

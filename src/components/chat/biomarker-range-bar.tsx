@@ -207,7 +207,7 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
 
         {/* Value marker */}
         <div
-          className="absolute w-3 h-3 rounded-full top-[-2px] border-2 border-white biomarker-marker-entrance"
+          className="absolute w-3 h-3 rounded-full top-[-2px] border-2 border-[var(--color-surface)] biomarker-marker-entrance"
           style={{
             left: `${valuePercent}%`,
             transform: "translateX(-50%)",
@@ -308,7 +308,7 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
     panel.biomarkers.filter((b) => b.flag !== "optimal" && b.flag !== "normal").length + qualitativeFlagged;
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
+    <div className="rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
       {/* Panel header */}
       <button
         type="button"
@@ -383,7 +383,7 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
               <span className="text-[10px] text-[var(--color-text-muted)]">Conventional range</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm bg-[var(--color-text-muted)]" />
+              <div className="w-2.5 h-2.5 rounded-full border-2 border-[var(--color-surface)] shadow-[var(--shadow-card)] bg-[var(--color-text-muted)]" />
               <span className="text-[10px] text-[var(--color-text-muted)]">Your value</span>
             </div>
           </div>

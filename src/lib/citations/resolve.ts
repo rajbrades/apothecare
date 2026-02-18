@@ -63,38 +63,57 @@ interface CrossRefResponse {
 
 // ── Citation extraction ────────────────────────────────────────────────────
 
-const CITATION_REGEX = /\[([^\]]+?,\s*\d{4}[a-z]?)\](?!\()/g;
+const UNLINKED_CITATION_REGEX = /\[([^\]]+?,\s*\d{4}[a-z]?)\](?!\()/g;
+// Allow balanced parentheses inside URLs (e.g. DOIs like 10.1016/S0140-6736(98)00170-3)
+const LINKED_CITATION_REGEX = /\[([^\]]+?,\s*\d{4}[a-z]?)\]\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g;
 
 /**
- * Extract all plain [Author, Year] citations from text that aren't already
- * markdown links (not followed by `(`).
+ * Extract all [Author, Year] citations from text — both plain (unlinked)
+ * and pre-linked markdown `[Author, Year](url)` citations.
+ *
+ * The AI system prompt instructs the model to pre-link citations with DOI or
+ * Scholar URLs, so most citations arrive already linked. We extract both
+ * forms so the server can resolve metadata (title, authors, evidence level)
+ * via CrossRef for badge rendering regardless of whether the AI pre-linked.
  */
 export function extractCitations(text: string): ExtractedCitation[] {
   const citations: ExtractedCitation[] = [];
   const seen = new Set<string>();
 
+  // Pass 1: extract pre-linked citations [Author, Year](url)
   let match: RegExpExecArray | null;
-  while ((match = CITATION_REGEX.exec(text)) !== null) {
+  while ((match = LINKED_CITATION_REGEX.exec(text)) !== null) {
     const citationText = match[1];
-
-    // Deduplicate — same citation may appear multiple times
     if (seen.has(citationText)) continue;
     seen.add(citationText);
 
-    // Extract surrounding context (~100 chars each side)
     const start = Math.max(0, match.index - 100);
     const end = Math.min(text.length, match.index + match[0].length + 100);
     const rawContext = text.slice(start, end);
-
-    // Clean context: remove markdown syntax, keep meaningful words
     const context = rawContext
       .replace(/[#*_`>\[\]()]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
 
-    // Parse author and year from citation text
     const { author, year } = parseAuthorYear(citationText);
+    citations.push({ text: citationText, context, author, year });
+  }
 
+  // Pass 2: extract unlinked citations [Author, Year] (not followed by `(`)
+  while ((match = UNLINKED_CITATION_REGEX.exec(text)) !== null) {
+    const citationText = match[1];
+    if (seen.has(citationText)) continue;
+    seen.add(citationText);
+
+    const start = Math.max(0, match.index - 100);
+    const end = Math.min(text.length, match.index + match[0].length + 100);
+    const rawContext = text.slice(start, end);
+    const context = rawContext
+      .replace(/[#*_`>\[\]()]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const { author, year } = parseAuthorYear(citationText);
     citations.push({ text: citationText, context, author, year });
   }
 
@@ -325,8 +344,9 @@ export async function resolveCitations(
 }
 
 /**
- * Replace plain [Author, Year] citations in text with markdown links
- * using the resolved data map.
+ * Replace citations in text with resolved DOI links.
+ * Handles both unlinked `[Author, Year]` and pre-linked `[Author, Year](url)`.
+ * For pre-linked citations, upgrades the URL if CrossRef resolved a DOI.
  */
 export function applyCitationLinks(
   text: string,
@@ -334,8 +354,9 @@ export function applyCitationLinks(
 ): string {
   if (resolvedMap.size === 0) return text;
 
-  return text.replace(
-    CITATION_REGEX,
+  // First: upgrade pre-linked citations to DOI URLs when available
+  let result = text.replace(
+    LINKED_CITATION_REGEX,
     (fullMatch, citationText: string) => {
       const data = resolvedMap.get(citationText);
       if (data?.url) {
@@ -344,4 +365,18 @@ export function applyCitationLinks(
       return fullMatch;
     }
   );
+
+  // Second: link any remaining unlinked citations
+  result = result.replace(
+    UNLINKED_CITATION_REGEX,
+    (fullMatch, citationText: string) => {
+      const data = resolvedMap.get(citationText);
+      if (data?.url) {
+        return `[${citationText}](${data.url})`;
+      }
+      return fullMatch;
+    }
+  );
+
+  return result;
 }

@@ -8,7 +8,7 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)] shadow-sm",
+                default: "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)] shadow-[var(--shadow-card)]",
                 destructive:
                     "bg-red-500 text-white hover:bg-red-600",
                 outline:
@@ -17,7 +17,7 @@ const buttonVariants = cva(
                     "bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border-light)]",
                 ghost: "hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] text-[var(--color-text-secondary)]",
                 link: "text-[var(--color-brand-600)] underline-offset-4 hover:underline",
-                gold: "bg-[var(--color-gold-500)] text-white hover:bg-[var(--color-gold-600)] shadow-sm",
+                gold: "bg-[var(--color-gold-500)] text-white hover:bg-[var(--color-gold-600)] shadow-[var(--shadow-card)]",
             },
             size: {
                 default: "h-10 px-4 py-2",

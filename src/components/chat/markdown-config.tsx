@@ -50,27 +50,16 @@ function CitationLink({
 
   if (isCitation && meta?.evidenceLevel) {
     return (
-      <span className="inline-flex items-baseline gap-1">
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
-        >
-          {children}
-          <ExternalLink className="inline w-3 h-3 flex-shrink-0" />
-        </a>
-        <EvidenceBadge
-          citation={{
-            level: meta.evidenceLevel as EvidenceLevel,
-            title: meta.title,
-            authors: meta.authors,
-            year: meta.year,
-            source: meta.source,
-            doi: meta.doi,
-          }}
-        />
-      </span>
+      <EvidenceBadge
+        citation={{
+          level: meta.evidenceLevel as EvidenceLevel,
+          title: meta.title,
+          authors: meta.authors,
+          year: meta.year,
+          source: meta.source,
+          doi: meta.doi,
+        }}
+      />
     );
   }
 

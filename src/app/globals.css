@@ -65,6 +65,7 @@
   --shadow-card: 0 1px 4px 0 rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.09);
   --shadow-elevated: 0 4px 16px -2px rgba(0, 0, 0, 0.14), 0 2px 8px -2px rgba(0, 0, 0, 0.09);
   --shadow-modal: 0 16px 48px -8px rgba(0, 0, 0, 0.20), 0 4px 20px -4px rgba(0, 0, 0, 0.13);
+  --shadow-focus: 0 4px 20px -4px rgba(13, 148, 121, 0.15);
 
   /* Icon sizes — standardized across components */
   --icon-inline: 16px;

@@ -205,7 +205,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
                   onClick={() => setLabView("reports")}
                   className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
                     labView === "reports"
-                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   }`}
                 >
@@ -215,7 +215,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
                   onClick={() => setLabView("trends")}
                   className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
                     labView === "trends"
-                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   }`}
                 >

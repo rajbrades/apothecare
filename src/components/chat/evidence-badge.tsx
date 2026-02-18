@@ -196,7 +196,7 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
               : "top-full mt-2"
           } left-1/2 -translate-x-1/2`}
         >
-          <div className={`bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg shadow-black/8 overflow-hidden`}>
+          <div className={`bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden`}>
             {/* Evidence level header */}
             <div className={`px-4 py-2.5 ${config.hoverBgClass} border-b ${config.borderClass}`}>
               <div className="flex items-center gap-2">

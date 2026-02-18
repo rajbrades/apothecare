@@ -100,7 +100,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border-2 border-[var(--color-border)] shadow-[var(--shadow-elevated)] hover:border-[var(--color-brand-400)] transition-all focus-within:border-[var(--color-brand-400)] focus-within:shadow-[0_4px_20px_-4px_rgba(13,148,121,0.15)]">
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border-2 border-[var(--color-border)] shadow-[var(--shadow-elevated)] hover:border-[var(--color-brand-400)] transition-all focus-within:border-[var(--color-brand-400)] focus-within:shadow-[var(--shadow-focus)]">
         <input
           type="text"
           value={query}
