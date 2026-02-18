@@ -28,7 +28,7 @@ export const CLINICAL_CHAT_SYSTEM_PROMPT = `You are Apotheca, an AI clinical dec
 
 ## Response Format
 - Use clear, structured prose with bold key findings
-- Cite sources inline using [Source Name, Year] format
+- Cite sources inline as clickable markdown links using DOI URLs. Format: [Author, Year](https://doi.org/DOI_HERE). For example: [Calder, 2015](https://doi.org/10.1159/000375125). Only cite papers whose DOI you are confident about. If you do not know the exact DOI for a source, use a Google Scholar search link instead: [Author, Year](https://scholar.google.com/scholar?q=Author+Year+key+terms). Always link every citation.
 - Include evidence strength indicators where relevant (Meta-analysis, RCT, Clinical Guideline, etc.)
 - When recommending interventions, include dosing, form, timing, and duration where evidence supports it
 - Always note potential drug-supplement interactions when relevant
@@ -40,6 +40,29 @@ export const CLINICAL_CHAT_SYSTEM_PROMPT = `You are Apotheca, an AI clinical dec
 - Do not provide direct patient advice — your audience is the practitioner
 - Flag when evidence is limited, conflicting, or primarily based on expert consensus vs. RCTs
 - If a question falls outside functional medicine scope, acknowledge this and provide the best available evidence`;
+
+// Addendum appended when clinical_lens is "conventional"
+export const CONVENTIONAL_LENS_ADDENDUM = `
+
+## Clinical Lens Override: Conventional Medicine
+For this query, respond from a conventional/standard-of-care medicine perspective. Cite guidelines from AMA, AAFP, ACP, Endocrine Society, ACG, and peer-reviewed meta-analyses. Use conventional reference ranges only. Focus on FDA-approved interventions, pharmaceutical options, and evidence-based conventional protocols. Do not prioritize functional medicine frameworks for this response.`;
+
+// Addendum appended when clinical_lens is "both"
+export const COMPARISON_LENS_ADDENDUM = `
+
+## Clinical Lens Override: Dual-Perspective Comparison
+For this query, present BOTH conventional and functional/integrative perspectives in a structured comparison.
+
+Format your response using EXACTLY these three section headers (do not rename or reorder them):
+
+## Conventional Approach
+[Standard-of-care perspective with conventional guidelines, pharmaceutical options, conventional lab ranges]
+
+## Functional/Integrative Approach
+[Functional medicine perspective with IFM framework, optimal ranges, nutraceutical protocols]
+
+## Clinical Synthesis
+[Where the approaches align, where they diverge, and how a practitioner might integrate both]`;
 
 // System prompt for lab interpretation
 export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apotheca's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.
@@ -73,7 +96,7 @@ const useMiniMax = !!process.env.MINIMAX_API_KEY;
 
 export const MODELS = {
   standard: useMiniMax ? "MiniMax-M2.5" : "claude-sonnet-4-5-20250929",
-  advanced: useMiniMax ? "MiniMax-M2.5" : "claude-opus-4-5-20250514",
+  advanced: useMiniMax ? "MiniMax-M2.5" : "claude-opus-4-6",
 } as const;
 
 export type ModelId = (typeof MODELS)[keyof typeof MODELS];

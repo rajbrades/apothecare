@@ -24,15 +24,15 @@
   --color-gold-700: #b45309;
 
   --color-surface: #ffffff;
-  --color-surface-secondary: #f8fafb;
-  --color-surface-tertiary: #f1f5f4;
-  --color-border: #e2e8e6;
-  --color-border-light: #f0f3f2;
+  --color-surface-secondary: #f3f7f6;
+  --color-surface-tertiary: #edf2f0;
+  --color-border: #cad6d3;
+  --color-border-light: #dce6e3;
 
   --color-text-primary: #1a2e2a;
   --color-text-secondary: #4a6660;
   --color-text-tertiary: #7a9690;
-  --color-text-muted: #a3bbb5;
+  --color-text-muted: #6b8a84;
 
   /* Evidence level badge colors */
   --color-evidence-meta: #f59e0b;
@@ -62,9 +62,9 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
-  --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-modal: 0 12px 40px -8px rgba(0, 0, 0, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 1px 4px 0 rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.09);
+  --shadow-elevated: 0 4px 16px -2px rgba(0, 0, 0, 0.14), 0 2px 8px -2px rgba(0, 0, 0, 0.09);
+  --shadow-modal: 0 16px 48px -8px rgba(0, 0, 0, 0.20), 0 4px 20px -4px rgba(0, 0, 0, 0.13);
 
   /* Icon sizes — standardized across components */
   --icon-inline: 16px;
@@ -152,6 +152,17 @@ html.dark {
 }
 
 /* Google Fonts loaded via <link> in root layout for performance */
+
+/* Dialog animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
 
 /* Base styles */
 body {
@@ -587,6 +598,44 @@ main {
 .biomarker-row-entrance:nth-child(5) { animation-delay: 0.25s; }
 .biomarker-row-entrance:nth-child(6) { animation-delay: 0.3s; }
 
+/* --- Comparison Card Entrance --- */
+@keyframes comparison-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes comparison-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.comparison-card-entrance {
+  animation: comparison-card-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.comparison-panel-entrance {
+  animation: comparison-panel-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.comparison-panel-entrance:nth-child(1) { animation-delay: 0.1s; }
+.comparison-panel-entrance:nth-child(2) { animation-delay: 0.2s; }
+
+.comparison-synthesis-entrance {
+  animation: comparison-panel-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
 /* --- Biomarker Panel Card Entrance --- */
 @keyframes panel-entrance {
   from {
@@ -704,7 +753,10 @@ main {
   .biomarker-marker-entrance,
   .biomarker-row-entrance,
   .biomarker-panel-entrance,
-  .message-entrance {
+  .message-entrance,
+  .comparison-card-entrance,
+  .comparison-panel-entrance,
+  .comparison-synthesis-entrance {
     animation: none;
     opacity: 1;
     transform: none;

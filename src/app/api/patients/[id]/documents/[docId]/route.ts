@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl, deleteFromStorage } from "@/lib/storage/patient-documents";
 import { rebuildPatientClinicalSummary } from "@/lib/ai/clinical-summary";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -10,7 +11,7 @@ function jsonError(message: string, status: number) {
 
 // ── GET /api/patients/[id]/documents/[docId] — Single document ──────────
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; docId: string }> }
 ) {
   try {
@@ -29,13 +30,22 @@ export async function GET(
 
     const { data: document, error } = await supabase
       .from("patient_documents")
-      .select("*")
+      .select("id, patient_id, file_name, file_size, file_type, storage_path, document_type, document_date, title, status, extracted_text, extracted_data, extraction_summary, error_message, uploaded_at, extracted_at")
       .eq("id", docId)
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
       .single();
 
     if (error || !document) return jsonError("Document not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient_document",
+      resourceId: docId,
+      detail: { patient_id: patientId },
+    });
 
     // Generate signed URL for PDF viewing
     let signedUrl: string | null = null;
@@ -64,7 +74,6 @@ export async function DELETE(
 
     const { id: patientId, docId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -104,17 +113,12 @@ export async function DELETE(
       console.error("Clinical summary rebuild failed:", err);
     });
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "delete",
-      resource_type: "patient_document",
-      resource_id: docId,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient_document",
+      resourceId: docId,
       detail: { patient_id: patientId },
     });
 

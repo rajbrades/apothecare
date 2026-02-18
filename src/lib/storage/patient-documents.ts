@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { sanitizeFilename } from "@/lib/sanitize";
 
 const BUCKET = "patient-documents";
 
@@ -12,7 +13,7 @@ export function buildStoragePath(
   documentId: string,
   fileName: string
 ): string {
-  return `${practitionerId}/${patientId}/${documentId}/${fileName}`;
+  return `${practitionerId}/${patientId}/${documentId}/${sanitizeFilename(fileName)}`;
 }
 
 /**

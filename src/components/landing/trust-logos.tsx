@@ -1,33 +1,38 @@
+import Image from "next/image";
 import { ScrollReveal } from "./scroll-reveal";
 
-// TODO: Replace text-based logos with actual SVG logos when available
 const partners = [
-  { name: "PubMed", subtitle: "NCBI" },
-  { name: "IFM", subtitle: "Inst. for Functional Medicine" },
-  { name: "A4M", subtitle: "Anti-Aging Medicine" },
-  { name: "Cleveland Clinic", subtitle: "Functional Medicine" },
-  { name: "Cochrane", subtitle: "Systematic Reviews" },
+  { name: "PubMed", subtitle: "NCBI", logo: "/logos/pubmed.svg", w: 100, h: 28 },
+  { name: "IFM", subtitle: "Inst. for Functional Medicine", logo: "/logos/ifm.svg", w: 54, h: 28 },
+  { name: "A4M", subtitle: "Anti-Aging Medicine", logo: "/logos/a4m.svg", w: 56, h: 28 },
+  { name: "Cleveland Clinic", subtitle: "Functional Medicine", logo: "/logos/cleveland-clinic.svg", w: 152, h: 28 },
+  { name: "Cochrane", subtitle: "Systematic Reviews", logo: "/logos/cochrane.svg", w: 126, h: 28 },
 ];
 
 export function TrustLogos() {
   return (
-    <section className="py-14 md:py-16">
+    <section className="py-8 md:py-10 bg-[var(--color-surface-secondary)] border-y border-[var(--color-border-light)]">
       <div className="max-w-4xl mx-auto px-6">
         <ScrollReveal>
-          <p className="text-center text-xs text-[var(--color-text-muted)] uppercase tracking-widest mb-8">
+          <p className="text-center text-xs text-[var(--color-text-secondary)] uppercase tracking-widest mb-8">
             Grounded in evidence from
           </p>
         </ScrollReveal>
         <ScrollReveal delay={100}>
-          <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12">
+          <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-10 md:gap-10">
             {partners.map((p) => (
               <div
                 key={p.name}
-                className="flex flex-col items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                className="flex flex-col items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity"
+                title={p.name}
               >
-                <span className="text-base md:text-lg font-semibold text-[var(--color-text-tertiary)] font-[var(--font-display)]">
-                  {p.name}
-                </span>
+                <Image
+                  src={p.logo}
+                  alt={p.name}
+                  width={p.w}
+                  height={p.h}
+                  unoptimized
+                />
                 <span className="text-[9px] text-[var(--color-text-muted)] uppercase tracking-widest">
                   {p.subtitle}
                 </span>

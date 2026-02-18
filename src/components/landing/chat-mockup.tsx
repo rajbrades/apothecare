@@ -174,13 +174,9 @@ export function ChatMockup() {
   return (
     <section
       ref={ref}
-      className="bg-[var(--color-surface-secondary)] py-16 md:py-24"
+      className="bg-[var(--color-surface-secondary)] py-10 md:py-14"
     >
       <div className="max-w-3xl mx-auto px-6">
-        <p className="text-center text-sm text-[var(--color-text-muted)] mb-8">
-          See it in action
-        </p>
-
         <Link href="/auth/register" className="block group">
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)] group-hover:shadow-[var(--shadow-modal)] transition-shadow">
             {/* Window chrome */}

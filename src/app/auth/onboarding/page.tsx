@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
@@ -43,6 +43,65 @@ function validateNpi(npi: string): boolean {
   return sum % 10 === 0;
 }
 
+const US_STATES = [
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "DC", label: "District of Columbia" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
+  { value: "AS", label: "American Samoa" },
+  { value: "GU", label: "Guam" },
+  { value: "MP", label: "Northern Mariana Islands" },
+  { value: "PR", label: "Puerto Rico" },
+  { value: "VI", label: "U.S. Virgin Islands" },
+];
+
 const specialtyOptions = [
   "Hormone Optimization",
   "GI / Gut Health",
@@ -67,11 +126,24 @@ export default function OnboardingPage() {
   const [practiceName, setPracticeName] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [npiError, setNpiError] = useState<string | null>(null);
+  const [licenseError, setLicenseError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [fullName, setFullName] = useState("");
+
   const router = useRouter();
   const supabase = createClient();
+
+  // Pre-fill name from OAuth metadata (Google provides "name", email/password provides "full_name")
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata) {
+        const name = user.user_metadata.full_name || user.user_metadata.name || "";
+        if (name) setFullName(name);
+      }
+    });
+  }, [supabase]);
 
   const selectedLicense = licenseOptions.find((l) => l.value === licenseType);
 
@@ -100,7 +172,7 @@ export default function OnboardingPage() {
         .insert({
           auth_user_id: user.id,
           email: user.email!,
-          full_name: user.user_metadata?.full_name || user.email!,
+          full_name: fullName || user.user_metadata?.full_name || user.user_metadata?.name || user.email!,
           license_type: licenseType as LicenseType,
           license_number: licenseNumber || null,
           license_state: licenseState || null,
@@ -178,7 +250,7 @@ export default function OnboardingPage() {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setLicenseType(opt.value)}
+                      onClick={() => { setLicenseType(opt.value); setLicenseError(null); }}
                       className={`text-left px-3 py-2.5 text-sm rounded-[var(--radius-sm)] border transition-all ${
                         licenseType === opt.value
                           ? "border-[var(--color-brand-400)] bg-[var(--color-brand-50)] text-[var(--color-brand-700)]"
@@ -189,6 +261,9 @@ export default function OnboardingPage() {
                     </button>
                   ))}
                 </div>
+                {licenseError && (
+                  <p className="mt-1.5 text-xs text-red-600">{licenseError}</p>
+                )}
               </div>
 
               {/* License Number + State */}
@@ -210,14 +285,18 @@ export default function OnboardingPage() {
                     <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
                       State
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={licenseState}
                       onChange={(e) => setLicenseState(e.target.value)}
-                      placeholder="e.g., FL"
-                      maxLength={2}
-                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] uppercase"
-                    />
+                      className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] transition-all text-[var(--color-text-primary)]"
+                    >
+                      <option value="">Select state</option>
+                      {US_STATES.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}
@@ -263,6 +342,11 @@ export default function OnboardingPage() {
 
               <button
                 onClick={() => {
+                  if (!licenseType) {
+                    setLicenseError("Please select your license type.");
+                    return;
+                  }
+                  setLicenseError(null);
                   if (selectedLicense?.npiRequired) {
                     if (npi.length === 0) {
                       setNpiError("NPI is required for your license type.");
@@ -279,8 +363,8 @@ export default function OnboardingPage() {
                   }
                   setStep(2);
                 }}
-                disabled={!licenseType}
-                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={false}
+                className="w-full py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -356,7 +440,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleComplete}
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-50"
                 >
                   {loading ? "Setting up..." : "Launch Apotheca →"}
                 </button>

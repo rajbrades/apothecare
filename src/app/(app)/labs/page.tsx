@@ -27,10 +27,11 @@ export default async function LabsPage() {
     .select("id, first_name, last_name")
     .eq("practitioner_id", practitioner.id)
     .eq("is_archived", false)
-    .order("last_name", { ascending: true });
+    .order("last_name", { ascending: true })
+    .limit(500);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-4xl mx-auto px-6 pt-12 pb-8">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">

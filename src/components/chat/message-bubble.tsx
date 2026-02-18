@@ -1,10 +1,14 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
 import { Copy, Star, Share2, FileDown } from "lucide-react";
 import { LogoAvatar } from "@/components/ui/logomark";
+import { markdownRehypePlugins, markdownComponents } from "./markdown-config";
+import { ComparisonCard } from "./comparison-card";
+import { processCitations } from "@/lib/chat/process-citations";
+import { parseComparisonSections } from "@/lib/chat/parse-comparison";
+import { CitationMetaContext, type CitationMeta } from "@/lib/chat/citation-meta-context";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
@@ -33,6 +37,46 @@ function StreamingRenderer({ content }: { content: string }) {
       {content}
       <StreamingCursor />
     </div>
+  );
+}
+
+function AssistantContent({ message }: { message: ChatMessage }) {
+  // Build citation metadata map keyed by [Author, Year] text
+  const citationMap = useMemo(() => {
+    const map = new Map<string, CitationMeta>();
+    for (const c of message.citations ?? []) {
+      if (c.citationText) {
+        map.set(c.citationText, {
+          citationText: c.citationText,
+          title: c.title,
+          authors: c.authors,
+          year: c.year,
+          doi: c.doi,
+          source: c.source,
+          evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+        });
+      }
+    }
+    return map;
+  }, [message.citations]);
+
+  const comparison = parseComparisonSections(message.content);
+
+  return (
+    <CitationMetaContext.Provider value={citationMap}>
+      {comparison ? (
+        <ComparisonCard sections={comparison} />
+      ) : (
+        <div className="prose-apotheca">
+          <ReactMarkdown
+            rehypePlugins={markdownRehypePlugins}
+            components={markdownComponents}
+          >
+            {processCitations(message.content)}
+          </ReactMarkdown>
+        </div>
+      )}
+    </CitationMetaContext.Provider>
   );
 }
 
@@ -77,103 +121,12 @@ export const MessageBubble = memo(function MessageBubble({
                 <StreamingRenderer content={message.content} />
               </div>
             ) : (
-              <div className="prose-apotheca">
-                <ReactMarkdown
-                  rehypePlugins={[rehypeSanitize]}
-                  components={{
-                    p: ({ children }) => (
-                      <p className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] mb-3 last:mb-0">
-                        {children}
-                      </p>
-                    ),
-                    strong: ({ children }) => (
-                      <strong className="font-semibold text-[var(--color-text-primary)]">
-                        {children}
-                      </strong>
-                    ),
-                    em: ({ children }) => (
-                      <em className="text-[var(--color-text-secondary)]">
-                        {children}
-                      </em>
-                    ),
-                    h1: ({ children }) => (
-                      <h1 className="text-lg font-semibold text-[var(--color-text-primary)] mt-6 mb-2 font-[var(--font-display)]">
-                        {children}
-                      </h1>
-                    ),
-                    h2: ({ children }) => (
-                      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mt-5 mb-2 font-[var(--font-display)]">
-                        {children}
-                      </h2>
-                    ),
-                    h3: ({ children }) => (
-                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mt-4 mb-1.5 font-[var(--font-display)]">
-                        {children}
-                      </h3>
-                    ),
-                    ul: ({ children }) => (
-                      <ul className="space-y-1.5 mb-3 ml-1">{children}</ul>
-                    ),
-                    ol: ({ children }) => (
-                      <ol className="space-y-1.5 mb-3 ml-1 list-decimal list-inside">
-                        {children}
-                      </ol>
-                    ),
-                    li: ({ children }) => (
-                      <li className="text-[15px] leading-[1.7] text-[var(--color-text-primary)] flex gap-2">
-                        <span className="text-[var(--color-brand-500)] mt-1.5 flex-shrink-0">
-                          •
-                        </span>
-                        <span>{children}</span>
-                      </li>
-                    ),
-                    code: ({ className, children }) => {
-                      const isInline = !className;
-                      if (isInline) {
-                        return (
-                          <code className="px-1.5 py-0.5 bg-[var(--color-surface-tertiary)] text-[var(--color-brand-800)] rounded text-[13px] font-[var(--font-mono)]">
-                            {children}
-                          </code>
-                        );
-                      }
-                      return (
-                        <code className="block bg-[var(--color-surface-tertiary)] rounded-[var(--radius-sm)] p-4 text-[13px] font-[var(--font-mono)] text-[var(--color-text-primary)] overflow-x-auto mb-3">
-                          {children}
-                        </code>
-                      );
-                    },
-                    blockquote: ({ children }) => (
-                      <blockquote className="border-l-3 border-[var(--color-brand-300)] pl-4 py-1 my-3 text-[var(--color-text-secondary)] italic">
-                        {children}
-                      </blockquote>
-                    ),
-                    table: ({ children }) => (
-                      <div className="overflow-x-auto mb-3">
-                        <table className="min-w-full border border-[var(--color-border-light)] rounded-lg text-sm">
-                          {children}
-                        </table>
-                      </div>
-                    ),
-                    th: ({ children }) => (
-                      <th className="px-3 py-2 bg-[var(--color-surface-secondary)] text-left text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider border-b border-[var(--color-border-light)]">
-                        {children}
-                      </th>
-                    ),
-                    td: ({ children }) => (
-                      <td className="px-3 py-2 text-[var(--color-text-primary)] border-b border-[var(--color-border-light)]">
-                        {children}
-                      </td>
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
-              </div>
+              <AssistantContent message={message} />
             )}
 
             {/* Action bar — only show when not streaming */}
             {!isStreaming && message.content && (
-              <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 <button
                   onClick={handleCopy}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"

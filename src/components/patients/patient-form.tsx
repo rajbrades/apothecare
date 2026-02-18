@@ -12,6 +12,7 @@ export function PatientForm() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState<string>("");
   const [chiefComplaints, setChiefComplaints] = useState<string[]>([]);
@@ -94,7 +95,7 @@ export function PatientForm() {
       </h1>
 
       {error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+        <div role="alert" className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
           {error}
         </div>
       )}
@@ -103,24 +104,48 @@ export function PatientForm() {
         {/* Name row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>First Name</label>
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="First name" />
+            <label htmlFor="pf-first-name" className={labelClass}>First Name <span className="text-red-400">*</span></label>
+            <input
+              id="pf-first-name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, firstName: true }))}
+              className={inputClass}
+              placeholder="First name"
+              required
+            />
+            {touched.firstName && !firstName.trim() && (
+              <p className="text-xs text-red-500 mt-1">First name is required</p>
+            )}
           </div>
           <div>
-            <label className={labelClass}>Last Name</label>
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="Last name" />
+            <label htmlFor="pf-last-name" className={labelClass}>Last Name <span className="text-red-400">*</span></label>
+            <input
+              id="pf-last-name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              onBlur={() => setTouched((prev) => ({ ...prev, lastName: true }))}
+              className={inputClass}
+              placeholder="Last name"
+              required
+            />
+            {touched.lastName && !lastName.trim() && (
+              <p className="text-xs text-red-500 mt-1">Last name is required</p>
+            )}
           </div>
         </div>
 
         {/* DOB + Sex */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Date of Birth</label>
-            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputClass} />
+            <label htmlFor="pf-dob" className={labelClass}>Date of Birth</label>
+            <input id="pf-dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Sex</label>
-            <select value={sex} onChange={(e) => setSex(e.target.value)} className={inputClass}>
+            <label htmlFor="pf-sex" className={labelClass}>Sex</label>
+            <select id="pf-sex" value={sex} onChange={(e) => setSex(e.target.value)} className={inputClass}>
               <option value="">Select...</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -131,9 +156,10 @@ export function PatientForm() {
 
         {/* Chief Complaints */}
         <div>
-          <label className={labelClass}>Chief Complaints</label>
+          <label htmlFor="pf-complaint" className={labelClass}>Chief Complaints</label>
           <div className="flex gap-2 mb-2">
             <input
+              id="pf-complaint"
               type="text"
               value={complaintInput}
               onChange={(e) => setComplaintInput(e.target.value)}
@@ -161,27 +187,28 @@ export function PatientForm() {
 
         {/* Medical History */}
         <div>
-          <label className={labelClass}>Medical History</label>
-          <textarea value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Past diagnoses, conditions, surgeries..." />
+          <label htmlFor="pf-medical-history" className={labelClass}>Medical History</label>
+          <textarea id="pf-medical-history" value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="Past diagnoses, conditions, surgeries..." />
         </div>
 
         {/* Medications + Supplements */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Current Medications</label>
-            <textarea value={currentMedications} onChange={(e) => setCurrentMedications(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="List current medications..." />
+            <label htmlFor="pf-medications" className={labelClass}>Current Medications</label>
+            <textarea id="pf-medications" value={currentMedications} onChange={(e) => setCurrentMedications(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="List current medications..." />
           </div>
           <div>
-            <label className={labelClass}>Current Supplements</label>
-            <textarea value={supplements} onChange={(e) => setSupplements(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="List current supplements..." />
+            <label htmlFor="pf-supplements" className={labelClass}>Current Supplements</label>
+            <textarea id="pf-supplements" value={supplements} onChange={(e) => setSupplements(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} placeholder="List current supplements..." />
           </div>
         </div>
 
         {/* Allergies */}
         <div>
-          <label className={labelClass}>Allergies</label>
+          <label htmlFor="pf-allergy" className={labelClass}>Allergies</label>
           <div className="flex gap-2 mb-2">
             <input
+              id="pf-allergy"
               type="text"
               value={allergyInput}
               onChange={(e) => setAllergyInput(e.target.value)}
@@ -209,8 +236,8 @@ export function PatientForm() {
 
         {/* Notes */}
         <div>
-          <label className={labelClass}>Notes</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputClass} min-h-[60px] resize-y`} placeholder="Additional notes..." />
+          <label htmlFor="pf-notes" className={labelClass}>Notes</label>
+          <textarea id="pf-notes" value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inputClass} min-h-[60px] resize-y`} placeholder="Additional notes..." />
         </div>
 
         {/* Submit */}

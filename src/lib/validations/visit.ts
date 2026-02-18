@@ -66,3 +66,13 @@ export const visitListQuerySchema = z.object({
 });
 
 export type VisitListQuery = z.infer<typeof visitListQuerySchema>;
+
+// ── Scribe (Transcript → Sections) ──────────────────────────────────
+export const scribeSchema = z.object({
+  transcript: z
+    .string()
+    .min(10, "Transcript must be at least 10 characters")
+    .max(100000, "Transcript too long (max 100,000 characters)"),
+});
+
+export type ScribeInput = z.infer<typeof scribeSchema>;

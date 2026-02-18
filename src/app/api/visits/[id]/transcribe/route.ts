@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { transcribeAudio, MAX_AUDIO_SIZE } from "@/lib/ai/transcription";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -29,7 +30,6 @@ export async function POST(
 
     const { id: visitId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Auth
     const {
@@ -104,17 +104,12 @@ export async function POST(
       .update({ raw_notes: updatedNotes })
       .eq("id", visitId);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "transcribe",
-      resource_type: "visit",
-      resource_id: visitId,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "visit",
+      resourceId: visitId,
       detail: {
         audio_size: audioFile.size,
         audio_type: audioFile.type,
@@ -132,7 +127,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Transcription error:", error);
-    const message = error instanceof Error ? error.message : "Transcription failed";
-    return jsonError(message, 500);
+    return jsonError("Transcription failed", 500);
   }
 }

@@ -196,7 +196,7 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
               : "top-full mt-2"
           } left-1/2 -translate-x-1/2`}
         >
-          <div className={`bg-white rounded-xl border border-[var(--color-border)] shadow-lg shadow-black/8 overflow-hidden`}>
+          <div className={`bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg shadow-black/8 overflow-hidden`}>
             {/* Evidence level header */}
             <div className={`px-4 py-2.5 ${config.hoverBgClass} border-b ${config.borderClass}`}>
               <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
 
           {/* Arrow indicator */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-[var(--color-border)] rotate-45 ${
+            className={`absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[var(--color-surface)] border-[var(--color-border)] rotate-45 ${
               popoverPosition === "above"
                 ? "bottom-[-6px] border-r border-b"
                 : "top-[-6px] border-l border-t"

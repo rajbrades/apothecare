@@ -17,8 +17,8 @@ const MODEL_MAP: Record<Provider, { standard: string; advanced: string }> = {
   openai: { standard: "gpt-4o", advanced: "gpt-4o" },
   minimax: { standard: "MiniMax-M2.5", advanced: "MiniMax-M2.5" },
   anthropic: {
-    standard: "claude-sonnet-4-5-20250929",
-    advanced: "claude-opus-4-5-20250514",
+    standard: "claude-sonnet-4-6",
+    advanced: "claude-opus-4-6",
   },
 };
 
@@ -28,8 +28,8 @@ export const MODELS = MODEL_MAP[provider];
 // Anthropic-specific models for features that always use the Anthropic API
 // (document vision, lab PDF parsing) regardless of the primary provider.
 export const ANTHROPIC_MODELS = {
-  standard: "claude-sonnet-4-5-20250929",
-  vision: "claude-opus-4-5-20250514",
+  standard: "claude-sonnet-4-6",
+  vision: "claude-opus-4-6",
 };
 
 // Log which provider is active at startup (visible in terminal)

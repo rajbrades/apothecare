@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { uploadLabSchema, labListQuerySchema } from "@/lib/validations/lab";
 import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports";
 import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { sanitizeFilename } from "@/lib/sanitize";
+import { escapePostgrestPattern } from "@/lib/search";
+import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -33,20 +36,28 @@ export async function GET(request: NextRequest) {
     const parsed = labListQuerySchema.safeParse(params);
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
-    const { cursor, limit, status, test_type, lab_vendor, patient_id } = parsed.data;
+    const { cursor, limit, status, test_type, lab_vendor, patient_id, search, include_archived } = parsed.data;
 
     let query = supabase
       .from("lab_reports")
-      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, error_message, created_at, updated_at, patients(first_name, last_name)")
+      .select("id, test_name, lab_vendor, test_type, collection_date, status, raw_file_name, raw_file_size, patient_id, error_message, is_archived, created_at, updated_at, patients(first_name, last_name)")
       .eq("practitioner_id", practitioner.id)
       .order("created_at", { ascending: false })
       .limit(limit);
+
+    if (!include_archived) query = query.eq("is_archived", false);
 
     if (status) query = query.eq("status", status);
     if (test_type) query = query.eq("test_type", test_type);
     if (lab_vendor) query = query.eq("lab_vendor", lab_vendor);
     if (patient_id) query = query.eq("patient_id", patient_id);
     if (cursor) query = query.lt("created_at", cursor);
+    if (search) {
+      // Search across test_name and raw_file_name (patient name filtering done client-side from joined data)
+      const escaped = escapePostgrestPattern(search);
+      const term = `%${escaped}%`;
+      query = query.or(`test_name.ilike.${term},raw_file_name.ilike.${term}`);
+    }
 
     const { data: labs, error } = await query;
     if (error) return jsonError("Failed to fetch lab reports", 500);
@@ -55,7 +66,17 @@ export async function GET(request: NextRequest) {
       ? labs[labs.length - 1].created_at
       : null;
 
-    return NextResponse.json({ labs: labs || [], nextCursor });
+    const labList = labs || [];
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "lab_report",
+      detail: { list: true, count: labList.length },
+    });
+
+    return NextResponse.json({ labs: labList, nextCursor });
   } catch {
     return jsonError("Internal server error", 500);
   }
@@ -68,7 +89,6 @@ export async function POST(request: NextRequest) {
     if (csrfError) return csrfError;
 
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -133,7 +153,7 @@ export async function POST(request: NextRequest) {
         test_name: parsed.data.test_name || null,
         collection_date: parsed.data.collection_date || null,
         raw_file_url: "",
-        raw_file_name: file.name,
+        raw_file_name: sanitizeFilename(file.name),
         raw_file_size: file.size,
         parsed_data: {},
         status: "uploading",
@@ -163,17 +183,12 @@ export async function POST(request: NextRequest) {
       .update({ raw_file_url: storagePath })
       .eq("id", report.id);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "upload",
-      resource_type: "lab_report",
-      resource_id: report.id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "lab_report",
+      resourceId: report.id,
       detail: {
         patient_id: patientId,
         file_name: file.name,

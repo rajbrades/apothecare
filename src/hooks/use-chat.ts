@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import type { ChatAttachment } from "@/types/database";
 
 const HISTORY_PAGE_SIZE = 50;
 
@@ -9,13 +10,16 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   citations?: Array<{
-    source: string;
+    /** The [Author, Year] key used to look up metadata during rendering */
+    citationText: string;
+    source?: string;
     title: string;
     authors?: string[];
     year?: number;
     doi?: string;
     evidence_level?: string;
   }>;
+  attachments?: ChatAttachment[];
   isStreaming?: boolean;
   created_at?: string;
 }
@@ -24,6 +28,8 @@ interface UseChatOptions {
   conversationId?: string | null;
   patientId?: string | null;
   isDeepConsult?: boolean;
+  clinicalLens?: "functional" | "conventional" | "both";
+  selectedSources?: string[];
   onConversationCreated?: (id: string) => void;
   onError?: (error: string) => void;
 }
@@ -41,19 +47,23 @@ export function useChat(options: UseChatOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingContentRef = useRef<string>("");
   const nextCursorRef = useRef<string | null>(null);
+  const lastFailedContentRef = useRef<string | null>(null);
+  const failedConvIdRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, attachments?: ChatAttachment[]) => {
       if (!content.trim() || isLoading) return;
 
       setError(null);
       setIsLoading(true);
+      lastFailedContentRef.current = null;
 
       // Add user message
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
         role: "user",
         content: content.trim(),
+        attachments: attachments?.map(({ extracted_text: _, ...rest }) => rest),
         created_at: new Date().toISOString(),
       };
 
@@ -83,6 +93,9 @@ export function useChat(options: UseChatOptions = {}) {
             conversation_id: conversationId,
             patient_id: options.patientId,
             is_deep_consult: options.isDeepConsult || false,
+            clinical_lens: options.clinicalLens || "functional",
+            ...(options.selectedSources?.length ? { source_filter: options.selectedSources } : {}),
+            ...(attachments?.length ? { attachments } : {}),
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -138,6 +151,52 @@ export function useChat(options: UseChatOptions = {}) {
                   });
                   break;
 
+                case "citations_resolved":
+                  // Replace message content with DOI-linked citations
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        content: event.content,
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
+
+                case "citation_metadata":
+                  // Store enriched citation metadata for evidence badge rendering
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        citations: (event.citations as Array<{
+                          citationText: string;
+                          title?: string;
+                          source?: string;
+                          authors?: string[];
+                          year?: string;
+                          doi?: string;
+                          evidenceLevel?: string;
+                        }>).map((c) => ({
+                          citationText: c.citationText,
+                          title: c.title || "",
+                          source: c.source,
+                          authors: c.authors,
+                          year: c.year ? parseInt(c.year) : undefined,
+                          doi: c.doi,
+                          evidence_level: c.evidenceLevel,
+                        })),
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
+
                 case "message_complete":
                   setMessages((prev) => {
                     const updated = [...prev];
@@ -181,6 +240,7 @@ export function useChat(options: UseChatOptions = {}) {
             err instanceof Error ? err.message : "Something went wrong";
           setError(errorMessage);
           options.onError?.(errorMessage);
+          lastFailedContentRef.current = content.trim();
 
           // Remove the empty assistant message on error
           setMessages((prev) => {
@@ -220,6 +280,7 @@ export function useChat(options: UseChatOptions = {}) {
         nextCursorRef.current = data.nextCursor ?? null;
       } catch {
         setError("Failed to load conversation history");
+        failedConvIdRef.current = convId;
       }
     },
     []
@@ -254,6 +315,28 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [conversationId, isLoadingMore]);
 
+  const retry = useCallback(() => {
+    const content = lastFailedContentRef.current;
+    if (!content) return;
+    // Remove the failed user message before resending
+    setMessages((prev) => {
+      const last = prev[prev.length - 1];
+      if (last?.role === "user" && last.content === content) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+    sendMessage(content);
+  }, [sendMessage]);
+
+  const retryLoadHistory = useCallback(() => {
+    const convId = failedConvIdRef.current;
+    if (!convId) return;
+    failedConvIdRef.current = null;
+    setError(null);
+    loadConversation(convId);
+  }, [loadConversation]);
+
   const clearMessages = useCallback(() => {
     setMessages([]);
     setConversationId(null);
@@ -273,5 +356,7 @@ export function useChat(options: UseChatOptions = {}) {
     loadConversation,
     loadMoreMessages,
     clearMessages,
+    retry,
+    retryLoadHistory,
   };
 }

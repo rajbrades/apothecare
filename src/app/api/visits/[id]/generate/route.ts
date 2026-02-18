@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import {
   buildVisitSystemPrompt,
@@ -10,6 +10,8 @@ import {
 import { generateVisitSchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -31,7 +33,6 @@ export async function POST(
 
     const { id: visitId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Auth
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -65,6 +66,14 @@ export async function POST(
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
     const { raw_notes, sections } = parsed.data;
+
+    // Prompt injection detection
+    validateInputSafety(raw_notes, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "visit",
+      resourceId: visitId,
+    });
 
     // Build patient context with document summaries
     let documentSummaries: string[] = [];
@@ -255,17 +264,12 @@ export async function POST(
             await Promise.all(tasks);
           }
 
-          // Audit log
-          const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-          const userAgent = request.headers.get("user-agent") || "unknown";
-
-          await serviceClient.from("audit_logs").insert({
-            practitioner_id: practitioner.id,
+          auditLog({
+            request,
+            practitionerId: practitioner.id,
             action: "generate",
-            resource_type: "visit",
-            resource_id: visitId,
-            ip_address: clientIp,
-            user_agent: userAgent,
+            resourceType: "visit",
+            resourceId: visitId,
             detail: { sections, visit_type: visit.visit_type, has_patient: !!visit.patient_id },
           });
 
@@ -274,9 +278,8 @@ export async function POST(
           controller.close();
         } catch (err) {
           console.error("Visit generation stream error:", err);
-          const errorMessage = err instanceof Error ? err.message : "Generation interrupted";
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: errorMessage })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ section: "error", status: "error", message: "Generation interrupted" })}\n\n`)
           );
           controller.close();
         }
@@ -291,6 +294,9 @@ export async function POST(
       },
     });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Input blocked by safety filter. Please rephrase.", 400);
+    }
     console.error("Visit generate error:", error);
     return jsonError("Internal server error", 500);
   }

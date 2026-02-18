@@ -179,16 +179,16 @@ Progress Since Last Visit, Current Symptoms, Protocol Adherence, New Labs & Find
     - Read-only (regenerate to update)
 ```
 
-### 5.7 Mark Visit Complete
+### 5.7 Sign & Lock Visit
 
 ```
-  1. Click "Mark Complete" button in workspace header
+  1. Click "Sign & Lock Note" button in workspace header
   2. Visit status changes to "completed"
   3. Editor becomes read-only
-  4. "Reopen" button appears to reverse
+  4. "Unlock & Edit" button appears to reverse
 ```
 
-**Constraint:** Completed visits cannot be modified (transcribe, scribe, generate all return 409).
+**Constraint:** Signed visits cannot be modified (transcribe, scribe, generate all return 409). Sign/unlock actions are audit logged.
 
 ### 5.8 Export Visit
 
@@ -442,3 +442,11 @@ These are potential enhancements identified from the current architecture. They 
 - **Visit linking** — connect related visits for longitudinal tracking
 - [ ] **Billing code suggestions** — ICD-10/CPT code recommendations based on SOAP content
 - [ ] **Practice Analytics** — Dashboards for protocol efficacy and clinical trends across the patient population
+- [ ] **Evidence Grading** — Tag AI citations with evidence levels (meta-analysis, RCT, guideline, cohort study, case report, expert opinion) so practitioners can assess recommendation strength at a glance
+- [ ] **Knowledge Base Dashboard** — Show practitioners which sources the AI drew from (PubMed, IFM guidelines, practitioner protocols), when they were last updated, and coverage stats per clinical domain
+- [ ] **Custom Knowledge Uploads** — Let practitioners upload their own trusted protocols, formularies, and clinical guidelines as private knowledge bases that the AI references alongside public evidence
+- [ ] **Patient-Specific AI Memory** — Let the AI remember a patient's history, labs, and protocols across chat sessions so follow-up questions carry full clinical context without re-explaining
+- [ ] **Lab-to-Chat Bridge** — Click an abnormal analyte in a parsed lab report to open a chat pre-loaded with that patient's context, asking for clinical guidance on the flagged result
+- [ ] **Protocol Library** — Curated, reusable treatment protocols (e.g., "5R gut protocol", "adrenal recovery") that the AI can reference and customize per patient's profile
+- [ ] **Multi-Source Citations** — Show which knowledge base each citation came from (PubMed, IFM guidelines, practitioner's own protocols) with source-level trust indicators
+- [ ] **Comparative Analysis** — "Compare treatment A vs B for this patient's profile" — side-by-side evidence comparison leveraging patient context and evidence base

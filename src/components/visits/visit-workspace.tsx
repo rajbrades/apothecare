@@ -4,12 +4,29 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Calendar, User, Sparkles, Check, RotateCcw,
+  Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
-  Grid3x3, Pill, MessageSquare, HeartPulse, UserCheck,
+  Grid3x3, Pill, HeartPulse, UserCheck, Trash2,
 } from "lucide-react";
-import { VisitEditor } from "./editor/visit-editor";
+import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { RawNotesInput } from "./raw-notes-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const VisitEditor = dynamic(
+  () => import("./editor/visit-editor").then((mod) => ({ default: mod.VisitEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+          <div className="w-4 h-4 border-2 border-[var(--color-brand-300)] border-t-transparent rounded-full animate-spin" />
+          Loading editor...
+        </div>
+      </div>
+    ),
+  }
+);
 import { SoapSections } from "./soap-sections";
 import { IFMMatrixView } from "./ifm-matrix-view";
 import { ProtocolPanel } from "./protocol-panel";
@@ -18,7 +35,7 @@ import { useVisitStream } from "@/hooks/use-visit-stream";
 import type { Visit, VisitType, IFMMatrix } from "@/types/database";
 import type { JSONContent } from "@tiptap/react";
 
-type Tab = "soap" | "ifm" | "protocol" | "chat";
+type Tab = "soap" | "ifm" | "protocol";
 
 interface VisitWorkspaceProps {
   visit: Visit & {
@@ -121,10 +138,26 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
   }, [stream.protocol.status, stream.protocol.data]);
 
+  // Regeneration confirmation state
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
     if (!text.trim()) return;
+
+    // Show confirmation dialog before overwriting existing SOAP content
+    const hasExistingContent = !!(visit.subjective || visit.objective || visit.assessment || visit.plan);
+    if (hasExistingContent) {
+      setShowRegenConfirm(true);
+      return;
+    }
+
+    doGenerate();
+  }, [rawNotes, useBlockEditor, visit.subjective, visit.objective, visit.assessment, visit.plan]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const doGenerate = useCallback(() => {
+    const text = useBlockEditor ? editorTextRef.current : rawNotes;
 
     // Save editor state before generating
     if (useBlockEditor && editorJsonRef.current) {
@@ -139,6 +172,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
 
     stream.generate(visit.id, text);
+    setShowRegenConfirm(false);
   }, [visit.id, rawNotes, stream, useBlockEditor]);
 
   // Handle block editor content changes (debounced auto-save)
@@ -152,14 +186,18 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(async () => {
         setSaving(true);
-        await fetch(`/api/visits/${visit.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            template_content: json,
-            raw_notes: text,
-          }),
-        });
+        try {
+          await fetch(`/api/visits/${visit.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              template_content: json,
+              raw_notes: text,
+            }),
+          });
+        } catch {
+          toast.error("Failed to save changes. Your edits are preserved locally.");
+        }
         setSaving(false);
       }, 2000);
     },
@@ -170,22 +208,32 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     setVisit((prev) => ({ ...prev, [field]: value }));
 
     setSaving(true);
-    await fetch(`/api/visits/${visit.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    } catch {
+      toast.error("Failed to save changes. Your edits are preserved locally.");
+    }
     setSaving(false);
   }, [visit.id]);
 
   const handleMatrixUpdate = useCallback(async (matrix: IFMMatrix) => {
     setVisit((prev) => ({ ...prev, ifm_matrix: matrix }));
     setSaving(true);
-    await fetch(`/api/visits/${visit.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ifm_matrix: matrix }),
-    });
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ifm_matrix: matrix }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    } catch {
+      toast.error("Failed to save IFM Matrix. Your edits are preserved locally.");
+    }
     setSaving(false);
   }, [visit.id]);
 
@@ -202,11 +250,23 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
   }, [visit.id, visit.status, router]);
 
+  const handleDelete = useCallback(async () => {
+    if (!window.confirm("Are you sure you want to delete this visit? This cannot be undone.")) return;
+
+    const res = await fetch(`/api/visits/${visit.id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Visit deleted");
+      router.push("/visits");
+      router.refresh();
+    } else {
+      toast.error("Failed to delete visit");
+    }
+  }, [visit.id, router]);
+
   const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
     { key: "soap", label: "SOAP Note", icon: ClipboardList },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
     { key: "protocol", label: "Protocol", icon: Pill },
-    { key: "chat", label: "Chat", icon: MessageSquare },
   ];
 
   return (
@@ -214,19 +274,34 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <Link
-            href="/visits"
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to visits
-          </Link>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-3">
+            <Link
+              href="/visits"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              Visits
+            </Link>
+            {patientName && (
+              <>
+                <span className="text-[var(--color-text-muted)]">&gt;</span>
+                <Link
+                  href={`/patients/${visit.patients?.id}`}
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                >
+                  {patientName}
+                </Link>
+              </>
+            )}
+            <span className="text-[var(--color-text-muted)]">&gt;</span>
+            <span className="text-[var(--color-text-primary)]">
+              {new Date(visit.visit_date).toLocaleDateString()}
+            </span>
+          </nav>
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isFollowUp
-                ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
-                : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
-            }`}>
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isFollowUp
+              ? "bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]"
+              : "bg-[var(--color-brand-50)] border border-[var(--color-brand-100)]"
+              }`}>
               <VisitIcon
                 className={`w-4.5 h-4.5 ${isFollowUp ? "text-[var(--color-gold-600)]" : "text-[var(--color-brand-600)]"}`}
                 strokeWidth={1.5}
@@ -257,19 +332,27 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {!isReadOnly && (
+            <button
+              onClick={handleDelete}
+              className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-[var(--radius-md)] transition-colors border border-transparent hover:border-red-200"
+              title="Delete Visit"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           <ExportMenu visit={visit} />
           <button
             onClick={handleStatusToggle}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${
-              visit.status === "completed"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-            }`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${visit.status === "completed"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              }`}
           >
             {visit.status === "completed" ? (
-              <><RotateCcw className="w-3 h-3" /> Reopen</>
+              <><RotateCcw className="w-3 h-3" /> Unlock & Edit</>
             ) : (
-              <><Check className="w-3 h-3" /> Mark Complete</>
+              <><Check className="w-3 h-3" /> Sign & Lock Note</>
             )}
           </button>
         </div>
@@ -340,22 +423,25 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
 
       {/* Error */}
       {stream.error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+        <div role="alert" className="mb-4 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
           {stream.error}
         </div>
       )}
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
+      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
+            role="tab"
+            aria-selected={activeTab === key}
+            aria-controls={`tabpanel-${key}`}
+            id={`tab-${key}`}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              activeTab === key
-                ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
-                : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-            }`}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === key
+              ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
+              : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+              }`}
           >
             <Icon className="w-4 h-4" />
             {label}
@@ -364,7 +450,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       </div>
 
       {/* Tab content */}
-      <div className="min-h-[400px]">
+      <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} className="min-h-[400px]">
         {activeTab === "soap" && (
           <SoapSections
             subjective={visit.subjective || ""}
@@ -382,6 +468,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             matrix={visit.ifm_matrix}
             status={stream.ifm_matrix.status}
             readOnly={isReadOnly}
+            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
             onUpdate={handleMatrixUpdate}
           />
         )}
@@ -389,19 +476,20 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           <ProtocolPanel
             protocol={visit.ai_protocol}
             status={stream.protocol.status}
+            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
           />
         )}
-        {activeTab === "chat" && (
-          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
-            <MessageSquare className="w-8 h-8 mb-3 opacity-50" />
-            <p className="text-sm mb-2">Visit Chat</p>
-            <p className="text-xs text-center max-w-sm">
-              Ask follow-up questions about this visit. AI will have full context of the SOAP note, IFM mapping, and protocol.
-            </p>
-            <p className="text-xs mt-3 text-[var(--color-brand-600)]">Coming in next update</p>
-          </div>
-        )}
       </div>
+
+      <ConfirmDialog
+        open={showRegenConfirm}
+        onConfirm={doGenerate}
+        onCancel={() => setShowRegenConfirm(false)}
+        title="Regenerate clinical note?"
+        description="This will overwrite all SOAP sections, IFM Matrix, and Protocol recommendations with new AI-generated content. Any manual edits will be lost."
+        confirmLabel="Regenerate"
+        variant="warning"
+      />
     </div>
   );
 }

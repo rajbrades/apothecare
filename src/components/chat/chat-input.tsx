@@ -1,18 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Square, Paperclip, Microscope, X } from "lucide-react";
+import { Send, Square, Paperclip, Microscope, Stethoscope, BookOpen, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
+import { SourceFilterPopover } from "@/components/chat/source-filter-popover";
+import { getSourceLabel, isDefaultSelection, type SourceId } from "@/lib/ai/source-filter";
+import type { ChatAttachment } from "@/types/database";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, attachments?: ChatAttachment[]) => void;
   onStop?: () => void;
   isLoading: boolean;
   isDeepConsult: boolean;
   onToggleDeepConsult: () => void;
+  clinicalLens: "functional" | "conventional" | "both";
+  onCycleClinicalLens: () => void;
+  selectedSources: SourceId[];
+  onChangeSources: (sources: SourceId[]) => void;
   placeholder?: string;
   disabled?: boolean;
   queriesRemaining?: number | null;
+  initialAttachments?: ChatAttachment[];
 }
 
 export function ChatInput({
@@ -21,13 +30,29 @@ export function ChatInput({
   isLoading,
   isDeepConsult,
   onToggleDeepConsult,
+  clinicalLens,
+  onCycleClinicalLens,
+  selectedSources,
+  onChangeSources,
   placeholder = "Ask a clinical question...",
   disabled = false,
   queriesRemaining,
+  initialAttachments,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<ChatAttachment[]>(initialAttachments ?? []);
+  const [uploading, setUploading] = useState(false);
   const [showDeepConsultInfo, setShowDeepConsultInfo] = useState(false);
+  const [showSourceFilter, setShowSourceFilter] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync initialAttachments when they change (e.g. from dashboard handoff)
+  useEffect(() => {
+    if (initialAttachments?.length) {
+      setAttachments(initialAttachments);
+    }
+  }, [initialAttachments]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -40,12 +65,61 @@ export function ChatInput({
 
   const handleSubmit = useCallback(() => {
     if (!input.trim() || isLoading || disabled) return;
-    onSend(input.trim());
+    onSend(input.trim(), attachments.length ? attachments : undefined);
     setInput("");
+    setAttachments([]);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [input, isLoading, disabled, onSend]);
+  }, [input, isLoading, disabled, onSend, attachments]);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    // Check max 5 attachments total
+    if (attachments.length + files.length > 5) {
+      toast.error("Maximum 5 attachments allowed");
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      for (const file of files) {
+        if (file.size > 10_485_760) {
+          toast.error(`${file.name} exceeds 10MB limit`);
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/chat/attachments", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          toast.error(data.error || `Failed to upload ${file.name}`);
+          continue;
+        }
+
+        const attachment: ChatAttachment = await res.json();
+        setAttachments((prev) => [...prev, attachment]);
+      }
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }, [attachments.length]);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Cmd/Ctrl+Enter to send
@@ -86,10 +160,10 @@ export function ChatInput({
     <div className="border-t border-[var(--color-border-light)] bg-[var(--color-surface)] px-6 py-4">
       <div className="max-w-3xl mx-auto">
         <div
-          className={`relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border transition-all chat-input-glow ${
+          className={`relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] border-2 transition-all chat-input-glow ${
             disabled
               ? "border-[var(--color-border-light)] opacity-60"
-              : "border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] focus-within:shadow-[var(--shadow-elevated)] focus-within:border-[var(--color-brand-300)]"
+              : "border-[var(--color-border)] shadow-[var(--shadow-elevated)] hover:border-[var(--color-brand-400)] focus-within:border-[var(--color-brand-400)] focus-within:shadow-[0_4px_20px_-4px_rgba(13,148,121,0.15)]"
           }`}
         >
           <textarea
@@ -103,17 +177,110 @@ export function ChatInput({
             className="w-full px-5 pt-4 pb-2 text-[15px] bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] rounded-[var(--radius-lg)] resize-none"
           />
 
+          {/* Attachment chips */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-5 pb-2">
+              {attachments.map((a) => (
+                <span
+                  key={a.id}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border border-[var(--color-brand-200)] rounded-full"
+                >
+                  <Paperclip className="w-3 h-3" />
+                  {a.name}
+                  <span className="text-[var(--color-text-muted)]">
+                    ({(a.size / 1_048_576).toFixed(1)} MB)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeAttachment(a.id)}
+                    className="ml-0.5 text-[var(--color-brand-500)] hover:text-red-600 transition-colors"
+                    aria-label={`Remove ${a.name}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              {uploading && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs text-[var(--color-text-muted)]">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Uploading...
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+
           {/* Bottom toolbar */}
           <div className="flex items-center justify-between px-4 pb-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                disabled={disabled}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)] transition-colors disabled:opacity-50"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled || uploading || attachments.length >= 5}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[var(--color-text-muted)] border border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-secondary)] transition-colors disabled:opacity-50"
               >
-                <Paperclip className="icon-inline" />
+                {uploading ? (
+                  <Loader2 className="icon-inline animate-spin" />
+                ) : (
+                  <Paperclip className="icon-inline" />
+                )}
                 Attach
               </button>
+
+              {/* Clinical Lens toggle */}
+              <button
+                type="button"
+                onClick={onCycleClinicalLens}
+                disabled={disabled}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors disabled:opacity-50 ${
+                  clinicalLens !== "functional"
+                    ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
+                    : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-700)] hover:border-[var(--color-brand-200)]"
+                }`}
+              >
+                <Stethoscope className="icon-inline" />
+                {clinicalLens === "functional" ? "Functional" : clinicalLens === "conventional" ? "Conventional" : "Both"}
+                {clinicalLens !== "functional" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)]" />
+                )}
+              </button>
+
+              {/* Source Filter toggle */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSourceFilter(!showSourceFilter)}
+                  disabled={disabled}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors disabled:opacity-50 ${
+                    !isDefaultSelection(selectedSources)
+                      ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
+                      : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-700)] hover:border-[var(--color-brand-200)]"
+                  }`}
+                >
+                  <BookOpen className="icon-inline" />
+                  {getSourceLabel(selectedSources)}
+                  {!isDefaultSelection(selectedSources) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)]" />
+                  )}
+                </button>
+
+                {showSourceFilter && (
+                  <SourceFilterPopover
+                    selectedSources={selectedSources}
+                    onChangeSources={onChangeSources}
+                    onClose={() => setShowSourceFilter(false)}
+                  />
+                )}
+              </div>
 
               {/* Deep Consult toggle with info */}
               <div className="relative">

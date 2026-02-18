@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 export function Hero() {
@@ -65,6 +66,15 @@ export function Hero() {
             </Link>
           </ScrollReveal>
         ))}
+      </div>
+
+      {/* Scroll cue */}
+      <div className="flex flex-col items-center gap-1.5 mt-10">
+        <span className="text-xs text-[var(--color-text-secondary)] tracking-wide">See it in action</span>
+        <ChevronDown
+          className="w-5 h-5 text-[var(--color-brand-500)] animate-bounce"
+          strokeWidth={2}
+        />
       </div>
     </section>
   );

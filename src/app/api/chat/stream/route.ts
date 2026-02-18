@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
-import { CLINICAL_CHAT_SYSTEM_PROMPT } from "@/lib/ai/anthropic";
+import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM } from "@/lib/ai/anthropic";
+import { buildSourceFilterAddendum, type SourceId } from "@/lib/ai/source-filter";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
+import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
+import { extractCitations, resolveCitations, applyCitationLinks } from "@/lib/citations/resolve";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,7 +25,6 @@ export async function POST(request: NextRequest) {
     if (csrfError) return csrfError;
 
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     // Verify authentication
     const {
@@ -71,11 +74,15 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return jsonError(parsed.error.issues[0].message, 400);
     }
-    const { message, conversation_id, patient_id, is_deep_consult } = parsed.data;
+    const { message, conversation_id, patient_id, is_deep_consult, clinical_lens, source_filter, attachments } = parsed.data;
 
-    // Capture request metadata for audit
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
+    // Prompt injection detection
+    validateInputSafety(message, {
+      request,
+      practitionerId: practitioner.id,
+      resourceType: "conversation",
+      resourceId: conversation_id ?? undefined,
+    });
 
     // Get or create conversation
     const model = is_deep_consult ? MODELS.advanced : MODELS.standard;
@@ -102,11 +109,25 @@ export async function POST(request: NextRequest) {
       convId = newConv.id;
     }
 
-    // Save user message
+    // Build user message content — inject attachment text if present
+    let userContent = message;
+    if (attachments?.length) {
+      const attachmentBlock = attachments
+        .filter((a) => a.extracted_text)
+        .map((a) => `--- ${a.name} ---\n${a.extracted_text}\n---`)
+        .join("\n\n");
+      if (attachmentBlock) {
+        userContent = `[Attached Files]\n${attachmentBlock}\n\n${message}`;
+      }
+    }
+
+    // Save user message (store attachment metadata without extracted_text)
+    const attachmentMeta = attachments?.map(({ extracted_text: _, ...rest }) => rest) ?? [];
     await supabase.from("messages").insert({
       conversation_id: convId,
       role: "user" as const,
       content: message,
+      attachments: attachmentMeta,
     });
 
     // Build conversation history
@@ -122,7 +143,7 @@ export async function POST(request: NextRequest) {
     if (patient_id) {
       const { data: patient } = await supabase
         .from("patients")
-        .select("*")
+        .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
         .eq("id", patient_id)
         .single();
 
@@ -131,13 +152,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build messages array
+    // Build messages array — replace last user message with attachment-enriched content
     const messages = (history || [])
       .filter((m: any) => m.role !== "system")
       .map((m: any) => ({
         role: m.role as "user" | "assistant",
         content: m.content as string,
       }));
+    // Replace the final user message content with the attachment-enriched version
+    if (attachments?.length && messages.length > 0) {
+      const lastIdx = messages.length - 1;
+      if (messages[lastIdx].role === "user") {
+        messages[lastIdx] = { ...messages[lastIdx], content: userContent };
+      }
+    }
 
     // Stream response
     const encoder = new TextEncoder();
@@ -157,7 +185,7 @@ export async function POST(request: NextRequest) {
             {
               model,
               maxTokens: is_deep_consult ? 4096 : 2048,
-              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext,
+              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum((source_filter ?? []) as SourceId[]),
               messages,
             },
             {
@@ -172,34 +200,74 @@ export async function POST(request: NextRequest) {
             }
           );
 
-          // Save assistant message
+          // Resolve citations via CrossRef (best-effort, non-blocking on failure)
+          let resolvedContent = fullContent;
+          let resolvedCitationsForDB: object[] = [];
+          try {
+            const citations = extractCitations(fullContent);
+            if (citations.length > 0) {
+              const resolvedMap = await resolveCitations(citations);
+              resolvedContent = applyCitationLinks(fullContent, resolvedMap);
+
+              // Send resolved content to client so it can update the message
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "citations_resolved", content: resolvedContent })}\n\n`
+                )
+              );
+
+              // Send citation metadata for badge rendering (only DOI-resolved citations)
+              const metadataList = [...resolvedMap.values()].filter((r) => r.doi);
+              if (metadataList.length > 0) {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "citation_metadata", citations: metadataList })}\n\n`
+                  )
+                );
+                resolvedCitationsForDB = metadataList.map((r) => ({
+                  citationText: r.citationText,
+                  title: r.title,
+                  source: r.source,
+                  authors: r.authors,
+                  year: r.year ? parseInt(r.year) : undefined,
+                  doi: r.doi,
+                  evidence_level: r.evidenceLevel,
+                }));
+              }
+            }
+          } catch (err) {
+            console.warn("[Citations] Resolution failed, saving unresolved text:", err);
+          }
+
+          // Save assistant message (with resolved citations if available)
           const { data: savedMessage } = await supabase
             .from("messages")
             .insert({
               conversation_id: convId,
               role: "assistant" as const,
-              content: fullContent,
-              citations: [],
+              content: resolvedContent,
+              citations: resolvedCitationsForDB,
               input_tokens: usage.inputTokens,
               output_tokens: usage.outputTokens,
             })
             .select()
             .single();
 
-          // Audit log
-          await serviceClient.from("audit_logs").insert({
-            practitioner_id: practitioner.id,
-            action: "query" as const,
-            resource_type: "conversation",
-            resource_id: convId,
-            ip_address: clientIp,
-            user_agent: userAgent,
+          auditLog({
+            request,
+            practitionerId: practitioner.id,
+            action: "query",
+            resourceType: "conversation",
+            resourceId: convId ?? undefined,
             detail: {
               model,
               input_tokens: usage.inputTokens,
               output_tokens: usage.outputTokens,
               is_deep_consult,
+              clinical_lens,
+              source_filter: source_filter ?? [],
               has_patient_context: !!patient_id,
+              attachment_count: attachments?.length ?? 0,
             },
           });
 
@@ -240,6 +308,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof PromptInjectionError) {
+      return jsonError("Your message was blocked by our safety filter. Please rephrase your question.", 400);
+    }
     console.error("Chat stream error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,

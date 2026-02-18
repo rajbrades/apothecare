@@ -29,7 +29,7 @@ All mutating endpoints (POST/PATCH/DELETE) validate the `Origin` header against 
 
 ### `POST /api/chat/stream` ✅ Implemented
 
-Send a clinical query and receive an SSE-streamed AI response.
+Send a clinical query and receive an SSE-streamed AI response with configurable clinical lens, evidence source filtering, and file attachments.
 
 **Input Validation:** Zod schema (`lib/validations/chat.ts`)
 
@@ -40,28 +40,50 @@ Send a clinical query and receive an SSE-streamed AI response.
 | `message` | string | Yes | 1–10,000 characters |
 | `conversation_id` | UUID | No | Valid UUID or null. Creates new if omitted. |
 | `patient_id` | UUID | No | Valid UUID or null. Injects patient context. |
-| `is_deep_consult` | boolean | No | Default: false. Routes to Opus model. |
+| `is_deep_consult` | boolean | No | Default: false. Routes to advanced model. |
+| `clinical_lens` | enum | No | `"functional"` (default), `"conventional"`, or `"both"`. Modifies system prompt perspective. |
+| `source_filter` | string[] | No | Array of source IDs (e.g., `["ifm", "pubmed", "cochrane"]`). Restricts evidence citations. Max 20. |
+| `attachments` | object[] | No | Array of `ChatAttachment` objects with `extracted_text` for injection into message context. |
 
 **Example Request:**
 ```json
 {
   "message": "What are evidence-based interventions for elevated zonulin and intestinal permeability?",
   "patient_id": "a1b2c3d4-...",
-  "is_deep_consult": false
+  "is_deep_consult": false,
+  "clinical_lens": "both",
+  "source_filter": ["ifm", "a4m", "pubmed"],
+  "attachments": [{ "id": "...", "name": "lab-results.pdf", "size": 524288, "extracted_text": "..." }]
 }
 ```
 
 **Response:** Server-Sent Events stream
 
 ```
-data: {"type":"conversation_id","id":"conv_uuid"}
+data: {"type":"conversation_id","conversation_id":"conv_uuid"}
 
-data: {"type":"delta","content":"Elevated "}
+data: {"type":"text_delta","text":"Elevated "}
 
-data: {"type":"delta","content":"zonulin indicates "}
+data: {"type":"text_delta","text":"zonulin indicates "}
 
-data: {"type":"done","usage":{"input_tokens":1250,"output_tokens":890},"queries_remaining":1}
+data: {"type":"citations_resolved","content":"...full text with DOI links..."}
+
+data: {"type":"citation_metadata","citations":[{"citationText":"Calder, 2015","url":"https://doi.org/10.1...","doi":"10.1...","title":"Omega-3 fatty acids and inflammatory...","authors":["Calder P"],"year":"2015","source":"Nutrients","evidenceLevel":"rct"}]}
+
+data: {"type":"message_complete","message_id":"msg_uuid","usage":{"input_tokens":1250,"output_tokens":890},"queries_remaining":1}
+
+data: [DONE]
 ```
+
+**Clinical Lens Behavior:**
+- `"functional"` (default) — Standard functional medicine perspective (no addendum)
+- `"conventional"` — Appends conventional/standard-of-care system prompt addendum
+- `"both"` — Appends comparison format: Conventional Approach / Functional Approach / Clinical Synthesis
+
+**Source Filter Behavior:**
+- When omitted or all sources selected — no filtering (Full Spectrum)
+- When subset selected — system prompt addendum restricts/prioritizes citations to selected sources
+- Available source IDs: `ifm`, `a4m`, `cleveland_clinic`, `pubmed`, `cochrane`, `aafp`, `acp`, `endocrine_society`, `acg`
 
 **Error Responses:**
 
@@ -77,8 +99,40 @@ data: {"type":"done","usage":{"input_tokens":1250,"output_tokens":890},"queries_
 **Notes:**
 - `queries_remaining` is `null` for Pro subscribers (unlimited)
 - Conversation title auto-generated from first message (first 100 chars)
-- Deep Consult routes to Claude Opus with 4096 max tokens
-- Standard queries route to Claude Sonnet with 2048 max tokens
+- Deep Consult routes to advanced model with 4096 max tokens
+- Standard queries route to standard model with 2048 max tokens
+- Prompt injection detection runs before processing (returns 400 if blocked)
+- Citations are resolved via CrossRef DOI lookup (best-effort, non-blocking)
+
+---
+
+### `POST /api/chat/attachments` ✅ Implemented
+
+Upload a file for chat attachment. Returns metadata with extracted text (for PDFs).
+
+**Request:** `multipart/form-data`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `file` | File | Yes | PDF or image file. Max 10MB. Accepted: `.pdf`, `.jpg`, `.jpeg`, `.png` |
+
+**Response (200):**
+```json
+{
+  "id": "attach_uuid",
+  "name": "lab-results.pdf",
+  "size": 524288,
+  "type": "application/pdf",
+  "url": "storage-path/filename.pdf",
+  "extracted_text": "Extracted text content from PDF..."
+}
+```
+
+**Notes:**
+- Maximum 5 attachments per message (enforced client-side)
+- PDF text extraction runs server-side
+- Extracted text is injected into the user message content when sent to AI
+- Attachment metadata (without extracted_text) is saved with the user message
 
 ---
 
@@ -542,6 +596,175 @@ Generate AI clinical review for a lab report. Currently returns `501 Not Impleme
 
 ---
 
+### `POST /api/supplements/review` ✅ Implemented
+
+Generate an AI-powered supplement review for a patient. Returns SSE stream.
+
+**Input Validation:** Zod schema (`lib/validations/supplement.ts`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `patient_id` | UUID | Yes | Valid patient UUID owned by practitioner |
+
+**Response:** Server-Sent Events stream
+
+```
+data: {"type":"review_id","id":"review_uuid"}
+
+data: {"type":"text_delta","content":"{\n  \"items\": [..."}
+
+data: {"type":"review_complete","data":{"items":[...],"additions":[...],"summary":"..."}}
+```
+
+**Notes:**
+- Patient must have supplements on file
+- Review evaluates each current supplement with action (keep/modify/discontinue)
+- Additions section recommends new supplements (max 5-8)
+- Brand preferences injected as soft hints in the AI prompt
+- Latest 50 biomarker results included for correlation
+- Rate limited: 5/day (free), 50/day (pro)
+
+---
+
+### `GET /api/supplements/review/[id]` ✅ Implemented
+
+Get a single supplement review with patient data.
+
+**Response (200):**
+```json
+{
+  "review": {
+    "id": "uuid",
+    "patient_id": "uuid",
+    "status": "complete",
+    "review_data": {
+      "items": [
+        {
+          "name": "Vitamin D3",
+          "current_dosage": "5000 IU daily",
+          "action": "keep",
+          "rationale": "Supports immune function...",
+          "evidence_level": "meta_analysis",
+          "recommended_dosage": "5000 IU",
+          "recommended_form": "softgel",
+          "recommended_timing": "With largest meal",
+          "recommended_brand": "Pure Encapsulations",
+          "interactions": [],
+          "biomarker_correlations": ["25-OH Vitamin D"]
+        }
+      ],
+      "additions": [],
+      "summary": "Overall well-constructed supplement regimen..."
+    },
+    "created_at": "2026-02-15T10:00:00Z",
+    "patients": { "first_name": "Jane", "last_name": "Smith" }
+  }
+}
+```
+
+**Security:** Practitioner ownership check + audit log.
+
+---
+
+### `GET /api/supplements/reviews` ✅ Implemented
+
+List supplement reviews with cursor-based pagination.
+
+**Query Parameters:**
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `cursor` | ISO timestamp | No | — | Pagination cursor (created_at) |
+| `limit` | number | No | 20 | Number of results (max: 100) |
+| `patient_id` | UUID | No | — | Filter by patient |
+
+**Response (200):**
+```json
+{
+  "reviews": [
+    {
+      "id": "uuid",
+      "patient_id": "uuid",
+      "status": "complete",
+      "review_data": { "summary": "..." },
+      "created_at": "2026-02-15T10:00:00Z",
+      "patients": { "first_name": "Jane", "last_name": "Smith" }
+    }
+  ],
+  "nextCursor": "2026-02-15T10:00:00Z"
+}
+```
+
+---
+
+### `POST /api/supplements/interactions` ✅ Implemented
+
+Check for interactions between supplements and medications. Returns SSE stream.
+
+**Input Validation:** Zod schema (`lib/validations/supplement.ts`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `supplements` | string | Yes | 1–5,000 characters |
+| `medications` | string | No | Max 5,000 characters |
+| `patient_id` | UUID | No | Valid patient UUID |
+
+**Response:** Server-Sent Events stream
+
+```
+data: {"type":"check_id","id":"check_uuid"}
+
+data: {"type":"text_delta","content":"{\n  \"interactions\": [..."}
+
+data: {"type":"check_complete","data":{"interactions":[...],"summary":"..."}}
+```
+
+**Notes:**
+- Checks CYP450, P-glycoprotein, pharmacodynamic, and timing-dependent interactions
+- Severity levels: critical, caution, safe, unknown
+- Rate limited: 10/day (free), 100/day (pro)
+
+---
+
+### `GET /api/supplements/brands` ✅ Implemented
+
+Get practitioner's brand preferences.
+
+**Response (200):**
+```json
+{
+  "brands": [
+    { "brand_name": "Pure Encapsulations", "is_active": true, "priority": 0 },
+    { "brand_name": "Thorne", "is_active": false, "priority": 1 }
+  ]
+}
+```
+
+---
+
+### `PUT /api/supplements/brands` ✅ Implemented
+
+Save practitioner's brand preferences.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `brands` | array | Yes | Array of { brand_name, is_active, priority } |
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+**Security:** CSRF protected, audit logged.
+
+---
+
 ### `POST /api/protocols/generate` 🔲 Planned
 
 Generate treatment protocol from lab reviews, visits, or chat context.
@@ -556,10 +779,10 @@ Handle Stripe subscription events.
 
 ## Rate Limits
 
-| Tier | Chat Queries | Lab Uploads | Protocols |
-|---|---|---|---|
-| Free | 2/day | 0 | 0 |
-| Pro | Unlimited* | 100/month | 50/month |
+| Tier | Chat Queries | Lab Uploads | Supplement Reviews | Interaction Checks | Protocols |
+|---|---|---|---|---|---|
+| Free | 2/day | 0 | 5/day | 10/day | 0 |
+| Pro | Unlimited* | 100/month | 50/day | 100/day | 50/month |
 
 *Soft rate limits on Pro prevent abuse (500 queries/day warning threshold).
 
@@ -576,11 +799,14 @@ Every endpoint that accesses PHI inserts a row into `audit_logs`:
   "ip_address": "192.168.1.1",
   "user_agent": "Mozilla/5.0...",
   "detail": {
-    "model": "claude-sonnet-4-5-20250929",
+    "model": "gpt-4o",
     "input_tokens": 1250,
     "output_tokens": 890,
     "is_deep_consult": false,
-    "has_patient_context": true
+    "clinical_lens": "functional",
+    "source_filter": [],
+    "has_patient_context": true,
+    "attachment_count": 0
   }
 }
 ```

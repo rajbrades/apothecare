@@ -31,11 +31,11 @@ const phases = [
 
 export function FeatureProtocol() {
   return (
-    <section className="py-20 md:py-28 bg-[var(--color-surface-secondary)]">
+    <section className="py-12 md:py-16 bg-[var(--color-surface-secondary)]">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Mockup (left on desktop) */}
-          <ScrollReveal direction="left" className="order-2 md:order-1">
+          <ScrollReveal direction="none" className="order-2 md:order-1">
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">
               {/* Header */}
               <div className="px-5 py-4 border-b border-[var(--color-border-light)] bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-surface-secondary)]">
@@ -86,7 +86,7 @@ export function FeatureProtocol() {
           </ScrollReveal>
 
           {/* Text (right on desktop) */}
-          <ScrollReveal direction="right" className="order-1 md:order-2">
+          <ScrollReveal direction="none" className="order-1 md:order-2">
             <div>
               <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
                 <ClipboardList className="icon-feature text-[var(--color-brand-600)]" />

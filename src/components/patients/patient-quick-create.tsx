@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Plus, Loader2 } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 interface PatientQuickCreateProps {
   open: boolean;
@@ -10,10 +11,12 @@ interface PatientQuickCreateProps {
 }
 
 export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCreateProps) {
+  const trapRef = useFocusTrap(open, onClose);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState("");
   const [chiefComplaints, setChiefComplaints] = useState<string[]>([]);
@@ -69,6 +72,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
   const resetForm = () => {
     setFirstName("");
     setLastName("");
+    setTouched({});
     setDob("");
     setSex("");
     setChiefComplaints([]);
@@ -93,12 +97,16 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quick-create-title"
           className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-light)]">
-            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+            <h2 id="quick-create-title" className="text-sm font-semibold text-[var(--color-text-primary)]">
               New Patient
             </h2>
             <button
@@ -113,7 +121,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
             {error && (
-              <div className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+              <div role="alert" className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
                 {error}
               </div>
             )}
@@ -121,33 +129,44 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
             {/* Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>First Name</label>
+                <label htmlFor="pqc-first-name" className={labelClass}>First Name</label>
                 <input
+                  id="pqc-first-name"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  onBlur={() => setTouched((prev) => ({ ...prev, firstName: true }))}
                   className={inputClass}
                   placeholder="First name"
                   autoFocus
                 />
+                {touched.firstName && !firstName.trim() && !lastName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">First or last name is required</p>
+                )}
               </div>
               <div>
-                <label className={labelClass}>Last Name</label>
+                <label htmlFor="pqc-last-name" className={labelClass}>Last Name</label>
                 <input
+                  id="pqc-last-name"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  onBlur={() => setTouched((prev) => ({ ...prev, lastName: true }))}
                   className={inputClass}
                   placeholder="Last name"
                 />
+                {touched.lastName && !lastName.trim() && !firstName.trim() && (
+                  <p className="text-xs text-red-500 mt-1">First or last name is required</p>
+                )}
               </div>
             </div>
 
             {/* DOB + Sex */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Date of Birth</label>
+                <label htmlFor="pqc-dob" className={labelClass}>Date of Birth</label>
                 <input
+                  id="pqc-dob"
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
@@ -155,8 +174,9 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
                 />
               </div>
               <div>
-                <label className={labelClass}>Sex</label>
+                <label htmlFor="pqc-sex" className={labelClass}>Sex</label>
                 <select
+                  id="pqc-sex"
                   value={sex}
                   onChange={(e) => setSex(e.target.value)}
                   className={inputClass}
@@ -171,9 +191,10 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
 
             {/* Chief Complaints */}
             <div>
-              <label className={labelClass}>Chief Complaints</label>
+              <label htmlFor="pqc-complaint" className={labelClass}>Chief Complaints</label>
               <div className="flex gap-2 mb-2">
                 <input
+                  id="pqc-complaint"
                   type="text"
                   value={complaintInput}
                   onChange={(e) => setComplaintInput(e.target.value)}

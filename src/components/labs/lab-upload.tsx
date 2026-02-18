@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 
 interface PatientOption {
   id: string;
@@ -12,6 +13,7 @@ interface PatientOption {
 interface LabUploadProps {
   patients: PatientOption[];
   onUploaded: () => void;
+  defaultExpanded?: boolean;
 }
 
 const LAB_VENDORS = [
@@ -46,8 +48,8 @@ const TEST_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export function LabUpload({ patients, onUploaded }: LabUploadProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function LabUpload({ patients, onUploaded, defaultExpanded = false }: LabUploadProps) {
+  const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -101,8 +103,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
       if (fileInputRef.current) fileInputRef.current.value = "";
 
       onUploaded();
+      toast.success("Lab report uploaded — parsing starting");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -139,10 +144,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
           {/* Metadata fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="lu-patient" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 Patient (optional)
               </label>
               <select
+                id="lu-patient"
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)]"
@@ -156,10 +162,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="lu-vendor" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 Lab Vendor
               </label>
               <select
+                id="lu-vendor"
                 value={labVendor}
                 onChange={(e) => setLabVendor(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)]"
@@ -172,10 +179,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="lu-test-type" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 Test Type
               </label>
               <select
+                id="lu-test-type"
                 value={testType}
                 onChange={(e) => setTestType(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)]"
@@ -188,10 +196,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="lu-collection-date" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 Collection Date (optional)
               </label>
               <input
+                id="lu-collection-date"
                 type="date"
                 value={collectionDate}
                 onChange={(e) => setCollectionDate(e.target.value)}
@@ -201,10 +210,11 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+            <label htmlFor="lu-test-name" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
               Test Name (optional)
             </label>
             <input
+              id="lu-test-name"
               type="text"
               value={testName}
               onChange={(e) => setTestName(e.target.value)}
@@ -259,7 +269,7 @@ export function LabUpload({ patients, onUploaded }: LabUploadProps) {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+            <div role="alert" className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
             </div>

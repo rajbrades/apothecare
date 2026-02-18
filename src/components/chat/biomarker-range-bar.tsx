@@ -28,6 +28,13 @@ export interface BiomarkerData {
   note?: string;
 }
 
+export interface QualitativeData {
+  name: string;
+  result: string;
+  reference: string;
+  flagged: boolean;
+}
+
 export interface BiomarkerPanelData {
   /** Panel title (e.g. "Thyroid Panel") */
   title: string;
@@ -39,6 +46,8 @@ export interface BiomarkerPanelData {
   flagCount?: number;
   /** Individual biomarker readings */
   biomarkers: BiomarkerData[];
+  /** Qualitative results (Detected/Not Detected) */
+  qualitativeResults?: QualitativeData[];
 }
 
 const FLAG_COLORS: Record<BiomarkerFlag, string> = {
@@ -56,6 +65,29 @@ const FLAG_LABELS: Record<BiomarkerFlag, string> = {
   "out-of-range": "Out of Range",
   critical: "Critical",
 };
+
+const SUPERSCRIPT_DIGITS = ["\u2070", "\u00B9", "\u00B2", "\u00B3", "\u2074", "\u2075", "\u2076", "\u2077", "\u2078", "\u2079"];
+
+/** Formats large/small numbers in scientific notation (e.g. 275000000 → "2.75 × 10⁸") */
+function formatSciNotation(n: number): string {
+  if (n === 0) return "0";
+  const abs = Math.abs(n);
+  if (abs >= 10000 || (abs > 0 && abs < 0.01)) {
+    const exp = Math.floor(Math.log10(abs));
+    const mantissa = n / Math.pow(10, exp);
+    const mantissaStr = Number.isInteger(mantissa) ? mantissa.toString() : mantissa.toFixed(2).replace(/\.?0+$/, "");
+    const supExp = Math.abs(exp).toString().split("").map((d) => SUPERSCRIPT_DIGITS[parseInt(d)]).join("");
+    return `${mantissaStr} \u00D7 10${exp < 0 ? "\u207B" : ""}${supExp}`;
+  }
+  return typeof n === "number" && !Number.isInteger(n) ? n.toFixed(2).replace(/\.?0+$/, "") : n.toString();
+}
+
+/** Returns a directional prefix for accessibility (e.g. "↑" for high, "↓" for low, "✓" for optimal) */
+function flagPrefix(flag: BiomarkerFlag, value: number, functionalLow: number, functionalHigh: number): string {
+  if (flag === "optimal" || flag === "normal") return "\u2713";
+  const midpoint = (functionalLow + functionalHigh) / 2;
+  return value >= midpoint ? "\u2191" : "\u2193";
+}
 
 function TrendIndicator({ current, previous }: { current: number; previous: number }) {
   const diff = current - previous;
@@ -135,7 +167,7 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
             className="text-sm font-[var(--font-mono)] font-medium tabular-nums"
             style={{ color: flagColor }}
           >
-            {value} <span className="text-[11px] opacity-70">{unit}</span>
+            {formatSciNotation(value)} <span className="text-[11px] opacity-70">{unit}</span>
           </span>
           <span
             className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
@@ -144,7 +176,7 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
               backgroundColor: `color-mix(in srgb, ${flagColor} 12%, transparent)`,
             }}
           >
-            {FLAG_LABELS[flag]}
+            {flagPrefix(flag, value, functionalLow, functionalHigh)} {FLAG_LABELS[flag]}
           </span>
         </div>
       </div>
@@ -205,11 +237,11 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
       <div className="flex justify-between mt-1.5">
         <span className="text-[10px] text-[var(--color-text-muted)] font-[var(--font-mono)]">
           <span className="text-[var(--color-brand-500)]">Functional</span>{" "}
-          {functionalLow}&ndash;{functionalHigh}
+          {formatSciNotation(functionalLow)}&ndash;{formatSciNotation(functionalHigh)}
         </span>
         <span className="text-[10px] text-[var(--color-text-muted)] font-[var(--font-mono)]">
           <span className="opacity-60">Conventional</span>{" "}
-          {conventionalLow}&ndash;{conventionalHigh}
+          {formatSciNotation(conventionalLow)}&ndash;{formatSciNotation(conventionalHigh)}
         </span>
       </div>
 
@@ -233,6 +265,34 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
   );
 }
 
+function QualitativeResultRow({ item }: { item: QualitativeData }) {
+  const isNormal = !item.flagged;
+  const color = isNormal
+    ? "var(--color-biomarker-normal)"
+    : "var(--color-biomarker-out-of-range)";
+  const label = isNormal ? "Normal" : "Abnormal";
+
+  return (
+    <div className="py-2.5 border-b border-[var(--color-border-light)] last:border-0 flex items-center justify-between">
+      <span className="text-sm text-[var(--color-text-primary)]">{item.name}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-[var(--font-mono)] tabular-nums" style={{ color }}>
+          {item.result}
+        </span>
+        <span
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
+          style={{
+            color,
+            backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
+          }}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /** Full biomarker panel card for embedding in chat messages */
 interface BiomarkerPanelProps {
   panel: BiomarkerPanelData;
@@ -242,45 +302,47 @@ interface BiomarkerPanelProps {
 
 export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) {
   const [isExpanded, setIsExpanded] = useState(!compact);
+  const qualitativeFlagged = panel.qualitativeResults?.filter((q) => q.flagged).length ?? 0;
   const flaggedCount =
     panel.flagCount ??
-    panel.biomarkers.filter((b) => b.flag !== "optimal" && b.flag !== "normal").length;
+    panel.biomarkers.filter((b) => b.flag !== "optimal" && b.flag !== "normal").length + qualitativeFlagged;
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden bg-white my-3 biomarker-panel-entrance">
+    <div className="rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
       {/* Panel header */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)] flex items-center justify-between hover:bg-[var(--color-surface-tertiary)] transition-colors"
+        className="w-full px-4 py-3.5 border-b border-[var(--color-border-light)] bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] flex items-center justify-between hover:from-[var(--color-brand-100)] hover:to-[var(--color-surface-tertiary)] transition-all"
       >
-        <div className="text-left">
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
-            {panel.title}
-          </h3>
-          {(panel.labSource || panel.collectedDate) && (
-            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
-              {panel.labSource}
-              {panel.labSource && panel.collectedDate && " \u00B7 "}
-              {panel.collectedDate}
-            </p>
-          )}
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-1 h-8 rounded-full bg-[var(--color-brand-400)] flex-shrink-0" />
+          <div>
+            <h3 className="text-[13px] font-bold tracking-wide text-[var(--color-text-primary)] font-[var(--font-display)]">
+              {panel.title}
+            </h3>
+            {(panel.labSource || panel.collectedDate) && (
+              <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                {panel.labSource}
+                {panel.labSource && panel.collectedDate && " \u00B7 "}
+                {panel.collectedDate}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {flaggedCount > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--color-biomarker-borderline)]/10">
               <span className="w-2 h-2 rounded-full bg-[var(--color-biomarker-borderline)]" />
-              <span className="text-[11px] text-[var(--color-text-muted)]">
+              <span className="text-[11px] font-medium text-[var(--color-biomarker-borderline)]">
                 {flaggedCount} {flaggedCount === 1 ? "flag" : "flags"}
               </span>
             </div>
           )}
-          {compact && (
-            isExpanded ? (
-              <ChevronUp size={14} className="text-[var(--color-text-muted)]" />
-            ) : (
-              <ChevronDown size={14} className="text-[var(--color-text-muted)]" />
-            )
+          {isExpanded ? (
+            <ChevronUp size={16} className="text-[var(--color-text-muted)]" />
+          ) : (
+            <ChevronDown size={16} className="text-[var(--color-text-muted)]" />
           )}
         </div>
       </button>
@@ -288,12 +350,24 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
       {/* Biomarker rows */}
       {isExpanded && (
         <div className="px-4 py-1">
-          {panel.biomarkers.map((biomarker) => (
+          {panel.biomarkers.map((biomarker, idx) => (
             <BiomarkerRangeBar
-              key={biomarker.name}
+              key={`${biomarker.name}-${idx}`}
               biomarker={biomarker}
             />
           ))}
+
+          {/* Qualitative results */}
+          {panel.qualitativeResults && panel.qualitativeResults.length > 0 && (
+            <>
+              {panel.biomarkers.length > 0 && (
+                <div className="border-t border-[var(--color-border-light)] mt-1" />
+              )}
+              {panel.qualitativeResults.map((item, idx) => (
+                <QualitativeResultRow key={`${item.name}-${idx}`} item={item} />
+              ))}
+            </>
+          )}
 
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-3 py-2.5 border-t border-[var(--color-border-light)] mt-1">

@@ -2,6 +2,21 @@
 
 All notable changes to Apotheca will be documented in this file.
 
+## [0.10.0] - 2026-02-18
+
+### Fixed
+- **API 500 error**: Updated stale model ID `claude-sonnet-4-5-20250929` → `claude-sonnet-4-6` in both `MODELS` and `ANTHROPIC_MODELS` in `src/lib/ai/provider.ts`. Invalid model IDs cause Anthropic to return 500 (not 400). Affected: lab PDF parsing, document vision, and any deployment using Anthropic as primary provider.
+- **Citation DOI resolution**: Added a third matching pass (author-only, no year) to `resolveSingleCitation()` in `src/lib/citations/resolve.ts`. Recovers papers where the AI cited the wrong year (e.g. citing a 2018 paper as "2013"). CrossRef already scopes results by author + context keywords, so the first author match is still topically correct.
+
+### Added — Inline Evidence Quality Badges
+- **`src/lib/chat/classify-evidence.ts`**: `classifyEvidenceLevel(title)` — keyword classifier mapping paper titles to `EvidenceLevel` (meta-analysis → META, randomized/controlled trial → RCT, guideline → GUIDELINE, cohort/prospective/retrospective → COHORT, case series → CASE).
+- **`src/lib/chat/citation-meta-context.ts`**: `CitationMetaContext` — React context threading resolved citation metadata (title, authors, year, journal, DOI, evidence level) from `MessageBubble` to the markdown `a` renderer without prop drilling.
+- **CrossRef enrichment** (`src/lib/citations/resolve.ts`): `resolveSingleCitation()` returns full `CitationResolvedData` including formatted authors, journal name (`container-title`), and `evidenceLevel` classified from title.
+- **`citation_metadata` SSE event** (`src/app/api/chat/stream/route.ts`): Sent after `citations_resolved` for DOI-resolved citations only. Also populates `messages.citations` JSONB column in DB (previously always `[]`).
+- **Hook handler** (`src/hooks/use-chat.ts`): Handles `citation_metadata` event; maps to `ChatMessage.citations[]` with `citationText` as lookup key. `ChatMessage.citations` type updated with `citationText` field.
+- **`MessageBubble` context provider** (`src/components/chat/message-bubble.tsx`): `AssistantContent` builds citation map from `message.citations` via `useMemo` and wraps render in `CitationMetaContext.Provider`.
+- **Inline badge rendering** (`src/components/chat/markdown-config.tsx`): `CitationLink` component reads context. When `evidenceLevel` present, renders citation link + `EvidenceBadge` with hover/click popover (title, authors, year, journal, "View source" DOI link). Scholar-fallback citations render as plain styled links unchanged. Comparison card panels inherit context automatically.
+
 ## [0.9.0] - 2026-02-14
 
 ### Added — Lab Reports in Patient Documents

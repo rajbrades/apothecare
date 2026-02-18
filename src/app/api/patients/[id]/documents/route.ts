@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { uploadDocumentSchema, documentListQuerySchema } from "@/lib/validations/document";
 import { buildStoragePath, uploadToStorage } from "@/lib/storage/patient-documents";
 import { extractDocumentContent } from "@/lib/ai/document-extraction";
 import { validateCsrf } from "@/lib/api/csrf";
+import { sanitizeFilename } from "@/lib/sanitize";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -59,6 +61,14 @@ export async function GET(
     const { data: documents, error } = await query;
     if (error) return jsonError("Failed to fetch documents", 500);
 
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient_document",
+      detail: { patient_id: patientId, list: true, count: documents?.length || 0 },
+    });
+
     return NextResponse.json({ documents: documents || [] });
   } catch {
     return jsonError("Internal server error", 500);
@@ -76,7 +86,6 @@ export async function POST(
 
     const { id: patientId } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Unauthorized", 401);
@@ -138,7 +147,7 @@ export async function POST(
       .insert({
         practitioner_id: practitioner.id,
         patient_id: patientId,
-        file_name: file.name,
+        file_name: sanitizeFilename(file.name),
         file_size: file.size,
         file_type: file.type,
         storage_path: "", // Will update after upload
@@ -170,17 +179,12 @@ export async function POST(
       .update({ storage_path: storagePath, status: "uploaded" })
       .eq("id", document.id);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "upload",
-      resource_type: "patient_document",
-      resource_id: document.id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient_document",
+      resourceId: document.id,
       detail: { patient_id: patientId, file_name: file.name, file_size: file.size, document_type: parsed.data.document_type },
     });
 

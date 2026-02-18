@@ -20,7 +20,7 @@ export default async function PatientDetailPage({
   const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }] = await Promise.all([
     supabase
       .from("patients")
-      .select("*")
+      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, is_archived, created_at, updated_at")
       .eq("id", id)
       .eq("practitioner_id", practitioner.id)
       .single(),
@@ -40,9 +40,10 @@ export default async function PatientDetailPage({
       .limit(10),
     supabase
       .from("lab_reports")
-      .select("id, raw_file_name, raw_file_size, lab_vendor, test_type, test_name, status, error_message, created_at, collection_date")
+      .select("id, raw_file_name, raw_file_size, lab_vendor, test_type, test_name, status, error_message, is_archived, created_at, collection_date")
       .eq("patient_id", id)
       .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
       .order("created_at", { ascending: false }),
   ]);
 

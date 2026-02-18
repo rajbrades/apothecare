@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+const chatAttachmentSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().max(255),
+  size: z.number().int().max(10_485_760),
+  type: z.string().max(100),
+  storage_path: z.string().max(500),
+  extracted_text: z.string().max(15000).optional(),
+});
+
 export const chatMessageSchema = z.object({
   message: z
     .string()
@@ -16,6 +25,9 @@ export const chatMessageSchema = z.object({
     .nullable()
     .optional(),
   is_deep_consult: z.boolean().optional().default(false),
+  clinical_lens: z.enum(["functional", "conventional", "both"]).optional().default("functional"),
+  source_filter: z.array(z.string().max(50)).max(20).optional(),
+  attachments: z.array(chatAttachmentSchema).max(5).optional(),
 });
 
 export type ChatMessageInput = z.infer<typeof chatMessageSchema>;

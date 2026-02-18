@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FileText, Trash2, RefreshCcw, ExternalLink, Loader2, FlaskConical } from "lucide-react";
+import { toast } from "sonner";
 import { ExtractionStatusBadge } from "./extraction-status-badge";
 import type { LabReportItem } from "./patient-profile";
 
@@ -23,6 +24,7 @@ interface DocumentListProps {
   documents: DocumentItem[];
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
+  onLabDeleted?: (labId: string) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -60,7 +62,7 @@ function formatTestType(type: string): string {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted }: DocumentListProps) {
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reextracting, setReextracting] = useState<string | null>(null);
   const [docStatuses, setDocStatuses] = useState<Record<string, string>>({});
@@ -76,13 +78,31 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
     }
   };
 
+  const handleDeleteLab = async (labId: string) => {
+    if (!confirm("Delete this lab report and all its biomarker results? This cannot be undone.")) return;
+    setDeleting(labId);
+    try {
+      const res = await fetch(`/api/labs/${labId}`, { method: "DELETE" });
+      if (res.ok) {
+        onLabDeleted?.(labId);
+        toast.success("Lab report deleted");
+      }
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const handleReextract = async (docId: string) => {
     setReextracting(docId);
     setDocStatuses((prev) => ({ ...prev, [docId]: "extracting" }));
     try {
-      await fetch(`/api/patients/${patientId}/documents/${docId}/extract`, { method: "POST" });
-      // Start polling
+      const res = await fetch(`/api/patients/${patientId}/documents/${docId}/extract`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to start re-extraction");
+      toast.success("Re-extraction started");
       pollStatus(docId);
+    } catch {
+      toast.error("Failed to start re-extraction");
+      setDocStatuses((prev) => ({ ...prev, [docId]: "error" }));
     } finally {
       setReextracting(null);
     }
@@ -155,7 +175,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
                     <span>&middot;</span>
                     <span>{formatTestType(lab.test_type)}</span>
                     <span>&middot;</span>
-                    <span>{formatFileSize(lab.raw_file_size)}</span>
+                    {lab.raw_file_size != null && <span>{formatFileSize(lab.raw_file_size)}</span>}
                     <span>&middot;</span>
                     <span>{new Date(lab.created_at).toLocaleDateString()}</span>
                     <ExtractionStatusBadge status={mappedStatus} />
@@ -174,6 +194,14 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted 
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
+                <button
+                  onClick={() => handleDeleteLab(lab.id)}
+                  disabled={deleting === lab.id}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors disabled:opacity-50"
+                  title="Delete lab report"
+                >
+                  {deleting === lab.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
               </div>
             </div>
           );

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { updateVisitSchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -22,7 +23,7 @@ async function getAuthPractitioner(supabase: any) {
 
 // ── GET /api/visits/[id] — Fetch single visit with patient data ─────────
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -39,6 +40,14 @@ export async function GET(
       .single();
 
     if (error || !visit) return jsonError("Visit not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "visit",
+      resourceId: id,
+    });
 
     return NextResponse.json({ visit });
   } catch {
@@ -57,7 +66,6 @@ export async function PATCH(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -90,18 +98,20 @@ export async function PATCH(
 
     if (error) return jsonError("Failed to update visit", 500);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
+    let action: "update" | "sign" | "unlock" = "update";
+    if (parsed.data.status === "completed" && existing.status !== "completed") {
+      action = "sign";
+    } else if (parsed.data.status === "draft" && existing.status === "completed") {
+      action = "unlock";
+    }
 
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
-      action: "update",
-      resource_type: "visit",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
-      detail: { fields_updated: Object.keys(parsed.data) },
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action,
+      resourceType: "visit",
+      resourceId: id,
+      detail: { fields_updated: Object.keys(parsed.data), previous_status: existing.status },
     });
 
     return NextResponse.json({ visit });
@@ -121,7 +131,6 @@ export async function DELETE(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -133,17 +142,12 @@ export async function DELETE(
 
     if (error) return jsonError("Failed to archive visit", 500);
 
-    // Audit log
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "delete",
-      resource_type: "visit",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "visit",
+      resourceId: id,
     });
 
     return NextResponse.json({ success: true });

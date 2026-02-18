@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import type { DocumentType, DocumentStatus } from "@/types/database";
 
 interface DocumentUploadProps {
@@ -71,12 +72,15 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
 
       const { document } = await res.json();
       onUploaded(document);
+      toast.success("Document uploaded — extraction starting");
       setTitle("");
 
       // Reset file input
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -94,8 +98,9 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
       {/* Document type + title row */}
       <div className="flex gap-3">
         <div className="w-48">
-          <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Document Type</label>
+          <label htmlFor="du-doc-type" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Document Type</label>
           <select
+            id="du-doc-type"
             value={docType}
             onChange={(e) => setDocType(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)]"
@@ -106,8 +111,9 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
           </select>
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Title (optional)</label>
+          <label htmlFor="du-title" className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Title (optional)</label>
           <input
+            id="du-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -163,7 +169,7 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+        <div role="alert" className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>

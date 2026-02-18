@@ -1,6 +1,6 @@
 # Apotheca — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
@@ -111,12 +111,12 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 - [x] **Feature:** Drag-and-drop reordering via `@dnd-kit/core`
 - [x] **Feature:** Visit workspace wiring — `handleMatrixUpdate` persists via PATCH API
 
-## Security Hardening (Partial)
+## Security Hardening ✅ COMPLETE
 
 - [x] **Security:** CSRF protection on all 13 mutating endpoints (shared `validateCsrf()` utility)
-- [ ] **Security:** Rate limiting on AI endpoints (unbounded cost exposure)
-- [ ] **Security:** Filename sanitization on storage paths
-- [ ] **Security:** Search parameter escaping for PostgREST
+- [x] **Security:** Rate limiting on all AI endpoints (Sprint 3 — per-tier limits)
+- [x] **Security:** Filename sanitization on storage paths (Sprint 3)
+- [x] **Security:** Search parameter escaping for PostgREST (Sprint 3)
 
 ## UI/UX Scalability Task List (Ongoing)
 
@@ -127,15 +127,17 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 - [x] **Refactor:** Create reusable `DropdownMenu` component (Radix UI)
 - [x] **Refactor:** Update Sidebar & NewVisitForm to use `DropdownMenu`
 - [x] **Feature:** Implement Toast Notifications (Sonner)
-- [ ] **Refactor:** Update `PatientForm` input fields
+- [x] **Refactor:** Update `PatientForm` input fields
 
 ---
 
-## Supplement Intelligence (Core Feature)
+## Supplement Intelligence (Core Feature) — Complete (Phase 1)
 
-- [ ] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
-- [ ] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
-- [ ] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
+- [x] **Feature:** Supplement search page — searchable supplement database with AI-powered lookup
+- [x] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
+- [x] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
+- [x] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
+- [x] **Feature:** Strict brand filtering mode — Toggle between soft hints ("prioritize these brands") and strict mode ("ONLY recommend from selected brands")
 - [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
 
 ---
@@ -160,15 +162,120 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 14, 2026.
 
 ---
 
+## Sprint 7 — UX Fixes & Polish (Feb 16) ✅ COMPLETE
+
+- [x] **Fix:** Lab parsing resilience — retry logic with model fallback (Opus → Sonnet) for transient 429/529/503 errors
+- [x] **Fix:** Null unit constraint violation in biomarker results insert
+- [x] **Fix:** IFM Matrix and Protocol tabs now show saved data on page load (idle stream status was blocking render)
+- [x] **Fix:** Conversation switching — clicking sidebar conversations now loads correctly
+- [x] **Fix:** Sidebar refreshes after visit deletion
+- [x] **UI:** Lab report section titles in ALL CAPS with enhanced panel headers (accent bar, gradient, pill badges)
+- [x] **UI:** Sidebar visit labels show patient name + visit type + short date instead of generic "Visit"
+- [x] **Feature:** Citation hyperlinks — server-side CrossRef DOI resolution for clinical chat citations
+- [x] **Fix:** Citation encoding bug — `encodeURIComponent` double-encoding in Google Scholar fallback URLs
+
+---
+
+## Design & Interaction Refinements (Feb 16 Audit)
+
+- [ ] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
+- [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
+- [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
+- [ ] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
+
+---
+
+## Homepage Graphic Design Audit (Feb 18) — Issues to Address
+
+_Assessed via Playwright full-page screenshots at 1440px viewport._
+
+### High Impact
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently appears 900px below fold) — no visual anchor above the fold
+- [ ] **Design:** Reduce section vertical padding by ~35% — page is 6065px for content that fits in ~3800px; excessive dead space between every section
+- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing — currently every section is white or near-white, no visual rhythm
+- [ ] **Design:** Show a rich AI response in the demo chat mockup — currently just one question + typing indicator in a large empty white box; add actual response with citations and evidence badges
+
+### Medium Impact
+- [ ] **Design:** Fix "Built for clinical practice" feature card grid — 4 cards are stacked with huge spacing, never visible as a 2×2 grid; tighten to show full grid in one viewport
+- [ ] **Design:** Add shadow/border to testimonial cards — three cards on near-white background have no visual separation from the section
+
+### Low Impact
+- [ ] **Design:** Enlarge and bold the feature section icons — "Multi-modal lab interpretation" and "Evidence-backed protocol generation" icons are ~18px and hard to read at a glance
+- [ ] **Design:** Balance hero input microcopy — "2 free queries/day · No credit card required" is left-aligned while CTA floats right; center microcopy below the input or restructure the row
+
+---
+
+## Clinical Lens & Source Filtering ✅ COMPLETE (Phase 1)
+
+- [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both perspectives via cycling chip in chat input and dashboard
+- [x] **Feature:** Conventional lens addendum — Standard-of-care system prompt when lens is "Conventional"
+- [x] **Feature:** Comparison lens addendum — Side-by-side Conventional vs Functional format when lens is "Both"
+- [x] **Feature:** Evidence source filter UI — "Sources" chip with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
+- [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
+- [x] **Feature:** Lens and sources operate independently (no auto-sync)
+
+### Remaining Enhancements
+- [x] **Feature:** Structured Comparison Card — Client-side markdown parsing renders "Both" lens responses as a two-column visual card: blue Conventional panel, teal Functional panel, gold Clinical Synthesis. Shared markdown config, staggered entrance animations, mobile-responsive stacking. Falls back to regular markdown if structure not detected.
+
+---
+
+## Evidence Source Filtering — Phase 2 (RAG & Persistence)
+
+- [x] **Feature:** Source filter UI — "Sources" chip in chat input and dashboard search with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
+- [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
+- [ ] **Feature:** "Save as Default" — Persist practitioner's preferred source preset to `preferred_evidence_sources` column
+- [ ] **Feature:** RAG retrieval integration — Wire source filter into `search_evidence()` RPC for vector-based retrieval from `evidence_documents` / `evidence_chunks` tables
+- [ ] **Feature:** Evidence ingestion pipeline — Build document ingestion (PubMed, IFM, A4M source material) with embedding generation for RAG knowledge base
+- [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
+
+---
+
+## Sprint 8 — Biomarker Timeline & Chat Enhancements (Feb 16) ✅ COMPLETE
+
+- [x] **Feature:** Biomarker timeline API — `GET /api/patients/[id]/biomarkers/timeline` endpoint returning biomarker history grouped by code
+- [x] **Feature:** Biomarker timeline chart — Recharts line chart with functional/conventional range bands, data point click-to-navigate
+- [x] **Feature:** Patient profile "Lab Trends" tab with biomarker selector dropdown
+- [x] **Feature:** `previousValue` populated on biomarker range bars from historical data
+- [x] **Feature:** Chat file attachments — PDF/image upload (max 5 files, 10MB each), text extraction, attachment chips
+- [x] **Feature:** Chat attachment API — `POST /api/chat/attachments` with file storage and text extraction
+- [x] **DB:** Migration 008 — `chat_attachments` storage bucket
+
+---
+
+## Sprint 9 — Clinical Lens, Source Filtering, Brand Filtering (Feb 17) ✅ COMPLETE
+
+- [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both cycling chip
+- [x] **Feature:** Conventional + Comparison lens system prompt addendums in `anthropic.ts`
+- [x] **Feature:** Evidence Source Filtering — Sources chip + popover with 3 presets and 9 individual source toggles
+- [x] **Feature:** Source filter prompt addendum — restricts/prioritizes selected evidence sources in AI responses
+- [x] **Feature:** Strict brand filtering mode — toggle between soft hints and strict-only brand recommendations
+- [x] **Feature:** Dashboard search handoff — clinical lens and source filter preserved via URL params
+- [x] **Feature:** Lens and sources operate as independent controls
+
+---
+
+## Sprint 10 — Evidence Quality Badges & Bug Fixes (Feb 18) ✅ COMPLETE
+
+- [x] **Fix:** API 500 error — updated invalid model ID `claude-sonnet-4-5-20250929` → `claude-sonnet-4-6` in `MODELS` and `ANTHROPIC_MODELS` in `provider.ts`; affected lab parsing and Anthropic-primary chat
+- [x] **Fix:** Citation DOI resolution — added Pass 3 author-only match to CrossRef lookup; recovers papers where AI cited wrong year
+- [x] **Feature:** Evidence quality badges — inline `[RCT]` / `[META]` / `[COHORT]` / `[COHORT]` / `[CASE]` badges on resolved citations with hover popover (title, authors, year, journal)
+- [x] **Feature:** `classifyEvidenceLevel()` in `src/lib/chat/classify-evidence.ts` — title keyword classifier
+- [x] **Feature:** `CitationMetaContext` in `src/lib/chat/citation-meta-context.ts` — React context threading metadata from `MessageBubble` to `a` renderer
+- [x] **Feature:** `citation_metadata` SSE event — enriched metadata sent after `citations_resolved`; stored on `ChatMessage.citations`
+- [x] **Feature:** DB `messages.citations` populated — persists `citationText`, title, authors, year, DOI, `evidence_level` as JSONB
+- [x] **Feature:** Comparison card badges — `ComparisonCard` inherits citation context automatically; removed redundant `processCitations`
+
+---
+
 ## Backlog
 
-- [ ] OAuth providers (Google, Apple) for registration
+- [x] OAuth providers (Google) for registration — Apple deferred
 - [ ] Mobile responsive pass on all pages
 - [ ] PWA support for mobile practitioners
-- [ ] Error boundary components for graceful failures
+- [x] Error boundary components for graceful failures
 - [ ] Analytics integration (PostHog or Mixpanel)
 - [ ] A/B testing framework for landing page conversion
 - [ ] Accessibility audit (WCAG 2.1 AA)
-- [ ] SEO optimization — meta tags, Open Graph images, structured data
-- [ ] Rate limiting middleware (beyond daily query count)
-- [ ] Prompt injection detection layer before Claude API calls
+- [x] SEO optimization — meta tags, Open Graph images, structured data
+- [x] Rate limiting middleware (beyond daily query count) — per-endpoint, per-tier rate limiting
+- [x] Prompt injection detection layer before Claude API calls

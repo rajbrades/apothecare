@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { auditLog } from "@/lib/api/audit";
 
 /**
  * GET /api/visits/[id]/export — Generate a simple HTML-based printable document.
@@ -9,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
  * that opens in a new tab and can be printed/saved as PDF.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -39,6 +40,14 @@ export async function GET(
   if (!visit) {
     return NextResponse.json({ error: "Visit not found" }, { status: 404 });
   }
+
+  auditLog({
+    request,
+    practitionerId: practitioner.id,
+    action: "export",
+    resourceType: "visit",
+    resourceId: id,
+  });
 
   const patientName = visit.patients
     ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")

@@ -21,7 +21,7 @@ export default async function LabDetailPage({
   // Fetch lab report with ownership check
   const { data: report, error } = await supabase
     .from("lab_reports")
-    .select("*, patients(first_name, last_name, date_of_birth, sex)")
+    .select("id, practitioner_id, patient_id, visit_id, lab_vendor, test_type, test_name, collection_date, raw_file_url, raw_file_name, raw_file_size, parsed_data, status, error_message, parsing_model, parsing_confidence, created_at, updated_at, patients(first_name, last_name, date_of_birth, sex)")
     .eq("id", id)
     .eq("practitioner_id", practitioner.id)
     .single();
@@ -31,10 +31,32 @@ export default async function LabDetailPage({
   // Fetch biomarker results
   const { data: biomarkers } = await supabase
     .from("biomarker_results")
-    .select("*")
+    .select("id, biomarker_code, biomarker_name, category, value, unit, conventional_low, conventional_high, conventional_flag, functional_low, functional_high, functional_flag, interpretation, clinical_significance, collection_date")
     .eq("lab_report_id", id)
     .order("category", { ascending: true })
     .order("biomarker_name", { ascending: true });
+
+  // Build map of previous values per biomarker_code
+  let previousValues: Record<string, number> = {};
+  if (report.patient_id && report.collection_date && biomarkers && biomarkers.length > 0) {
+    const biomarkerCodes = biomarkers.map((b: any) => b.biomarker_code);
+
+    const { data: previousResults } = await supabase
+      .from("biomarker_results")
+      .select("biomarker_code, value, collection_date")
+      .eq("patient_id", report.patient_id)
+      .neq("lab_report_id", id)
+      .in("biomarker_code", biomarkerCodes)
+      .lt("collection_date", report.collection_date)
+      .order("collection_date", { ascending: false });
+
+    // Take the most recent previous value per biomarker_code
+    for (const result of previousResults || []) {
+      if (!(result.biomarker_code in previousValues)) {
+        previousValues[result.biomarker_code] = result.value;
+      }
+    }
+  }
 
   // Generate signed URL for the original PDF
   let pdfUrl: string | null = null;
@@ -51,6 +73,7 @@ export default async function LabDetailPage({
       report={report}
       biomarkers={biomarkers || []}
       pdfUrl={pdfUrl}
+      previousValues={previousValues}
     />
   );
 }

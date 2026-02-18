@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus, GripVertical, Trash2 } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
   DndContext,
   closestCenter,
@@ -86,7 +87,7 @@ function SortableFinding({ id, value, onChange, onRemove }: SortableFindingProps
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 text-sm px-2 py-1.5 border border-[var(--color-border-light)] rounded-[var(--radius-sm)] bg-white focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)]"
+        className="flex-1 text-sm px-2 py-1.5 border border-[var(--color-border-light)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)]"
         placeholder="Enter finding..."
       />
       <button
@@ -131,16 +132,6 @@ export function IFMNodeModal({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Close on Escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleSave();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [findings, severity, notes]);
-
   const handleSave = useCallback(() => {
     const filtered = findings.filter((f) => f.trim());
     onSave({
@@ -150,6 +141,8 @@ export function IFMNodeModal({
     });
     onClose();
   }, [findings, severity, notes, onSave, onClose]);
+
+  const trapRef = useFocusTrap(true, handleSave);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) handleSave();
@@ -191,11 +184,11 @@ export function IFMNodeModal({
       onClick={handleOverlayClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
     >
-      <div className="bg-white rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="ifm-node-title" className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-light)]">
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+            <h3 id="ifm-node-title" className="text-base font-semibold text-[var(--color-text-primary)]">
               {label}
             </h3>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -277,7 +270,7 @@ export function IFMNodeModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full text-sm px-3 py-2 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-white focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)] resize-none"
+              className="w-full text-sm px-3 py-2 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-500)] focus:ring-1 focus:ring-[var(--color-brand-500)] resize-none"
               placeholder="Clinical reasoning and interpretation..."
             />
           </div>

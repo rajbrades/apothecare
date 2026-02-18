@@ -37,6 +37,8 @@ export const labListQuerySchema = z.object({
     "realtime_labs", "zrt", "other",
   ]).optional(),
   patient_id: z.string().uuid().optional(),
+  search: z.string().max(200).optional(),
+  include_archived: z.coerce.boolean().optional().default(false),
 });
 
 export type LabListQuery = z.infer<typeof labListQuerySchema>;

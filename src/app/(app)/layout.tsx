@@ -36,6 +36,12 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-brand-600)] focus:text-white focus:rounded-md focus:text-sm focus:font-medium"
+      >
+        Skip to main content
+      </a>
       <Sidebar
         practitioner={{
           full_name: practitioner.full_name,
@@ -45,7 +51,7 @@ export default async function AppLayout({
         recentConversations={recentConversations}
         recentVisits={recentVisits}
       />
-      <main className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>
+      <main id="main-content" className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>
     </div>
   );
 }

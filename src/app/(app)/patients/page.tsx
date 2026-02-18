@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus, Users } from "lucide-react";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
+import { escapePostgrestPattern } from "@/lib/search";
 import { PatientListClient } from "@/components/patients/patient-list-client";
 
 export default async function PatientsPage({
@@ -28,7 +29,8 @@ export default async function PatientsPage({
     .limit(20);
 
   if (search) {
-    query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
+    const escaped = escapePostgrestPattern(search);
+    query = query.or(`first_name.ilike.%${escaped}%,last_name.ilike.%${escaped}%`);
   }
 
   const { data: patients } = await query;
@@ -39,19 +41,19 @@ export default async function PatientsPage({
     : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-6">
+    <div className="max-w-4xl mx-auto px-6 pt-12 pb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Patients</h1>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Patients</h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Manage patient profiles and clinical documents
           </p>
         </div>
         <Link
           href="/patients/new"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-4 h-4" />
           New Patient
         </Link>
       </div>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { updatePatientSchema } from "@/lib/validations/patient";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -22,7 +23,7 @@ async function getAuthPractitioner(supabase: ReturnType<typeof createClient> ext
 
 // ── GET /api/patients/[id] — Fetch single patient with document count ───
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -33,12 +34,20 @@ export async function GET(
 
     const { data: patient, error } = await supabase
       .from("patients")
-      .select("*")
+      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, is_archived, created_at, updated_at")
       .eq("id", id)
       .eq("practitioner_id", practitioner.id)
       .single();
 
     if (error || !patient) return jsonError("Patient not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "read",
+      resourceType: "patient",
+      resourceId: id,
+    });
 
     // Fetch document count
     const { count } = await supabase
@@ -63,7 +72,6 @@ export async function PATCH(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -81,16 +89,12 @@ export async function PATCH(
 
     if (error) return jsonError("Failed to update patient", 500);
 
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "update",
-      resource_type: "patient",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient",
+      resourceId: id,
       detail: { fields_updated: Object.keys(parsed.data) },
     });
 
@@ -111,7 +115,6 @@ export async function DELETE(
 
     const { id } = await params;
     const supabase = await createClient();
-    const serviceClient = createServiceClient();
     const practitioner = await getAuthPractitioner(supabase);
     if (!practitioner) return jsonError("Unauthorized", 401);
 
@@ -123,16 +126,12 @@ export async function DELETE(
 
     if (error) return jsonError("Failed to archive patient", 500);
 
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    await serviceClient.from("audit_logs").insert({
-      practitioner_id: practitioner.id,
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
       action: "delete",
-      resource_type: "patient",
-      resource_id: id,
-      ip_address: clientIp,
-      user_agent: userAgent,
+      resourceType: "patient",
+      resourceId: id,
     });
 
     return NextResponse.json({ success: true });

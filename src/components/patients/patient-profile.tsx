@@ -2,16 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
-  ArrowLeft, User, Calendar, FileText, ClipboardList,
-  Stethoscope, Upload,
+  User, Calendar, FileText, ClipboardList,
+  Stethoscope, Upload, FlaskConical, Loader2,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PreChartView } from "./pre-chart-view";
+import { LabReportCard } from "@/components/labs/lab-report-card";
 import type { Patient, PatientDocument } from "@/types/database";
+import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 
-type Tab = "overview" | "documents" | "prechart" | "visits";
+const BiomarkerTimeline = dynamic(
+  () => import("@/components/labs/biomarker-timeline").then((m) => m.BiomarkerTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
+type Tab = "overview" | "documents" | "labs" | "prechart" | "visits";
 
 interface VisitItem {
   id: string;
@@ -23,13 +38,14 @@ interface VisitItem {
 
 export interface LabReportItem {
   id: string;
-  raw_file_name: string;
-  raw_file_size: number;
-  lab_vendor: string;
-  test_type: string;
+  raw_file_name: string | null;
+  raw_file_size: number | null;
+  lab_vendor: LabVendor;
+  test_type: LabTestType;
   test_name: string | null;
-  status: string;
+  status: LabReportStatus;
   error_message: string | null;
+  is_archived?: boolean;
   created_at: string;
   collection_date: string | null;
 }
@@ -46,16 +62,19 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
-export function PatientProfile({ patient, documents: initialDocs, labReports, visits }: PatientProfileProps) {
+export function PatientProfile({ patient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [labView, setLabView] = useState<"reports" | "trends">("reports");
   const [documents, setDocuments] = useState(initialDocs);
+  const [labReports, setLabReports] = useState(initialLabs);
 
   const name = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || "Unnamed Patient";
   const age = getAge(patient.date_of_birth);
 
   const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
     { key: "overview", label: "Overview", icon: User },
-    { key: "documents", label: `Documents (${documents.length + labReports.length})`, icon: FileText },
+    { key: "documents", label: `Documents (${documents.length})`, icon: FileText },
+    { key: "labs", label: `Labs (${labReports.length})`, icon: FlaskConical },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
   ];
@@ -68,16 +87,23 @@ export function PatientProfile({ patient, documents: initialDocs, labReports, vi
     setDocuments((prev) => prev.filter((d) => d.id !== docId));
   };
 
+  const handleLabDeleted = (labId: string) => {
+    setLabReports((prev) => prev.filter((l) => l.id !== labId));
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-6">
-      {/* Header */}
-      <Link
-        href="/patients"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to patients
-      </Link>
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-4">
+        <Link
+          href="/patients"
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          Patients
+        </Link>
+        <span className="text-[var(--color-text-muted)]">&gt;</span>
+        <span className="text-[var(--color-text-primary)]">{name}</span>
+      </nav>
 
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -165,7 +191,71 @@ export function PatientProfile({ patient, documents: initialDocs, labReports, vi
               documents={documents}
               labReports={labReports}
               onDeleted={handleDocumentDeleted}
+              onLabDeleted={handleLabDeleted}
             />
+          </div>
+        )}
+
+        {activeTab === "labs" && (
+          <div className="space-y-4">
+            {/* Sub-view toggle: Reports / Trends */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 p-0.5 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)]">
+                <button
+                  onClick={() => setLabView("reports")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+                    labView === "reports"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  Reports ({labReports.length})
+                </button>
+                <button
+                  onClick={() => setLabView("trends")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+                    labView === "trends"
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  Trends
+                </button>
+              </div>
+              {labView === "reports" && (
+                <Link
+                  href={`/labs?patient_id=${patient.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload Lab
+                </Link>
+              )}
+            </div>
+
+            {labView === "reports" && (
+              <>
+                {labReports.length === 0 ? (
+                  <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
+                    No lab reports for this patient yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {labReports.map((lab) => (
+                      <LabReportCard
+                        key={lab.id}
+                        report={lab}
+                        onDelete={handleLabDeleted}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {labView === "trends" && (
+              <BiomarkerTimeline patientId={patient.id} />
+            )}
           </div>
         )}
 

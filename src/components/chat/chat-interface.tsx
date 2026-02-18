@@ -1,26 +1,52 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useChat } from "@/hooks/use-chat";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
-import { ArrowRight, Leaf, Loader2 } from "lucide-react";
+import { ArrowRight, Leaf, Loader2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
+import { ALL_SOURCE_IDS, type SourceId } from "@/lib/ai/source-filter";
+import type { ChatAttachment } from "@/types/database";
 
 export function ChatInterface() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const initialQuery = searchParams.get("q");
   const convId = searchParams.get("id");
   const initialPatientId = searchParams.get("patient_id");
   const initialDeepConsult = searchParams.get("deep_consult") === "true";
+  const initialLens = searchParams.get("clinical_lens") as "functional" | "conventional" | "both" | null;
+  const attachKey = searchParams.get("attach_key");
+  const initialSourceFilter = searchParams.get("source_filter");
 
   const [isDeepConsult, setIsDeepConsult] = useState(initialDeepConsult);
+  const [clinicalLens, setClinicalLens] = useState<"functional" | "conventional" | "both">(initialLens || "functional");
+  const [selectedSources, setSelectedSources] = useState<SourceId[]>(
+    initialSourceFilter ? initialSourceFilter.split(",") as SourceId[] : [...ALL_SOURCE_IDS]
+  );
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
+  const loadedConvIdRef = useRef<string | null>(null);
+
+  // Load attachments from sessionStorage (dashboard handoff)
+  useEffect(() => {
+    if (attachKey) {
+      try {
+        const stored = sessionStorage.getItem(attachKey);
+        if (stored) {
+          const parsed = JSON.parse(stored) as ChatAttachment[];
+          setPendingAttachments(parsed);
+          sessionStorage.removeItem(attachKey);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [attachKey]);
 
   const {
     messages,
@@ -35,11 +61,17 @@ export function ChatInterface() {
     loadConversation,
     loadMoreMessages,
     clearMessages,
+    retry,
+    retryLoadHistory,
   } = useChat({
     conversationId: convId,
     patientId: initialPatientId,
     isDeepConsult,
+    clinicalLens,
+    selectedSources,
     onConversationCreated: (id) => {
+      // Mark as loaded so the convId watcher doesn't clear+reload mid-stream
+      loadedConvIdRef.current = id;
       window.history.replaceState(null, "", `/chat?id=${id}`);
     },
   });
@@ -59,20 +91,29 @@ export function ChatInterface() {
     });
   }, [loadMoreMessages]);
 
-  // Load existing conversation
+  // Load conversation when convId changes (including switching between conversations)
   useEffect(() => {
-    if (convId && !messages.length) {
+    if (convId && convId !== loadedConvIdRef.current) {
+      loadedConvIdRef.current = convId;
+      clearMessages();
       loadConversation(convId);
+    } else if (!convId && loadedConvIdRef.current) {
+      // Navigated to new chat (no id)
+      loadedConvIdRef.current = null;
+      clearMessages();
     }
-  }, [convId, loadConversation, messages.length]);
+  }, [convId, loadConversation, clearMessages]);
 
-  // Auto-send initial query from suggested questions
+  // Auto-send initial query from suggested questions (with attachments if from dashboard)
   useEffect(() => {
     if (initialQuery && !initialQuerySentRef.current && !convId) {
+      // Wait for pending attachments to load from sessionStorage if attach_key present
+      if (attachKey && pendingAttachments.length === 0) return;
       initialQuerySentRef.current = true;
-      sendMessage(initialQuery);
+      sendMessage(initialQuery, pendingAttachments.length ? pendingAttachments : undefined);
+      setPendingAttachments([]);
     }
-  }, [initialQuery, convId, sendMessage]);
+  }, [initialQuery, convId, sendMessage, attachKey, pendingAttachments]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -108,6 +149,20 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-40px)]">
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm px-6 pt-4 pb-2">
+        <Link
+          href="/dashboard"
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          Dashboard
+        </Link>
+        <span className="text-[var(--color-text-muted)]">&gt;</span>
+        <span className="text-[var(--color-text-primary)]">
+          {conversationId ? "Conversation" : "New Chat"}
+        </span>
+      </nav>
+
       {/* Evidence banner */}
       <div className="flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
         <Leaf size={12} className="text-[var(--color-brand-500)]" />
@@ -185,17 +240,25 @@ export function ChatInterface() {
 
             {/* Error display */}
             {error && (
-              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div role="alert" className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <span className="text-red-500 text-lg">!</span>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-red-800">{error}</p>
-                  {error.includes("query limit") && (
+                  {error.includes("query limit") ? (
                     <Link
                       href="/pricing"
                       className="text-sm text-[var(--color-brand-700)] font-medium hover:underline mt-1 inline-block"
                     >
                       Upgrade to Pro for unlimited queries
                     </Link>
+                  ) : (
+                    <button
+                      onClick={error.includes("conversation history") ? retryLoadHistory : retry}
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Retry
+                    </button>
                   )}
                 </div>
               </div>
@@ -213,7 +276,15 @@ export function ChatInterface() {
         isLoading={isLoading}
         isDeepConsult={isDeepConsult}
         onToggleDeepConsult={() => setIsDeepConsult(!isDeepConsult)}
+        clinicalLens={clinicalLens}
+        onCycleClinicalLens={() => {
+          const next = clinicalLens === "functional" ? "both" : clinicalLens === "both" ? "conventional" : "functional";
+          setClinicalLens(next);
+        }}
+        selectedSources={selectedSources}
+        onChangeSources={setSelectedSources}
         queriesRemaining={queriesRemaining}
+        initialAttachments={pendingAttachments}
       />
     </div>
   );

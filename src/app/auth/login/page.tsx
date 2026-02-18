@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
+import { GoogleSignIn, OAuthDivider } from "@/components/auth/google-sign-in";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,8 +15,17 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
   const supabase = createClient();
+
+  const validateEmail = (value: string) => {
+    if (value && !EMAIL_REGEX.test(value)) {
+      setFieldErrors((prev) => ({ ...prev, email: "Please enter a valid email address" }));
+    } else {
+      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+    }
+  };
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -71,6 +83,8 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
+          <GoogleSignIn onError={setError} />
+          <OAuthDivider />
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label
@@ -83,11 +97,16 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
+                onBlur={(e) => validateEmail(e.target.value)}
                 placeholder="you@practice.com"
                 required
-                className="w-full px-4 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-400)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                aria-invalid={!!fieldErrors.email}
+                className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:ring-2 transition-all text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] ${fieldErrors.email ? "border-red-400 focus:border-red-400 focus:ring-red-100" : "border-[var(--color-border)] focus:border-[var(--color-brand-400)] focus:ring-[var(--color-brand-100)]"}`}
               />
+              {fieldErrors.email && (
+                <p role="alert" className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -118,13 +137,13 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+              <div role="alert" className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
+              <div role="status" className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-700">{success}</p>
               </div>
             )}

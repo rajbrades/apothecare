@@ -30,10 +30,10 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-20 md:py-28 bg-[var(--color-surface-secondary)]">
+    <section className="py-12 md:py-16 bg-[var(--color-surface-secondary)]">
       <div className="max-w-6xl mx-auto px-6">
         <ScrollReveal>
-          <div className="text-center mb-14">
+          <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)] mb-3">
               Trusted by practitioners
             </h2>
@@ -46,9 +46,9 @@ export function Testimonials() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <ScrollReveal key={t.name} delay={i * 100}>
-              <div className="h-full p-8 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border-light)] shadow-[var(--shadow-card)] flex flex-col">
+              <div className="h-full p-8 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] flex flex-col">
                 {/* Quote mark */}
-                <span className="text-4xl leading-none text-[var(--color-brand-200)] font-[var(--font-display)] mb-3">
+                <span className="text-4xl leading-none text-[var(--color-brand-300)] font-[var(--font-display)] mb-3">
                   &ldquo;
                 </span>
                 <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed flex-1">

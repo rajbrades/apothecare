@@ -95,9 +95,10 @@ function ProtocolItemCard({ item }: { item: ProtocolItem }) {
 interface ProtocolPanelProps {
   protocol: VisitProtocol | Record<string, unknown> | null;
   status: "idle" | "generating" | "streaming" | "complete" | "error";
+  hasSoapNote?: boolean;
 }
 
-export function ProtocolPanel({ protocol, status }: ProtocolPanelProps) {
+export function ProtocolPanel({ protocol, status, hasSoapNote = false }: ProtocolPanelProps) {
   const isGenerating = status === "generating" || status === "streaming";
 
   if (isGenerating) {
@@ -109,10 +110,14 @@ export function ProtocolPanel({ protocol, status }: ProtocolPanelProps) {
     );
   }
 
-  if (status === "idle" || !protocol) {
+  if (!protocol) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
-        <p className="text-sm">Generate a SOAP note to get protocol recommendations</p>
+        <p className="text-sm">
+          {hasSoapNote
+            ? "Protocol has not been generated yet. Regenerate the SOAP note to populate it."
+            : "Generate a SOAP note to get protocol recommendations"}
+        </p>
       </div>
     );
   }
