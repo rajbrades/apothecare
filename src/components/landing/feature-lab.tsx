@@ -132,7 +132,7 @@ function BiomarkerRow({
 
 export function FeatureLab() {
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-12 md:py-16 bg-[var(--color-surface)]">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Text */}
