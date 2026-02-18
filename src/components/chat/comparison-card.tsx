@@ -4,7 +4,6 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Stethoscope, Leaf, Scale } from "lucide-react";
 import { markdownRehypePlugins, markdownComponents } from "./markdown-config";
-import { processCitations } from "@/lib/chat/process-citations";
 import type { ComparisonSections } from "@/lib/chat/parse-comparison";
 
 interface ComparisonCardProps {
@@ -17,7 +16,7 @@ function PanelMarkdown({ content }: { content: string }) {
       rehypePlugins={markdownRehypePlugins}
       components={markdownComponents}
     >
-      {processCitations(content)}
+      {content}
     </ReactMarkdown>
   );
 }

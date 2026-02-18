@@ -185,6 +185,26 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
+## Homepage Graphic Design Audit (Feb 18) — Issues to Address
+
+_Assessed via Playwright full-page screenshots at 1440px viewport._
+
+### High Impact
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently appears 900px below fold) — no visual anchor above the fold
+- [ ] **Design:** Reduce section vertical padding by ~35% — page is 6065px for content that fits in ~3800px; excessive dead space between every section
+- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing — currently every section is white or near-white, no visual rhythm
+- [ ] **Design:** Show a rich AI response in the demo chat mockup — currently just one question + typing indicator in a large empty white box; add actual response with citations and evidence badges
+
+### Medium Impact
+- [ ] **Design:** Fix "Built for clinical practice" feature card grid — 4 cards are stacked with huge spacing, never visible as a 2×2 grid; tighten to show full grid in one viewport
+- [ ] **Design:** Add shadow/border to testimonial cards — three cards on near-white background have no visual separation from the section
+
+### Low Impact
+- [ ] **Design:** Enlarge and bold the feature section icons — "Multi-modal lab interpretation" and "Evidence-backed protocol generation" icons are ~18px and hard to read at a glance
+- [ ] **Design:** Balance hero input microcopy — "2 free queries/day · No credit card required" is left-aligned while CTA floats right; center microcopy below the input or restructure the row
+
+---
+
 ## Clinical Lens & Source Filtering ✅ COMPLETE (Phase 1)
 
 - [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both perspectives via cycling chip in chat input and dashboard
@@ -231,6 +251,19 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Strict brand filtering mode — toggle between soft hints and strict-only brand recommendations
 - [x] **Feature:** Dashboard search handoff — clinical lens and source filter preserved via URL params
 - [x] **Feature:** Lens and sources operate as independent controls
+
+---
+
+## Sprint 10 — Evidence Quality Badges & Bug Fixes (Feb 18) ✅ COMPLETE
+
+- [x] **Fix:** API 500 error — updated invalid model ID `claude-sonnet-4-5-20250929` → `claude-sonnet-4-6` in `MODELS` and `ANTHROPIC_MODELS` in `provider.ts`; affected lab parsing and Anthropic-primary chat
+- [x] **Fix:** Citation DOI resolution — added Pass 3 author-only match to CrossRef lookup; recovers papers where AI cited wrong year
+- [x] **Feature:** Evidence quality badges — inline `[RCT]` / `[META]` / `[COHORT]` / `[COHORT]` / `[CASE]` badges on resolved citations with hover popover (title, authors, year, journal)
+- [x] **Feature:** `classifyEvidenceLevel()` in `src/lib/chat/classify-evidence.ts` — title keyword classifier
+- [x] **Feature:** `CitationMetaContext` in `src/lib/chat/citation-meta-context.ts` — React context threading metadata from `MessageBubble` to `a` renderer
+- [x] **Feature:** `citation_metadata` SSE event — enriched metadata sent after `citations_resolved`; stored on `ChatMessage.citations`
+- [x] **Feature:** DB `messages.citations` populated — persists `citationText`, title, authors, year, DOI, `evidence_level` as JSONB
+- [x] **Feature:** Comparison card badges — `ComparisonCard` inherits citation context automatically; removed redundant `processCitations`
 
 ---
 

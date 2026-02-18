@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Copy, Star, Share2, FileDown } from "lucide-react";
 import { LogoAvatar } from "@/components/ui/logomark";
@@ -8,6 +8,7 @@ import { markdownRehypePlugins, markdownComponents } from "./markdown-config";
 import { ComparisonCard } from "./comparison-card";
 import { processCitations } from "@/lib/chat/process-citations";
 import { parseComparisonSections } from "@/lib/chat/parse-comparison";
+import { CitationMetaContext, type CitationMeta } from "@/lib/chat/citation-meta-context";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
@@ -39,20 +40,43 @@ function StreamingRenderer({ content }: { content: string }) {
   );
 }
 
-function AssistantContent({ content }: { content: string }) {
-  const comparison = parseComparisonSections(content);
-  if (comparison) {
-    return <ComparisonCard sections={comparison} />;
-  }
+function AssistantContent({ message }: { message: ChatMessage }) {
+  // Build citation metadata map keyed by [Author, Year] text
+  const citationMap = useMemo(() => {
+    const map = new Map<string, CitationMeta>();
+    for (const c of message.citations ?? []) {
+      if (c.citationText) {
+        map.set(c.citationText, {
+          citationText: c.citationText,
+          title: c.title,
+          authors: c.authors,
+          year: c.year,
+          doi: c.doi,
+          source: c.source,
+          evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+        });
+      }
+    }
+    return map;
+  }, [message.citations]);
+
+  const comparison = parseComparisonSections(message.content);
+
   return (
-    <div className="prose-apotheca">
-      <ReactMarkdown
-        rehypePlugins={markdownRehypePlugins}
-        components={markdownComponents}
-      >
-        {processCitations(content)}
-      </ReactMarkdown>
-    </div>
+    <CitationMetaContext.Provider value={citationMap}>
+      {comparison ? (
+        <ComparisonCard sections={comparison} />
+      ) : (
+        <div className="prose-apotheca">
+          <ReactMarkdown
+            rehypePlugins={markdownRehypePlugins}
+            components={markdownComponents}
+          >
+            {processCitations(message.content)}
+          </ReactMarkdown>
+        </div>
+      )}
+    </CitationMetaContext.Provider>
   );
 }
 
@@ -97,7 +121,7 @@ export const MessageBubble = memo(function MessageBubble({
                 <StreamingRenderer content={message.content} />
               </div>
             ) : (
-              <AssistantContent content={message.content} />
+              <AssistantContent message={message} />
             )}
 
             {/* Action bar — only show when not streaming */}

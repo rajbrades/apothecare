@@ -68,6 +68,8 @@ data: {"type":"text_delta","text":"zonulin indicates "}
 
 data: {"type":"citations_resolved","content":"...full text with DOI links..."}
 
+data: {"type":"citation_metadata","citations":[{"citationText":"Calder, 2015","url":"https://doi.org/10.1...","doi":"10.1...","title":"Omega-3 fatty acids and inflammatory...","authors":["Calder P"],"year":"2015","source":"Nutrients","evidenceLevel":"rct"}]}
+
 data: {"type":"message_complete","message_id":"msg_uuid","usage":{"input_tokens":1250,"output_tokens":890},"queries_remaining":1}
 
 data: [DONE]

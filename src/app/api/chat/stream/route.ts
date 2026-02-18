@@ -202,6 +202,7 @@ export async function POST(request: NextRequest) {
 
           // Resolve citations via CrossRef (best-effort, non-blocking on failure)
           let resolvedContent = fullContent;
+          let resolvedCitationsForDB: object[] = [];
           try {
             const citations = extractCitations(fullContent);
             if (citations.length > 0) {
@@ -214,6 +215,25 @@ export async function POST(request: NextRequest) {
                   `data: ${JSON.stringify({ type: "citations_resolved", content: resolvedContent })}\n\n`
                 )
               );
+
+              // Send citation metadata for badge rendering (only DOI-resolved citations)
+              const metadataList = [...resolvedMap.values()].filter((r) => r.doi);
+              if (metadataList.length > 0) {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "citation_metadata", citations: metadataList })}\n\n`
+                  )
+                );
+                resolvedCitationsForDB = metadataList.map((r) => ({
+                  citationText: r.citationText,
+                  title: r.title,
+                  source: r.source,
+                  authors: r.authors,
+                  year: r.year ? parseInt(r.year) : undefined,
+                  doi: r.doi,
+                  evidence_level: r.evidenceLevel,
+                }));
+              }
             }
           } catch (err) {
             console.warn("[Citations] Resolution failed, saving unresolved text:", err);
@@ -226,7 +246,7 @@ export async function POST(request: NextRequest) {
               conversation_id: convId,
               role: "assistant" as const,
               content: resolvedContent,
-              citations: [],
+              citations: resolvedCitationsForDB,
               input_tokens: usage.inputTokens,
               output_tokens: usage.outputTokens,
             })

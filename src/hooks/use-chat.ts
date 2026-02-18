@@ -10,7 +10,9 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   citations?: Array<{
-    source: string;
+    /** The [Author, Year] key used to look up metadata during rendering */
+    citationText: string;
+    source?: string;
     title: string;
     authors?: string[];
     year?: number;
@@ -158,6 +160,37 @@ export function useChat(options: UseChatOptions = {}) {
                       updated[updated.length - 1] = {
                         ...last,
                         content: event.content,
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
+
+                case "citation_metadata":
+                  // Store enriched citation metadata for evidence badge rendering
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        citations: (event.citations as Array<{
+                          citationText: string;
+                          title?: string;
+                          source?: string;
+                          authors?: string[];
+                          year?: string;
+                          doi?: string;
+                          evidenceLevel?: string;
+                        }>).map((c) => ({
+                          citationText: c.citationText,
+                          title: c.title || "",
+                          source: c.source,
+                          authors: c.authors,
+                          year: c.year ? parseInt(c.year) : undefined,
+                          doi: c.doi,
+                          evidence_level: c.evidenceLevel,
+                        })),
                       };
                     }
                     return updated;

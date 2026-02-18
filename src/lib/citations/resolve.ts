@@ -4,7 +4,13 @@
  * After the AI finishes streaming, we extract [Author, Year] citations,
  * query CrossRef to resolve each to a DOI, and replace the plain citations
  * with markdown links pointing to https://doi.org/{DOI}.
+ *
+ * Enriched metadata (title, authors, journal, evidence level) is returned
+ * alongside each resolved URL for client-side badge rendering.
  */
+
+import { classifyEvidenceLevel } from "@/lib/chat/classify-evidence";
+import type { EvidenceLevel } from "@/components/chat/evidence-badge";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -19,10 +25,31 @@ export interface ExtractedCitation {
   year: string;
 }
 
+/** Full resolved citation data returned from CrossRef (or Scholar fallback). */
+export interface CitationResolvedData {
+  /** The original [Author, Year] text, used as the lookup key */
+  citationText: string;
+  /** Resolved URL — either https://doi.org/... or a Google Scholar fallback */
+  url: string;
+  /** Raw DOI string (without https://doi.org/ prefix), only set when CrossRef matched */
+  doi?: string;
+  /** Paper title from CrossRef */
+  title?: string;
+  /** Formatted author strings, e.g. ["Sinha R", "Calcagnotto A"] */
+  authors?: string[];
+  /** Publication year from CrossRef (may differ from cited year) */
+  year?: string;
+  /** Journal / container title from CrossRef */
+  source?: string;
+  /** Evidence level inferred from the paper title */
+  evidenceLevel?: EvidenceLevel;
+}
+
 interface CrossRefItem {
   DOI: string;
   title?: string[];
   author?: Array<{ family?: string; given?: string }>;
+  "container-title"?: string[];
   published?: { "date-parts"?: number[][] };
   "published-print"?: { "date-parts"?: number[][] };
   "published-online"?: { "date-parts"?: number[][] };
@@ -136,22 +163,54 @@ function extractContextKeywords(context: string, author: string): string {
   return unique.slice(0, 5).join(" ");
 }
 
+/** Format a CrossRef author object as "Family G" */
+function formatAuthor(a: { family?: string; given?: string }): string {
+  const family = a.family || "";
+  const given = a.given ? ` ${a.given.charAt(0)}` : "";
+  return `${family}${given}`.trim();
+}
+
+/** Build enriched CitationResolvedData from a matched CrossRef item. */
+function buildResolvedData(
+  text: string,
+  item: CrossRefItem
+): CitationResolvedData {
+  const doi = item.DOI;
+  const title = item.title?.[0] || "";
+  const authors = item.author?.map(formatAuthor).filter(Boolean);
+  const source = item["container-title"]?.[0];
+  const year = getPublicationYear(item);
+  const evidenceLevel = title ? classifyEvidenceLevel(title) : undefined;
+
+  return {
+    citationText: text,
+    url: `https://doi.org/${doi}`,
+    doi,
+    title: title || undefined,
+    authors: authors?.length ? authors : undefined,
+    year: year || undefined,
+    source: source || undefined,
+    evidenceLevel,
+  };
+}
+
 /**
- * Query CrossRef for a single citation and return a resolved URL.
- * Returns a DOI URL if a good match is found, otherwise a Google Scholar fallback.
+ * Query CrossRef for a single citation and return enriched resolved data.
+ * Returns a DOI URL + metadata if a good match is found, otherwise a
+ * Google Scholar fallback URL with no metadata.
  */
 async function resolveSingleCitation(
   citation: ExtractedCitation
-): Promise<{ citationText: string; url: string }> {
+): Promise<CitationResolvedData> {
   const { text, context, author, year } = citation;
   const keywords = extractContextKeywords(context, author);
 
-  // Build CrossRef query
+  // Build CrossRef query — include container-title for journal name
   const params = new URLSearchParams({
     "query.author": author,
     "query.bibliographic": [year, keywords].filter(Boolean).join(" "),
     rows: "3",
-    select: "DOI,title,author,published,published-print,published-online",
+    select: "DOI,title,author,published,published-print,published-online,container-title",
   });
 
   const url = `${CROSSREF_BASE}?${params.toString()}`;
@@ -177,39 +236,47 @@ async function resolveSingleCitation(
     const data: CrossRefResponse = await response.json();
     const items = data.message?.items || [];
 
-    // Find best match: author name present AND year matches
+    // Pass 1 — strict: exact author family name + year matches
     for (const item of items) {
       const itemYear = getPublicationYear(item);
       const authorMatch = item.author?.some(
         (a) => a.family?.toLowerCase() === author.toLowerCase()
       );
-
       if (authorMatch && itemYear === year) {
-        return {
-          citationText: text,
-          url: `https://doi.org/${item.DOI}`,
-        };
+        return buildResolvedData(text, item);
       }
     }
 
-    // Relaxed match: just check year if author name format differs
+    // Pass 2 — relaxed: partial author name + year matches
     for (const item of items) {
       const itemYear = getPublicationYear(item);
       const authorPresent = item.author?.some((a) =>
         a.family?.toLowerCase().includes(author.toLowerCase()) ||
         author.toLowerCase().includes(a.family?.toLowerCase() || "")
       );
-
       if (authorPresent && itemYear === year) {
-        return {
-          citationText: text,
-          url: `https://doi.org/${item.DOI}`,
-        };
+        return buildResolvedData(text, item);
+      }
+    }
+
+    // Pass 3 — best-effort: author match without year requirement.
+    // Handles cases where the AI cited the wrong year (e.g. "2013" for a 2018 paper).
+    // CrossRef already filtered by author + context keywords, so the first author
+    // match is the most topically relevant paper by that author.
+    for (const item of items) {
+      const authorMatch = item.author?.some(
+        (a) => a.family?.toLowerCase() === author.toLowerCase()
+      );
+      if (authorMatch && item.DOI) {
+        return buildResolvedData(text, item);
       }
     }
   } catch (err) {
     // Log but don't throw — fall back to Scholar
-    console.warn(`[Citations] CrossRef lookup failed for "${text}":`, err instanceof Error ? err.message : err);
+    console.warn(
+      `[Citations] CrossRef lookup failed for "${text}":`,
+      err instanceof Error ? err.message : err
+    );
   }
 
   // Fallback: Google Scholar with context keywords for better results
@@ -235,22 +302,22 @@ function getPublicationYear(item: CrossRefItem): string {
 // ── Public API ─────────────────────────────────────────────────────────────
 
 /**
- * Resolve all citations in a text via CrossRef. Returns a map from
- * citation text to resolved URL (DOI or Google Scholar fallback).
+ * Resolve all citations in a text via CrossRef.
+ * Returns a map from citation text to full resolved data (URL + metadata).
  */
 export async function resolveCitations(
   citations: ExtractedCitation[]
-): Promise<Map<string, string>> {
+): Promise<Map<string, CitationResolvedData>> {
   if (citations.length === 0) return new Map();
 
   const results = await Promise.allSettled(
     citations.map((c) => resolveSingleCitation(c))
   );
 
-  const resolved = new Map<string, string>();
+  const resolved = new Map<string, CitationResolvedData>();
   for (const result of results) {
     if (result.status === "fulfilled") {
-      resolved.set(result.value.citationText, result.value.url);
+      resolved.set(result.value.citationText, result.value);
     }
   }
 
@@ -259,20 +326,20 @@ export async function resolveCitations(
 
 /**
  * Replace plain [Author, Year] citations in text with markdown links
- * using the resolved URL map.
+ * using the resolved data map.
  */
 export function applyCitationLinks(
   text: string,
-  resolvedMap: Map<string, string>
+  resolvedMap: Map<string, CitationResolvedData>
 ): string {
   if (resolvedMap.size === 0) return text;
 
   return text.replace(
     CITATION_REGEX,
     (fullMatch, citationText: string) => {
-      const url = resolvedMap.get(citationText);
-      if (url) {
-        return `[${citationText}](${url})`;
+      const data = resolvedMap.get(citationText);
+      if (data?.url) {
+        return `[${citationText}](${data.url})`;
       }
       return fullMatch;
     }

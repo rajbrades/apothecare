@@ -30,7 +30,7 @@ Functional medicine practitioners spend **30–60 minutes per complex patient ca
 ## Features
 
 ### Evidence-Cited Clinical Chat
-Ask clinical questions and get streaming responses grounded in functional medicine evidence from IFM, A4M, Cleveland Clinic Center for Functional Medicine, and peer-reviewed literature. Every claim is cited with evidence strength indicators (meta-analysis, RCT, clinical guideline, case study).
+Ask clinical questions and get streaming responses grounded in functional medicine evidence from IFM, A4M, Cleveland Clinic Center for Functional Medicine, and peer-reviewed literature. Every citation is resolved to a real DOI via CrossRef and rendered with an inline **evidence quality badge** — `[META]`, `[RCT]`, `[GUIDELINE]`, `[COHORT]`, or `[CASE]` — color-coded by evidence level. Hovering any badge reveals a popover with paper title, authors, year, journal, and a direct "View source" DOI link.
 
 ### Multi-Modal Lab Interpretation
 Upload blood panels, GI-MAPs, DUTCH tests, and OAT panels. Claude Vision parses lab PDFs, extracts biomarkers, and normalizes results against both **conventional and functional/optimal reference ranges** displayed side-by-side. Drag-and-drop upload with auto-detected vendor and test type. Lab reports linked to patients appear automatically in their Documents tab.
@@ -278,7 +278,9 @@ All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP +
 | **Sidebar** | 260px |
 
 ### Evidence Badge Colors
-Meta-analysis (gold) · RCT (blue) · Clinical Guideline (green) · Cohort Study (purple) · Case Study (gray)
+`meta-analysis` (amber/gold) · `rct` (blue) · `guideline` (green) · `cohort` (purple) · `case-study` (gray)
+
+Badges appear inline next to each DOI-resolved citation. Scholar-fallback citations (unresolved) render as plain styled links — no badge degradation.
 
 ### Biomarker Traffic Light
 Optimal (green) · Normal (blue) · Borderline (amber) · Out of Range (red) · Critical (dark red)

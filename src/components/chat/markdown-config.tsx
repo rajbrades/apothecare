@@ -1,7 +1,14 @@
+"use client";
+
+import { useContext } from "react";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { ExternalLink } from "lucide-react";
 import type { Components } from "react-markdown";
 import type { PluggableList } from "unified";
+import type { ReactNode } from "react";
+import { CitationMetaContext } from "@/lib/chat/citation-meta-context";
+import { EvidenceBadge } from "@/components/chat/evidence-badge";
+import type { EvidenceLevel } from "@/components/chat/evidence-badge";
 
 export const markdownRehypePlugins: PluggableList = [
   [
@@ -16,29 +23,81 @@ export const markdownRehypePlugins: PluggableList = [
   ],
 ];
 
-export const markdownComponents: Components = {
-  a: ({ href, children }) => {
-    const isCitation =
-      href?.includes("doi.org/") ||
-      href?.includes("scholar.google.com/scholar");
+/** Flatten React children to a plain string for citation map lookup. */
+function flattenChildren(children: ReactNode): string {
+  if (typeof children === "string") return children;
+  if (Array.isArray(children)) return children.map(flattenChildren).join("");
+  if (children != null && typeof children === "object" && "props" in children) {
+    return flattenChildren((children as { props: { children?: ReactNode } }).props.children);
+  }
+  return "";
+}
+
+function CitationLink({
+  href,
+  children,
+}: {
+  href?: string;
+  children: ReactNode;
+}) {
+  const citationMap = useContext(CitationMetaContext);
+  const citationText = flattenChildren(children);
+  const meta = citationMap.get(citationText);
+
+  const isCitation =
+    href?.includes("doi.org/") ||
+    href?.includes("scholar.google.com/scholar");
+
+  if (isCitation && meta?.evidenceLevel) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={
-          isCitation
-            ? "inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
-            : "text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline underline-offset-2 transition-colors"
-        }
-      >
-        {children}
-        {isCitation && (
+      <span className="inline-flex items-baseline gap-1">
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
+        >
+          {children}
           <ExternalLink className="inline w-3 h-3 flex-shrink-0" />
-        )}
-      </a>
+        </a>
+        <EvidenceBadge
+          citation={{
+            level: meta.evidenceLevel as EvidenceLevel,
+            title: meta.title,
+            authors: meta.authors,
+            year: meta.year,
+            source: meta.source,
+            doi: meta.doi,
+          }}
+        />
+      </span>
     );
-  },
+  }
+
+  // Plain citation (Scholar fallback, no metadata) or regular link
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={
+        isCitation
+          ? "inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
+          : "text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline underline-offset-2 transition-colors"
+      }
+    >
+      {children}
+      {isCitation && (
+        <ExternalLink className="inline w-3 h-3 flex-shrink-0" />
+      )}
+    </a>
+  );
+}
+
+export const markdownComponents: Components = {
+  a: ({ href, children }) => (
+    <CitationLink href={href}>{children}</CitationLink>
+  ),
   p: ({ children }) => (
     <p className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] mb-3 last:mb-0">
       {children}

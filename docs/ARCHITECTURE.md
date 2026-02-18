@@ -146,11 +146,14 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
        OR COMPARISON_LENS_ADDENDUM (if lens = "both")
     c. + buildSourceFilterAddendum() (if non-default source selection)
 13. Call AI provider via SSE streaming (standard or advanced model)
-14. Resolve citations via CrossRef DOI lookup (best-effort)
-15. Save user message + assistant response (with resolved citations) to messages table
-16. Insert audit_log entry (action: 'query', ip_address, user_agent,
+14. Resolve citations via CrossRef DOI lookup (3-pass: strict year+author → relaxed → author-only fallback)
+    Classify evidence level from paper title → classifyEvidenceLevel() in src/lib/chat/classify-evidence.ts
+15. Send citation_metadata SSE event (title, authors, year, journal, DOI, evidenceLevel) for DOI-resolved only
+16. Save user message + assistant response (resolved citations); messages.citations JSONB populated
+17. Insert audit_log entry (action: 'query', ip_address, user_agent,
     clinical_lens, source_filter, attachment_count)
-17. Stream response tokens to client via Server-Sent Events
+18. Stream response tokens to client via Server-Sent Events
+19. Client: hook handles citation_metadata → CitationMetaContext → inline EvidenceBadge on resolved links
 ```
 
 ### Visit Generation Flow (Current Implementation)
@@ -253,8 +256,8 @@ The AI layer uses a provider abstraction (`src/lib/ai/provider.ts`) that routes 
 |---|---|---|---|
 | Standard clinical question | OpenAI (primary) | gpt-4o | 2,048 |
 | Deep Consult (complex reasoning) | OpenAI (primary) | gpt-4o | 4,096 |
-| Lab PDF parsing | Anthropic (always) | Claude Sonnet 4.5 | 4,096 |
-| Document extraction | Anthropic (always) | Claude Sonnet 4.5 | 4,096 |
+| Lab PDF parsing | Anthropic (always) | claude-sonnet-4-6 | 4,096 |
+| Document extraction | Anthropic (always) | claude-sonnet-4-6 | 4,096 |
 | SOAP note generation | OpenAI (primary) | gpt-4o | 4,096 |
 | IFM Matrix mapping | OpenAI (primary) | gpt-4o | 3,000 |
 | Protocol generation | OpenAI (primary) | gpt-4o | 4,096 |
@@ -376,8 +379,10 @@ src/
 │   │   ├── biomarker-range-bar.tsx # Dual-range biomarker visualization
 │   │   ├── chat-input.tsx          # Input + Deep Consult + Clinical Lens + Sources + shortcuts
 │   │   ├── chat-interface.tsx      # Main chat container
-│   │   ├── evidence-badge.tsx      # Color-coded evidence level badges
-│   │   ├── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
+│   │   ├── comparison-card.tsx     # Two-column Conventional/Functional comparison card for "Both" lens
+│   │   ├── evidence-badge.tsx      # Color-coded evidence level badges with hover popover
+│   │   ├── markdown-config.tsx     # Shared ReactMarkdown components + CitationLink with evidence badge
+│   │   ├── message-bubble.tsx      # Markdown rendering + CitationMetaContext.Provider + rehype-sanitize
 │   │   └── source-filter-popover.tsx # Evidence source preset/toggle popover
 │   ├── dashboard/
 │   │   └── dashboard-search.tsx    # Search bar with Clinical Lens, Sources, Deep Consult, Attachments
@@ -446,6 +451,10 @@ src/
 │   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
 │   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
+│   ├── chat/
+│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext React context
+│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel classifier
+│   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
 │   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts
 │   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts

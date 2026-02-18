@@ -1,6 +1,6 @@
 # Apotheca — Project Summary & Handoff Document
 
-**Last updated:** February 14, 2026
+**Last updated:** February 18, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -30,7 +30,7 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 | Icons | Lucide React |
 
 **Supabase Project:** https://qcjuosldesbgqkregztn.supabase.co
-**Current Branch:** main-02-13-26
+**Current Branch:** main-02-14-26
 **Local dev:** `npm run dev` → http://localhost:3000
 
 ---
@@ -96,10 +96,13 @@ src/
 ├── components/
 │   ├── chat/
 │   │   ├── biomarker-range-bar.tsx # Dual-range biomarker visualization
-│   │   ├── chat-input.tsx          # Input bar + Deep Consult tooltip + shortcuts
+│   │   ├── chat-input.tsx          # Input bar + Deep Consult + Clinical Lens + Sources + shortcuts
 │   │   ├── chat-interface.tsx      # Main chat container
-│   │   ├── evidence-badge.tsx      # Color-coded evidence level badges
-│   │   └── message-bubble.tsx      # Markdown rendering + actions + rehype-sanitize
+│   │   ├── comparison-card.tsx     # Two-column Conventional/Functional card for "Both" lens
+│   │   ├── evidence-badge.tsx      # Color-coded evidence level badges with hover popover
+│   │   ├── markdown-config.tsx     # Shared ReactMarkdown components + CitationLink + EvidenceBadge
+│   │   ├── message-bubble.tsx      # Markdown rendering + CitationMetaContext.Provider + rehype-sanitize
+│   │   └── source-filter-popover.tsx # Evidence source preset/toggle popover
 │   ├── dashboard/
 │   │   └── dashboard-search.tsx    # Unified search across patients, visits, labs
 │   ├── landing/                    # 12 landing page components (hero, features, pricing, etc.)
@@ -145,17 +148,21 @@ src/
 │       ├── protocol-panel.tsx      # Protocol recommendations panel
 │       └── export-menu.tsx         # Visit export options
 ├── hooks/
-│   ├── use-chat.ts                 # SSE streaming hook (chat)
+│   ├── use-chat.ts                 # SSE streaming hook (chat + citation_metadata handler)
 │   ├── use-editor-dictation.ts     # Dictation + AI Scribe → editor bridge
 │   ├── use-audio-recorder.ts       # MediaRecorder wrapper
 │   ├── use-speech-recognition.ts   # Web Speech API wrapper
 │   ├── use-visit-stream.ts         # Visit generation SSE hook
+│   ├── use-supplement-review.ts    # Supplement review SSE hook
+│   ├── use-interaction-check.ts    # Interaction check SSE hook
 │   └── use-keyboard-shortcuts.ts   # Global keyboard shortcuts
 ├── lib/
 │   ├── ai/
-│   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS constant
+│   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
+│   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
+│   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts
 │   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts
 │   │   ├── transcription.ts        # OpenAI Whisper integration
 │   │   ├── clinical-summary.ts     # Patient clinical summary generation
@@ -164,7 +171,15 @@ src/
 │   │   ├── lab-parsing.ts          # Lab PDF parsing via Claude Vision
 │   │   └── lab-parsing-prompts.ts  # Lab parsing prompt templates
 │   ├── api/
-│   │   └── csrf.ts                 # Shared CSRF validation utility
+│   │   ├── audit.ts                # Shared fire-and-forget audit logging
+│   │   ├── csrf.ts                 # Shared CSRF validation utility
+│   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
+│   ├── chat/
+│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext React context
+│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel
+│   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
+│   ├── citations/
+│   │   └── resolve.ts              # CrossRef DOI resolution (3-pass) + CitationResolvedData
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
 │   ├── labs/
@@ -188,23 +203,25 @@ src/
 │       ├── visit.ts                # Visit create/update/generate schemas
 │       ├── patient.ts              # Patient create/update schemas
 │       ├── document.ts             # Document upload/extraction schemas
-│       └── lab.ts                  # Lab upload/list schemas
+│       ├── lab.ts                  # Lab upload/list schemas
+│       └── supplement.ts           # Supplement review/interaction/brand schemas
 ├── middleware.ts                    # Root middleware
 └── types/database.ts               # Supabase type definitions
 ```
 
 ---
 
-## Database Schema (14 tables, all with RLS)
+## Database Schema (16+ tables, all with RLS)
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_reports, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
+**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences
 **Evidence:** evidence_sources, evidence_embeddings
-**System:** audit_logs, usage_tracking
+**System:** audit_logs, usage_tracking, rate_limits
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migrations:** 4 applied in Supabase SQL Editor (see "Database Migrations" section below).
+**Migrations:** 8 applied in Supabase SQL Editor (see "Database Migrations" section below).
 
 ---
 
@@ -364,32 +381,70 @@ src/
 6. ✅ Applied to all 13 mutating handlers across 11 route files
 7. ✅ Replaced inline CSRF in `/api/chat/stream` with shared utility
 
+### Sprint 5-6 — Security, UX, Supplements (Feb 15-16, 2026)
+
+1. ✅ Rate limiting on all AI endpoints — `checkRateLimit()` in `src/lib/api/rate-limit.ts`
+2. ✅ Filename sanitization on storage paths
+3. ✅ Search parameter escaping for PostgREST
+4. ✅ Accessibility improvements — ARIA, focus trapping, keyboard nav
+5. ✅ Lazy TipTap loading — reduced bundle size
+6. ✅ Comprehensive audit logs on all PHI-touching routes
+7. ✅ Supplement review module — patient supplement evaluation with evidence-based recommendations
+8. ✅ Interaction safety checker — drug-supplement and supplement-supplement pairwise safety
+9. ✅ Brand formulary — practitioner preferred brands injected into protocol generation prompts
+10. ✅ Strict brand filtering mode — toggle between soft hints and strict-only recommendations
+11. ✅ Fullscript stub — placeholder button with toast for future dispensary integration
+
+### Sprint 7-8 — Labs UX, Biomarker Timeline, Chat Attachments (Feb 16, 2026)
+
+1. ✅ Lab search, archival, smart AI-generated titles
+2. ✅ Patient Labs tab — lab reports visible in patient Documents tab
+3. ✅ Biomarker timeline — Recharts line chart per biomarker with functional/conventional range bands
+4. ✅ `previousValue` trend indicators on biomarker range bars
+5. ✅ Chat file attachments — PDF/image upload (max 5 files, 10MB each), text extraction, chips
+6. ✅ CrossRef DOI resolution for citations — 3-pass matching, server-side in stream route
+
+### Sprint 9 — Clinical Lens, Source Filtering (Feb 17, 2026)
+
+1. ✅ Clinical Lens toggle — Functional / Conventional / Both cycling chip in chat and dashboard
+2. ✅ Conventional lens addendum — standard-of-care system prompt
+3. ✅ Comparison lens addendum — side-by-side format when lens = "Both"
+4. ✅ Structured Comparison Card — two-column visual card (blue Conventional, teal Functional, gold Synthesis)
+5. ✅ Evidence Source Filtering — "Sources" chip + popover with 3 presets and 9 individual toggles
+6. ✅ Source filter prompt addendum — `buildSourceFilterAddendum()` in `src/lib/ai/source-filter.ts`
+
+### Sprint 10 — Evidence Quality Badges & Bug Fixes (Feb 18, 2026)
+
+1. ✅ **Fix:** Model ID `claude-sonnet-4-5-20250929` → `claude-sonnet-4-6` in `provider.ts` (was causing Anthropic 500 errors)
+2. ✅ **Fix:** Citation DOI regression — added Pass 3 author-only match to CrossRef lookup
+3. ✅ `classifyEvidenceLevel(title)` — paper title keyword → EvidenceLevel classifier
+4. ✅ `CitationMetaContext` — React context threading citation metadata from MessageBubble to `a` renderer
+5. ✅ `citation_metadata` SSE event — enriched metadata sent after `citations_resolved`
+6. ✅ DB `messages.citations` populated — persists title, authors, year, DOI, evidence_level as JSONB
+7. ✅ Inline evidence badges — `[RCT]`, `[META]`, `[COHORT]`, `[GUIDELINE]`, `[CASE]` appear next to citation links
+8. ✅ Badge hover popover — title, authors, year, journal, "View source" DOI link
+
 ---
 
 ## What Needs To Be Done Next
 
-### Supplement Intelligence (Core Feature)
-- [ ] **Supplement review module** — evaluate current supplements against medical history, labs, clinical goals
-- [ ] **Interaction safety checker** — flag contraindications and adverse effects
-- [ ] **Brand-specific formulary** — preferred supplement brands with SKUs and dosing
-- [ ] **Fullscript integration** — dispensary connection, protocol-to-cart workflow
+### High Priority
+- [ ] **Source filter persistence** — "Save as Default" → `preferred_evidence_sources` column
+- [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
+- [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 
-### Codebase Review Fixes (from docs/CODEBASE-REVIEW.md)
-- [ ] Rate limiting on AI endpoints (Security CRITICAL)
-- [ ] Fix `select("*")` over-fetching on hot paths (Performance)
-- [ ] Install Vitest + write P0 tests (Test Coverage)
-- [ ] Parallelize visit generation AI calls (Performance)
-- [ ] Mobile sidebar drawer (Usability)
-- [ ] Accessibility pass (ARIA roles, focus trapping)
+### Homepage Design Fixes (from Playwright audit Feb 18)
+- [ ] Move chat product mockup into hero viewport — no visual anchor above fold
+- [ ] Reduce section vertical padding by ~35%
+- [ ] Add dark/teal CTA break section before pricing
+- [ ] Show rich AI response (with citations + badges) in demo chat mockup
 
 ### Backlog
-- OAuth providers (Google, Apple)
 - Mobile responsive pass
 - PWA support
-- Analytics (PostHog)
+- Analytics (PostHog or Mixpanel)
 - Accessibility audit (WCAG 2.1 AA)
-- SEO + Open Graph images
-- Prompt injection detection
+- Evidence ingestion pipeline (PubMed, IFM, A4M for RAG knowledge base)
 
 ---
 
@@ -435,21 +490,26 @@ NEXT_PUBLIC_APP_NAME=Apotheca
 
 ## Database Migrations
 
-4 migrations must be applied in order in Supabase SQL Editor:
+8 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
 3. `003_patient_documents.sql` — patient_documents table for document management
 4. `004_visit_template_content.sql` — template_content JSONB column for block editor persistence
+5. `005_rate_limits.sql` — rate_limits table + RPC for per-action, tier-aware limiting
+6. `006_supplements.sql` — 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
+7. `007_lab_enhancements.sql` — lab search, archival (is_archived), AI-generated smart titles
+8. `008_chat_attachments.sql` — chat_attachments storage bucket
 
 ## Known Issues / Gotchas
 
 1. **Supabase uses `vector` not `pgvector`** for the extension name
 2. **Service role key is new-format** (`sb_secret_...`) not JWT — use `createClient` from `@supabase/supabase-js`, not `createServerClient` from `@supabase/ssr`
-3. **Evidence badge and biomarker components exist** but are not yet wired to Claude API responses. The next step is to update the system prompt to return structured citations and render them using the `<EvidenceBadge>` component.
+3. **Anthropic model IDs** — Always use `claude-sonnet-4-6` / `claude-opus-4-6`. Dated IDs like `claude-sonnet-4-5-20250929` cause silent 500 errors (Anthropic returns 500 not 400 for unrecognized models).
 4. **AI Scribe requires OpenAI API key** — Whisper transcription uses `OPENAI_API_KEY`. Without it, the Record/AI Scribe feature will fail with "OPENAI_API_KEY is not configured".
 5. **Block editor backward compatibility** — Visits with `template_content: null` (created before the editor) fall back to the legacy textarea. New visits always use the block editor.
 6. **Web Speech API** (live dictation) only works in Chrome/Edge. Safari and Firefox have limited support.
+7. **Evidence badges only appear on DOI-resolved citations** — if CrossRef lookup fails, citations render as plain Scholar links (no badge). This is intentional — no badge degradation on unresolved citations.
 
 ---
 
