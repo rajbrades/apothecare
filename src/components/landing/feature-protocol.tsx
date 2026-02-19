@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, CheckCircle2 } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 const phases = [
@@ -31,11 +31,11 @@ const phases = [
 
 export function FeatureProtocol() {
   return (
-    <section className="py-12 md:py-16 bg-[var(--color-surface-secondary)]">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+    <section className="py-20 md:py-28">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Mockup (left on desktop) */}
-          <ScrollReveal direction="none" className="order-2 md:order-1">
+          <ScrollReveal direction="none" className="order-2 lg:order-1">
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)]">
               {/* Header */}
               <div className="px-5 py-4 border-b border-[var(--color-border-light)] bg-gradient-to-r from-[var(--color-gold-50)] to-[var(--color-surface-secondary)]">
@@ -59,7 +59,7 @@ export function FeatureProtocol() {
                         {phase.timeline}
                       </span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 pl-3 border-l-2 border-[var(--color-brand-200)]">
                       {phase.items.map((item) => (
                         <div
                           key={item.supplement}
@@ -86,30 +86,30 @@ export function FeatureProtocol() {
           </ScrollReveal>
 
           {/* Text (right on desktop) */}
-          <ScrollReveal direction="none" className="order-1 md:order-2">
-            <div>
-              <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
-                <ClipboardList className="icon-feature text-[var(--color-brand-600)]" />
+          <ScrollReveal direction="none" className="order-1 lg:order-2">
+            <div className="space-y-6">
+              <div className="w-11 h-11 rounded-xl bg-[var(--color-brand-50)] flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-[var(--color-brand-600)]" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--color-text-primary)]">
                 Evidence-backed protocol generation
               </h2>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
+              <p className="text-lg text-[var(--color-text-secondary)] leading-relaxed">
                 Generate phased treatment protocols with supplement dosing, dietary interventions,
                 and lifestyle recommendations — every line item backed by a cited evidence source.
               </p>
-              <ul className="space-y-3 text-sm text-[var(--color-text-secondary)]">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Phased protocols following the 5R framework
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Phased protocols following the 5R framework</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Evidence-level badges on every recommendation
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Evidence-level badges on every recommendation</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Dosing in clinical notation (TID, BID, QD)
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Dosing in clinical notation (TID, BID, QD)</span>
                 </li>
               </ul>
             </div>

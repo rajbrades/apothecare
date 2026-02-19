@@ -6,7 +6,6 @@ import { FeatureLab } from "@/components/landing/feature-lab";
 import { FeatureProtocol } from "@/components/landing/feature-protocol";
 import { FeaturesGrid } from "@/components/landing/features-grid";
 import { Testimonials } from "@/components/landing/testimonials";
-import { CtaBreak } from "@/components/landing/cta-break";
 import { Pricing } from "@/components/landing/pricing";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Footer } from "@/components/landing/footer";
@@ -19,11 +18,10 @@ export default function HomePage() {
         <Hero />
         <ChatMockup />
         <TrustLogos />
+        <FeaturesGrid />
         <FeatureLab />
         <FeatureProtocol />
-        <FeaturesGrid />
         <Testimonials />
-        <CtaBreak />
         <Pricing />
         <FinalCta />
       </main>

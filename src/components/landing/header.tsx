@@ -6,6 +6,26 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-surface)]/80 backdrop-blur-md border-b border-[var(--color-border-light)]">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Logomark size="sm" withText />
+        <nav className="hidden sm:flex items-center gap-6">
+          <a
+            href="#features"
+            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            Features
+          </a>
+          <a
+            href="#pricing"
+            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            Pricing
+          </a>
+          <a
+            href="#about"
+            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            About
+          </a>
+        </nav>
         <div className="flex items-center gap-4">
           <Link
             href="/auth/login"

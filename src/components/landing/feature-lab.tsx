@@ -1,4 +1,4 @@
-import { Dna } from "lucide-react";
+import { Dna, CheckCircle2 } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 const biomarkers = [
@@ -132,35 +132,35 @@ function BiomarkerRow({
 
 export function FeatureLab() {
   return (
-    <section className="py-12 md:py-16 bg-[var(--color-surface)]">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+    <section className="bg-[var(--color-surface-secondary)] py-20 md:py-28">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text */}
           <ScrollReveal direction="none">
-            <div>
-              <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4">
-                <Dna className="icon-feature text-[var(--color-brand-600)]" />
+            <div className="space-y-6">
+              <div className="w-11 h-11 rounded-xl bg-[var(--color-brand-50)] flex items-center justify-center">
+                <Dna className="w-5 h-5 text-[var(--color-brand-600)]" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--color-text-primary)]">
                 Multi-modal lab interpretation
               </h2>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
+              <p className="text-lg text-[var(--color-text-secondary)] leading-relaxed">
                 Upload blood panels, GI-MAPs, DUTCH tests, and OATs. Apotheca parses, interprets,
                 and correlates findings across all labs — with both conventional and functional
                 ranges side by side.
               </p>
-              <ul className="space-y-3 text-sm text-[var(--color-text-secondary)]">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Functional ranges catch subclinical dysfunction early
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Functional ranges catch subclinical dysfunction early</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Cross-lab pattern recognition across all test types
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Cross-lab pattern recognition across all test types</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] mt-2 flex-shrink-0" />
-                  Visual biomarker bars with color-coded status
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0 mt-0.5" />
+                  <span className="text-[var(--color-text-secondary)]">Visual biomarker bars with color-coded status</span>
                 </li>
               </ul>
             </div>

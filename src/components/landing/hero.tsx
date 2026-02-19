@@ -1,81 +1,86 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 export function Hero() {
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-16 sm:pb-20 text-center">
-      <ScrollReveal>
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)] text-sm mb-8">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-brand-500)]" />
-          Evidence partnerships with A4M, IFM, Cleveland Clinic & more
-        </div>
-      </ScrollReveal>
+    <section className="relative">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 md:py-28 lg:py-32">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center space-y-8">
+            <ScrollReveal>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-200)]">
+                <Sparkles className="w-3 h-3 text-[var(--color-brand-600)]" />
+                <span className="text-xs font-medium text-[var(--color-text-primary)]">Trusted by 2,000+ functional medicine practitioners</span>
+              </div>
+            </ScrollReveal>
 
-      <ScrollReveal delay={100}>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[var(--color-text-primary)] leading-tight mb-6">
-          Clinical intelligence for{" "}
-          <span className="text-[var(--color-brand-600)]">functional medicine</span>
-        </h1>
-      </ScrollReveal>
+            <ScrollReveal delay={100}>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--color-text-primary)] text-balance leading-[1.1]">
+                Clinical intelligence for{" "}
+                <span className="text-[var(--color-brand-600)]">functional medicine</span>
+              </h1>
+            </ScrollReveal>
 
-      <ScrollReveal delay={200}>
-        <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto mb-12 leading-relaxed">
-          AI-powered evidence synthesis, multi-modal lab interpretation, and protocol
-          generation — grounded in functional medicine research. Built for the practitioners
-          who think differently about health.
-        </p>
-      </ScrollReveal>
+            <ScrollReveal delay={200}>
+              <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto text-balance leading-relaxed">
+                Evidence-based answers in seconds. Multi-modal lab interpretation. Protocol generation with cited research&mdash;all grounded in functional medicine.
+              </p>
+            </ScrollReveal>
 
-      <ScrollReveal delay={300}>
-        <div className="max-w-2xl mx-auto">
-          <div className="relative container-elevated p-2">
-            <input
-              type="text"
-              placeholder="Ask a clinical question..."
-              className="w-full px-4 py-3 text-lg bg-transparent outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-              readOnly
-            />
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 pb-3">
-              <span className="text-xs text-[var(--color-text-muted)]">
-                2 free queries/day · No credit card required
-              </span>
-              <Link
-                href="/auth/register"
-                className="w-full sm:w-auto text-center px-5 py-2 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors"
-              >
-                Start Free &rarr;
-              </Link>
-            </div>
+            <ScrollReveal delay={300}>
+              <div className="pt-4">
+                <div className="relative w-full max-w-xl mx-auto">
+                  <input
+                    type="text"
+                    placeholder="Ask a clinical question..."
+                    className="w-full h-14 px-6 pr-32 rounded-lg border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-base outline-none focus:border-[var(--color-brand-600)] transition-colors text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                    readOnly
+                  />
+                  <Link
+                    href="/auth/register"
+                    className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 px-5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-md hover:bg-[var(--color-brand-700)] transition-colors"
+                  >
+                    Start <ArrowRight className="w-4 h-4 ml-1.5" />
+                  </Link>
+                </div>
+                <p className="text-sm text-[var(--color-text-muted)] mt-4">
+                  2 free queries daily &middot; No credit card required
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={400}>
+              <div className="grid grid-cols-3 gap-3 pt-6 max-w-2xl mx-auto">
+                {[
+                  "Berberine vs. metformin for insulin resistance?",
+                  "Interpret elevated zonulin with low sIgA",
+                  "DUTCH test: high cortisol metabolites protocol",
+                ].map((q) => (
+                  <Link
+                    key={q}
+                    href="/auth/register"
+                    className="px-4 py-2.5 text-sm font-medium text-center text-[var(--color-text-secondary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border)] hover:shadow-sm border border-[var(--color-border-light)] rounded-lg transition-all duration-200"
+                  >
+                    {q}
+                  </Link>
+                ))}
+              </div>
+            </ScrollReveal>
           </div>
         </div>
-      </ScrollReveal>
 
-      <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mt-6">
-        {[
-          "Berberine vs. metformin for insulin resistance?",
-          "Interpret elevated zonulin with low sIgA",
-          "DUTCH test: high cortisol metabolites protocol",
-        ].map((q, i) => (
-          <ScrollReveal key={q} delay={400 + i * 100} className="flex-1">
-            <Link
-              href="/auth/register"
-              className="block px-4 py-3 text-sm text-left text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all"
-            >
-              {q}
-            </Link>
-          </ScrollReveal>
-        ))}
+        {/* Scroll cue */}
+        <div className="text-center mt-12">
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">See it in action</p>
+          <svg className="w-5 h-5 text-[var(--color-brand-600)] animate-bounce mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
       </div>
 
-      {/* Scroll cue */}
-      <div className="flex flex-col items-center gap-1.5 mt-10">
-        <span className="text-xs text-[var(--color-text-secondary)] tracking-wide">See it in action</span>
-        <ChevronDown
-          className="w-5 h-5 text-[var(--color-brand-500)] animate-bounce"
-          strokeWidth={2}
-        />
-      </div>
+      {/* Subtle gradient overlay at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-surface-secondary)]/20 to-transparent pointer-events-none" />
     </section>
   );
 }

@@ -1,106 +1,120 @@
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 export function Pricing() {
   return (
-    <section className="py-12 md:py-16">
-      <div className="max-w-3xl mx-auto px-6">
+    <section id="pricing" className="py-20 md:py-28">
+      <div className="max-w-5xl mx-auto px-6 lg:px-8">
         <ScrollReveal>
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-[var(--color-text-primary)] mb-3 font-[var(--font-display)]">
-            Simple, transparent pricing
-          </h2>
-          <p className="text-center text-[var(--color-text-secondary)] mb-12">
-            Start free. Upgrade when you&apos;re ready.
-          </p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[var(--color-text-primary)] mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-lg text-[var(--color-text-secondary)]">
+              Start free. Upgrade when you&apos;re ready.
+            </p>
+          </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Free */}
           <ScrollReveal delay={0}>
-            <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Free</h3>
-              <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                Try Apotheca risk-free
-              </p>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4 font-[var(--font-mono)]">$0</p>
-              <ul className="mt-6 space-y-3 text-sm">
-                {[
-                  { text: "2 clinical queries per day", included: true },
-                  { text: "PubMed evidence sources", included: true },
-                  { text: "Basic citation expansion", included: true },
-                  { text: "7-day conversation history", included: true },
-                  { text: "Lab interpretation", included: false },
-                  { text: "Visit documentation", included: false },
-                  { text: "Protocol generation", included: false },
-                ].map((item) => (
-                  <li
-                    key={item.text}
-                    className={`flex items-center gap-2.5 ${
-                      item.included
-                        ? "text-[var(--color-text-secondary)]"
-                        : "text-[var(--color-text-muted)]"
-                    }`}
-                  >
-                    {item.included ? (
-                      <Check className="icon-inline text-[var(--color-brand-500)] flex-shrink-0" />
-                    ) : (
-                      <X className="icon-inline text-[var(--color-text-muted)] flex-shrink-0" />
-                    )}
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/auth/register"
-                className="block text-center mt-8 px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-secondary)] transition-colors"
-              >
-                Get Started
-              </Link>
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Free</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Try Apotheca risk-free
+                  </p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-bold text-[var(--color-text-primary)]">$0</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    { text: "2 clinical queries per day", included: true },
+                    { text: "PubMed evidence sources", included: true },
+                    { text: "Basic citation expansion", included: true },
+                    { text: "7-day conversation history", included: true },
+                    { text: "Lab interpretation", included: false },
+                    { text: "Visit documentation", included: false },
+                    { text: "Protocol generation", included: false },
+                  ].map((item) => (
+                    <li
+                      key={item.text}
+                      className={`flex items-start gap-3 text-sm ${
+                        item.included
+                          ? ""
+                          : "text-[var(--color-text-muted)]"
+                      }`}
+                    >
+                      {item.included ? (
+                        <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0" />
+                      ) : (
+                        <span className="w-5 h-5 flex items-center justify-center text-[var(--color-text-muted)] flex-shrink-0">
+                          &#x2715;
+                        </span>
+                      )}
+                      <span className={item.included ? "" : "line-through"}>
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/auth/register"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-secondary)] transition-colors"
+                >
+                  Get Started
+                </Link>
+              </div>
             </div>
           </ScrollReveal>
 
           {/* Pro */}
           <ScrollReveal delay={100}>
-            <div className="h-full p-8 rounded-[var(--radius-lg)] border-2 border-[var(--color-brand-500)] bg-[var(--color-surface)] shadow-[var(--shadow-elevated)] relative">
-              <div className="absolute -top-3 left-6 px-3 py-0.5 bg-[var(--color-brand-600)] text-white text-xs font-medium rounded-full">
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border-2 border-[var(--color-brand-500)] bg-[var(--color-surface)] relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[var(--color-brand-600)] text-white text-xs font-medium rounded-full">
                 Most Popular
               </div>
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Pro</h3>
-              <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                Everything you need in practice
-              </p>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-4 font-[var(--font-mono)]">
-                $89
-                <span className="text-base font-normal text-[var(--color-text-tertiary)]">
-                  /mo
-                </span>
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-[var(--color-text-secondary)]">
-                {[
-                  "Unlimited clinical queries",
-                  "All evidence sources (A4M, IFM, premium)",
-                  "Full citation expansion + evidence badges",
-                  "Unlimited visit documentation + SOAP notes",
-                  "Multi-modal lab interpretation",
-                  "Cross-lab correlation analysis",
-                  "Protocol generation with dosing",
-                  "Patient management + trending",
-                  "Branded PDF exports",
-                  "HIPAA BAA included",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5">
-                    <Check className="icon-inline text-[var(--color-brand-500)] flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/auth/register?plan=pro"
-                className="block text-center mt-8 px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
-              >
-                Start Free Trial &rarr;
-              </Link>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Pro</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Everything you need in practice
+                  </p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-bold text-[var(--color-text-primary)]">$89</span>
+                  <span className="text-[var(--color-text-tertiary)]">/mo</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "Unlimited clinical queries",
+                    "All evidence sources (A4M, IFM, premium)",
+                    "Full citation expansion + evidence badges",
+                    "Unlimited visit documentation + SOAP notes",
+                    "Multi-modal lab interpretation",
+                    "Cross-lab correlation analysis",
+                    "Protocol generation with dosing",
+                    "Patient management + trending",
+                    "Branded PDF exports",
+                    "HIPAA BAA included",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm">
+                      <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/auth/register?plan=pro"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
+                >
+                  Start Free Trial &rarr;
+                </Link>
+              </div>
             </div>
           </ScrollReveal>
         </div>

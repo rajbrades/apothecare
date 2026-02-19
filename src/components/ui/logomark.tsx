@@ -66,7 +66,7 @@ export function Logomark({ size = "md", withText = false, className = "" }: Logo
           className="fill-white"
           fontSize="36"
           fontWeight="700"
-          fontFamily="var(--font-display), ui-serif, Georgia, serif"
+          fontFamily="var(--font-body), system-ui, sans-serif"
         >
           A
         </text>
@@ -74,7 +74,7 @@ export function Logomark({ size = "md", withText = false, className = "" }: Logo
 
       {withText && (
         <span
-          className={`font-semibold text-[var(--color-text-primary)] font-[var(--font-display)] ${TEXT_SIZES[size]}`}
+          className={`font-semibold tracking-tight text-[var(--color-text-primary)] ${TEXT_SIZES[size]}`}
         >
           Apotheca
         </span>
@@ -116,7 +116,7 @@ export function LogoAvatar({ size = 32, className = "" }: LogoAvatarProps) {
           fill="white"
           fontSize="44"
           fontWeight="700"
-          fontFamily="var(--font-display), ui-serif, Georgia, serif"
+          fontFamily="var(--font-body), system-ui, sans-serif"
         >
           A
         </text>
