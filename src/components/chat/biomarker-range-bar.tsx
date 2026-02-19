@@ -298,9 +298,11 @@ interface BiomarkerPanelProps {
   panel: BiomarkerPanelData;
   /** Compact mode for inline display */
   compact?: boolean;
+  /** Optional id for scroll-to-panel navigation */
+  id?: string;
 }
 
-export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) {
+export function BiomarkerPanel({ panel, compact = false, id }: BiomarkerPanelProps) {
   const [isExpanded, setIsExpanded] = useState(!compact);
   const qualitativeFlagged = panel.qualitativeResults?.filter((q) => q.flagged).length ?? 0;
   const flaggedCount =
@@ -308,7 +310,7 @@ export function BiomarkerPanel({ panel, compact = false }: BiomarkerPanelProps) 
     panel.biomarkers.filter((b) => b.flag !== "optimal" && b.flag !== "normal").length + qualitativeFlagged;
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
+    <div id={id} className="rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden bg-[var(--color-surface)] my-3 biomarker-panel-entrance">
       {/* Panel header */}
       <button
         type="button"

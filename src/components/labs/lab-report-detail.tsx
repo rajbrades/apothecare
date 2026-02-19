@@ -80,6 +80,12 @@ function formatDate(dateStr: string): string {
 
 const MAX_TITLE_LENGTH = 80;
 
+/** Convert a panel title to a DOM-safe id slug. */
+function slugifyPanel(title: string): string {
+  return "panel-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+
 /** Split a long semicolon-delimited test name into a short title + panel list */
 function parseTestName(testName: string | null): { shortName: string; panels: string[] | null } {
   if (!testName) return { shortName: "Lab Report", panels: null };
@@ -342,7 +348,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
     : null;
 
   const vendorLabel = VENDOR_LABELS[report.lab_vendor] || report.lab_vendor;
-  const { shortName: displayName, panels: testPanels } = parseTestName(report.test_name);
+  const { shortName: displayName } = parseTestName(report.test_name);
   const [panelsExpanded, setPanelsExpanded] = useState(false);
 
   const isGiMap = report.lab_vendor === "diagnostic_solutions";
@@ -380,24 +386,29 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               {report.collection_date && ` \u00B7 ${formatDate(report.collection_date)}`}
               {patientName && ` \u00B7 ${patientName}`}
             </p>
-            {testPanels && (
+            {panels.length > 1 && (
               <div className="mt-2">
                 <button
                   onClick={() => setPanelsExpanded(!panelsExpanded)}
                   className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
                 >
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${panelsExpanded ? "rotate-180" : ""}`} />
-                  {testPanels.length} panels included
+                  {panels.length} panels included
                 </button>
                 {panelsExpanded && (
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {testPanels.map((panel, i) => (
-                      <span
+                    {panels.map((p, i) => (
+                      <button
                         key={i}
-                        className="px-2 py-0.5 text-xs bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border-light)]"
+                        type="button"
+                        onClick={() => {
+                          const el = document.getElementById(slugifyPanel(p.title));
+                          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                        className="px-2 py-0.5 text-xs bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:border-[var(--color-brand-200)] hover:text-[var(--color-brand-700)] transition-colors cursor-pointer"
                       >
-                        {panel}
-                      </span>
+                        {p.title}
+                      </button>
                     ))}
                   </div>
                 )}
@@ -489,7 +500,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
       {report.status === "complete" && panels.length > 0 && (
         <div className="space-y-4">
           {panels.map((panel, idx) => (
-            <BiomarkerPanel key={`${panel.title}-${idx}`} panel={panel} />
+            <BiomarkerPanel key={`${panel.title}-${idx}`} panel={panel} id={slugifyPanel(panel.title)} />
           ))}
         </div>
       )}
