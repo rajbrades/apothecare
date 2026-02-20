@@ -250,7 +250,7 @@ export function BiomarkerRangeBar({ biomarker, animate = true }: BiomarkerRangeB
         <button
           type="button"
           onClick={() => setShowNote(!showNote)}
-          className="flex items-center gap-1 mt-1.5 text-[11px] text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+          className="flex items-center gap-1 mt-1.5 text-[11px] text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
         >
           {showNote ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
           Clinical note

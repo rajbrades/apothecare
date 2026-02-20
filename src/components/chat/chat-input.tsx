@@ -244,7 +244,7 @@ export function ChatInput({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors disabled:opacity-50 ${
                   clinicalLens !== "functional"
                     ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
-                    : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-700)] hover:border-[var(--color-brand-200)]"
+                    : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-500)] hover:border-[var(--color-brand-200)]"
                 }`}
               >
                 <Stethoscope className="icon-inline" />
@@ -263,7 +263,7 @@ export function ChatInput({
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors disabled:opacity-50 ${
                     !isDefaultSelection(selectedSources)
                       ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
-                      : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-700)] hover:border-[var(--color-brand-200)]"
+                      : "text-[var(--color-text-muted)] border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-500)] hover:border-[var(--color-brand-200)]"
                   }`}
                 >
                   <BookOpen className="icon-inline" />
@@ -358,7 +358,7 @@ export function ChatInput({
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim() || disabled}
-                className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Send message (Enter)"
               >
                 <Send className="icon-inline" stroke="white" />

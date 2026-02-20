@@ -249,7 +249,7 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
                 setShowArchived(false);
                 setTimeout(() => applyFilters(), 0);
               }}
-              className="mt-2 text-sm font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+              className="mt-2 text-sm font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
             >
               Clear filters
             </button>

@@ -31,7 +31,7 @@ const phases = [
 
 export function FeatureProtocol() {
   return (
-    <section className="py-20 md:py-28">
+    <section className="py-12 md:py-16 bg-[var(--color-surface-secondary)]">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Mockup (left on desktop) */}
@@ -59,7 +59,7 @@ export function FeatureProtocol() {
                         {phase.timeline}
                       </span>
                     </div>
-                    <div className="space-y-2 pl-3 border-l-2 border-[var(--color-brand-200)]">
+                    <div className="space-y-2">
                       {phase.items.map((item) => (
                         <div
                           key={item.supplement}

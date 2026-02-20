@@ -4,7 +4,7 @@ import { ScrollReveal } from "./scroll-reveal";
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-20 md:py-28">
+    <section id="pricing" className="bg-[#FCFCFC] py-20 md:py-28">
       <div className="max-w-5xl mx-auto px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-16">
@@ -21,7 +21,7 @@ export function Pricing() {
           {/* Free */}
           <ScrollReveal delay={0}>
             <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div className="space-y-6">
+              <div className="flex flex-col h-full space-y-6">
                 <div>
                   <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Free</h3>
                   <p className="text-sm text-[var(--color-text-secondary)]">
@@ -31,7 +31,7 @@ export function Pricing() {
                 <div className="flex items-baseline gap-1">
                   <span className="text-5xl font-bold text-[var(--color-text-primary)]">$0</span>
                 </div>
-                <ul className="space-y-3">
+                <ul className="space-y-3 flex-1">
                   {[
                     { text: "2 clinical queries per day", included: true },
                     { text: "PubMed evidence sources", included: true },
@@ -64,7 +64,7 @@ export function Pricing() {
                 </ul>
                 <Link
                   href="/auth/register"
-                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-secondary)] transition-colors"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-tertiary)] transition-colors"
                 >
                   Get Started
                 </Link>
@@ -78,7 +78,7 @@ export function Pricing() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[var(--color-brand-600)] text-white text-xs font-medium rounded-full">
                 Most Popular
               </div>
-              <div className="space-y-6">
+              <div className="flex flex-col h-full space-y-6">
                 <div>
                   <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Pro</h3>
                   <p className="text-sm text-[var(--color-text-secondary)]">
@@ -89,7 +89,7 @@ export function Pricing() {
                   <span className="text-5xl font-bold text-[var(--color-text-primary)]">$89</span>
                   <span className="text-[var(--color-text-tertiary)]">/mo</span>
                 </div>
-                <ul className="space-y-3">
+                <ul className="space-y-3 flex-1">
                   {[
                     "Unlimited clinical queries",
                     "All evidence sources (A4M, IFM, premium)",
@@ -110,7 +110,7 @@ export function Pricing() {
                 </ul>
                 <Link
                   href="/auth/register?plan=pro"
-                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-700)] transition-colors"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-500)] transition-colors"
                 >
                   Start Free Trial &rarr;
                 </Link>

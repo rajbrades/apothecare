@@ -136,7 +136,7 @@ export function ConversationEntry({
                 <button
                     onClick={handleRenameSubmit}
                     disabled={loading}
-                    className="p-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+                    className="p-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
                     title="Save"
                 >
                     <Check size={14} />

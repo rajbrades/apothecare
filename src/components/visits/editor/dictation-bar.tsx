@@ -157,7 +157,7 @@ export function DictationBar({
                   type="button"
                   onClick={startRecording}
                   disabled={disabled}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   AI Scribe
@@ -195,7 +195,7 @@ export function DictationBar({
             <button
               type="button"
               onClick={scribeRecording}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-700)] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-500)] transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
               Process with AI Scribe

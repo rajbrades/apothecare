@@ -152,7 +152,7 @@ export function HeroChatDemo() {
     <Link href="/auth/register" className="block group">
       <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)] group-hover:shadow-[var(--shadow-modal)] transition-shadow">
         {/* Window chrome */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-light)] bg-[#F5F5F5]">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-[var(--color-border)]" />
             <div className="w-3 h-3 rounded-full bg-[var(--color-border)]" />

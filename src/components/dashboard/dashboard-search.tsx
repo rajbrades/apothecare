@@ -191,7 +191,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
               clinicalLens !== "functional"
                 ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
-                : "text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-700)] hover:border-[var(--color-brand-200)]"
+                : "text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-brand-50)] hover:text-[var(--color-brand-500)] hover:border-[var(--color-brand-200)]"
             }`}
           >
             <Stethoscope className="w-3 h-3" />
@@ -249,7 +249,7 @@ export function DashboardSearch({ patients }: DashboardSearchProps) {
           <button
             type="submit"
             disabled={!query.trim()}
-            className="ml-auto w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="ml-auto w-9 h-9 rounded-full bg-[var(--color-brand-600)] flex items-center justify-center hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Search className="w-4 h-4" stroke="white" />
           </button>

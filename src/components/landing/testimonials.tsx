@@ -30,7 +30,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="bg-[var(--color-surface-secondary)] py-20 md:py-28">
+    <section className="bg-[#FAFAFA] py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-16">

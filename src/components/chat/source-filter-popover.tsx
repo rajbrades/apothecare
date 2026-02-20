@@ -91,7 +91,7 @@ export function SourceFilterPopover({
               className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                 activePreset?.id === preset.id
                   ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-300)]"
-                  : "text-[var(--color-text-secondary)] border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-700)]"
+                  : "text-[var(--color-text-secondary)] border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-500)]"
               }`}
               title={preset.description}
             >

@@ -5,7 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList,
-  Stethoscope, Upload, FlaskConical, Loader2,
+  Stethoscope, Upload, FlaskConical, Loader2, Clock,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
@@ -26,7 +26,19 @@ const BiomarkerTimeline = dynamic(
   }
 );
 
-type Tab = "overview" | "documents" | "labs" | "prechart" | "visits";
+const PatientTimeline = dynamic(
+  () => import("@/components/patients/patient-timeline").then((m) => m.PatientTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
+type Tab = "overview" | "documents" | "labs" | "prechart" | "visits" | "timeline";
 
 interface VisitItem {
   id: string;
@@ -77,6 +89,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
     { key: "labs", label: `Labs (${labReports.length})`, icon: FlaskConical },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
+    { key: "timeline", label: "Timeline", icon: Clock },
   ];
 
   const handleDocumentUploaded = (newDoc: typeof documents[0]) => {
@@ -127,7 +140,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
 
         <Link
           href={`/visits/new?patient_id=${patient.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
         >
           <Stethoscope className="w-3.5 h-3.5" />
           New Visit
@@ -225,7 +238,7 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
               {labView === "reports" && (
                 <Link
                   href={`/labs?patient_id=${patient.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   Upload Lab
@@ -298,6 +311,10 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
               ))
             )}
           </div>
+        )}
+
+        {activeTab === "timeline" && (
+          <PatientTimeline patientId={patient.id} />
         )}
       </div>
     </div>

@@ -441,7 +441,7 @@ export function RawNotesInput({
                     type="button"
                     onClick={handleTranscribeRecording}
                     disabled={transcribing}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
                   >
                     {transcribing ? (
                       <>

@@ -29,13 +29,13 @@ export function Header() {
         <div className="flex items-center gap-4">
           <Link
             href="/auth/login"
-            className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="text-sm px-4 py-2 rounded-[var(--radius-sm)] border border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-tertiary)] hover:border-[var(--color-border)] transition-colors"
           >
             Sign in
           </Link>
           <Link
             href="/auth/register"
-            className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-700)] transition-colors font-medium"
+            className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-500)] transition-colors font-medium"
           >
             Get Started Free
           </Link>

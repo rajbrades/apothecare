@@ -247,7 +247,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Create Patient

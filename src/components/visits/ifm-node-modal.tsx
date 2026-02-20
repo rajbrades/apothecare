@@ -253,7 +253,7 @@ export function IFMNodeModal({
               </DndContext>
               <button
                 onClick={addFinding}
-                className="flex items-center gap-1.5 text-xs text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] font-medium py-1 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] font-medium py-1 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add finding
@@ -286,7 +286,7 @@ export function IFMNodeModal({
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-700)] rounded-[var(--radius-md)] transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] rounded-[var(--radius-md)] transition-colors"
           >
             Save Changes
           </button>

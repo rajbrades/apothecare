@@ -210,7 +210,7 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive
-                    ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                    ? "bg-white text-[var(--color-brand-600)] font-medium"
                     : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)]"
                     }`}
                 >
@@ -322,7 +322,7 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
                         key={visit.id}
                         href={`/visits/${visit.id}`}
                         className={`block px-3 pl-7 py-1.5 rounded-md transition-colors ${isVisitActive
-                          ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] font-medium"
+                          ? "bg-white text-[var(--color-brand-600)] font-medium"
                           : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
                           }`}
                       >

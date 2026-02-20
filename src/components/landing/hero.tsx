@@ -4,12 +4,12 @@ import { ScrollReveal } from "./scroll-reveal";
 
 export function Hero() {
   return (
-    <section className="relative">
+    <section className="relative bg-[#FCFCFC]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 md:py-28 lg:py-32">
         <div className="max-w-4xl mx-auto">
           <div className="text-center space-y-8">
             <ScrollReveal>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-200)]">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]">
                 <Sparkles className="w-3 h-3 text-[var(--color-brand-600)]" />
                 <span className="text-xs font-medium text-[var(--color-text-primary)]">Trusted by 2,000+ functional medicine practitioners</span>
               </div>
@@ -39,7 +39,7 @@ export function Hero() {
                   />
                   <Link
                     href="/auth/register"
-                    className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 px-5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-md hover:bg-[var(--color-brand-700)] transition-colors"
+                    className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 px-5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-md hover:bg-[var(--color-brand-500)] transition-colors"
                   >
                     Start <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Link>
@@ -51,7 +51,7 @@ export function Hero() {
             </ScrollReveal>
 
             <ScrollReveal delay={400}>
-              <div className="grid grid-cols-3 gap-3 pt-6 max-w-2xl mx-auto">
+              <div className="flex flex-wrap justify-center gap-2 pt-6 max-w-2xl mx-auto">
                 {[
                   "Berberine vs. metformin for insulin resistance?",
                   "Interpret elevated zonulin with low sIgA",
@@ -60,7 +60,7 @@ export function Hero() {
                   <Link
                     key={q}
                     href="/auth/register"
-                    className="px-4 py-2.5 text-sm font-medium text-center text-[var(--color-text-secondary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border)] hover:shadow-sm border border-[var(--color-border-light)] rounded-lg transition-all duration-200"
+                    className="px-4 py-2.5 text-sm whitespace-nowrap text-[var(--color-text-secondary)] bg-[var(--color-surface)] hover:border-[var(--color-brand-500)] border border-[var(--color-border-light)] rounded-lg transition-colors"
                   >
                     {q}
                   </Link>
@@ -80,7 +80,7 @@ export function Hero() {
       </div>
 
       {/* Subtle gradient overlay at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-surface-secondary)]/20 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA]/20 to-transparent pointer-events-none" />
     </section>
   );
 }

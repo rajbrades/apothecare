@@ -405,7 +405,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
                           const el = document.getElementById(slugifyPanel(p.title));
                           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                         }}
-                        className="px-2 py-0.5 text-xs bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:border-[var(--color-brand-200)] hover:text-[var(--color-brand-700)] transition-colors cursor-pointer"
+                        className="px-2 py-0.5 text-xs bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] rounded-full border border-[var(--color-border-light)] hover:bg-[var(--color-brand-50)] hover:border-[var(--color-brand-200)] hover:text-[var(--color-brand-500)] transition-colors cursor-pointer"
                       >
                         {p.title}
                       </button>

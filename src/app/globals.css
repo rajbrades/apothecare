@@ -24,15 +24,15 @@
   --color-gold-700: #b45309;
 
   --color-surface: #ffffff;
-  --color-surface-secondary: #f3f7f6;
-  --color-surface-tertiary: #edf2f0;
-  --color-border: #cad6d3;
-  --color-border-light: #dce6e3;
+  --color-surface-secondary: oklab(0.959998 -0.00481549 0.00140041 / 0.2);
+  --color-surface-tertiary: #efefef;
+  --color-border: #e0e0e0;
+  --color-border-light: #ebebeb;
 
-  --color-text-primary: #1a2e2a;
-  --color-text-secondary: #4a6660;
-  --color-text-tertiary: #7a9690;
-  --color-text-muted: #6b8a84;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #6b7280;
+  --color-text-muted: #9ca3af;
 
   /* Evidence level badge colors */
   --color-evidence-meta: #f59e0b;

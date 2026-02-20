@@ -16,7 +16,7 @@ export default function AppNotFound() {
         </p>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-lg hover:bg-[var(--color-brand-700)] transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-lg hover:bg-[var(--color-brand-500)] transition-colors"
         >
           Go to Dashboard
         </Link>

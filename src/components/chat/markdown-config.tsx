@@ -71,8 +71,8 @@ function CitationLink({
       rel="noopener noreferrer"
       className={
         isCitation
-          ? "inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
-          : "text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] underline underline-offset-2 transition-colors"
+          ? "inline-flex items-center gap-0.5 text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] underline decoration-[var(--color-brand-300)] underline-offset-2 hover:decoration-[var(--color-brand-500)] transition-colors text-[13px] font-medium"
+          : "text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] underline underline-offset-2 transition-colors"
       }
     >
       {children}

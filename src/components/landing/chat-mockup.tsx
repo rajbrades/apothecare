@@ -174,13 +174,13 @@ export function ChatMockup() {
   return (
     <section
       ref={ref}
-      className="bg-[var(--color-surface-secondary)] py-20 md:py-28"
+      className="bg-[#FAFAFA] py-20 md:py-28"
     >
       <div className="max-w-5xl mx-auto px-6 lg:px-8">
         <Link href="/auth/register" className="block group">
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)] group-hover:shadow-[var(--shadow-modal)] transition-shadow">
             {/* Window chrome */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-light)] bg-[#F5F5F5]">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-[var(--color-border)]" />
                 <div className="w-3 h-3 rounded-full bg-[var(--color-border)]" />
@@ -196,7 +196,7 @@ export function ChatMockup() {
             </div>
 
             {/* Chat content */}
-            <div className="p-4 sm:p-6 space-y-6 min-h-[280px] sm:min-h-[320px] md:min-h-[380px]">
+            <div className="px-6 pt-10 pb-10 sm:px-8 sm:pt-12 sm:pb-12 space-y-6 min-h-[280px] sm:min-h-[320px] md:min-h-[380px]">
               {/* User message */}
               <div className="flex justify-end">
                 <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tr-md bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] text-sm text-[var(--color-text-primary)] leading-relaxed">
@@ -208,7 +208,7 @@ export function ChatMockup() {
               {phase !== "idle" && (
                 <div className="flex gap-3">
                   <LogoAvatar size={28} className="mt-0.5" />
-                  <div className="flex-1 text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+                  <div className="flex-1 text-sm text-[var(--color-text-secondary)] leading-normal whitespace-pre-wrap">
                     {phase === "thinking" && (
                       <div className="flex items-center gap-1 py-2">
                         <div className="thinking-dot w-1.5 h-1.5 rounded-full bg-[var(--color-brand-400)]" />
