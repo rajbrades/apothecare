@@ -150,6 +150,39 @@ const GI_MAP_SECTION_ORDER = [
   "intestinal_health",
 ];
 
+// Clinical display order for CBC biomarkers
+const CBC_BIOMARKER_ORDER = [
+  // Red cell indices first
+  "HEMOGLOBIN", "HGB",
+  "RED BLOOD CELL", "RBC",
+  "HEMATOCRIT", "HCT",
+  "MCH ",  // trailing space to avoid matching MCHC
+  "MCHC",
+  "MCV", "MEAN CORPUSCULAR VOLUME",
+  "RDW",
+  // WBC total before differentials
+  "WHITE BLOOD CELL", "WBC",
+  // WBC differentials
+  "NEUTROPHIL", "NEUT",
+  "LYMPHOCYTE", "LYMPH",
+  "MONOCYTE", "MONO",
+  "EOSINOPHIL", "EOS",
+  "BASOPHIL", "BASO",
+  // Platelets last
+  "PLATELET", "PLT",
+  "MPV",
+];
+
+function getCbcSortIndex(name: string): number {
+  const upper = name.toUpperCase();
+  for (let i = 0; i < CBC_BIOMARKER_ORDER.length; i++) {
+    if (upper.includes(CBC_BIOMARKER_ORDER[i].trimEnd()) || upper.startsWith(CBC_BIOMARKER_ORDER[i].trimEnd())) {
+      return i;
+    }
+  }
+  return CBC_BIOMARKER_ORDER.length; // unknown → end
+}
+
 function isQualitativeFlagged(result: string, reference: string): boolean {
   const r = result.toLowerCase().trim();
   const ref = reference.toLowerCase().trim();
@@ -239,8 +272,14 @@ function buildPanels(
   }
 
   return sortedCategories.map((category) => {
-    const markers = numericGroups.get(category) || [];
+    let markers = numericGroups.get(category) || [];
     const qualitative = qualGroups.get(category) || [];
+
+    // Sort CBC biomarkers in clinical display order
+    if (category.toLowerCase() === "cbc") {
+      markers = [...markers].sort((a, b) => getCbcSortIndex(a.name) - getCbcSortIndex(b.name));
+    }
+
     const numericFlagCount = markers.filter((m) => m.flag !== "optimal" && m.flag !== "normal").length;
     const qualFlagCount = qualitative.filter((q) => q.flagged).length;
 

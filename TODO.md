@@ -267,6 +267,12 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
+## Lab & Biomarker Enhancements
+
+- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
+
+---
+
 ## Backlog
 
 - [x] OAuth providers (Google) for registration — Apple deferred

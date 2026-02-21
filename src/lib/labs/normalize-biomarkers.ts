@@ -17,6 +17,27 @@ const BIOMARKER_ALIASES: Record<string, string> = {
   ANTI_TPO: "TPO_AB",
   THYROID_PEROXIDASE_AB: "TPO_AB",
 
+  // CBC
+  HEMOGLOBIN: "HGB",
+  RED_BLOOD_CELL_COUNT: "RBC",
+  RED_BLOOD_CELLS: "RBC",
+  WHITE_BLOOD_CELL_COUNT: "WBC",
+  WHITE_BLOOD_CELLS: "WBC",
+  HEMATOCRIT: "HCT",
+  MEAN_CORPUSCULAR_VOLUME: "MCV",
+  PLATELET_COUNT: "PLT",
+  PLATELETS: "PLT",
+
+  // Lipid
+  CHOLESTEROL_TOTAL: "TOTAL_CHOLESTEROL",
+  TOTAL_CHOL: "TOTAL_CHOLESTEROL",
+  CHOL_TOTAL: "TOTAL_CHOLESTEROL",
+  LDL_CHOLESTEROL: "LDL",
+  LDL_CHOL: "LDL",
+  HDL_CHOLESTEROL: "HDL",
+  HDL_CHOL: "HDL",
+  TRIG: "TRIGLYCERIDES",
+
   // Nutritional
   "25_OH_VITAMIN_D": "VITAMIN_D_25OH",
   "25_HYDROXY_VITAMIN_D": "VITAMIN_D_25OH",
@@ -51,9 +72,15 @@ const BIOMARKER_ALIASES: Record<string, string> = {
   AM_CORTISOL: "CORTISOL_AM",
   TESTOSTERONE_TOTAL: "TOTAL_TESTOSTERONE",
 
-  // Magnesium
+  // Magnesium (serum)
+  SERUM_MAGNESIUM: "MAGNESIUM",
+  MG_SERUM: "MAGNESIUM",
+  MAGNESIUM_SERUM: "MAGNESIUM",
+
+  // Magnesium (RBC)
   RBC_MAGNESIUM: "MAGNESIUM_RBC",
   MAGNESIUM_RED_BLOOD_CELL: "MAGNESIUM_RBC",
+  MG_RBC: "MAGNESIUM_RBC",
 
   // Omega
   OMEGA_3_INDEX: "OMEGA_3_INDEX",
@@ -93,13 +120,29 @@ export function matchBiomarkerReference(
     if (aliasMatch) return aliasMatch;
   }
 
-  // Tier 3: Fuzzy name match
+  // Tier 3: Fuzzy name match — exact first, then substring (prefer shortest ref name to avoid false positives)
   const normalizedName = normalizeCode(extracted.name);
-  const nameMatch = references.find((r) => {
+
+  // 3a: Exact name match
+  const exactNameMatch = references.find(
+    (r) => normalizeCode(r.biomarker_name) === normalizedName
+  );
+  if (exactNameMatch) return exactNameMatch;
+
+  // 3b: Substring match — score by closeness in length to avoid e.g. "Hemoglobin" matching "Hemoglobin A1c"
+  const substringMatches = references.filter((r) => {
     const refName = normalizeCode(r.biomarker_name);
-    return refName === normalizedName || normalizedName.includes(refName) || refName.includes(normalizedName);
+    return normalizedName.includes(refName) || refName.includes(normalizedName);
   });
-  if (nameMatch) return nameMatch;
+  if (substringMatches.length > 0) {
+    // Pick the reference whose name length is closest to the extracted name
+    substringMatches.sort((a, b) => {
+      const aDiff = Math.abs(normalizeCode(a.biomarker_name).length - normalizedName.length);
+      const bDiff = Math.abs(normalizeCode(b.biomarker_name).length - normalizedName.length);
+      return aDiff - bDiff;
+    });
+    return substringMatches[0];
+  }
 
   return null;
 }
@@ -121,8 +164,8 @@ export function calculateBiomarkerFlag(
   if (low !== null && value < low) return "low";
   if (high !== null && value > high) return "high";
 
-  // Borderline: within 10% of boundary
-  if (low !== null) {
+  // Borderline: within 10% of boundary (skip low-side when range starts at 0)
+  if (low !== null && low > 0) {
     const borderlineZone = (high !== null ? high - low : low) * 0.1;
     if (value < low + borderlineZone) return "borderline_low";
   }
@@ -152,9 +195,21 @@ export function calculateFlags(
       ? calculateBiomarkerFlag(value, functionalLow, functionalHigh)
       : null;
 
-  // Upgrade conventional flag to "optimal" if within functional range
-  if (functional_flag === "normal" || functional_flag === "optimal") {
+  // Upgrade to "optimal" if within functional range (including borderline edges — the functional range IS the optimal zone)
+  if (functional_flag === "normal" || functional_flag === "optimal"
+    || functional_flag === "borderline_low" || functional_flag === "borderline_high") {
     return { conventional_flag: "optimal", functional_flag: "optimal" };
+  }
+
+  // Downgrade functional "out of range" to "borderline" if still within conventional range
+  const conventionalIsNormal = conventional_flag === "normal" || conventional_flag === "optimal"
+    || conventional_flag === "borderline_low" || conventional_flag === "borderline_high";
+
+  if (functional_flag === "low" && conventionalIsNormal) {
+    return { conventional_flag, functional_flag: "borderline_low" };
+  }
+  if (functional_flag === "high" && conventionalIsNormal) {
+    return { conventional_flag, functional_flag: "borderline_high" };
   }
 
   return { conventional_flag, functional_flag };

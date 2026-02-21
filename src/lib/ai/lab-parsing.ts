@@ -118,6 +118,12 @@ export async function parseLabReport(
       })
       .eq("id", reportId);
 
+    // Delete old biomarker results before re-inserting (prevents duplicates on re-parse)
+    await serviceClient
+      .from("biomarker_results")
+      .delete()
+      .eq("lab_report_id", reportId);
+
     // Normalize biomarkers against reference ranges and insert results
     const normResult = await normalizeBiomarkers(
       parsedData.biomarkers,
