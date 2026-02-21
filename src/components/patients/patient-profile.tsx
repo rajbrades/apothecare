@@ -12,7 +12,8 @@ import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PreChartView } from "./pre-chart-view";
 import { LabReportCard } from "@/components/labs/lab-report-card";
-import type { Patient, PatientDocument } from "@/types/database";
+import { SupplementList } from "./supplement-list";
+import type { Patient, PatientDocument, PatientSupplement } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 
 const BiomarkerTimeline = dynamic(
@@ -68,6 +69,7 @@ interface PatientProfileProps {
   documents: Pick<PatientDocument, "id" | "file_name" | "file_size" | "document_type" | "title" | "status" | "error_message" | "uploaded_at" | "extracted_at">[];
   labReports: LabReportItem[];
   visits: VisitItem[];
+  supplements: PatientSupplement[];
 }
 
 function getAge(dob: string | null): number | null {
@@ -75,7 +77,7 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
-export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
+export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements }: PatientProfileProps) {
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [labView, setLabView] = useState<"reports" | "trends">("reports");
@@ -196,12 +198,9 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               fieldName="current_medications"
               onSaved={handleFieldSaved}
             />
-            <EditableTextSection
-              title="Current Supplements"
-              value={patient.supplements}
+            <SupplementList
               patientId={patient.id}
-              fieldName="supplements"
-              onSaved={handleFieldSaved}
+              initialSupplements={initialSupplements}
             />
             <EditableTagSection
               title="Allergies"

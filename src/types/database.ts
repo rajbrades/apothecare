@@ -22,6 +22,8 @@ export type DocumentStatus = "uploading" | "uploaded" | "extracting" | "extracte
 export type SupplementReviewStatus = "pending" | "generating" | "complete" | "error";
 export type InteractionSeverity = "critical" | "caution" | "safe" | "unknown";
 export type SupplementAction = "keep" | "modify" | "discontinue" | "add";
+export type PatientSupplementStatus = "active" | "discontinued" | "pending_patient";
+export type PatientSupplementSource = "manual" | "review" | "patient_reported";
 
 // ===========================================
 // Table Row Types
@@ -80,6 +82,27 @@ export interface Patient {
   notes: string | null;
   clinical_summary: PatientClinicalSummary;
   is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PatientSupplement {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  name: string;
+  dosage: string | null;
+  form: string | null;
+  frequency: string | null;
+  timing: string | null;
+  brand: string | null;
+  status: PatientSupplementStatus;
+  source: PatientSupplementSource;
+  review_id: string | null;
+  started_at: string | null;
+  discontinued_at: string | null;
+  notes: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

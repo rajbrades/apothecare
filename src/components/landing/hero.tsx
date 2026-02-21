@@ -5,9 +5,9 @@ import { ScrollReveal } from "./scroll-reveal";
 export function Hero() {
   return (
     <section className="relative bg-[#FCFCFC]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 md:py-28 lg:py-32">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-20 lg:py-20">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6">
             <ScrollReveal>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]">
                 <Sparkles className="w-3 h-3 text-[var(--color-brand-600)]" />
@@ -29,7 +29,7 @@ export function Hero() {
             </ScrollReveal>
 
             <ScrollReveal delay={300}>
-              <div className="pt-4">
+              <div>
                 <div className="relative w-full max-w-xl mx-auto">
                   <input
                     type="text"
@@ -51,7 +51,7 @@ export function Hero() {
             </ScrollReveal>
 
             <ScrollReveal delay={400}>
-              <div className="flex flex-wrap justify-center gap-2 pt-6 max-w-2xl mx-auto">
+              <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
                 {[
                   "Berberine vs. metformin for insulin resistance?",
                   "Interpret elevated zonulin with low sIgA",
@@ -71,7 +71,7 @@ export function Hero() {
         </div>
 
         {/* Scroll cue */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8">
           <p className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">See it in action</p>
           <svg className="w-5 h-5 text-[var(--color-brand-600)] animate-bounce mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />

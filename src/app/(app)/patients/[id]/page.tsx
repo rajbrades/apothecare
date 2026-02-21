@@ -17,7 +17,7 @@ export default async function PatientDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }] = await Promise.all([
+  const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }, { data: supplements }] = await Promise.all([
     supabase
       .from("patients")
       .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, is_archived, created_at, updated_at")
@@ -45,6 +45,14 @@ export default async function PatientDetailPage({
       .eq("practitioner_id", practitioner.id)
       .eq("is_archived", false)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("patient_supplements")
+      .select("*")
+      .eq("patient_id", id)
+      .eq("practitioner_id", practitioner.id)
+      .eq("status", "active")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   if (error || !patient) notFound();
@@ -55,6 +63,7 @@ export default async function PatientDetailPage({
       documents={documents || []}
       labReports={labReports || []}
       visits={visits || []}
+      supplements={supplements || []}
     />
   );
 }
