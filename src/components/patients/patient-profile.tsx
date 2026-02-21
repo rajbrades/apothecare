@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList,
   Stethoscope, Upload, FlaskConical, Loader2, Clock,
+  Pencil, Check, X, Plus,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
@@ -74,11 +75,16 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
-export function PatientProfile({ patient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
+export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits }: PatientProfileProps) {
+  const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [labView, setLabView] = useState<"reports" | "trends">("reports");
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
+
+  const handleFieldSaved = useCallback((field: string, value: unknown) => {
+    setPatient((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   const name = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || "Unnamed Patient";
   const age = getAge(patient.date_of_birth);
@@ -169,30 +175,49 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
       <div className="min-h-[400px]">
         {activeTab === "overview" && (
           <div className="space-y-4">
-            {patient.chief_complaints?.length ? (
-              <Section title="Chief Complaints">
-                <div className="flex flex-wrap gap-1.5">
-                  {patient.chief_complaints.map((cc) => (
-                    <span key={cc} className="px-2 py-0.5 text-xs bg-[var(--color-brand-50)] text-[var(--color-brand-700)] rounded-full">
-                      {cc}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-            {patient.medical_history && <Section title="Medical History"><p className="text-sm whitespace-pre-wrap">{patient.medical_history}</p></Section>}
-            {patient.current_medications && <Section title="Current Medications"><p className="text-sm whitespace-pre-wrap">{patient.current_medications}</p></Section>}
-            {patient.supplements && <Section title="Current Supplements"><p className="text-sm whitespace-pre-wrap">{patient.supplements}</p></Section>}
-            {patient.allergies?.length ? (
-              <Section title="Allergies">
-                <div className="flex flex-wrap gap-1.5">
-                  {patient.allergies.map((a) => (
-                    <span key={a} className="px-2 py-0.5 text-xs bg-red-50 text-red-700 rounded-full">{a}</span>
-                  ))}
-                </div>
-              </Section>
-            ) : null}
-            {patient.notes && <Section title="Notes"><p className="text-sm whitespace-pre-wrap">{patient.notes}</p></Section>}
+            <EditableTagSection
+              title="Chief Complaints"
+              values={patient.chief_complaints}
+              patientId={patient.id}
+              fieldName="chief_complaints"
+              onSaved={handleFieldSaved}
+            />
+            <EditableTextSection
+              title="Medical History"
+              value={patient.medical_history}
+              patientId={patient.id}
+              fieldName="medical_history"
+              onSaved={handleFieldSaved}
+            />
+            <EditableTextSection
+              title="Current Medications"
+              value={patient.current_medications}
+              patientId={patient.id}
+              fieldName="current_medications"
+              onSaved={handleFieldSaved}
+            />
+            <EditableTextSection
+              title="Current Supplements"
+              value={patient.supplements}
+              patientId={patient.id}
+              fieldName="supplements"
+              onSaved={handleFieldSaved}
+            />
+            <EditableTagSection
+              title="Allergies"
+              values={patient.allergies}
+              patientId={patient.id}
+              fieldName="allergies"
+              onSaved={handleFieldSaved}
+              tagColor="red"
+            />
+            <EditableTextSection
+              title="Notes"
+              value={patient.notes}
+              patientId={patient.id}
+              fieldName="notes"
+              onSaved={handleFieldSaved}
+            />
           </div>
         )}
 
@@ -321,11 +346,327 @@ export function PatientProfile({ patient, documents: initialDocs, labReports: in
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// ── Editable Section Primitives ──────────────────────────────────────
+
+function SectionShell({
+  title,
+  isEditing,
+  isSaving,
+  onEdit,
+  onSave,
+  onCancel,
+  children,
+}: {
+  title: string;
+  isEditing: boolean;
+  isSaving: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] p-4">
-      <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">{title}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+          {title}
+        </h3>
+        {isEditing ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onCancel}
+              disabled={isSaving}
+              className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              title="Cancel"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onSave}
+              disabled={isSaving}
+              className="p-1 rounded-[var(--radius-sm)] text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] transition-colors"
+              title="Save"
+            >
+              {isSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onEdit}
+            className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+            title={`Edit ${title.toLowerCase()}`}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
       <div className="text-[var(--color-text-primary)]">{children}</div>
     </div>
+  );
+}
+
+function EditableTextSection({
+  title,
+  value,
+  patientId,
+  fieldName,
+  onSaved,
+}: {
+  title: string;
+  value: string | null;
+  patientId: string;
+  fieldName: string;
+  onSaved: (field: string, value: string | null) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleEdit = () => {
+    setDraft(value ?? "");
+    setError(null);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setError(null);
+  };
+
+  const handleSave = async () => {
+    const trimmed = draft.trim();
+    const newValue = trimmed || null;
+    if (newValue === value) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [fieldName]: newValue }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save");
+      }
+      onSaved(fieldName, newValue);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <SectionShell
+      title={title}
+      isEditing={isEditing}
+      isSaving={isSaving}
+      onEdit={handleEdit}
+      onSave={handleSave}
+      onCancel={handleCancel}
+    >
+      {isEditing ? (
+        <>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={4}
+            className="w-full text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] p-2 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] resize-y"
+            autoFocus
+          />
+          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+        </>
+      ) : value ? (
+        <p className="text-sm whitespace-pre-wrap">{value}</p>
+      ) : (
+        <button
+          onClick={handleEdit}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors flex items-center gap-1"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add {title.toLowerCase()}
+        </button>
+      )}
+    </SectionShell>
+  );
+}
+
+function EditableTagSection({
+  title,
+  values,
+  patientId,
+  fieldName,
+  onSaved,
+  tagColor = "brand",
+}: {
+  title: string;
+  values: string[] | null;
+  patientId: string;
+  fieldName: string;
+  onSaved: (field: string, value: string[] | null) => void;
+  tagColor?: "brand" | "red";
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState<string[]>(values ?? []);
+  const [inputValue, setInputValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const colorMap = {
+    brand: { bg: "bg-[var(--color-brand-50)]", text: "text-[var(--color-brand-700)]" },
+    red: { bg: "bg-red-50", text: "text-red-700" },
+  };
+  const colors = colorMap[tagColor];
+
+  const handleEdit = () => {
+    setDraft(values ?? []);
+    setInputValue("");
+    setError(null);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setError(null);
+  };
+
+  const addTag = () => {
+    const trimmed = inputValue.trim();
+    if (trimmed && !draft.includes(trimmed)) {
+      setDraft((prev) => [...prev, trimmed]);
+    }
+    setInputValue("");
+    inputRef.current?.focus();
+  };
+
+  const removeTag = (tag: string) => {
+    setDraft((prev) => prev.filter((t) => t !== tag));
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+    if (e.key === "Backspace" && inputValue === "" && draft.length > 0) {
+      setDraft((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const handleSave = async () => {
+    const newValue = draft.length > 0 ? draft : null;
+    const unchanged =
+      (newValue === null && (values === null || values.length === 0)) ||
+      (newValue !== null && values !== null && JSON.stringify(newValue) === JSON.stringify(values));
+
+    if (unchanged) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [fieldName]: newValue }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save");
+      }
+      onSaved(fieldName, newValue);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <SectionShell
+      title={title}
+      isEditing={isEditing}
+      isSaving={isSaving}
+      onEdit={handleEdit}
+      onSave={handleSave}
+      onCancel={handleCancel}
+    >
+      {isEditing ? (
+        <>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {draft.map((tag) => (
+              <span
+                key={tag}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs ${colors.bg} ${colors.text} rounded-full`}
+              >
+                {tag}
+                <button
+                  onClick={() => removeTag(tag)}
+                  className="hover:opacity-70"
+                  type="button"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`Add ${title.toLowerCase().replace(/s$/, "")}...`}
+              className="flex-1 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+              autoFocus
+            />
+            <button
+              onClick={addTag}
+              disabled={!inputValue.trim()}
+              className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] transition-colors disabled:opacity-30"
+              type="button"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+        </>
+      ) : values && values.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {values.map((tag) => (
+            <span
+              key={tag}
+              className={`px-2 py-0.5 text-xs ${colors.bg} ${colors.text} rounded-full`}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <button
+          onClick={handleEdit}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors flex items-center gap-1"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add {title.toLowerCase()}
+        </button>
+      )}
+    </SectionShell>
   );
 }
