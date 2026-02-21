@@ -25,6 +25,7 @@ interface DocumentListProps {
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
   onLabDeleted?: (labId: string) => void;
+  groupBy?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -62,7 +63,42 @@ function formatTestType(type: string): string {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted }: DocumentListProps) {
+const CATEGORY_ORDER = [
+  "Lab Reports",
+  "Clinical Records",
+  "Imaging",
+  "Referrals",
+  "Administrative",
+  "Other",
+] as const;
+
+type UnifiedItem =
+  | { kind: "document"; data: DocumentItem }
+  | { kind: "lab"; data: LabReportItem };
+
+function getDocumentCategory(item: UnifiedItem): string {
+  if (item.kind === "lab") return "Lab Reports";
+  const t = item.data.document_type;
+  if (t === "lab_report") return "Lab Reports";
+  if (t === "intake_form" || t === "health_history") return "Clinical Records";
+  if (t === "imaging") return "Imaging";
+  if (t === "referral") return "Referrals";
+  if (t === "consent" || t === "insurance") return "Administrative";
+  return "Other";
+}
+
+function buildUnified(documents: DocumentItem[], labReports: LabReportItem[]): UnifiedItem[] {
+  return [
+    ...documents.map((d): UnifiedItem => ({ kind: "document", data: d })),
+    ...labReports.map((l): UnifiedItem => ({ kind: "lab", data: l })),
+  ].sort((a, b) => {
+    const dateA = a.kind === "document" ? a.data.uploaded_at : a.data.created_at;
+    const dateB = b.kind === "document" ? b.data.uploaded_at : b.data.created_at;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
+}
+
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted, groupBy = false }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reextracting, setReextracting] = useState<string | null>(null);
   const [docStatuses, setDocStatuses] = useState<Record<string, string>>({});
@@ -136,23 +172,9 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
     );
   }
 
-  // Build unified list: documents + lab reports, sorted by date descending
-  type UnifiedItem =
-    | { kind: "document"; data: DocumentItem }
-    | { kind: "lab"; data: LabReportItem };
+  const unified = buildUnified(documents, labReports);
 
-  const unified: UnifiedItem[] = [
-    ...documents.map((d): UnifiedItem => ({ kind: "document", data: d })),
-    ...labReports.map((l): UnifiedItem => ({ kind: "lab", data: l })),
-  ].sort((a, b) => {
-    const dateA = a.kind === "document" ? a.data.uploaded_at : a.data.created_at;
-    const dateB = b.kind === "document" ? b.data.uploaded_at : b.data.created_at;
-    return new Date(dateB).getTime() - new Date(dateA).getTime();
-  });
-
-  return (
-    <div className="space-y-2">
-      {unified.map((item) => {
+  const renderItem = (item: UnifiedItem) => {
         if (item.kind === "lab") {
           const lab = item.data;
           const mappedStatus = LAB_STATUS_MAP[lab.status] || lab.status;
@@ -267,7 +289,43 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
             </div>
           </div>
         );
-      })}
+  };
+
+  if (groupBy) {
+    const groups = new Map<string, UnifiedItem[]>();
+    for (const item of unified) {
+      const cat = getDocumentCategory(item);
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(item);
+    }
+
+    return (
+      <div className="space-y-6">
+        {CATEGORY_ORDER.filter((cat) => groups.has(cat)).map((cat) => {
+          const items = groups.get(cat)!;
+          return (
+            <div key={cat}>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                  {cat}
+                </h3>
+                <span className="text-[10px] font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-1.5 py-0.5 rounded-full">
+                  {items.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {items.map(renderItem)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {unified.map(renderItem)}
     </div>
   );
 }

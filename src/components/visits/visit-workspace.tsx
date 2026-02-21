@@ -141,6 +141,10 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
   // Regeneration confirmation state
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
 
+  // Push to Patient Matrix state
+  const [showPushConfirm, setShowPushConfirm] = useState(false);
+  const [pushing, setPushing] = useState(false);
+
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
@@ -236,6 +240,28 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     }
     setSaving(false);
   }, [visit.id]);
+
+  const handlePushToPatientMatrix = useCallback(async () => {
+    if (!visit.patients?.id) return;
+    setPushing(true);
+    try {
+      const res = await fetch(`/api/patients/${visit.patients.id}/ifm-matrix/merge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visit_id: visit.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to push matrix");
+      }
+      toast.success("IFM Matrix merged into patient profile");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to push matrix");
+    } finally {
+      setPushing(false);
+      setShowPushConfirm(false);
+    }
+  }, [visit.id, visit.patients?.id]);
 
   const handleStatusToggle = useCallback(async () => {
     const newStatus = visit.status === "draft" ? "completed" : "draft";
@@ -464,13 +490,31 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           />
         )}
         {activeTab === "ifm" && (
-          <IFMMatrixView
-            matrix={visit.ifm_matrix}
-            status={stream.ifm_matrix.status}
-            readOnly={isReadOnly}
-            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
-            onUpdate={handleMatrixUpdate}
-          />
+          <div className="space-y-4">
+            {visit.patients?.id && visit.ifm_matrix && Object.keys(visit.ifm_matrix).length > 0 && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowPushConfirm(true)}
+                  disabled={pushing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+                >
+                  {pushing ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <User className="w-3.5 h-3.5" />
+                  )}
+                  Push to Patient Matrix
+                </button>
+              </div>
+            )}
+            <IFMMatrixView
+              matrix={visit.ifm_matrix}
+              status={stream.ifm_matrix.status}
+              readOnly={isReadOnly}
+              hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
+              onUpdate={handleMatrixUpdate}
+            />
+          </div>
         )}
         {activeTab === "protocol" && (
           <ProtocolPanel
@@ -489,6 +533,17 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         description="This will overwrite all SOAP sections, IFM Matrix, and Protocol recommendations with new AI-generated content. Any manual edits will be lost."
         confirmLabel="Regenerate"
         variant="warning"
+      />
+
+      <ConfirmDialog
+        open={showPushConfirm}
+        onConfirm={handlePushToPatientMatrix}
+        onCancel={() => setShowPushConfirm(false)}
+        title="Push to Patient Matrix?"
+        description="This will merge findings from this visit into the patient's persistent IFM Matrix. Existing findings are preserved — new findings, higher severity levels, and notes will be added."
+        confirmLabel="Push to Patient"
+        variant="warning"
+        loading={pushing}
       />
     </div>
   );

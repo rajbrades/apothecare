@@ -12,6 +12,7 @@ export const createPatientSchema = z.object({
   supplements: z.string().max(5000).nullable().optional(),
   allergies: z.array(z.string().max(200)).max(50).nullable().optional(),
   notes: z.string().max(10000).nullable().optional(),
+  ifm_matrix: z.record(z.unknown()).optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;

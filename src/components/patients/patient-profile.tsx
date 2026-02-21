@@ -5,15 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
-  User, Calendar, FileText, ClipboardList,
-  Stethoscope, Upload, FlaskConical, Loader2, Clock,
+  User, Calendar, FileText, ClipboardList, Grid3x3,
+  Stethoscope, Upload, Loader2, Clock,
   Pencil, Check, X, Plus, Archive, ArchiveRestore,
   Trash2, AlertTriangle, MoreVertical,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PreChartView } from "./pre-chart-view";
-import { LabReportCard } from "@/components/labs/lab-report-card";
 import { SupplementList } from "./supplement-list";
 import type { Patient, PatientDocument, PatientSupplement } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
@@ -42,7 +41,19 @@ const PatientTimeline = dynamic(
   }
 );
 
-type Tab = "overview" | "documents" | "labs" | "prechart" | "visits" | "timeline";
+const IFMMatrixView = dynamic(
+  () => import("@/components/visits/ifm-matrix-view").then((m) => m.IFMMatrixView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
+type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline";
 
 interface VisitItem {
   id: string;
@@ -83,7 +94,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [labView, setLabView] = useState<"reports" | "trends">("reports");
+  const [docView, setDocView] = useState<"files" | "trends">("files");
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
 
@@ -97,6 +108,20 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const handleFieldSaved = useCallback((field: string, value: unknown) => {
     setPatient((prev) => ({ ...prev, [field]: value }));
   }, []);
+
+  const handleMatrixUpdate = useCallback(async (matrix: import("@/types/database").IFMMatrix) => {
+    try {
+      const res = await fetch(`/api/patients/${patient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ifm_matrix: matrix }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setPatient((prev) => ({ ...prev, ifm_matrix: matrix }));
+    } catch {
+      // Could add toast — silently fail for now
+    }
+  }, [patient.id]);
 
   const handleArchiveToggle = async () => {
     const newArchived = !patient.is_archived;
@@ -143,9 +168,9 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
   const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
     { key: "overview", label: "Overview", icon: User },
-    { key: "documents", label: `Documents (${documents.length})`, icon: FileText },
-    { key: "labs", label: `Labs (${labReports.length})`, icon: FlaskConical },
+    { key: "documents", label: `Documents (${documents.length + labReports.length})`, icon: FileText },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
+    { key: "ifm_matrix", label: "IFM Matrix", icon: Grid3x3 },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
     { key: "timeline", label: "Timeline", icon: Clock },
   ];
@@ -370,37 +395,24 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "documents" && (
-          <div className="space-y-6">
-            <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
-            <DocumentList
-              patientId={patient.id}
-              documents={documents}
-              labReports={labReports}
-              onDeleted={handleDocumentDeleted}
-              onLabDeleted={handleLabDeleted}
-            />
-          </div>
-        )}
-
-        {activeTab === "labs" && (
           <div className="space-y-4">
-            {/* Sub-view toggle: Reports / Trends */}
+            {/* Sub-view toggle: All Files / Trends */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 p-0.5 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)]">
                 <button
-                  onClick={() => setLabView("reports")}
+                  onClick={() => setDocView("files")}
                   className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
-                    labView === "reports"
+                    docView === "files"
                       ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   }`}
                 >
-                  Reports ({labReports.length})
+                  All Files ({documents.length + labReports.length})
                 </button>
                 <button
-                  onClick={() => setLabView("trends")}
+                  onClick={() => setDocView("trends")}
                   className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
-                    labView === "trends"
+                    docView === "trends"
                       ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   }`}
@@ -408,7 +420,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                   Trends
                 </button>
               </div>
-              {labView === "reports" && (
+              {docView === "files" && (
                 <Link
                   href={`/labs?patient_id=${patient.id}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
@@ -419,27 +431,21 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               )}
             </div>
 
-            {labView === "reports" && (
-              <>
-                {labReports.length === 0 ? (
-                  <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
-                    No lab reports for this patient yet.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {labReports.map((lab) => (
-                      <LabReportCard
-                        key={lab.id}
-                        report={lab}
-                        onDelete={handleLabDeleted}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+            {docView === "files" && (
+              <div className="space-y-6">
+                <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
+                <DocumentList
+                  patientId={patient.id}
+                  documents={documents}
+                  labReports={labReports}
+                  onDeleted={handleDocumentDeleted}
+                  onLabDeleted={handleLabDeleted}
+                  groupBy
+                />
+              </div>
             )}
 
-            {labView === "trends" && (
+            {docView === "trends" && (
               <BiomarkerTimeline patientId={patient.id} />
             )}
           </div>
@@ -447,6 +453,15 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
         {activeTab === "prechart" && (
           <PreChartView patient={patient} />
+        )}
+
+        {activeTab === "ifm_matrix" && (
+          <IFMMatrixView
+            matrix={patient.ifm_matrix}
+            status="complete"
+            readOnly={false}
+            onUpdate={handleMatrixUpdate}
+          />
         )}
 
         {activeTab === "visits" && (

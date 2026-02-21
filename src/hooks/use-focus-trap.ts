@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -9,21 +9,26 @@ const FOCUSABLE_SELECTOR =
  */
 export function useFocusTrap(active: boolean, onEscape?: () => void) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const stableOnEscape = useCallback(() => onEscape?.(), [onEscape]);
+  const onEscapeRef = useRef(onEscape);
+  onEscapeRef.current = onEscape;
 
+  // Focus first focusable element on mount only
+  useEffect(() => {
+    if (!active || !containerRef.current) return;
+    const firstFocusable =
+      containerRef.current.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    firstFocusable?.focus();
+  }, [active]);
+
+  // Keydown handler — stable effect, reads callback from ref
   useEffect(() => {
     if (!active || !containerRef.current) return;
 
     const container = containerRef.current;
 
-    // Focus first focusable element on mount
-    const firstFocusable =
-      container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    firstFocusable?.focus();
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        stableOnEscape();
+        onEscapeRef.current?.();
         return;
       }
 
@@ -52,7 +57,7 @@ export function useFocusTrap(active: boolean, onEscape?: () => void) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [active, stableOnEscape]);
+  }, [active]);
 
   return containerRef;
 }

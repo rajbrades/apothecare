@@ -81,6 +81,7 @@ export interface Patient {
   allergies: string[] | null;
   notes: string | null;
   clinical_summary: PatientClinicalSummary;
+  ifm_matrix: IFMMatrix | Record<string, unknown>;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
