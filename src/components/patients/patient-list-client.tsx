@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, Calendar, ChevronRight, Loader2, Search, X } from "lucide-react";
+import { User, Calendar, ChevronRight, Loader2, Search, X, Archive } from "lucide-react";
 
 interface PatientItem {
   id: string;
@@ -24,6 +24,7 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const loadMore = useCallback(async () => {
     if (!cursor || loading) return;
@@ -31,6 +32,7 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
     try {
       const params = new URLSearchParams({ cursor });
       if (search) params.set("search", search);
+      if (showArchived) params.set("archived", "true");
       const res = await fetch(`/api/patients?${params}`);
       const data = await res.json();
       setPatients((prev) => [...prev, ...data.patients]);
@@ -38,15 +40,16 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
     } finally {
       setLoading(false);
     }
-  }, [cursor, loading, search]);
+  }, [cursor, loading, search, showArchived]);
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = useCallback(async (term: string) => {
+  const handleSearch = useCallback(async (term: string, archived = showArchived) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (term) params.set("search", term);
+      if (archived) params.set("archived", "true");
       const res = await fetch(`/api/patients?${params}`);
       const data = await res.json();
       setPatients(data.patients);
@@ -54,7 +57,13 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showArchived]);
+
+  const handleToggleArchived = useCallback(() => {
+    const next = !showArchived;
+    setShowArchived(next);
+    handleSearch(search, next);
+  }, [showArchived, search, handleSearch]);
 
   // Debounced search on typing (300ms)
   useEffect(() => {
@@ -92,6 +101,31 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
             </button>
           )}
         </div>
+      </div>
+
+      {/* Active / Archived toggle */}
+      <div className="flex items-center gap-1 mb-4 p-0.5 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] w-fit">
+        <button
+          onClick={() => showArchived && handleToggleArchived()}
+          className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+            !showArchived
+              ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
+              : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          }`}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => !showArchived && handleToggleArchived()}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+            showArchived
+              ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
+              : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          }`}
+        >
+          <Archive className="w-3 h-3" />
+          Archived
+        </button>
       </div>
 
       {/* Patient list */}
@@ -149,7 +183,7 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
       {patients.length === 0 && !loading && (
         <div className="text-center py-8">
           <p className="text-sm text-[var(--color-text-muted)]">
-            No patients found
+            {showArchived ? "No archived patients" : "No patients found"}
           </p>
           {search && (
             <button

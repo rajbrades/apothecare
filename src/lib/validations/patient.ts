@@ -17,7 +17,9 @@ export const createPatientSchema = z.object({
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 
 // ── Update Patient ─────────────────────────────────────────────────────
-export const updatePatientSchema = createPatientSchema.partial();
+export const updatePatientSchema = createPatientSchema.extend({
+  is_archived: z.boolean().optional(),
+}).partial();
 
 export type UpdatePatientInput = z.infer<typeof updatePatientSchema>;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -349,7 +349,14 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
   const vendorLabel = VENDOR_LABELS[report.lab_vendor] || report.lab_vendor;
   const { shortName: displayName } = parseTestName(report.test_name);
-  const [panelsExpanded, setPanelsExpanded] = useState(false);
+  const [panelsExpanded, setPanelsExpanded] = useState(true);
+  const [sectionsExpanded, setSectionsExpanded] = useState(false);
+  const [sectionKey, setSectionKey] = useState(0);
+
+  const handleToggleAllSections = useCallback(() => {
+    setSectionsExpanded((prev) => !prev);
+    setSectionKey((k) => k + 1);
+  }, []);
 
   const isGiMap = report.lab_vendor === "diagnostic_solutions";
   const qualitativeResults = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
@@ -390,9 +397,9 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               <div className="mt-2">
                 <button
                   onClick={() => setPanelsExpanded(!panelsExpanded)}
-                  className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full hover:border-[var(--color-brand-200)] hover:text-[var(--color-brand-600)] transition-colors"
                 >
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${panelsExpanded ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3 h-3 transition-transform ${panelsExpanded ? "rotate-180" : ""}`} />
                   {panels.length} panels included
                 </button>
                 {panelsExpanded && (
@@ -488,19 +495,34 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
       {/* Biomarker summary */}
       {report.status === "complete" && totalBiomarkers > 0 && (
-        <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-          {totalBiomarkers} biomarker{totalBiomarkers !== 1 ? "s" : ""}
-          {flaggedCount > 0 && (
-            <> &middot; <span className="text-[var(--color-biomarker-borderline)] font-medium">{flaggedCount} flagged</span></>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {totalBiomarkers} biomarker{totalBiomarkers !== 1 ? "s" : ""}
+            {flaggedCount > 0 && (
+              <> &middot; <span className="text-[var(--color-biomarker-borderline)] font-medium">{flaggedCount} flagged</span></>
+            )}
+          </p>
+          {panels.length > 1 && (
+            <button
+              onClick={handleToggleAllSections}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full hover:border-[var(--color-brand-200)] hover:text-[var(--color-brand-600)] transition-colors"
+            >
+              {sectionsExpanded ? (
+                <ChevronsDownUp className="w-3 h-3" />
+              ) : (
+                <ChevronsUpDown className="w-3 h-3" />
+              )}
+              {sectionsExpanded ? "Collapse All" : "Expand All"}
+            </button>
           )}
-        </p>
+        </div>
       )}
 
       {/* Biomarker panels */}
       {report.status === "complete" && panels.length > 0 && (
         <div className="space-y-4">
           {panels.map((panel, idx) => (
-            <BiomarkerPanel key={`${panel.title}-${idx}`} panel={panel} id={slugifyPanel(panel.title)} />
+            <BiomarkerPanel key={`${panel.title}-${idx}-${sectionKey}`} panel={panel} id={slugifyPanel(panel.title)} initialExpanded={sectionsExpanded} />
           ))}
         </div>
       )}

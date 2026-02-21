@@ -129,7 +129,7 @@ export async function DELETE(
     auditLog({
       request,
       practitionerId: practitioner.id,
-      action: "delete",
+      action: "archive",
       resourceType: "patient",
       resourceId: id,
     });

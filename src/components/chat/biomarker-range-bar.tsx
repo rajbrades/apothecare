@@ -300,10 +300,12 @@ interface BiomarkerPanelProps {
   compact?: boolean;
   /** Optional id for scroll-to-panel navigation */
   id?: string;
+  /** Override initial expanded state (used by parent expand/collapse all) */
+  initialExpanded?: boolean;
 }
 
-export function BiomarkerPanel({ panel, compact = false, id }: BiomarkerPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(!compact);
+export function BiomarkerPanel({ panel, compact = false, id, initialExpanded }: BiomarkerPanelProps) {
+  const [isExpanded, setIsExpanded] = useState(initialExpanded ?? !compact);
   const qualitativeFlagged = panel.qualitativeResults?.filter((q) => q.flagged).length ?? 0;
   const flaggedCount =
     panel.flagCount ??

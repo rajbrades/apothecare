@@ -1,12 +1,14 @@
-"use client";
+ "use client";
 
 import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList,
   Stethoscope, Upload, FlaskConical, Loader2, Clock,
-  Pencil, Check, X, Plus,
+  Pencil, Check, X, Plus, Archive, ArchiveRestore,
+  Trash2, AlertTriangle, MoreVertical,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
@@ -78,15 +80,63 @@ function getAge(dob: string | null): number | null {
 }
 
 export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements }: PatientProfileProps) {
+  const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [labView, setLabView] = useState<"reports" | "trends">("reports");
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
 
+  // Archive / Delete state
+  const [showMenu, setShowMenu] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const handleFieldSaved = useCallback((field: string, value: unknown) => {
     setPatient((prev) => ({ ...prev, [field]: value }));
   }, []);
+
+  const handleArchiveToggle = async () => {
+    const newArchived = !patient.is_archived;
+    setArchiving(true);
+    try {
+      if (newArchived) {
+        // Archive via DELETE endpoint
+        const res = await fetch(`/api/patients/${patient.id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to archive");
+      } else {
+        // Restore via PATCH
+        const res = await fetch(`/api/patients/${patient.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_archived: false }),
+        });
+        if (!res.ok) throw new Error("Failed to restore");
+      }
+      setPatient((prev) => ({ ...prev, is_archived: newArchived }));
+      setShowArchiveDialog(false);
+      setShowMenu(false);
+    } catch {
+      // silently fail — could add toast
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const handlePermanentDelete = async (confirmation: string) => {
+    const res = await fetch(`/api/patients/${patient.id}/permanent-delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to delete");
+    }
+    router.push("/patients");
+  };
 
   const name = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || "Unnamed Patient";
   const age = getAge(patient.date_of_birth);
@@ -126,6 +176,33 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         <span className="text-[var(--color-text-primary)]">{name}</span>
       </nav>
 
+      {/* Archived banner */}
+      {patient.is_archived && (
+        <div className="flex items-center justify-between px-4 py-3 mb-4 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50">
+          <div className="flex items-center gap-2 text-sm text-amber-800">
+            <Archive className="w-4 h-4" />
+            <span className="font-medium">This patient has been archived.</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleArchiveToggle}
+              disabled={archiving}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-[var(--radius-md)] transition-colors disabled:opacity-50"
+            >
+              <ArchiveRestore className="w-3.5 h-3.5" />
+              {archiving ? "Restoring..." : "Restore"}
+            </button>
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-[var(--radius-md)] transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Permanently Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] flex items-center justify-center">
@@ -146,14 +223,86 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
           </div>
         </div>
 
-        <Link
-          href={`/visits/new?patient_id=${patient.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
-        >
-          <Stethoscope className="w-3.5 h-3.5" />
-          New Visit
-        </Link>
+        <div className="flex items-center gap-2">
+          {!patient.is_archived && (
+            <Link
+              href={`/visits/new?patient_id=${patient.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
+            >
+              <Stethoscope className="w-3.5 h-3.5" />
+              New Visit
+            </Link>
+          )}
+
+          {/* Actions menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu((prev) => !prev)}
+              className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              title="Patient actions"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {showMenu && (
+              <>
+                {/* Click-away backdrop */}
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-card)] z-20 py-1">
+                  {!patient.is_archived ? (
+                    <button
+                      onClick={() => { setShowMenu(false); setShowArchiveDialog(true); }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+                    >
+                      <Archive className="w-4 h-4" />
+                      Archive Patient
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setShowMenu(false); handleArchiveToggle(); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+                      >
+                        <ArchiveRestore className="w-4 h-4" />
+                        Restore Patient
+                      </button>
+                      <button
+                        onClick={() => { setShowMenu(false); setShowDeleteDialog(true); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Permanently Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Archive confirmation dialog */}
+      {showArchiveDialog && (
+        <ConfirmDialog
+          title="Archive Patient"
+          description={`Are you sure you want to archive ${name}? They will no longer appear in your active patient list but can be restored later.`}
+          confirmLabel={archiving ? "Archiving..." : "Archive"}
+          confirmVariant="warning"
+          disabled={archiving}
+          onConfirm={handleArchiveToggle}
+          onCancel={() => setShowArchiveDialog(false)}
+        />
+      )}
+
+      {/* Permanent delete dialog */}
+      {showDeleteDialog && (
+        <PermanentDeleteDialog
+          patientName={name}
+          onConfirm={handlePermanentDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
 
       {/* Tab bar */}
       <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
@@ -340,6 +489,135 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         {activeTab === "timeline" && (
           <PatientTimeline patientId={patient.id} />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Dialogs ─────────────────────────────────────────────────────────
+
+function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  confirmVariant = "warning",
+  disabled,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  confirmVariant?: "warning" | "danger";
+  disabled?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const variantStyles = {
+    warning: "bg-amber-600 hover:bg-amber-700 text-white",
+    danger: "bg-red-600 hover:bg-red-700 text-white",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h2>
+        <p className="text-sm text-[var(--color-text-secondary)] mb-6">{description}</p>
+        <div className="flex items-center justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={disabled}
+            className={`px-4 py-2 text-sm font-medium rounded-[var(--radius-md)] transition-colors disabled:opacity-50 ${variantStyles[confirmVariant]}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PermanentDeleteDialog({
+  patientName,
+  onConfirm,
+  onCancel,
+}: {
+  patientName: string;
+  onConfirm: (confirmation: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [input, setInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const expected = `${patientName} Delete`;
+  const isMatch = input === expected;
+
+  const handleSubmit = async () => {
+    if (!isMatch) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await onConfirm(input);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Permanently Delete Patient</h2>
+        </div>
+
+        <p className="text-sm text-[var(--color-text-secondary)] mb-2">
+          This action is <strong className="text-red-600">irreversible</strong>. All patient data including visits, documents, lab reports, and supplements will be permanently deleted.
+        </p>
+
+        <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+          To confirm, type <strong className="text-[var(--color-text-primary)] font-mono bg-[var(--color-surface-tertiary)] px-1.5 py-0.5 rounded">{expected}</strong> below:
+        </p>
+
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => { setInput(e.target.value); setError(null); }}
+          placeholder={expected}
+          className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-[var(--color-text-muted)]"
+          autoFocus
+          autoComplete="off"
+          spellCheck={false}
+        />
+
+        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+
+        <div className="flex items-center justify-end gap-3 mt-6">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!isMatch || deleting}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-[var(--radius-md)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {deleting ? "Deleting..." : "Permanently Delete"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -110,7 +110,7 @@ export default async function DashboardPage() {
           <Link
             key={action.href}
             href={action.href}
-            className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-500)]"
+            className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
           >
             {action.icon}
             {action.label}
