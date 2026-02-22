@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "./button";
 
 interface ConfirmDialogProps {
@@ -111,7 +111,8 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading ? "Deleting..." : confirmLabel}
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {confirmLabel}
           </Button>
         </div>
       </div>

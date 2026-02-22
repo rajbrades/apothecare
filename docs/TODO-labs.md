@@ -1,7 +1,7 @@
 # Lab Results Module — TODO
 
 **Reference:** [PRD-labs.md](PRD-labs.md)
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-20
 
 ---
 
@@ -36,13 +36,14 @@
 - [x] Add "Show Archived" toggle to `lab-list-client.tsx` filter bar
 - [x] Archived labs visually dimmed in list view
 
-### Patient Profile — Dedicated Labs Tab ✅
+### Patient Profile — Dedicated Labs Tab ✅ → Merged into Documents
 - [x] Add "Labs" tab to `patient-profile.tsx` (separate from Documents)
 - [x] Create `patient-labs-tab.tsx` component
 - [x] Show lab cards with type icons/colors
 - [x] Summary bar: report count, flag count, last lab date
 - [x] "Upload Lab" button pre-selects current patient
 - [x] Link to biomarker timeline
+- **Note (Feb 20):** Labs tab removed and merged into Documents tab with category grouping (Lab Reports, Clinical Records, Imaging, Referrals, Administrative, Other). Biomarker Trends moved to Documents sub-toggle ("All Files / Trends"). This reduced the tab bar from 7 → 6 tabs.
 
 ---
 
@@ -112,7 +113,7 @@
 - [x] Lab search (test name, vendor, patient name — debounced)
 - [x] Patient filter on lab list
 - [x] Lab archival (archive/unarchive/show archived toggle)
-- [x] Patient profile dedicated Labs tab with summary bar
+- [x] Patient profile dedicated Labs tab with summary bar (later merged into Documents tab — see P1 note)
 - [x] Smart lab titles from AI-extracted test names
 - [x] Lab report deletion with cascade cleanup
 

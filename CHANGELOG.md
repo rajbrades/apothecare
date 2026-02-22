@@ -2,6 +2,78 @@
 
 All notable changes to Apotheca will be documented in this file.
 
+## [0.14.0] - 2026-02-22
+
+### Added — Freeform Supplement Reviews
+- **Patient-free review mode**: Reviews tab now supports "For a patient" and "Freeform" modes. Pill-style toggle at top of form.
+- **Freeform input**: Textarea for pasting a supplement list, plus optional medications and medical context fields.
+- **Structured item builder**: Expandable mini-form with Name, Dosage, Form fields. Each added item appends a formatted line (e.g., "Vitamin D3 5000 IU (softgel)") to the textarea.
+- **API freeform branch**: `/api/supplements/review` now accepts `{ supplements, medications?, medical_context? }` without a patient. Skips patient/biomarker DB lookups; inserts review with `patient_id: null`.
+- **Migration 014** (`supabase/migrations/014_freeform_reviews.sql`): `supplement_reviews.patient_id` changed from `NOT NULL` to nullable. RLS uses `practitioner_id` only — no RLS changes required.
+- **Past reviews list**: Freeform reviews display "Freeform Review" label when `patient_id` is null.
+
+### Added — Clinician Action Overrides on Supplement Reviews
+- **Clickable `ActionBadge` dropdown**: Each supplement's action badge (Keep/Modify/Discontinue/Add) is now an interactive dropdown on the review detail page. Practitioners can override AI recommendations before pushing to the patient file.
+- **Visual override feedback**: Overridden badges show a ring indicator + "(AI)" label beside the original recommendation. Items with `discontinue` override display a red border and strikethrough on the supplement name.
+- **Overrides sent at push time**: `action_overrides: Record<string, SupplementAction>` sent in the push-review request body. Original AI recommendations preserved in DB.
+- **Badges become read-only after push** to prevent accidental post-push changes.
+
+### Added — Push Protocol Supplements to Patient File
+- **Protocol tab push button** in visit workspace: Confirm dialog pushes all AI-recommended protocol supplements to `patient_supplements` with `source: "protocol"` and `visit_id` provenance.
+- **Migration 013** (`supabase/migrations/013_protocol_push.sql`): Adds `protocol` to `patient_supplement_source` enum, `visit_id` on `patient_supplements`, `protocol_pushed_at` on `visits`.
+- **"Pushed {date}" emerald badge** shown after push; "Re-push Supplements" available for subsequent updates.
+
+## [0.13.0] - 2026-02-21
+
+### Added — Supplement Phase 2: Push to Patient File
+- **"Push to Patient File" button** on supplement review detail page: maps each review item → `patient_supplements` row. `keep`/`modify` → upsert active; `discontinue` → set discontinued with timestamp; `add` → insert new with `source: "review"` + `review_id` provenance.
+- **Migration 012** (`supabase/migrations/012_supplement_review_pushed_at.sql`): Adds `pushed_at TIMESTAMPTZ` to `supplement_reviews` for idempotency tracking.
+- **Deduplication**: Matches by lowercased supplement name; updates existing rows instead of duplicating.
+- **Push API** (`/api/patients/[id]/supplements/push-review`): CSRF + auth + Zod validated. Accepts `review_id` and optional `action_overrides`.
+
+### Added — Patient Archive/Delete
+- Active/Archived patient toggle on patient list page.
+- Per-patient archive and hard-delete (confirmation dialog) actions.
+
+### Added — Patient-Level IFM Matrix (Migration 011)
+- **`patients.ifm_matrix` JSONB column** (Migration 011): Persistent IFM Matrix stored per patient.
+- **IFM Matrix tab** on patient profile: Editable, persisted across all visits.
+- **"Push to Patient Matrix" button** on visit workspace: Merges visit IFM findings into patient-level matrix (idempotent dedup, severity escalation, notes concatenation).
+- **`src/lib/ifm/merge.ts`**: Pure utility functions for matrix merging.
+- **Simplified `ifm-matrix-view.tsx`**: Reduced from ~530 to ~155 lines; display-only cards with click-to-edit modal.
+
+### Added — Structured Supplement List: Phase 1 (Migration 010)
+- **`patient_supplements` table**: Structured supplement records with name, dosage, form, frequency, timing, brand, status, source, `review_id` provenance, and sort order.
+- **`supplement-list.tsx`**: Inline add/edit/discontinue UI on patient Overview tab. Replaces freeform supplements field.
+- **CRUD API** (`/api/patients/[id]/supplements` + `/[supId]`): GET list, POST create, PATCH update, DELETE (soft-delete).
+- **Supplements overlay** in `supplements/page.tsx`: Merges structured `patient_supplements` over freeform field for AI review context.
+
+## [0.12.0] - 2026-02-20
+
+### Added — Patient Timeline Phase 1 (Migration 009)
+- **`timeline_events` table** (Migration 009): Enum-typed events (`lab_result`, `visit`, `supplement_start`, `supplement_stop`, `supplement_dose_change`, `symptom_log`, `protocol_milestone`, `patient_reported`, `ai_insight`), RLS, auto-insert triggers on lab completion + visit creation, backfill for historical data.
+- **Timeline API** (`/api/patients/[id]/timeline`): Cursor-paginated, filterable by event type.
+- **Timeline tab** on patient profile: Chronological event list with type-specific icons (6th tab alongside Overview, Documents, Pre-Chart, IFM Matrix, Lab Trends).
+
+### Added — Inline-Editable Patient Overview
+- **Per-section edit mode**: Overview sections (Chief Complaints, Medical History, Medications, Supplements, Allergies) each have an edit pencil revealing inline editing.
+- **`EditableTextSection`** and **`EditableTagSection`** components: Textarea or tag-cloud editor with PATCH save + optimistic UI + error rollback.
+
+### Fixed — Homepage Design Polish (Sprint 11)
+- **Design tokens neutralized**: `--color-text-*` tokens shifted from green-tinted to pure neutral greys.
+- **`surface-secondary`**: Changed to `oklab(... / 0.2)` nearly-transparent warm tint.
+- **Landing page audit**: All 12 landing page components verified 100% token-compliant.
+
+### Changed — Labs merged into Documents tab
+- Unified document list shows both uploaded documents and lab reports (flask icon, vendor metadata, "View" link for lab reports).
+
+## [0.11.0] - 2026-02-19
+
+### Added — Homepage Redesign
+- **Geist font** for body copy; **OKLCH brand color palette** for perceptually uniform brand colors.
+- **Refined-A layout**: Hero spacing, input sizing, and CTA hierarchy polished.
+- **Chat mockup**: Demo chat now shows a rich AI response with citations and evidence badges.
+
 ## [0.10.0] - 2026-02-18
 
 ### Fixed

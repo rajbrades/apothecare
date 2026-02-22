@@ -31,6 +31,31 @@ export default async function SupplementsPage() {
     .order("last_name", { ascending: true })
     .limit(500);
 
+  // Overlay structured patient_supplements when available — prefer over freeform field
+  type PatientRow = { id: string; first_name: string | null; last_name: string | null; supplements: string | null; current_medications: string | null };
+  let mergedPatients: PatientRow[] = (patients || []) as PatientRow[];
+  if (mergedPatients.length > 0) {
+    const { data: structuredSupps } = await supabase
+      .from("patient_supplements")
+      .select("patient_id, name, dosage")
+      .in("patient_id", mergedPatients.map((p) => p.id))
+      .eq("status", "active")
+      .order("sort_order", { ascending: true });
+
+    if (structuredSupps && structuredSupps.length > 0) {
+      const suppsByPatient = new Map<string, string[]>();
+      for (const s of structuredSupps as { patient_id: string; name: string; dosage: string | null }[]) {
+        const list = suppsByPatient.get(s.patient_id) ?? [];
+        list.push(s.dosage ? `${s.name} ${s.dosage}` : s.name);
+        suppsByPatient.set(s.patient_id, list);
+      }
+      mergedPatients = mergedPatients.map((p) => {
+        const structured = suppsByPatient.get(p.id);
+        return structured ? { ...p, supplements: structured.join("\n") } : p;
+      });
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-6 pt-12 pb-8">
       <div className="mb-6">
@@ -43,7 +68,7 @@ export default async function SupplementsPage() {
       </div>
       <SupplementsPageClient
         initialReviews={reviews || []}
-        patients={patients || []}
+        patients={mergedPatients}
       />
     </div>
   );

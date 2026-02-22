@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { SUPPORTED_BRANDS } from "@/lib/validations/supplement";
-import { Check, Plus, X, Loader2 } from "lucide-react";
+import { SUPPORTED_BRANDS, KNOWN_SUPPLEMENT_BRANDS } from "@/lib/validations/supplement";
+import { Check, Plus, X, Loader2, AlertTriangle } from "lucide-react";
 
 interface BrandPreference {
   brand_name: string;
@@ -15,8 +15,30 @@ export function BrandFormulary() {
   const [brands, setBrands] = useState<BrandPreference[]>([]);
   const [strictMode, setStrictMode] = useState(false);
   const [customBrand, setCustomBrand] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const suggestions = useMemo(() => {
+    const q = customBrand.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return KNOWN_SUPPLEMENT_BRANDS.filter(
+      (b) =>
+        b.toLowerCase().includes(q) &&
+        !brands.some(
+          (existing) => existing.brand_name.toLowerCase() === b.toLowerCase()
+        )
+    ).slice(0, 6);
+  }, [customBrand, brands]);
+
+  const isUnrecognized = useMemo(() => {
+    const q = customBrand.trim();
+    if (q.length < 3) return false;
+    return !KNOWN_SUPPLEMENT_BRANDS.some(
+      (b) => b.toLowerCase() === q.toLowerCase()
+    );
+  }, [customBrand]);
 
   // Fetch current preferences on mount
   useEffect(() => {
@@ -95,7 +117,24 @@ export function BrandFormulary() {
       { brand_name: name, is_active: true, priority: prev.length },
     ]);
     setCustomBrand("");
+    setShowSuggestions(false);
   }, [customBrand, brands]);
+
+  const selectSuggestion = useCallback(
+    (name: string) => {
+      if (brands.some((b) => b.brand_name.toLowerCase() === name.toLowerCase())) {
+        toast.error("This brand is already in your list.");
+      } else {
+        setBrands((prev) => [
+          ...prev,
+          { brand_name: name, is_active: true, priority: prev.length },
+        ]);
+      }
+      setCustomBrand("");
+      setShowSuggestions(false);
+    },
+    [brands]
+  );
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -213,15 +252,45 @@ export function BrandFormulary() {
           Add Custom Brand
         </label>
         <div className="flex gap-2">
-          <input
-            id="custom-brand"
-            type="text"
-            value={customBrand}
-            onChange={(e) => setCustomBrand(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCustomBrand()}
-            placeholder="e.g., Thorne Research"
-            className="flex-1 px-3 py-2 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
-          />
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              id="custom-brand"
+              type="text"
+              value={customBrand}
+              onChange={(e) => {
+                setCustomBrand(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  addCustomBrand();
+                }
+                if (e.key === "Escape") {
+                  setShowSuggestions(false);
+                }
+              }}
+              onFocus={() => customBrand.trim().length >= 2 && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="e.g., Thorne Research"
+              autoComplete="off"
+              className="w-full px-3 py-2 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)] focus:border-transparent"
+            />
+            {/* Autocomplete suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-card)] overflow-hidden">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    onMouseDown={() => selectSuggestion(s)}
+                    className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={addCustomBrand}
             disabled={!customBrand.trim()}
@@ -231,6 +300,13 @@ export function BrandFormulary() {
             Add
           </button>
         </div>
+        {/* Unrecognized brand warning */}
+        {isUnrecognized && !showSuggestions && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-amber-600">
+            <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+            Not in our known brands list — double-check the spelling or add anyway.
+          </p>
+        )}
       </div>
 
       {/* Strict mode toggle */}

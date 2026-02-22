@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInteractionCheck } from "@/hooks/use-interaction-check";
 import { InteractionResultCard } from "./interaction-result-card";
 import { Loader2, Shield, AlertTriangle, StopCircle } from "lucide-react";
@@ -15,10 +15,11 @@ interface PatientOption {
 
 interface InteractionCheckerProps {
   patients: PatientOption[];
+  selectedPatientId: string;
+  onPatientChange: (id: string) => void;
 }
 
-export function InteractionChecker({ patients }: InteractionCheckerProps) {
-  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+export function InteractionChecker({ patients, selectedPatientId, onPatientChange }: InteractionCheckerProps) {
   const [supplements, setSupplements] = useState("");
   const [medications, setMedications] = useState("");
 
@@ -27,9 +28,20 @@ export function InteractionChecker({ patients }: InteractionCheckerProps) {
 
   const isChecking = status === "generating" || status === "streaming";
 
+  // Auto-fill when mounting with an already-selected patient (e.g. switching tabs)
+  useEffect(() => {
+    if (selectedPatientId && !supplements && !medications) {
+      const patient = patients.find((p) => p.id === selectedPatientId);
+      if (patient) {
+        setSupplements(patient.supplements || "");
+        setMedications(patient.current_medications || "");
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-fill from patient record
   function handlePatientChange(patientId: string) {
-    setSelectedPatientId(patientId);
+    onPatientChange(patientId);
     if (patientId) {
       const patient = patients.find((p) => p.id === patientId);
       if (patient) {

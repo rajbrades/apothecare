@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { FullscriptStubButton } from "./fullscript-stub-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SupplementReviewItem, SupplementAction, InteractionSeverity } from "@/types/database";
 
 interface SupplementReviewDetailProps {
@@ -15,8 +17,10 @@ interface SupplementReviewDetailProps {
       summary: string;
     } | null;
     created_at: string;
+    pushed_at?: string | null;
   };
   patientName: string;
+  patientId?: string;
 }
 
 const ACTION_BADGE_CONFIG: Record<
@@ -59,9 +63,100 @@ const SEVERITY_STYLES: Record<InteractionSeverity, string> = {
   unknown: "bg-gray-50 border-gray-200 text-gray-700",
 };
 
-function SupplementItemCard({ item }: { item: SupplementReviewItem }) {
+const ACTION_OPTIONS: SupplementAction[] = ["keep", "modify", "discontinue", "add"];
+
+function ActionBadge({
+  currentAction,
+  originalAction,
+  onActionChange,
+}: {
+  currentAction: SupplementAction;
+  originalAction: SupplementAction;
+  onActionChange?: (action: SupplementAction) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const config = ACTION_BADGE_CONFIG[currentAction] || ACTION_BADGE_CONFIG.keep;
+  const isOverridden = currentAction !== originalAction;
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  if (!onActionChange) {
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium border rounded-[var(--radius-sm)] flex-shrink-0 ${config.className}`}
+      >
+        {config.label}
+      </span>
+    );
+  }
+
+  return (
+    <div className="relative flex-shrink-0" ref={menuRef}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium border rounded-[var(--radius-sm)] cursor-pointer hover:opacity-80 transition-opacity ${config.className} ${isOverridden ? "ring-1 ring-offset-1 ring-[var(--color-brand-300)]" : ""}`}
+        title="Click to change action"
+      >
+        {config.label}
+        <ChevronDown className="w-3 h-3" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-card)] py-1 min-w-[120px]">
+          {ACTION_OPTIONS.map((action) => {
+            const opt = ACTION_BADGE_CONFIG[action];
+            const isActive = action === currentAction;
+            return (
+              <button
+                key={action}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onActionChange(action);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${isActive ? "bg-[var(--color-surface-secondary)] font-medium" : "hover:bg-[var(--color-surface-secondary)]"}`}
+              >
+                <span className={`inline-flex items-center gap-1.5`}>
+                  <span className={`w-2 h-2 rounded-full border ${opt.className}`} />
+                  {opt.label}
+                  {action === originalAction && action !== currentAction && (
+                    <span className="text-[10px] text-[var(--color-text-muted)]">(AI)</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SupplementItemCard({
+  item,
+  actionOverride,
+  onActionChange,
+}: {
+  item: SupplementReviewItem;
+  actionOverride?: SupplementAction;
+  onActionChange?: (name: string, action: SupplementAction) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const actionConfig = ACTION_BADGE_CONFIG[item.action] || ACTION_BADGE_CONFIG.keep;
+  const currentAction = actionOverride || item.action;
 
   const hasDetails =
     item.recommended_dosage ||
@@ -73,7 +168,7 @@ function SupplementItemCard({ item }: { item: SupplementReviewItem }) {
     (item.biomarker_correlations && item.biomarker_correlations.length > 0);
 
   return (
-    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-[var(--color-surface)]">
+    <div className={`border rounded-[var(--radius-md)] bg-[var(--color-surface)] ${currentAction === "discontinue" ? "border-red-200" : "border-[var(--color-border-light)]"}`}>
       {/* Always visible header */}
       <button
         onClick={() => hasDetails && setExpanded(!expanded)}
@@ -92,7 +187,7 @@ function SupplementItemCard({ item }: { item: SupplementReviewItem }) {
               </span>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-medium text-[var(--color-text-primary)]">
+              <p className={`text-sm font-medium ${currentAction === "discontinue" ? "text-red-700 line-through" : "text-[var(--color-text-primary)]"}`}>
                 {item.name}
               </p>
               {item.current_dosage && (
@@ -110,11 +205,15 @@ function SupplementItemCard({ item }: { item: SupplementReviewItem }) {
               )}
             </div>
           </div>
-          <span
-            className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium border rounded-[var(--radius-sm)] flex-shrink-0 ${actionConfig.className}`}
-          >
-            {actionConfig.label}
-          </span>
+          <ActionBadge
+            currentAction={currentAction}
+            originalAction={item.action}
+            onActionChange={
+              onActionChange
+                ? (action) => onActionChange(item.name, action)
+                : undefined
+            }
+          />
         </div>
       </button>
 
@@ -244,8 +343,54 @@ function SupplementItemCard({ item }: { item: SupplementReviewItem }) {
 export function SupplementReviewDetail({
   review,
   patientName,
+  patientId,
 }: SupplementReviewDetailProps) {
   const data = review.review_data;
+  const [showPushConfirm, setShowPushConfirm] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pushed, setPushed] = useState(!!review.pushed_at);
+  const [actionOverrides, setActionOverrides] = useState<
+    Record<string, SupplementAction>
+  >({});
+
+  const handleActionChange = useCallback(
+    (name: string, action: SupplementAction) => {
+      const key = name.trim().toLowerCase();
+      setActionOverrides((prev) => ({ ...prev, [key]: action }));
+    },
+    []
+  );
+
+  const hasOverrides = Object.keys(actionOverrides).length > 0;
+
+  const handlePushToPatientFile = async () => {
+    if (!patientId || !review.id) return;
+    setPushing(true);
+    try {
+      const body: Record<string, unknown> = { review_id: review.id };
+      if (hasOverrides) body.action_overrides = actionOverrides;
+
+      const res = await fetch(`/api/patients/${patientId}/supplements/push-review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to push supplements");
+      }
+      const { results } = await res.json();
+      setPushed(true);
+      setShowPushConfirm(false);
+      toast.success(
+        `Pushed ${results.total} supplement${results.total !== 1 ? "s" : ""} to patient file`
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Push failed");
+    } finally {
+      setPushing(false);
+    }
+  };
 
   if (!data) {
     return (
@@ -254,6 +399,8 @@ export function SupplementReviewDetail({
       </div>
     );
   }
+
+  const canPush = patientId && review.id && review.status === "complete";
 
   return (
     <div className="space-y-6">
@@ -269,6 +416,31 @@ export function SupplementReviewDetail({
         </div>
       )}
 
+      {/* Push to Patient File */}
+      {canPush && (
+        <div className="flex justify-end">
+          {pushed ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-[var(--radius-md)]">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Pushed to Patient File
+            </span>
+          ) : (
+            <button
+              onClick={() => setShowPushConfirm(true)}
+              disabled={pushing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+            >
+              {pushing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Upload className="w-3.5 h-3.5" />
+              )}
+              Push to Patient File
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Current supplements review */}
       {data.items && data.items.length > 0 && (
         <div>
@@ -277,7 +449,12 @@ export function SupplementReviewDetail({
           </h3>
           <div className="space-y-2">
             {data.items.map((item, idx) => (
-              <SupplementItemCard key={`item-${idx}`} item={item} />
+              <SupplementItemCard
+                key={`item-${idx}`}
+                item={item}
+                actionOverride={actionOverrides[item.name.trim().toLowerCase()]}
+                onActionChange={!pushed ? handleActionChange : undefined}
+              />
             ))}
           </div>
         </div>
@@ -291,11 +468,28 @@ export function SupplementReviewDetail({
           </h3>
           <div className="space-y-2">
             {data.additions.map((item, idx) => (
-              <SupplementItemCard key={`addition-${idx}`} item={item} />
+              <SupplementItemCard
+                key={`addition-${idx}`}
+                item={item}
+                actionOverride={actionOverrides[item.name.trim().toLowerCase()]}
+                onActionChange={!pushed ? handleActionChange : undefined}
+              />
             ))}
           </div>
         </div>
       )}
+
+      {/* Push confirm dialog */}
+      <ConfirmDialog
+        open={showPushConfirm}
+        onConfirm={handlePushToPatientFile}
+        onCancel={() => setShowPushConfirm(false)}
+        title="Push to Patient File?"
+        description="This will update the patient's supplement list based on this review. Existing supplements will be matched by name — kept and modified items will be updated, discontinued items marked inactive, and new additions created."
+        confirmLabel="Push to Patient File"
+        variant="warning"
+        loading={pushing}
+      />
     </div>
   );
 }

@@ -6,13 +6,13 @@ import { IFMNodeModal } from "./ifm-node-modal";
 import type { IFMMatrix, IFMMatrixNode } from "@/types/database";
 
 const MATRIX_NODES: { key: keyof IFMMatrix; label: string; description: string }[] = [
-  { key: "assimilation", label: "Assimilation", description: "Digestion, absorption, microbiome, GI barrier" },
-  { key: "defense_repair", label: "Defense & Repair", description: "Immune, inflammation, autoimmunity" },
-  { key: "energy", label: "Energy", description: "Mitochondria, oxidative stress, ATP" },
-  { key: "biotransformation", label: "Biotransformation", description: "Detox, methylation, Phase I/II" },
-  { key: "transport", label: "Transport", description: "Cardiovascular, lymphatic, respiratory" },
-  { key: "communication", label: "Communication", description: "Hormones, neurotransmitters, cytokines" },
-  { key: "structural_integrity", label: "Structural Integrity", description: "Musculoskeletal, membranes" },
+  { key: "assimilation", label: "Assimilation", description: "Digestion, Absorption, Microbiome, GI Barrier" },
+  { key: "defense_repair", label: "Defense & Repair", description: "Immune, Inflammation, Autoimmunity" },
+  { key: "energy", label: "Energy", description: "Mitochondria, Oxidative Stress, ATP" },
+  { key: "biotransformation", label: "Biotransformation", description: "Detox, Methylation, Phase I/II" },
+  { key: "transport", label: "Transport", description: "Cardiovascular, Lymphatic, Respiratory" },
+  { key: "communication", label: "Communication", description: "Hormones, Neurotransmitters, Cytokines" },
+  { key: "structural_integrity", label: "Structural Integrity", description: "Musculoskeletal, Membranes" },
 ];
 
 const SEVERITY_COLORS = {

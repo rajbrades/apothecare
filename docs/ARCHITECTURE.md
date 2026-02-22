@@ -27,7 +27,7 @@ Apotheca is a Next.js 15 application using the App Router with React Server Comp
 │  CSRF protected          │   │  ┌─────────────────────────────────┐│
 │  Audit logged (IP+UA)    │   │  │  PostgreSQL 17 + pgvector       ││
 │                          │   │  │  Row-Level Security              ││
-└──────────┬───────────────┘   │  │  16+ tables + audit logs          ││
+└──────────┬───────────────┘   │  │  18+ tables + audit logs          ││
            │                   │  │  17 seeded biomarkers             ││
      ┌─────┼──────────┐       │  └─────────────────────────────────┘│
      ▼     ▼          ▼       │  HIPAA: Supabase Pro BAA             │
@@ -61,25 +61,41 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
 
 ### Supplement Review Flow (Current Implementation)
 
+Supports two modes: **patient-based** (full context from DB) and **freeform** (no patient required).
+
 ```
-1. Practitioner navigates to /supplements, selects a patient
-2. POST /api/supplements/review { patient_id }
-3. CSRF + Zod validation + rate limit check → Auth → fetch patient (supplements, meds, allergies, history)
-4. Fetch latest 50 biomarker results for lab correlation
-5. Fetch practitioner's brand preferences (prioritized in prompt)
-6. Build system prompt: SUPPLEMENT_REVIEW_SYSTEM_PROMPT + brand prefs + patient context + lab context
-7. Insert supplement_reviews row (status: generating)
-8. Stream AI response via SSE with events: review_id, text_delta, review_complete, error
-9. Parse JSON: items[] (keep/modify/discontinue per supplement) + additions[] (new recs) + summary
-10. Update row (status: complete, review_data JSONB)
-11. Audit log with IP, user agent, patient_id
-12. Client receives SSE stream via useSupplementReview hook → renders detail cards
+Patient mode:
+1. Practitioner selects a patient on Reviews tab → POST /api/supplements/review { patient_id }
+2. CSRF + Zod validation + rate limit check → Auth → fetch patient (supplements, meds, allergies, history)
+3. Fetch latest 50 biomarker results for lab correlation
+4. Fetch practitioner's brand preferences (prioritized in prompt)
+5. Build prompt: SUPPLEMENT_REVIEW_SYSTEM_PROMPT + brand prefs + patient context + lab context
+6. Insert supplement_reviews row (status: generating, patient_id set)
+7. Stream AI response via SSE: review_id, text_delta, review_complete, error
+8. Parse JSON: items[] (keep/modify/discontinue per supplement) + additions[] + summary
+9. Update row (status: complete, review_data JSONB)
+10. Audit log with IP, user agent, patient_id
+
+Freeform mode:
+1. Practitioner toggles to "Freeform" mode → POST /api/supplements/review { supplements, medications?, medical_context? }
+2. CSRF + Zod validation + rate limit → Auth
+3. No patient/biomarker DB lookup; supplements text used directly
+4. Insert supplement_reviews row (patient_id: null)
+5. Same streaming/parsing/audit flow as patient mode
+
+Push to Patient File:
+1. Practitioner optionally overrides action badges (Keep/Modify/Discontinue/Add) via ActionBadge dropdown
+2. POST /api/patients/[id]/supplements/push-review { review_id, action_overrides? }
+3. Maps review items → patient_supplements rows with provenance (review_id)
+4. Sets supplement_reviews.pushed_at for idempotency tracking
 ```
 
 **Key files:**
 - `src/lib/ai/supplement-prompts.ts` — Review + interaction system prompts, `buildSupplementReviewPrompt()`, `formatLabContextForReview()`
-- `src/lib/validations/supplement.ts` — Zod schemas + `SUPPORTED_BRANDS` const
-- `src/hooks/use-supplement-review.ts` — SSE streaming hook (mirrors `use-visit-stream.ts`)
+- `src/lib/validations/supplement.ts` — Zod schemas + `SUPPORTED_BRANDS` const; `.refine()` requires patient_id OR supplements
+- `src/lib/validations/patient-supplement.ts` — `pushReviewSchema` with `action_overrides` record
+- `src/hooks/use-supplement-review.ts` — SSE streaming hook; accepts `{ patient_id }` or `{ supplements, medications?, medical_context? }`
+- `src/app/api/patients/[id]/supplements/push-review/route.ts` — Push-review API with override support
 
 ### Interaction Check Flow (Current Implementation)
 
@@ -219,7 +235,7 @@ Anthropic offers a HIPAA BAA with zero data retention — patient data sent via 
 6. Flag calculation: conventional + functional flags (optimal/normal/borderline/out-of-range/critical)
 7. Results saved to biomarker_results table, status → "complete"
 8. Lab detail page polls status (3s interval), displays dual-range bars when ready
-9. If patient_id linked, lab appears in patient's Documents tab automatically
+9. If patient_id linked, lab appears in patient's Documents tab (Lab Reports category) automatically
 10. On failure: status → "error", retry via POST /api/labs/[id]/reparse re-triggers pipeline
 11. Stuck job cleanup: GET /api/admin/cleanup-stuck-jobs marks jobs stuck >15min as error
 ```
@@ -356,6 +372,11 @@ src/
 │   │   │   │   │   │   ├── extract/route.ts  # POST re-trigger extraction
 │   │   │   │   │   │   └── route.ts          # GET/DELETE document
 │   │   │   │   │   └── route.ts              # GET list / POST upload
+│   │   │   │   ├── ifm-matrix/
+│   │   │   │   │   └── merge/route.ts        # POST merge visit IFM into patient matrix
+│   │   │   │   ├── supplements/
+│   │   │   │   │   ├── [supId]/route.ts      # PATCH/DELETE supplement
+│   │   │   │   │   └── route.ts              # GET list / POST create
 │   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
@@ -407,12 +428,13 @@ src/
 │   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner
 │   │   └── sidebar-conversation.tsx # Conversation list management
 │   ├── patients/
-│   │   ├── document-list.tsx       # Unified document + lab report list
+│   │   ├── document-list.tsx       # Unified document + lab report list (groupBy mode for category sections)
 │   │   ├── document-upload.tsx     # Document upload form
 │   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
-│   │   ├── patient-profile.tsx     # Patient detail view
+│   │   ├── patient-profile.tsx     # Patient detail view (6 tabs: Overview, Documents, Pre-Chart, IFM Matrix, Visits, Timeline)
+│   │   ├── supplement-list.tsx    # Structured supplement list (CRUD, inline add/edit/discontinue)
 │   │   ├── patient-quick-create.tsx # Inline patient creation modal
 │   │   └── pre-chart-view.tsx      # Pre-encounter patient summary
 │   ├── ui/
@@ -431,11 +453,11 @@ src/
 │       │   ├── template-section-node.tsx # Collapsible section NodeView
 │       │   └── visit-editor.tsx        # Main Tiptap editor wrapper
 │       ├── ifm-node-modal.tsx      # IFM Matrix node editing modal
-│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs
+│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs + Push to Patient Matrix
 │       ├── new-visit-form.tsx      # Patient + encounter type selector
 │       ├── voice-input.tsx         # Voice input component
 │       ├── soap-sections.tsx       # SOAP note display tabs
-│       ├── ifm-matrix-view.tsx     # IFM Matrix visualization + inline editing + DnD
+│       ├── ifm-matrix-view.tsx     # IFM Matrix visualization (display-only cards, click → IFMNodeModal)
 │       ├── protocol-panel.tsx      # Protocol recommendations panel
 │       └── export-menu.tsx         # Visit export options
 ├── hooks/
@@ -470,6 +492,8 @@ src/
 │   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
+│   ├── ifm/
+│   │   └── merge.ts               # IFM Matrix merge utility (dedup findings, severity escalation, notes concat)
 │   ├── labs/
 │   │   ├── normalize-biomarkers.ts # Biomarker reference matching + flag calculation
 │   │   └── flag-mapping.ts         # DB flag → component display mapping
@@ -490,6 +514,7 @@ src/
 │       ├── chat.ts                 # Chat API schemas
 │       ├── visit.ts                # Visit create/update/generate schemas
 │       ├── patient.ts              # Patient create/update schemas
+│       ├── patient-supplement.ts   # Patient supplement CRUD schemas
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -519,7 +544,13 @@ supabase/migrations/
 ├── 005_rate_limits.sql             # Rate limit table + RPC
 ├── 006_supplements.sql             # 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
 ├── 007_lab_enhancements.sql        # Lab search, archival, smart titles
-└── 008_chat_attachments.sql        # chat_attachments storage bucket
+├── 008_chat_attachments.sql        # chat_attachments storage bucket
+├── 009_timeline_events.sql         # timeline_events table, enum, RLS, auto-insert triggers, backfill
+├── 010_patient_supplements.sql     # patient_supplements table, enums, RLS, indexes
+├── 011_patient_ifm_matrix.sql      # patients.ifm_matrix JSONB column (persistent IFM Matrix)
+├── 012_supplement_review_pushed_at.sql  # supplement_reviews.pushed_at timestamp for idempotency
+├── 013_protocol_push.sql           # patient_supplement_source 'protocol' enum value, patient_supplements.visit_id, visits.protocol_pushed_at
+└── 014_freeform_reviews.sql        # supplement_reviews.patient_id nullable (freeform reviews without a patient)
 ```
 
 ## Test Infrastructure

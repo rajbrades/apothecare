@@ -26,27 +26,32 @@ export function useSupplementReview() {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const startReview = useCallback(async (patientId: string) => {
-    // Abort any in-flight request
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const startReview = useCallback(
+    async (
+      params:
+        | { patient_id: string }
+        | { supplements: string; medications?: string; medical_context?: string }
+    ) => {
+      // Abort any in-flight request
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    setState({
-      status: "generating",
-      rawText: "",
-      reviewData: null,
-      reviewId: null,
-      error: null,
-    });
-
-    try {
-      const res = await fetch("/api/supplements/review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: patientId }),
-        signal: controller.signal,
+      setState({
+        status: "generating",
+        rawText: "",
+        reviewData: null,
+        reviewId: null,
+        error: null,
       });
+
+      try {
+        const res = await fetch("/api/supplements/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+          signal: controller.signal,
+        });
 
       if (!res.ok) {
         const data = await res.json();

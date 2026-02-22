@@ -28,10 +28,11 @@ export default async function SupplementReviewPage({
 
   if (!review) notFound();
 
-  const patientName =
-    [review.patients?.first_name, review.patients?.last_name]
-      .filter(Boolean)
-      .join(" ") || "Unknown Patient";
+  const patientName = review.patient_id
+    ? [review.patients?.first_name, review.patients?.last_name]
+        .filter(Boolean)
+        .join(" ") || "Unknown Patient"
+    : "Freeform Review";
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -48,7 +49,7 @@ export default async function SupplementReviewPage({
         <span className="text-[var(--color-text-muted)]">&gt;</span>
         <span className="text-[var(--color-text-primary)]">{patientName}</span>
       </nav>
-      <SupplementReviewDetail review={review} patientName={patientName} />
+      <SupplementReviewDetail review={review} patientName={patientName} patientId={review.patient_id || undefined} />
     </div>
   );
 }

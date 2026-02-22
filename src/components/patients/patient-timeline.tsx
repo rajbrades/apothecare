@@ -230,6 +230,56 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
             </span>
           ) : null}
 
+          {/* Supplement start: dosage details */}
+          {event.event_type === "supplement_start" && (detail.dosage || detail.frequency) ? (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {[detail.dosage, detail.form, detail.frequency, detail.timing]
+                .filter(Boolean)
+                .map(String)
+                .join(" · ")}
+            </span>
+          ) : null}
+
+          {/* Supplement dose change: old → new */}
+          {event.event_type === "supplement_dose_change" && detail.previous && detail.updated ? (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {(() => {
+                const prev = detail.previous as Record<string, string | null>;
+                const upd = detail.updated as Record<string, string | null>;
+                const changes: string[] = [];
+                if (prev.dosage !== upd.dosage)
+                  changes.push(`${prev.dosage || "none"} → ${upd.dosage || "none"}`);
+                if (prev.form !== upd.form)
+                  changes.push(`form: ${prev.form || "none"} → ${upd.form || "none"}`);
+                if (prev.frequency !== upd.frequency)
+                  changes.push(`freq: ${prev.frequency || "none"} → ${upd.frequency || "none"}`);
+                if (prev.timing !== upd.timing)
+                  changes.push(`timing: ${prev.timing || "none"} → ${upd.timing || "none"}`);
+                return changes.join(", ");
+              })()}
+            </span>
+          ) : null}
+
+          {/* Supplement stop: show what was being taken */}
+          {event.event_type === "supplement_stop" && detail.last_dosage ? (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              was: {[detail.last_dosage, detail.last_frequency, detail.last_timing]
+                .filter(Boolean)
+                .map(String)
+                .join(" · ")}
+            </span>
+          ) : null}
+
+          {/* Source badge for supplement events */}
+          {(event.event_type === "supplement_start" ||
+            event.event_type === "supplement_stop" ||
+            event.event_type === "supplement_dose_change") &&
+            detail.source ? (
+            <span className="text-xs text-[var(--color-text-muted)] italic">
+              via {String(detail.source)}
+            </span>
+          ) : null}
+
           {/* Body systems as inline text */}
           {event.body_systems && event.body_systems.length > 0 && (
             <span className="text-xs text-[var(--color-text-muted)]">
@@ -377,7 +427,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
             No timeline events yet
           </p>
           <p className="text-xs text-[var(--color-text-muted)] mt-1">
-            Events will appear as labs are processed and visits are created
+            Events will appear as labs, visits, and supplement changes are recorded
           </p>
         </div>
       ) : (

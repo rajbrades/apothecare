@@ -16,7 +16,7 @@ interface PatientOption {
 
 interface ReviewItem {
   id: string;
-  patient_id: string;
+  patient_id: string | null;
   status: string;
   review_data: any;
   created_at: string;
@@ -41,6 +41,7 @@ export function SupplementsPageClient({
   patients,
 }: SupplementsPageClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>("reviews");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
 
   return (
     <div>
@@ -77,10 +78,19 @@ export function SupplementsPageClient({
         aria-labelledby={`tab-${activeTab}`}
       >
         {activeTab === "reviews" && (
-          <ReviewTab patients={patients} initialReviews={initialReviews} />
+          <ReviewTab
+            patients={patients}
+            initialReviews={initialReviews}
+            selectedPatientId={selectedPatientId}
+            onPatientChange={setSelectedPatientId}
+          />
         )}
         {activeTab === "interactions" && (
-          <InteractionChecker patients={patients} />
+          <InteractionChecker
+            patients={patients}
+            selectedPatientId={selectedPatientId}
+            onPatientChange={setSelectedPatientId}
+          />
         )}
         {activeTab === "brands" && <BrandFormulary />}
       </div>

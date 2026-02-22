@@ -97,6 +97,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Lab parsing pipeline — Claude Vision PDF extraction → biomarker normalization → flag calculation
 - [x] **Feature:** Biomarker normalization — reference matching, conventional + functional flag computation
 - [x] **Feature:** Lab reports in patient Documents tab — unified display merging both data sources
+- [x] **Refactor:** Merged Labs tab into Documents tab — category grouping (Lab Reports, Clinical Records, Imaging, Referrals, Administrative, Other), "All Files / Trends" sub-toggle, reduced tab bar from 7 → 6 tabs
 
 ## Multi-Provider AI ✅ COMPLETE
 
@@ -104,12 +105,30 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** OpenAI primary, Anthropic for vision features, MiniMax as fallback
 - [x] **Feature:** `ANTHROPIC_MODELS` constant for features always using Anthropic API
 
-## IFM Matrix Editing ✅ COMPLETE
+## IFM Matrix ✅ COMPLETE
 
-- [x] **Feature:** Inline node editing — click to edit findings directly
-- [x] **Feature:** Portal-based modal for detailed node editing
-- [x] **Feature:** Drag-and-drop reordering via `@dnd-kit/core`
+- [x] **Feature:** Portal-based modal for detailed node editing (IFMNodeModal)
 - [x] **Feature:** Visit workspace wiring — `handleMatrixUpdate` persists via PATCH API
+- [x] **Feature:** Patient-level IFM Matrix — persistent `ifm_matrix` JSONB column (migration 011)
+- [x] **Feature:** IFM Matrix tab on patient profile — editable, persisted per-patient
+- [x] **Feature:** "Push to Patient Matrix" button on visit workspace — merges visit IFM findings into patient-level matrix (idempotent, dedup findings, severity escalation)
+- [x] **Feature:** Merge utility (`src/lib/ifm/merge.ts`) — pure functions for node + matrix merging
+- [x] **Refactor:** Simplified `ifm-matrix-view.tsx` from ~530 to ~155 lines — removed inline DnD editing, cards are display-only → click opens modal
+
+## Patient Timeline ✅ Phase 1 Complete
+
+- [x] **DB:** Migration 009 — `timeline_events` table with full enum type, RLS, auto-insert triggers (lab completion + visit creation), and historical data backfill
+- [x] **Feature:** Timeline API — `GET /api/patients/[id]/timeline` cursor-paginated, filterable by event type
+- [x] **Feature:** Timeline tab on patient profile — chronological event list with type-specific icons (6th tab)
+- [ ] **Feature (Phase 2):** `supplement_start`/`supplement_stop`/`supplement_dose_change` event producers from `patient_supplements` changes
+- [ ] **Feature (Phase 2):** `symptom_log`, `protocol_milestone`, `patient_reported`, `ai_insight` event producers
+- [ ] **Feature (Phase 2):** Filter bar should hide unused event types until producers exist
+
+## Inline-Editable Patient Overview ✅ COMPLETE
+
+- [x] **Feature:** Per-section edit mode on Overview (Chief Complaints, Medical History, Medications, Supplements, Allergies)
+- [x] **Feature:** `EditableTextSection` — textarea editor with PATCH save + optimistic UI + error rollback
+- [x] **Feature:** `EditableTagSection` — tag-cloud editor for structured multi-value fields
 
 ## Security Hardening ✅ COMPLETE
 
@@ -131,20 +150,25 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 
 ---
 
-## Supplement Intelligence (Core Feature) — Complete (Phase 1)
+## Supplement Intelligence (Core Feature) — Phases 1 & 2 Complete ✅
 
 - [x] **Feature:** Supplement search page — searchable supplement database with AI-powered lookup
 - [x] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
 - [x] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
 - [x] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
 - [x] **Feature:** Strict brand filtering mode — Toggle between soft hints ("prioritize these brands") and strict mode ("ONLY recommend from selected brands")
+- [x] **Feature (Phase 1):** Structured `patient_supplements` table (Migration 010) — CRUD API, inline add/edit/discontinue on patient Overview tab. Replaces freeform field.
+- [x] **Feature (Phase 2):** "Push to Patient File" — Map supplement review items → `patient_supplements` with keep/modify/discontinue/add actions. Deduplication by name, `review_id` provenance, `pushed_at` tracking (Migration 012).
+- [x] **Feature (Phase 2):** Clinician action overrides — Clickable `ActionBadge` dropdown lets practitioners override AI recommendations before pushing. Ring indicator + strikethrough for overridden items.
+- [x] **Feature:** Freeform supplement reviews — Patient-free mode with textarea + structured item builder. Inserts review with `patient_id: null` (Migration 014).
+- [x] **Feature:** Push protocol supplements — Visit workspace Protocol tab pushes AI-recommended supplements to `patient_supplements` with `source: "protocol"` and `visit_id` provenance (Migration 013).
 - [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
 
 ---
 
 ## Patient Education & Engagement
 
-- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews (podcast style) and slide decks (PDF/PPTX) explaining the "Why" behind the protocol.
+- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews (podcast style, ask questions in an interactive style) and slide decks (PDF/PPTX), and mind-maps explaining the "Why" behind the protocol.
 - [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to specific functional medicine interventions (e.g., "How to do a Castor Oil Pack", "Understanding SIBO").
 
 ---
@@ -191,7 +215,6 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ### High Impact
 - [ ] **Design:** Move chat product mockup into the hero viewport (currently appears 900px below fold) — no visual anchor above the fold
-- [ ] **Design:** Reduce section vertical padding by ~35% — page is 6065px for content that fits in ~3800px; excessive dead space between every section
 - [ ] **Design:** Add one dark/teal full-width CTA break section before pricing — currently every section is white or near-white, no visual rhythm
 - [ ] **Design:** Show a rich AI response in the demo chat mockup — currently just one question + typing indicator in a large empty white box; add actual response with citations and evidence badges
 

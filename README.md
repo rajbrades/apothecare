@@ -42,7 +42,7 @@ AI-generated treatment protocols with supplement dosing, dietary interventions, 
 Full visit lifecycle with block-based editor. Four encounter templates (SOAP, H&P, Consultation, Follow-up) pre-populate collapsible sections. **AI Scribe** records provider-patient encounters, transcribes via OpenAI Whisper, then uses Claude to assign content to the appropriate template sections. Live dictation via Web Speech API inserts text at cursor. AI-generated SOAP notes, IFM Matrix mapping, and evidence-based protocols — all streamed via SSE.
 
 ### Supplement Intelligence
-AI-powered supplement review evaluates each supplement in a patient's regimen with evidence-based recommendations — keep, modify, or discontinue — plus suggested additions. Built-in interaction checker flags drug-supplement and supplement-supplement interactions with severity-coded results (critical, caution, safe, unknown). Brand formulary lets practitioners set preferred brands that the AI prioritizes in recommendations. Fullscript integration coming soon.
+AI-powered supplement review evaluates each supplement in a patient's regimen with evidence-based recommendations — keep, modify, or discontinue — plus suggested additions. Supports **patient-linked** and **freeform** (no patient required) review modes. Practitioners can override AI action recommendations via clickable badge dropdowns before pushing results to the patient file. "Push to Patient File" maps review items to a structured `patient_supplements` record with full provenance tracking. Protocol tab on visit workspace can push AI-recommended protocol supplements with a single click. Built-in interaction checker flags drug-supplement and supplement-supplement interactions with severity-coded results (critical, caution, safe, unknown). Brand formulary lets practitioners set preferred brands that the AI prioritizes in recommendations. Fullscript integration coming soon.
 
 ### Patient Management
 Create and manage patient profiles with comprehensive clinical data — demographics, medical history, medications, supplements, allergies, and chief complaints. Upload and extract clinical documents (lab reports, intake forms, referrals). Pre-chart view provides an AI-generated clinical summary before encounters.
@@ -228,11 +228,12 @@ src/
 
 ## Database Schema
 
-16 tables with RLS. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
+20+ tables across 14 migrations with RLS on every table. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
-**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences
+**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences, patient_supplements
+**Timeline:** timeline_events
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking
 
@@ -257,11 +258,17 @@ See [`docs/API.md`](docs/API.md) for the complete reference.
 | `/api/visits/[id]/generate` | POST | SSE SOAP/IFM/Protocol generation |
 | `/api/visits/[id]/transcribe` | POST | Audio → Whisper transcription |
 | `/api/visits/[id]/scribe` | POST | AI Scribe (transcript → sections) |
-| `/api/supplements/review` | POST | SSE supplement review generation |
+| `/api/supplements/review` | POST | SSE supplement review generation (patient or freeform mode) |
 | `/api/supplements/review/[id]` | GET | Supplement review detail |
 | `/api/supplements/reviews` | GET | List supplement reviews |
 | `/api/supplements/interactions` | POST | SSE interaction safety check |
 | `/api/supplements/brands` | GET/PUT | Get / save brand preferences |
+| `/api/patients/[id]/supplements` | GET/POST | List / add structured supplements |
+| `/api/patients/[id]/supplements/[supId]` | PATCH/DELETE | Update / discontinue supplement |
+| `/api/patients/[id]/supplements/push-review` | POST | Push supplement review → patient_supplements |
+| `/api/patients/[id]/timeline` | GET | Patient timeline events (cursor-paginated) |
+| `/api/patients/[id]/biomarkers/timeline` | GET | Biomarker history for Lab Trends chart |
+| `/api/patients/[id]/ifm-matrix/merge` | POST | Merge visit IFM findings into patient matrix |
 | `/api/visits/[id]/export` | POST | Export visit document |
 
 All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP + user agent.

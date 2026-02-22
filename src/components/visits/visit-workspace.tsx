@@ -145,6 +145,13 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
   const [showPushConfirm, setShowPushConfirm] = useState(false);
   const [pushing, setPushing] = useState(false);
 
+  // Push Protocol Supplements state
+  const [showPushProtocolConfirm, setShowPushProtocolConfirm] = useState(false);
+  const [pushingProtocol, setPushingProtocol] = useState(false);
+  const [protocolPushedAt, setProtocolPushedAt] = useState<string | null>(
+    visit.protocol_pushed_at || null
+  );
+
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
@@ -260,6 +267,35 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     } finally {
       setPushing(false);
       setShowPushConfirm(false);
+    }
+  }, [visit.id, visit.patients?.id]);
+
+  const handlePushProtocolSupplements = useCallback(async () => {
+    if (!visit.patients?.id) return;
+    setPushingProtocol(true);
+    try {
+      const res = await fetch(
+        `/api/patients/${visit.patients.id}/supplements/push-protocol`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visit_id: visit.id }),
+        }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to push supplements");
+      }
+      const { results } = await res.json();
+      setProtocolPushedAt(new Date().toISOString());
+      toast.success(
+        `Protocol supplements pushed: ${results.added} added, ${results.updated} updated`
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to push supplements");
+    } finally {
+      setPushingProtocol(false);
+      setShowPushProtocolConfirm(false);
     }
   }, [visit.id, visit.patients?.id]);
 
@@ -517,11 +553,34 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
           </div>
         )}
         {activeTab === "protocol" && (
-          <ProtocolPanel
-            protocol={visit.ai_protocol}
-            status={stream.protocol.status}
-            hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
-          />
+          <div className="space-y-4">
+            {visit.patients?.id && visit.ai_protocol?.supplements?.length > 0 && (
+              <div className="flex items-center justify-end gap-3">
+                {protocolPushedAt && (
+                  <span className="text-xs text-emerald-600 font-medium">
+                    Pushed {new Date(protocolPushedAt).toLocaleDateString()}
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowPushProtocolConfirm(true)}
+                  disabled={pushingProtocol}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+                >
+                  {pushingProtocol ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Pill className="w-3.5 h-3.5" />
+                  )}
+                  {protocolPushedAt ? "Re-push Supplements" : "Push Supplements to Patient File"}
+                </button>
+              </div>
+            )}
+            <ProtocolPanel
+              protocol={visit.ai_protocol}
+              status={stream.protocol.status}
+              hasSoapNote={!!(visit.subjective || visit.objective || visit.assessment || visit.plan)}
+            />
+          </div>
         )}
       </div>
 
@@ -544,6 +603,21 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         confirmLabel="Push to Patient"
         variant="warning"
         loading={pushing}
+      />
+
+      <ConfirmDialog
+        open={showPushProtocolConfirm}
+        onConfirm={handlePushProtocolSupplements}
+        onCancel={() => setShowPushProtocolConfirm(false)}
+        title={protocolPushedAt ? "Re-push protocol supplements?" : "Push protocol supplements?"}
+        description={
+          protocolPushedAt
+            ? "This will update the patient's supplement list with the latest protocol recommendations. Changed dosages, forms, or timing will be updated and logged in the timeline."
+            : "This will add the protocol's supplement recommendations to the patient's supplement list and create timeline events for each change."
+        }
+        confirmLabel={protocolPushedAt ? "Re-push Supplements" : "Push Supplements"}
+        variant="warning"
+        loading={pushingProtocol}
       />
     </div>
   );

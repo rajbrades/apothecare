@@ -55,28 +55,81 @@ export async function POST(request: NextRequest) {
     const parsed = supplementReviewRequestSchema.safeParse(body);
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
-    const { patient_id } = parsed.data;
+    const { patient_id, supplements: freeformSupplements, medications: freeformMedications, medical_context } = parsed.data;
 
-    // Fetch patient (verify ownership)
-    const { data: patient } = await supabase
-      .from("patients")
-      .select(
-        "id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, clinical_summary"
-      )
-      .eq("id", patient_id)
-      .eq("practitioner_id", practitioner.id)
-      .single();
-    if (!patient) return jsonError("Patient not found", 404);
+    let patientContext = "";
+    let labContext = "";
+    let supplementsList: string | null = null;
 
-    // Fetch latest biomarkers via lab_reports -> biomarker_results
-    const { data: biomarkers } = await supabase
-      .from("biomarker_results")
-      .select(
-        "biomarker_name, value, unit, functional_flag, conventional_flag, lab_reports!inner(patient_id, collection_date)"
-      )
-      .eq("lab_reports.patient_id", patient_id)
-      .order("lab_reports(collection_date)", { ascending: false })
-      .limit(50);
+    if (patient_id) {
+      // ── Patient mode: fetch everything from DB ──────────────────────
+      const { data: patient } = await supabase
+        .from("patients")
+        .select(
+          "id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, clinical_summary"
+        )
+        .eq("id", patient_id)
+        .eq("practitioner_id", practitioner.id)
+        .single();
+      if (!patient) return jsonError("Patient not found", 404);
+
+      const { data: biomarkers } = await supabase
+        .from("biomarker_results")
+        .select(
+          "biomarker_name, value, unit, functional_flag, conventional_flag, lab_reports!inner(patient_id, collection_date)"
+        )
+        .eq("lab_reports.patient_id", patient_id)
+        .order("lab_reports(collection_date)", { ascending: false })
+        .limit(50);
+
+      // Prefer structured patient_supplements over freeform patients.supplements
+      const { data: structuredSupps } = await supabase
+        .from("patient_supplements")
+        .select("name, dosage, form, timing, brand")
+        .eq("patient_id", patient_id)
+        .eq("status", "active")
+        .order("sort_order", { ascending: true });
+
+      supplementsList =
+        structuredSupps && structuredSupps.length > 0
+          ? (structuredSupps as { name: string; dosage: string | null; form: string | null; timing: string | null; brand: string | null }[])
+              .map((s) => {
+                const parts = [s.name];
+                if (s.dosage) parts.push(s.dosage);
+                if (s.form) parts.push(`(${s.form})`);
+                if (s.timing) parts.push(`— ${s.timing}`);
+                if (s.brand) parts.push(`[${s.brand}]`);
+                return parts.join(" ");
+              })
+              .join("\n")
+          : patient.supplements;
+
+      patientContext = formatPatientContext(patient);
+      labContext = formatLabContextForReview(
+        (biomarkers || []).map((b: any) => ({
+          biomarker_name: b.biomarker_name,
+          value: b.value,
+          unit: b.unit,
+          functional_flag: b.functional_flag,
+          conventional_flag: b.conventional_flag,
+          collection_date: b.lab_reports?.collection_date || null,
+        }))
+      );
+    } else {
+      // ── Freeform mode: use provided text ────────────────────────────
+      supplementsList = freeformSupplements || null;
+
+      const contextParts: string[] = [];
+      if (freeformMedications?.trim()) {
+        contextParts.push(`Current Medications: ${freeformMedications.trim()}`);
+      }
+      if (medical_context?.trim()) {
+        contextParts.push(medical_context.trim());
+      }
+      patientContext = contextParts.length
+        ? contextParts.join("\n\n")
+        : "No patient context provided. Review supplements based on general evidence.";
+    }
 
     // Fetch brand preferences (includes __strict_mode__ meta row)
     const { data: brandPrefs } = await supabase
@@ -93,19 +146,6 @@ export async function POST(request: NextRequest) {
     );
     const brandNames = activeBrands.map((b: any) => b.brand_name);
 
-    // Build context
-    const patientContext = formatPatientContext(patient);
-    const labContext = formatLabContextForReview(
-      (biomarkers || []).map((b: any) => ({
-        biomarker_name: b.biomarker_name,
-        value: b.value,
-        unit: b.unit,
-        functional_flag: b.functional_flag,
-        conventional_flag: b.conventional_flag,
-        collection_date: b.lab_reports?.collection_date || null,
-      }))
-    );
-
     const systemPrompt = buildSupplementReviewPrompt({
       patientContext,
       labContext: labContext || undefined,
@@ -118,7 +158,7 @@ export async function POST(request: NextRequest) {
       .from("supplement_reviews")
       .insert({
         practitioner_id: practitioner.id,
-        patient_id,
+        patient_id: patient_id || null,
         status: "generating",
         review_data: {},
         raw_ai_text: "",
@@ -131,7 +171,7 @@ export async function POST(request: NextRequest) {
       return jsonError("Failed to create supplement review", 500);
     }
 
-    const userMessage = `Review this patient's current supplement regimen and provide evidence-based recommendations.\n\nPatient Context:\n${patientContext}${labContext ? `\n\nLatest Lab Results:\n${labContext}` : ""}\n\nCurrent Supplements:\n${patient.supplements || "No supplements currently listed."}`;
+    const userMessage = `Review this supplement regimen and provide evidence-based recommendations.\n\n${patientContext ? `Context:\n${patientContext}\n\n` : ""}${labContext ? `Latest Lab Results:\n${labContext}\n\n` : ""}Current Supplements:\n${supplementsList || "No supplements currently listed."}`;
 
     const model = MODELS.standard;
     const encoder = new TextEncoder();
@@ -192,7 +232,8 @@ export async function POST(request: NextRequest) {
             resourceType: "supplement_review",
             resourceId: review.id,
             detail: {
-              patient_id,
+              patient_id: patient_id || null,
+              freeform: !patient_id,
               model,
               input_tokens: usage.inputTokens,
               output_tokens: usage.outputTokens,

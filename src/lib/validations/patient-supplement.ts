@@ -11,6 +11,7 @@ export const patientSupplementSourceEnum = z.enum([
   "manual",
   "review",
   "patient_reported",
+  "protocol",
 ]);
 export type PatientSupplementSource = z.infer<typeof patientSupplementSourceEnum>;
 
@@ -56,3 +57,24 @@ export const patientSupplementListSchema = z.object({
   status: patientSupplementStatusEnum.optional(),
   include_discontinued: z.coerce.boolean().optional().default(false),
 });
+
+// ── Push Review ──────────────────────────────────────────────────────
+
+const supplementActionEnum = z.enum(["keep", "modify", "discontinue", "add"]);
+
+export const pushReviewSchema = z.object({
+  review_id: z.string().uuid(),
+  action_overrides: z
+    .record(z.string(), supplementActionEnum)
+    .optional(),
+});
+
+export type PushReviewInput = z.infer<typeof pushReviewSchema>;
+
+// ── Push Protocol ───────────────────────────────────────────────────
+
+export const pushProtocolSchema = z.object({
+  visit_id: z.string().uuid(),
+});
+
+export type PushProtocolInput = z.infer<typeof pushProtocolSchema>;

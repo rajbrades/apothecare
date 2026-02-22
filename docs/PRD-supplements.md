@@ -2,8 +2,8 @@
 
 **Product:** Apotheca
 **Module:** Supplements → Patient Profile Integration
-**Status:** Phase 1 — In Progress
-**Last Updated:** 2026-02-20
+**Status:** Phase 2 Complete — Phase 3 (Patient Portal) Pending
+**Last Updated:** 2026-02-22
 
 ---
 
@@ -77,7 +77,7 @@ Same pattern as all other tables: `practitioner_id IN (SELECT id FROM practition
 
 ---
 
-## 5. Phase 1 — Structured List (Current Sprint)
+## 5. Phase 1 — Structured List ✅ COMPLETE
 
 ### 5.1 Patient Overview Tab
 - Replace freeform text "Current Supplements" section with structured supplement table
@@ -104,22 +104,39 @@ Same pattern as all other tables: `practitioner_id IN (SELECT id FROM practition
 
 ---
 
-## 6. Phase 2 — Review Integration (Next Sprint)
+## 6. Phase 2 — Review Integration ✅ COMPLETE
 
-### 6.1 "Push to Patient File" Button
+### 6.1 "Push to Patient File" Button ✅
 - Added to `SupplementReviewDetail` component
-- On click: maps each `SupplementReviewItem` → `patient_supplements` row
+- Maps each `SupplementReviewItem` → `patient_supplements` row:
   - `action: "keep"` → upsert existing (match by name), update dosage/timing if changed
   - `action: "modify"` → upsert existing, update fields
   - `action: "discontinue"` → set status to `discontinued`, set `discontinued_at`
   - `action: "add"` → insert new row with `source: "review"`, `review_id` set
 - Deduplication: match by lowercased `name`; if match exists, update rather than insert
 - Sets `review_id` on all touched rows for provenance
+- `pushed_at` tracked on `supplement_reviews` for idempotency (Migration 012)
+- Button becomes "Re-push" after first push; badges become read-only post-push
 
-### 6.2 Review Summary Card
-- Shown at top of supplements section on Overview tab
-- Displays: "Last reviewed [date] — [summary excerpt]"
-- Links to full review page
+### 6.2 Clinician Action Overrides ✅
+- Clickable `ActionBadge` dropdown on each supplement card (Keep/Modify/Discontinue/Add)
+- Ring indicator + "(AI)" label shown when an override is active
+- Items overridden to `discontinue` show red border + strikethrough name
+- `action_overrides: Record<string, SupplementAction>` sent in push-review request body
+- Original AI recommendations preserved in DB; overrides applied only at push time
+
+### 6.3 Freeform Reviews (No Patient Required) ✅
+- Reviews tab supports "For a patient" and "Freeform" modes via pill-style toggle
+- Freeform inputs: supplement textarea, optional medications and medical context
+- Structured item builder: expandable form appends formatted lines to textarea
+- Freeform review inserted with `patient_id: null` (Migration 014)
+- "Freeform Review" label in past reviews list; push button hidden (no patient to push to)
+
+### 6.4 Push Protocol Supplements ✅
+- Visit workspace Protocol tab: "Push Protocol Supplements" confirm dialog
+- Sends all AI-recommended protocol supplements → `patient_supplements` with `source: "protocol"`, `visit_id` provenance
+- `protocol_pushed_at` tracked on `visits` (Migration 013)
+- "Pushed {date}" badge shown; "Re-push" available for subsequent updates
 
 ---
 

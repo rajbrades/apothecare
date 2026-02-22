@@ -23,7 +23,7 @@ export type SupplementReviewStatus = "pending" | "generating" | "complete" | "er
 export type InteractionSeverity = "critical" | "caution" | "safe" | "unknown";
 export type SupplementAction = "keep" | "modify" | "discontinue" | "add";
 export type PatientSupplementStatus = "active" | "discontinued" | "pending_patient";
-export type PatientSupplementSource = "manual" | "review" | "patient_reported";
+export type PatientSupplementSource = "manual" | "review" | "patient_reported" | "protocol";
 
 // ===========================================
 // Table Row Types
@@ -100,6 +100,7 @@ export interface PatientSupplement {
   status: PatientSupplementStatus;
   source: PatientSupplementSource;
   review_id: string | null;
+  visit_id: string | null;
   started_at: string | null;
   discontinued_at: string | null;
   notes: string | null;
@@ -225,6 +226,7 @@ export interface Visit {
   ifm_matrix: IFMMatrix | Record<string, unknown>;
   conversation_id: string | null;
   is_archived: boolean;
+  protocol_pushed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -326,7 +328,7 @@ export interface SupplementReviewData {
 export interface SupplementReview {
   id: string;
   practitioner_id: string;
-  patient_id: string;
+  patient_id: string | null;
   status: SupplementReviewStatus;
   review_data: SupplementReviewData;
   raw_ai_text: string | null;
@@ -334,6 +336,7 @@ export interface SupplementReview {
   input_tokens: number | null;
   output_tokens: number | null;
   error_message: string | null;
+  pushed_at: string | null;
   created_at: string;
   updated_at: string;
 }
