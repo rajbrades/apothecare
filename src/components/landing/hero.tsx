@@ -4,9 +4,9 @@ import { ScrollReveal } from "./scroll-reveal";
 
 export function Hero() {
   return (
-    <section className="relative bg-[#FCFCFC]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-20 lg:py-20">
-        <div className="max-w-4xl mx-auto">
+    <section className="relative bg-[#FCFCFC] min-h-[calc(100vh-4rem)] flex flex-col pb-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-10 lg:py-10 flex-1 flex items-center">
+        <div className="max-w-4xl mx-auto w-full">
           <div className="text-center space-y-6">
             <ScrollReveal>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]">
@@ -70,13 +70,14 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Scroll cue */}
-        <div className="text-center mt-8">
-          <p className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">See it in action</p>
-          <svg className="w-5 h-5 text-[var(--color-brand-600)] animate-bounce mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
+      </div>
+
+      {/* Scroll cue */}
+      <div className="text-center pb-8">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">See it in action</p>
+        <svg className="w-5 h-5 text-[var(--color-brand-600)] animate-bounce mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
       </div>
 
       {/* Subtle gradient overlay at bottom */}
