@@ -47,11 +47,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect authenticated users away from login/register pages
+  // Honor ?next param to preserve the user's intended destination
   if (
     user &&
     (request.nextUrl.pathname === "/auth/login" ||
       request.nextUrl.pathname === "/auth/register")
   ) {
+    const nextParam = request.nextUrl.searchParams.get("next");
+    if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+      return NextResponse.redirect(new URL(nextParam, request.nextUrl.origin));
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

@@ -5,19 +5,24 @@ import { createClient } from "@/lib/supabase/client";
 
 interface GoogleSignInProps {
   onError?: (message: string) => void;
+  next?: string | null;
 }
 
-export function GoogleSignIn({ onError }: GoogleSignInProps) {
+export function GoogleSignIn({ onError, next }: GoogleSignInProps) {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const supabase = createClient();
 
+    const callbackUrl = next
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${window.location.origin}/auth/callback`;
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl,
       },
     });
 

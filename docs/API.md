@@ -765,6 +765,71 @@ Save practitioner's brand preferences.
 
 ---
 
+### `POST /api/patients/:id/fm-timeline/events` ✅ Implemented
+
+Push a single event to a patient's FM Health Timeline (ATM framework).
+
+**Input Validation:** Zod schema (`lib/validations/fm-timeline.ts` — `pushFMEventSchema`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `category` | enum | Yes | `"antecedent"`, `"trigger"`, or `"mediator"` |
+| `life_stage` | enum | Yes | `"prenatal"`, `"birth"`, `"childhood"`, `"adolescence"`, or `"adulthood"` |
+| `title` | string | Yes | 1–300 characters |
+| `notes` | string | No | Max 2,000 characters |
+| `year` | number | No | Integer 1900–2100 |
+| `source` | enum | No | `"practitioner"` (default) or `"patient"` |
+
+**Response (200):**
+```json
+{
+  "event": { "id": "abc123", "category": "trigger", "life_stage": "adulthood", "title": "Mold exposure" },
+  "fm_timeline_data": { "events": [] }
+}
+```
+
+**Notes:**
+- Atomically appends the event to `patients.fm_timeline_data.events` JSONB
+- Used by the "Push to FM Timeline" action on the regular patient Timeline tab
+- Audit logged as `update` action on `fm_timeline` resource type
+
+---
+
+### `POST /api/patients/:id/fm-timeline/analyze` ✅ Implemented
+
+AI root cause analysis of a patient's FM Timeline events using the ATM (Antecedents, Triggers, Mediators) framework.
+
+**Input Validation:** Zod schema (`lib/validations/fm-timeline.ts` — `analyzeFMTimelineSchema`)
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `events` | array | Yes | 1–500 FM Timeline events |
+
+**Response (200):**
+```json
+{
+  "result": {
+    "summary": "Overview connecting patient's timeline to current health picture",
+    "antecedent_patterns": ["Pattern 1", "Pattern 2"],
+    "trigger_patterns": ["Pattern 1", "Pattern 2"],
+    "mediator_patterns": ["Pattern 1", "Pattern 2"],
+    "root_cause_hypotheses": ["Hypothesis 1", "Hypothesis 2"],
+    "recommended_focus": ["Focus area 1", "Focus area 2"]
+  }
+}
+```
+
+**Notes:**
+- Fetches patient context (name, age, sex, chief complaints, medical history) for richer analysis
+- Uses Claude standard model with structured JSON output
+- Audit logged as `generate` action on `fm_timeline` resource type
+
+---
+
 ### `POST /api/protocols/generate` 🔲 Planned
 
 Generate treatment protocol from lab reviews, visits, or chat context.

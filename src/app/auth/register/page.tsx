@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
 import { GoogleSignIn, OAuthDivider } from "@/components/auth/google-sign-in";
 
@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const supabase = createClient();
 
   const validateEmail = (value: string) => {
@@ -71,8 +73,11 @@ export default function RegisterPage() {
         return;
       }
 
-      // Redirect to onboarding to collect credentials
-      router.push("/auth/onboarding");
+      // Redirect to onboarding to collect credentials (threading next param)
+      const onboardingUrl = next
+        ? `/auth/onboarding?next=${encodeURIComponent(next)}`
+        : "/auth/onboarding";
+      router.push(onboardingUrl);
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -96,7 +101,7 @@ export default function RegisterPage() {
 
         {/* Form */}
         <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
-          <GoogleSignIn onError={setError} />
+          <GoogleSignIn onError={setError} next={next} />
           <OAuthDivider />
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
@@ -195,7 +200,7 @@ export default function RegisterPage() {
         <p className="text-center mt-6 text-sm text-[var(--color-text-secondary)]">
           Already have an account?{" "}
           <Link
-            href="/auth/login"
+            href={next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login"}
             className="text-[var(--color-brand-700)] font-medium hover:underline"
           >
             Sign in

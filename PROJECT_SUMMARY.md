@@ -1,6 +1,6 @@
 # Apotheca — Project Summary & Handoff Document
 
-**Last updated:** February 18, 2026
+**Last updated:** February 24, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -30,7 +30,7 @@ Apotheca is an AI-powered clinical decision support platform for functional and 
 | Icons | Lucide React |
 
 **Supabase Project:** https://qcjuosldesbgqkregztn.supabase.co
-**Current Branch:** main-02-14-26
+**Current Branch:** main
 **Local dev:** `npm run dev` → http://localhost:3000
 
 ---
@@ -50,7 +50,7 @@ src/
 │   │   │   ├── loading.tsx         # Lab list loading skeleton
 │   │   │   └── page.tsx            # Lab list + upload
 │   │   ├── patients/
-│   │   │   ├── [id]/page.tsx       # Patient detail + documents + lab reports
+│   │   │   ├── [id]/page.tsx       # Patient detail (8 tabs: overview, documents, trends, prechart, ifm_matrix, visits, timeline, fm_timeline)
 │   │   │   ├── new/page.tsx        # New patient form
 │   │   │   └── page.tsx            # Patient list
 │   │   ├── visits/
@@ -75,6 +75,13 @@ src/
 │   │   │   │   │   │   ├── extract/route.ts  # POST re-trigger extraction
 │   │   │   │   │   │   └── route.ts          # GET/DELETE document
 │   │   │   │   │   └── route.ts              # GET list / POST upload
+│   │   │   │   ├── fm-timeline/
+│   │   │   │   │   ├── analyze/route.ts      # POST AI root cause analysis
+│   │   │   │   │   └── events/route.ts       # POST push event to FM Timeline
+│   │   │   │   ├── supplements/
+│   │   │   │   │   ├── [supId]/route.ts      # PATCH/DELETE supplement
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── timeline/route.ts         # GET patient timeline events
 │   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
@@ -121,7 +128,11 @@ src/
 │   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
-│   │   ├── patient-profile.tsx     # Patient detail view
+│   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: overview, documents, trends, prechart, ifm_matrix, visits, timeline, fm_timeline)
+│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM
+│   │   ├── fm-timeline.tsx        # FM Health Timeline (ATM framework, life stages, AI root cause analysis)
+│   │   ├── vitals-timeline.tsx    # Vitals + pillars of health tracking with Recharts
+│   │   ├── supplement-list.tsx    # Structured supplement list (CRUD, inline add/edit/discontinue)
 │   │   ├── patient-quick-create.tsx # Inline patient creation modal
 │   │   └── pre-chart-view.tsx      # Pre-encounter patient summary
 │   ├── ui/
@@ -201,7 +212,10 @@ src/
 │   └── validations/
 │       ├── chat.ts                 # Chat API schemas
 │       ├── visit.ts                # Visit create/update/generate schemas
-│       ├── patient.ts              # Patient create/update schemas
+│       ├── patient.ts              # Patient create/update schemas (includes fm_timeline_data)
+│       ├── patient-supplement.ts   # Patient supplement CRUD schemas
+│       ├── fm-timeline.ts          # FM Timeline push/analyze/data schemas
+│       ├── timeline.ts             # Timeline event types + filters
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -211,17 +225,19 @@ src/
 
 ---
 
-## Database Schema (16+ tables, all with RLS)
+## Database Schema (20+ tables, all with RLS)
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_reports, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
-**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences
+**Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences, patient_supplements
+**Timeline:** timeline_events (polymorphic via source_table/source_id, auto-triggers)
+**FM Timeline:** patients.fm_timeline_data (JSONB — ATM events across life stages)
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking, rate_limits
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migrations:** 8 applied in Supabase SQL Editor (see "Database Migrations" section below).
+**Migrations:** 18 applied (see "Database Migrations" section below).
 
 ---
 
@@ -424,6 +440,53 @@ src/
 7. ✅ Inline evidence badges — `[RCT]`, `[META]`, `[COHORT]`, `[GUIDELINE]`, `[CASE]` appear next to citation links
 8. ✅ Badge hover popover — title, authors, year, journal, "View source" DOI link
 
+### Sprint 11 — Supplements Phase 2 & Timeline (Feb 19–20, 2026)
+
+1. ✅ Patient supplements — structured `patient_supplements` table with CRUD, source tracking (review/protocol/manual)
+2. ✅ Freeform supplement reviews — reviews without a patient (patient_id nullable)
+3. ✅ Action overrides — practitioners override AI action badges before pushing to patient file
+4. ✅ Protocol push — push AI-recommended supplements from visit protocol tab to patient_supplements
+5. ✅ Timeline events — `timeline_events` table with polymorphic source_table/source_id
+6. ✅ Auto-triggers — lab completion → `lab_result`, visit INSERT → `visit`, document upload → `document_upload`, supplement changes → supplement_* events
+7. ✅ Patient timeline component — chronological feed with type filtering, cursor pagination, AI synthesis
+8. ✅ Patient-level IFM Matrix — persistent IFM Matrix on patient profile with merge from visits
+
+### Sprint 12 — Labs & Timeline Enhancements (Feb 21, 2026)
+
+1. ✅ Labs patient search/assign/browse — search patients when uploading labs, assign labs to patients
+2. ✅ Auto-timeline for labs — lab completion fires timeline event automatically
+3. ✅ Trends tab — biomarker timeline charts with functional/conventional range bands
+
+### Sprint 13 — Vitals & Visit Notes (Feb 22, 2026)
+
+1. ✅ Vitals tracking — weight, blood pressure, heart rate, temperature, SpO2
+2. ✅ Pillars of health — sleep, stress, exercise, diet quality tracking with Recharts
+3. ✅ Visit notes patient search — search patients when creating visits
+4. ✅ AI timeline synthesis — Claude-powered pattern analysis across all patient timeline events
+
+### Sprint 14 — FM Health Timeline (Feb 23–24, 2026)
+
+1. ✅ FM Timeline component — vertical ATM (Antecedents, Triggers, Mediators) swimlane across life stages (prenatal → adulthood)
+2. ✅ Inline add/edit/delete — EventForm with category selector, title, year, notes, debounced auto-save via PATCH
+3. ✅ AI root cause analysis — POST /api/patients/[id]/fm-timeline/analyze sends events + patient context to Claude for pattern identification
+4. ✅ AI synthesis panel — collapsible panel with antecedent/trigger/mediator patterns, root cause hypotheses, recommended focus
+5. ✅ Push to FM Timeline — timeline events can be pushed to FM Timeline with category/life stage picker
+6. ✅ Atomic push API — POST /api/patients/[id]/fm-timeline/events appends event to patient's fm_timeline_data JSONB
+7. ✅ Zod validation schemas — `fm-timeline.ts` with pushFMEventSchema, analyzeFMTimelineSchema, fmTimelineDataSchema
+8. ✅ Audit logging — both FM Timeline API routes audit-logged (generate + update actions)
+9. ✅ Patient profile wiring — new `fm_timeline` tab (8th tab), `fm_timeline_data` fetched in page query, dynamic import
+10. ✅ Migration 018 — `fm_timeline_data JSONB` column on patients table
+
+### Landing → App Transition (Feb 24, 2026)
+
+1. ✅ Functional hero input — landing page search input is now typeable (was readOnly); on submit, redirects to `/auth/register?next=/chat?q=<encoded_query>`
+2. ✅ Example question chips — clicking a sample question threads the query through the same `?next=` param
+3. ✅ `next` param threaded through entire auth flow — register → onboarding → dashboard/chat, login → dashboard/chat, Google OAuth → callback → onboarding/chat
+4. ✅ `sanitizeRedirectPath` hardened — now checks only pathname (before `?`) for scheme injection, allowing colons in query string values
+5. ✅ Middleware updated — authenticated users landing on `/auth/login?next=...` or `/auth/register?next=...` are redirected to the `next` destination instead of `/dashboard`
+6. ✅ Auth callback updated — new users without practitioner profile are redirected to `/auth/onboarding?next=...` (threading the param)
+7. ✅ Suspense boundaries — added `<Suspense>` wrappers in layout files for register, login, and onboarding pages (required by `useSearchParams()` in Next.js 15)
+
 ---
 
 ## What Needs To Be Done Next
@@ -490,7 +553,7 @@ NEXT_PUBLIC_APP_NAME=Apotheca
 
 ## Database Migrations
 
-8 migrations must be applied in order in Supabase SQL Editor:
+18 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
@@ -500,6 +563,16 @@ NEXT_PUBLIC_APP_NAME=Apotheca
 6. `006_supplements.sql` — 3 enums + 3 tables (supplement_reviews, interaction_checks, practitioner_brand_preferences) + RLS
 7. `007_lab_enhancements.sql` — lab search, archival (is_archived), AI-generated smart titles
 8. `008_chat_attachments.sql` — chat_attachments storage bucket
+9. `009_timeline_events.sql` — timeline_events table, enum, RLS, auto-insert triggers, backfill
+10. `010_patient_supplements.sql` — patient_supplements table, enums, RLS, indexes
+11. `011_patient_ifm_matrix.sql` — patients.ifm_matrix JSONB column (persistent IFM Matrix)
+12. `012_supplement_review_pushed_at.sql` — supplement_reviews.pushed_at timestamp for idempotency
+13. `013_protocol_push.sql` — patient_supplement_source 'protocol' enum value, patient_supplements.visit_id, visits.protocol_pushed_at
+14. `014_freeform_reviews.sql` — supplement_reviews.patient_id nullable (freeform reviews without a patient)
+15. `015_vitals.sql` — patient_vitals table for vital signs and pillars of health tracking
+16. `016_timeline_enhancements.sql` — additional timeline event types and trigger improvements
+17. `017_visit_notes_search.sql` — visit notes full-text search and patient linking
+18. `018_fm_timeline.sql` — patients.fm_timeline_data JSONB column for FM Health Timeline (ATM framework)
 
 ## Known Issues / Gotchas
 

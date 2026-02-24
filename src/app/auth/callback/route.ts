@@ -13,8 +13,10 @@ function sanitizeRedirectPath(path: string | null): string {
   // Must start with exactly one "/" and not be protocol-relative ("//")
   if (!path.startsWith("/") || path.startsWith("//")) return fallback;
 
-  // Block any attempt to embed a scheme (e.g. "/\evil.com", data:, javascript:)
-  if (/[\\:]/.test(path)) return fallback;
+  // Only check the pathname portion (before query string) for scheme injection
+  // This allows colons in query values (e.g. /chat?q=DUTCH+test:+protocol)
+  const pathname = path.split("?")[0];
+  if (/[\\:]/.test(pathname)) return fallback;
 
   return path;
 }
@@ -41,9 +43,12 @@ export async function GET(request: NextRequest) {
           .eq("auth_user_id", user.id)
           .single();
 
-        // If no profile, redirect to onboarding
+        // If no profile, redirect to onboarding (threading next param)
         if (!practitioner) {
-          return NextResponse.redirect(`${origin}/auth/onboarding`);
+          const onboardingUrl = next !== "/dashboard"
+            ? `${origin}/auth/onboarding?next=${encodeURIComponent(next)}`
+            : `${origin}/auth/onboarding`;
+          return NextResponse.redirect(onboardingUrl);
         }
       }
 

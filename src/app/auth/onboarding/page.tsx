@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
 import type { LicenseType } from "@/types/database";
 
@@ -133,6 +133,8 @@ export default function OnboardingPage() {
   const [fullName, setFullName] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const supabase = createClient();
 
   // Pre-fill name from OAuth metadata (Google provides "name", email/password provides "full_name")
@@ -187,14 +189,14 @@ export default function OnboardingPage() {
       if (insertError) {
         if (insertError.code === "23505") {
           // Duplicate — profile already exists, just redirect
-          router.push("/dashboard");
+          router.push(next || "/dashboard");
           return;
         }
         setError(insertError.message);
         return;
       }
 
-      router.push("/dashboard");
+      router.push(next || "/dashboard");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");

@@ -209,7 +209,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [ ] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
 - [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
 - [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
-- [ ] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
+- [x] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
 
 ---
 

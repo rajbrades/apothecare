@@ -374,9 +374,13 @@ src/
 │   │   │   │   │   └── route.ts              # GET list / POST upload
 │   │   │   │   ├── ifm-matrix/
 │   │   │   │   │   └── merge/route.ts        # POST merge visit IFM into patient matrix
+│   │   │   │   ├── fm-timeline/
+│   │   │   │   │   ├── analyze/route.ts      # POST AI root cause analysis
+│   │   │   │   │   └── events/route.ts       # POST push event to FM Timeline
 │   │   │   │   ├── supplements/
 │   │   │   │   │   ├── [supId]/route.ts      # PATCH/DELETE supplement
 │   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── timeline/route.ts         # GET patient timeline events
 │   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
@@ -433,7 +437,10 @@ src/
 │   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
-│   │   ├── patient-profile.tsx     # Patient detail view (6 tabs: Overview, Documents, Pre-Chart, IFM Matrix, Visits, Timeline)
+│   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: Overview, Documents, Trends, Pre-Chart, IFM Matrix, Visits, Timeline, FM Timeline)
+│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM
+│   │   ├── fm-timeline.tsx        # FM Health Timeline (ATM framework, life stages, AI root cause analysis)
+│   │   ├── vitals-timeline.tsx    # Vitals + pillars of health tracking with Recharts
 │   │   ├── supplement-list.tsx    # Structured supplement list (CRUD, inline add/edit/discontinue)
 │   │   ├── patient-quick-create.tsx # Inline patient creation modal
 │   │   └── pre-chart-view.tsx      # Pre-encounter patient summary

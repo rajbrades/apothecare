@@ -45,7 +45,16 @@ Full visit lifecycle with block-based editor. Four encounter templates (SOAP, H&
 AI-powered supplement review evaluates each supplement in a patient's regimen with evidence-based recommendations — keep, modify, or discontinue — plus suggested additions. Supports **patient-linked** and **freeform** (no patient required) review modes. Practitioners can override AI action recommendations via clickable badge dropdowns before pushing results to the patient file. "Push to Patient File" maps review items to a structured `patient_supplements` record with full provenance tracking. Protocol tab on visit workspace can push AI-recommended protocol supplements with a single click. Built-in interaction checker flags drug-supplement and supplement-supplement interactions with severity-coded results (critical, caution, safe, unknown). Brand formulary lets practitioners set preferred brands that the AI prioritizes in recommendations. Fullscript integration coming soon.
 
 ### Patient Management
-Create and manage patient profiles with comprehensive clinical data — demographics, medical history, medications, supplements, allergies, and chief complaints. Upload and extract clinical documents (lab reports, intake forms, referrals). Pre-chart view provides an AI-generated clinical summary before encounters.
+Create and manage patient profiles with comprehensive clinical data — demographics, medical history, medications, supplements, allergies, and chief complaints. Upload and extract clinical documents (lab reports, intake forms, referrals). Pre-chart view provides an AI-generated clinical summary before encounters. **8 tabs** per patient: Overview, Documents, Trends, Pre-Chart, IFM Matrix, Visits, Timeline, and FM Timeline.
+
+### FM Health Timeline (ATM Framework)
+Visual vertical timeline mapping Antecedents, Triggers, and Mediators across life stages (prenatal → adulthood) — the functional medicine root-cause analysis framework. Inline add/edit/delete with debounced auto-save. **AI Synthesize** button runs Claude analysis to identify patterns, root cause hypotheses, and recommended focus areas. Events from the regular patient Timeline can be pushed directly to the FM Timeline with one click.
+
+### Patient Timeline & AI Synthesis
+Chronological feed of all patient events — lab results, visits, supplement changes, document uploads — with cursor-based pagination, type filtering, and AI-powered timeline synthesis that identifies clinical patterns across the patient's history.
+
+### Vitals & Pillars of Health Tracking
+Track vital signs (weight, blood pressure, heart rate, temperature, SpO2) and lifestyle pillars (sleep, stress, exercise, diet quality) over time with Recharts visualizations. Trends tab provides both biomarker and vitals/pillars views.
 
 ### Deep Consult Mode
 Toggle to use Claude Opus for complex multi-system cases, differential diagnoses, and cross-lab correlations. Extended 4096-token responses with advanced clinical reasoning.
@@ -209,7 +218,7 @@ src/
 │   ├── labs/                        # Lab list, card, detail, upload, status badge
 │   ├── landing/                     # 12 landing page components
 │   ├── layout/                      # Sidebar + conversation list
-│   ├── patients/                    # Patient list, form, profile, documents, pre-chart
+│   ├── patients/                    # Patient list, form, profile, documents, pre-chart, timeline, FM timeline, vitals
 │   ├── ui/                          # Button, dropdown, input, label, logomark, sonner
 │   └── visits/                      # Workspace, editor, IFM matrix, protocol, SOAP
 ├── hooks/                           # Chat, dictation, audio, speech, visit stream, supplements
@@ -221,19 +230,20 @@ src/
 │   ├── templates/                   # 4 encounter templates + conversion
 │   ├── storage/                     # Patient documents + lab reports storage
 │   ├── supabase/                    # Client, server, middleware, cached queries
-│   └── validations/                 # Zod schemas (chat, visit, patient, document, lab, supplement)
+│   └── validations/                 # Zod schemas (chat, visit, patient, document, lab, supplement, fm-timeline, timeline)
 ├── middleware.ts                     # Root middleware
 └── types/database.ts                # Supabase types
 ```
 
 ## Database Schema
 
-20+ tables across 14 migrations with RLS on every table. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
+20+ tables across 18 migrations with RLS on every table. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
 **Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences, patient_supplements
-**Timeline:** timeline_events
+**Timeline:** timeline_events (polymorphic via source_table/source_id, auto-triggers for labs, visits, documents, supplements)
+**FM Timeline:** patients.fm_timeline_data (JSONB — ATM events across life stages)
 **Evidence:** evidence_sources, evidence_embeddings
 **System:** audit_logs, usage_tracking
 
@@ -269,6 +279,9 @@ See [`docs/API.md`](docs/API.md) for the complete reference.
 | `/api/patients/[id]/timeline` | GET | Patient timeline events (cursor-paginated) |
 | `/api/patients/[id]/biomarkers/timeline` | GET | Biomarker history for Lab Trends chart |
 | `/api/patients/[id]/ifm-matrix/merge` | POST | Merge visit IFM findings into patient matrix |
+| `/api/patients/[id]/fm-timeline/events` | POST | Push event to FM Timeline (ATM framework) |
+| `/api/patients/[id]/fm-timeline/analyze` | POST | AI root cause analysis of FM Timeline |
+| `/api/patients/[id]/vitals` | GET/POST | List / record vital signs |
 | `/api/visits/[id]/export` | POST | Export visit document |
 
 All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP + user agent.

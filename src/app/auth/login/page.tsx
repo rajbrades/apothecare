@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
 import { GoogleSignIn, OAuthDivider } from "@/components/auth/google-sign-in";
 
@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const supabase = createClient();
 
   const validateEmail = (value: string) => {
@@ -59,7 +61,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(next || "/dashboard");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -83,7 +85,7 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-8">
-          <GoogleSignIn onError={setError} />
+          <GoogleSignIn onError={setError} next={next} />
           <OAuthDivider />
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -162,7 +164,7 @@ export default function LoginPage() {
         <p className="text-center mt-6 text-sm text-[var(--color-text-secondary)]">
           Don&apos;t have an account?{" "}
           <Link
-            href="/auth/register"
+            href={next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register"}
             className="text-[var(--color-brand-600)] font-medium hover:underline"
           >
             Create one free

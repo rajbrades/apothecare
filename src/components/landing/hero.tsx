@@ -1,8 +1,25 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
+function buildRegisterHref(query?: string) {
+  if (!query) return "/auth/register";
+  const next = `/chat?q=${encodeURIComponent(query)}`;
+  return `/auth/register?next=${encodeURIComponent(next)}`;
+}
+
 export function Hero() {
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push(buildRegisterHref(query.trim() || undefined));
+  };
+
   return (
     <section className="relative bg-[#FCFCFC] min-h-[calc(100vh-4rem)] flex flex-col pb-12">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-10 lg:py-10 flex-1 flex items-center">
@@ -30,20 +47,21 @@ export function Hero() {
 
             <ScrollReveal delay={300}>
               <div>
-                <div className="relative w-full max-w-xl mx-auto">
+                <form onSubmit={handleSubmit} className="relative w-full max-w-xl mx-auto">
                   <input
                     type="text"
                     placeholder="Ask a clinical question..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
                     className="w-full h-14 px-6 pr-32 rounded-lg border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-base outline-none focus:border-[var(--color-brand-600)] transition-colors text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-                    readOnly
                   />
-                  <Link
-                    href="/auth/register"
+                  <button
+                    type="submit"
                     className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 px-5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-md hover:bg-[var(--color-brand-500)] transition-colors"
                   >
                     Start <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Link>
-                </div>
+                  </button>
+                </form>
                 <p className="text-sm text-[var(--color-text-muted)] mt-4">
                   2 free queries daily &middot; No credit card required
                 </p>
@@ -57,13 +75,14 @@ export function Hero() {
                   "Interpret elevated zonulin with low sIgA",
                   "DUTCH test: high cortisol metabolites protocol",
                 ].map((q) => (
-                  <Link
+                  <button
                     key={q}
-                    href="/auth/register"
+                    type="button"
+                    onClick={() => router.push(buildRegisterHref(q))}
                     className="px-4 py-2.5 text-sm whitespace-nowrap text-[var(--color-text-secondary)] bg-[var(--color-surface)] hover:border-[var(--color-brand-500)] border border-[var(--color-border-light)] rounded-lg transition-colors"
                   >
                     {q}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </ScrollReveal>
