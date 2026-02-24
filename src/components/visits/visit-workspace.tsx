@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
-  Grid3x3, Pill, HeartPulse, UserCheck, Trash2,
+  Grid3x3, Pill, HeartPulse, UserCheck, Trash2, Activity,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -30,12 +30,13 @@ const VisitEditor = dynamic(
 import { SoapSections } from "./soap-sections";
 import { IFMMatrixView } from "./ifm-matrix-view";
 import { ProtocolPanel } from "./protocol-panel";
+import { VitalsPanel } from "./vitals-panel";
 import { ExportMenu } from "./export-menu";
 import { useVisitStream } from "@/hooks/use-visit-stream";
-import type { Visit, VisitType, IFMMatrix } from "@/types/database";
+import type { Visit, VisitType, IFMMatrix, VitalsData, HealthRatings } from "@/types/database";
 import type { JSONContent } from "@tiptap/react";
 
-type Tab = "soap" | "ifm" | "protocol";
+type Tab = "soap" | "ifm" | "protocol" | "intake";
 
 interface VisitWorkspaceProps {
   visit: Visit & {
@@ -152,6 +153,10 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     visit.protocol_pushed_at || null
   );
 
+  // Push visit to patient timeline state
+  const [pushingToRecord, setPushingToRecord] = useState(false);
+  const [pushedToRecord, setPushedToRecord] = useState<"idle" | "pushed" | "already">( "idle");
+
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
@@ -248,6 +253,28 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
     setSaving(false);
   }, [visit.id]);
 
+  const handlePushToRecord = useCallback(async () => {
+    if (!visit.patients?.id) return;
+    setPushingToRecord(true);
+    try {
+      const res = await fetch(`/api/visits/${visit.id}/push-to-record`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to push to timeline");
+      }
+      const { already_existed } = await res.json();
+      setPushedToRecord(already_existed ? "already" : "pushed");
+      toast.success(already_existed ? "Already on patient timeline — updated" : "Visit added to patient timeline");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to push to timeline");
+    } finally {
+      setPushingToRecord(false);
+    }
+  }, [visit.id, visit.patients?.id]);
+
   const handlePushToPatientMatrix = useCallback(async () => {
     if (!visit.patients?.id) return;
     setPushing(true);
@@ -326,6 +353,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
   }, [visit.id, router]);
 
   const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
+    { key: "intake", label: "Intake", icon: Activity },
     { key: "soap", label: "SOAP Note", icon: ClipboardList },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
     { key: "protocol", label: "Protocol", icon: Pill },
@@ -401,6 +429,27 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
               title="Delete Visit"
             >
               <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          {visit.patients?.id && (
+            <button
+              onClick={handlePushToRecord}
+              disabled={pushingToRecord}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors disabled:opacity-50 ${
+                pushedToRecord === "already"
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : pushedToRecord === "pushed"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)]"
+              }`}
+              title="Push visit summary to patient timeline"
+            >
+              {pushingToRecord ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <User className="w-3 h-3" />
+              )}
+              {pushedToRecord === "already" ? "Already on Timeline" : pushedToRecord === "pushed" ? "On Timeline ✓" : "Push to Timeline"}
             </button>
           )}
           <ExportMenu visit={visit} />
@@ -513,6 +562,14 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
 
       {/* Tab content */}
       <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} className="min-h-[400px]">
+        {activeTab === "intake" && (
+          <VitalsPanel
+            visitId={visit.id}
+            initialVitals={(visit.vitals_data as VitalsData) ?? null}
+            initialRatings={(visit.health_ratings as HealthRatings) ?? null}
+            readOnly={isReadOnly}
+          />
+        )}
         {activeTab === "soap" && (
           <SoapSections
             subjective={visit.subjective || ""}

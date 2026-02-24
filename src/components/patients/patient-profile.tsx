@@ -30,6 +30,18 @@ const BiomarkerTimeline = dynamic(
   }
 );
 
+const VitalsTimeline = dynamic(
+  () => import("@/components/patients/vitals-timeline").then((m) => m.VitalsTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
 const PatientTimeline = dynamic(
   () => import("@/components/patients/patient-timeline").then((m) => m.PatientTimeline),
   {
@@ -100,6 +112,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const [labReports, setLabReports] = useState(initialLabs);
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [initialBiomarkerCode, setInitialBiomarkerCode] = useState<string | null>(null);
+  const [trendsView, setTrendsView] = useState<"biomarkers" | "vitals">("biomarkers");
 
   // Archive / Delete state
   const [showMenu, setShowMenu] = useState(false);
@@ -425,10 +438,35 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "trends" && (
-          <BiomarkerTimeline
-            patientId={patient.id}
-            initialBiomarkerCode={initialBiomarkerCode ?? undefined}
-          />
+          <div>
+            {/* Sub-toggle: Biomarkers / Vitals & Pillars */}
+            <div className="flex items-center gap-1 mb-5">
+              {(["biomarkers", "vitals"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setTrendsView(v);
+                    if (v === "vitals") setInitialBiomarkerCode(null);
+                  }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                    trendsView === v
+                      ? "bg-[var(--color-brand-600)] text-white"
+                      : "bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  {v === "biomarkers" ? "Biomarkers" : "Vitals & Pillars"}
+                </button>
+              ))}
+            </div>
+            {trendsView === "biomarkers" ? (
+              <BiomarkerTimeline
+                patientId={patient.id}
+                initialBiomarkerCode={initialBiomarkerCode ?? undefined}
+              />
+            ) : (
+              <VitalsTimeline patientId={patient.id} />
+            )}
+          </div>
         )}
 
         {activeTab === "prechart" && (

@@ -204,6 +204,25 @@ export interface IFMMatrix {
   structural_integrity: IFMMatrixNode;
 }
 
+export interface VitalsData {
+  weight_kg?: number;
+  height_cm?: number;
+  bp_systolic?: number;
+  bp_diastolic?: number;
+  heart_rate_bpm?: number;
+}
+
+export interface HealthRatings {
+  sleep?: number;
+  stress?: number;
+  movement?: number;
+  nutrition?: number;
+  digestion?: number;
+  energy?: number;
+  mood?: number;
+  hydration?: number;
+}
+
 export interface Visit {
   id: string;
   practitioner_id: string;
@@ -224,6 +243,8 @@ export interface Visit {
   template_content: Record<string, unknown> | null;
   ai_protocol: VisitProtocol;
   ifm_matrix: IFMMatrix | Record<string, unknown>;
+  vitals_data: VitalsData | null;
+  health_ratings: HealthRatings | null;
   conversation_id: string | null;
   is_archived: boolean;
   protocol_pushed_at: string | null;

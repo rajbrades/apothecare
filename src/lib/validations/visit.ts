@@ -33,6 +33,8 @@ export const updateVisitSchema = z.object({
   ifm_matrix: z.record(z.unknown()).optional(),
   ai_protocol: z.record(z.unknown()).optional(),
   template_content: z.record(z.unknown()).nullable().optional(),
+  vitals_data: z.record(z.unknown()).nullable().optional(),
+  health_ratings: z.record(z.unknown()).nullable().optional(),
 });
 
 export type UpdateVisitInput = z.infer<typeof updateVisitSchema>;

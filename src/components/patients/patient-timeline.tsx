@@ -12,7 +12,11 @@ import {
   FileText,
   Loader2,
   Clock,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useTimeline } from "@/hooks/use-timeline";
 import type { TimelineEvent, TimelineFilters } from "@/hooks/use-timeline";
 import type { TimelineEventType } from "@/lib/validations/timeline";
@@ -178,6 +182,67 @@ function TimelineFilterBar({
   );
 }
 
+// ── AI Insight expanded detail ─────────────────────────────────────────
+
+interface AISynthesisDetail {
+  summary?: string;
+  key_trends?: string[];
+  correlations?: string[];
+  potential_root_causes?: string[];
+  bright_spots?: string[];
+  focus_areas?: string[];
+  generated_at?: string;
+}
+
+const AI_SECTIONS: { key: keyof AISynthesisDetail; label: string }[] = [
+  { key: "key_trends", label: "Key Trends" },
+  { key: "correlations", label: "Correlations" },
+  { key: "potential_root_causes", label: "Potential Root Causes" },
+  { key: "bright_spots", label: "Bright Spots" },
+  { key: "focus_areas", label: "Focus Areas" },
+];
+
+function AIInsightDetail({ detail }: { detail: AISynthesisDetail }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1 text-xs text-[var(--color-brand-600)] hover:underline font-medium"
+      >
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        {open ? "Hide details" : "View analysis"}
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3">
+          {AI_SECTIONS.map(({ key, label }) => {
+            const items = detail[key] as string[] | undefined;
+            if (!items?.length) return null;
+            return (
+              <div key={key}>
+                <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1">{label}</p>
+                <ul className="space-y-1">
+                  {items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                      <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-brand-400)] flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+          {detail.generated_at && (
+            <p className="text-[10px] text-[var(--color-text-muted)]">
+              Generated {new Date(detail.generated_at).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── EventRow ──────────────────────────────────────────────────────────
 
 function TimelineEventRow({ event }: { event: TimelineEvent }) {
@@ -295,6 +360,11 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
             </span>
           )}
         </div>
+
+        {/* AI Insight expanded detail */}
+        {event.event_type === "ai_insight" && (
+          <AIInsightDetail detail={detail as AISynthesisDetail} />
+        )}
       </div>
     </div>
   );
@@ -361,6 +431,7 @@ interface PatientTimelineProps {
 
 export function PatientTimeline({ patientId }: PatientTimelineProps) {
   const [excludedTypes, setExcludedTypes] = useState<Set<TimelineEventType>>(new Set());
+  const [analyzing, setAnalyzing] = useState(false);
 
   const {
     events,
@@ -371,6 +442,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
     filters,
     setFilters,
     loadMore,
+    refresh,
   } = useTimeline(patientId);
 
   const handleToggleType = useCallback((type: TimelineEventType) => {
@@ -396,6 +468,26 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
     loadMore();
   }, [loadMore]);
 
+  const handleSynthesize = useCallback(async () => {
+    setAnalyzing(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}/timeline/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Analysis failed");
+      }
+      toast.success("AI synthesis complete");
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Analysis failed");
+    } finally {
+      setAnalyzing(false);
+    }
+  }, [patientId, refresh]);
+
   const grouped = groupByMonth(events);
 
   if (isLoading) {
@@ -419,11 +511,26 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" />
-        <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-          Health Timeline
-        </h2>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" />
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+            Health Timeline
+          </h2>
+        </div>
+        <button
+          onClick={handleSynthesize}
+          disabled={analyzing}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+          title="AI analyzes all clinical data and surfaces trends, correlations, and root causes"
+        >
+          {analyzing ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5" />
+          )}
+          {analyzing ? "Analyzing…" : "Synthesize"}
+        </button>
       </div>
 
       <TimelineFilterBar excludedTypes={excludedTypes} onToggleType={handleToggleType} />
