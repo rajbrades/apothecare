@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { LabStatusBadge } from "./lab-status-badge";
+import { AssignPatientButton } from "./assign-patient-button";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 
 const TEST_TYPE_VISUALS: Record<string, { icon: LucideIcon; bg: string; border: string; text: string }> = {
@@ -39,10 +40,11 @@ interface LabReportCardProps {
     raw_file_size: number | null;
     is_archived?: boolean;
     created_at: string;
-    patients?: { first_name: string | null; last_name: string | null } | null;
+    patients?: { id?: string; first_name: string | null; last_name: string | null } | null;
   };
   onDelete?: (id: string) => void;
   onArchive?: (id: string, archived: boolean) => void;
+  onAssign?: (id: string, patient: { id: string; first_name: string | null; last_name: string | null } | null) => void;
 }
 
 const VENDOR_LABELS: Partial<Record<LabVendor, string>> = {
@@ -88,7 +90,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function LabReportCard({ report, onDelete, onArchive }: LabReportCardProps) {
+export function LabReportCard({ report, onDelete, onArchive, onAssign }: LabReportCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const isArchived = report.is_archived ?? false;
@@ -180,6 +182,14 @@ export function LabReportCard({ report, onDelete, onArchive }: LabReportCardProp
 
       {/* Action buttons */}
       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        {onAssign && (
+          <AssignPatientButton
+            labId={report.id}
+            currentPatient={report.patients?.id ? { id: report.patients.id, first_name: report.patients.first_name, last_name: report.patients.last_name } : null}
+            onAssigned={(p) => onAssign(report.id, p)}
+            variant="icon"
+          />
+        )}
         {onArchive && (
           <button
             onClick={handleArchive}

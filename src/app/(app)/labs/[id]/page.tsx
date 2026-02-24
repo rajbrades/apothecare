@@ -6,10 +6,13 @@ import { LabReportDetail } from "@/components/labs/lab-report-detail";
 
 export default async function LabDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string; patientId?: string; patientName?: string }>;
 }) {
   const { id } = await params;
+  const { from, patientId, patientName } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect("/auth/login");
 
@@ -68,12 +71,17 @@ export default async function LabDetailPage({
     }
   }
 
+  const fromPatient = from === "patient" && patientId
+    ? { id: patientId, name: decodeURIComponent(patientName || "") }
+    : undefined;
+
   return (
     <LabReportDetail
       report={report}
       biomarkers={biomarkers || []}
       pdfUrl={pdfUrl}
       previousValues={previousValues}
+      fromPatient={fromPatient}
     />
   );
 }

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl, deleteFromStorage } from "@/lib/storage/lab-reports";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
+import { patchLabSchema } from "@/lib/validations/lab";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -165,26 +166,60 @@ export async function PATCH(
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
     const body = await request.json();
-    const isArchived = body.is_archived;
-    if (typeof isArchived !== "boolean") return jsonError("is_archived must be a boolean", 400);
+    const parsedBody = patchLabSchema.safeParse(body);
+    if (!parsedBody.success) return jsonError(parsedBody.error.issues[0].message, 400);
+
+    const updates: Record<string, unknown> = {};
+
+    if (parsedBody.data.is_archived !== undefined) {
+      updates.is_archived = parsedBody.data.is_archived;
+    }
+
+    if ("patient_id" in parsedBody.data) {
+      const patientId = parsedBody.data.patient_id ?? null;
+      // Verify patient ownership if non-null
+      if (patientId !== null) {
+        const { data: patient } = await supabase
+          .from("patients")
+          .select("id")
+          .eq("id", patientId)
+          .eq("practitioner_id", practitioner.id)
+          .single();
+        if (!patient) return jsonError("Patient not found", 404);
+      }
+      updates.patient_id = patientId;
+    }
 
     const { error: updateError } = await supabase
       .from("lab_reports")
-      .update({ is_archived: isArchived })
+      .update(updates)
       .eq("id", reportId)
       .eq("practitioner_id", practitioner.id);
 
     if (updateError) return jsonError("Failed to update lab report", 500);
 
+    // When assigning/unassigning a patient, sync biomarker_results.patient_id
+    if ("patient_id" in parsedBody.data) {
+      await supabase
+        .from("biomarker_results")
+        .update({ patient_id: parsedBody.data.patient_id ?? null })
+        .eq("lab_report_id", reportId);
+    }
+
     auditLog({
       request,
       practitionerId: practitioner.id,
-      action: isArchived ? "archive" : "unarchive",
+      action: parsedBody.data.is_archived !== undefined
+        ? (parsedBody.data.is_archived ? "archive" : "unarchive")
+        : "update",
       resourceType: "lab_report",
       resourceId: reportId,
+      detail: "patient_id" in parsedBody.data
+        ? { patient_assigned: true, patient_id: parsedBody.data.patient_id }
+        : undefined,
     });
 
-    return NextResponse.json({ success: true, is_archived: isArchived });
+    return NextResponse.json({ success: true, ...updates });
   } catch {
     return jsonError("Internal server error", 500);
   }

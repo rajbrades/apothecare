@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList, Grid3x3,
-  Stethoscope, Upload, Loader2, Clock,
+  Stethoscope, Upload, Loader2, Clock, TrendingUp,
   Pencil, Check, X, Plus, Archive, ArchiveRestore,
   Trash2, AlertTriangle, MoreVertical,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
+import { LabDetailSheet } from "@/components/labs/lab-detail-sheet";
 import { PreChartView } from "./pre-chart-view";
 import { SupplementList } from "./supplement-list";
 import type { Patient, PatientDocument, PatientSupplement } from "@/types/database";
@@ -53,7 +54,7 @@ const IFMMatrixView = dynamic(
   }
 );
 
-type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline";
+type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends";
 
 interface VisitItem {
   id: string;
@@ -83,6 +84,7 @@ interface PatientProfileProps {
   labReports: LabReportItem[];
   visits: VisitItem[];
   supplements: PatientSupplement[];
+  initialTab?: Tab;
 }
 
 function getAge(dob: string | null): number | null {
@@ -90,13 +92,14 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
-export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements }: PatientProfileProps) {
+export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements, initialTab = "overview" }: PatientProfileProps) {
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [docView, setDocView] = useState<"files" | "trends">("files");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
+  const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
+  const [initialBiomarkerCode, setInitialBiomarkerCode] = useState<string | null>(null);
 
   // Archive / Delete state
   const [showMenu, setShowMenu] = useState(false);
@@ -169,6 +172,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const tabs: { key: Tab; label: string; icon: typeof FileText }[] = [
     { key: "overview", label: "Overview", icon: User },
     { key: "documents", label: `Documents (${documents.length + labReports.length})`, icon: FileText },
+    { key: "trends", label: "Trends", icon: TrendingUp },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
     { key: "ifm_matrix", label: "IFM Matrix", icon: Grid3x3 },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
@@ -396,59 +400,35 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
         {activeTab === "documents" && (
           <div className="space-y-4">
-            {/* Sub-view toggle: All Files / Trends */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 p-0.5 bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)]">
-                <button
-                  onClick={() => setDocView("files")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
-                    docView === "files"
-                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
-                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-                  }`}
-                >
-                  All Files ({documents.length + labReports.length})
-                </button>
-                <button
-                  onClick={() => setDocView("trends")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
-                    docView === "trends"
-                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[var(--shadow-card)]"
-                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-                  }`}
-                >
-                  Trends
-                </button>
-              </div>
-              {docView === "files" && (
-                <Link
-                  href={`/labs?patient_id=${patient.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  Upload Lab
-                </Link>
-              )}
+            <div className="flex items-center justify-end">
+              <Link
+                href={`/labs?patient_id=${patient.id}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload Lab
+              </Link>
             </div>
-
-            {docView === "files" && (
-              <div className="space-y-6">
-                <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
-                <DocumentList
-                  patientId={patient.id}
-                  documents={documents}
-                  labReports={labReports}
-                  onDeleted={handleDocumentDeleted}
-                  onLabDeleted={handleLabDeleted}
-                  groupBy
-                />
-              </div>
-            )}
-
-            {docView === "trends" && (
-              <BiomarkerTimeline patientId={patient.id} />
-            )}
+            <div className="space-y-6">
+              <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
+              <DocumentList
+                patientId={patient.id}
+                documents={documents}
+                labReports={labReports}
+                onDeleted={handleDocumentDeleted}
+                onLabDeleted={handleLabDeleted}
+                onLabClick={setSelectedLabId}
+                groupBy
+              />
+            </div>
           </div>
+        )}
+
+        {activeTab === "trends" && (
+          <BiomarkerTimeline
+            patientId={patient.id}
+            initialBiomarkerCode={initialBiomarkerCode ?? undefined}
+          />
         )}
 
         {activeTab === "prechart" && (
@@ -505,6 +485,19 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
           <PatientTimeline patientId={patient.id} />
         )}
       </div>
+
+      {/* Lab detail slide-over — opens when clicking a lab in the Documents tab */}
+      <LabDetailSheet
+        labId={selectedLabId}
+        patientId={patient.id}
+        patientName={name}
+        onClose={() => setSelectedLabId(null)}
+        onOpenTrends={(code) => {
+          setSelectedLabId(null);
+          setInitialBiomarkerCode(code ?? null);
+          setActiveTab("trends");
+        }}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ const TIMELINE_EVENT_TYPES = [
   "supplement_start",
   "supplement_stop",
   "supplement_dose_change",
+  "document_upload",
   "symptom_log",
   "protocol_milestone",
   "patient_reported",

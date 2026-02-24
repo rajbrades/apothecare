@@ -97,7 +97,8 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Lab parsing pipeline — Claude Vision PDF extraction → biomarker normalization → flag calculation
 - [x] **Feature:** Biomarker normalization — reference matching, conventional + functional flag computation
 - [x] **Feature:** Lab reports in patient Documents tab — unified display merging both data sources
-- [x] **Refactor:** Merged Labs tab into Documents tab — category grouping (Lab Reports, Clinical Records, Imaging, Referrals, Administrative, Other), "All Files / Trends" sub-toggle, reduced tab bar from 7 → 6 tabs
+- [x] **Refactor:** Merged Labs tab into Documents tab — category grouping (Lab Reports, Clinical Records, Imaging, Referrals, Administrative, Other), reduced tab bar from 7 → 6 tabs
+- [x] **Refactor:** Trends promoted from Documents sub-toggle to dedicated top-level Trends tab — tab bar back to 7 tabs (Feb 23)
 
 ## Multi-Provider AI ✅ COMPLETE
 
@@ -115,11 +116,14 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Merge utility (`src/lib/ifm/merge.ts`) — pure functions for node + matrix merging
 - [x] **Refactor:** Simplified `ifm-matrix-view.tsx` from ~530 to ~155 lines — removed inline DnD editing, cards are display-only → click opens modal
 
-## Patient Timeline ✅ Phase 1 Complete
+## Patient Timeline ✅ Phase 1 + Phase 2 (Partial) Complete
 
 - [x] **DB:** Migration 009 — `timeline_events` table with full enum type, RLS, auto-insert triggers (lab completion + visit creation), and historical data backfill
 - [x] **Feature:** Timeline API — `GET /api/patients/[id]/timeline` cursor-paginated, filterable by event type
 - [x] **Feature:** Timeline tab on patient profile — chronological event list with type-specific icons (6th tab)
+- [x] **DB:** Migration 016 — `document_upload` enum value + `on_document_uploaded` trigger (patient_documents INSERT) + `on_visit_completed` trigger (visits UPDATE → completed) + backfill for existing documents
+- [x] **Feature:** `document_upload` events: auto-created for every patient document upload with type-specific summary and detail
+- [x] **Feature:** Visit completion events: existing visit event updated (not duplicated) when visit status → completed
 - [ ] **Feature (Phase 2):** `supplement_start`/`supplement_stop`/`supplement_dose_change` event producers from `patient_supplements` changes
 - [ ] **Feature (Phase 2):** `symptom_log`, `protocol_milestone`, `patient_reported`, `ai_insight` event producers
 - [ ] **Feature (Phase 2):** Filter bar should hide unused event types until producers exist
@@ -289,6 +293,20 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Feature:** Comparison card badges — `ComparisonCard` inherits citation context automatically; removed redundant `processCitations`
 
 ---
+
+## Sprint 11 — Labs Patient Search, Assign, Browse & Auto-Timeline (Feb 23) ✅ COMPLETE
+
+- [x] **Feature:** Searchable patient combobox — replaces HTML `<select>` on labs filter bar, debounced 300ms search, div-based popover
+- [x] **Feature:** Assign patient to unlinked lab — `AssignPatientButton` on lab card (hover) + detail page; PATCH syncs `lab_reports.patient_id` + `biomarker_results.patient_id`
+- [x] **Feature:** Browse-by-patient mode — toggle in lab list shows patient cards with lab counts; unlinked labs card; clicking filters list
+- [x] **API:** `GET /api/labs?unlinked=true` — filters to labs with no patient
+- [x] **API:** `GET /api/labs/patients-summary` — patient-level lab counts for browse mode
+- [x] **Feature:** Push lab to patient record — `POST /api/labs/[id]/push-to-record` upserts `lab_result` timeline event with flagged biomarker detail (idempotent)
+- [x] **Feature:** Contextual back-link — navigating from patient record to lab detail preserves context; breadcrumb shows patient name with back-link to Documents tab
+- [x] **Feature:** Lab detail slide-over drawer (`LabDetailSheet`) — 500px right panel preview of a lab's biomarkers from within patient record, without leaving the page
+- [x] **Feature:** "View Trend" per flagged biomarker in drawer — TrendingUp button closes drawer, switches to Trends tab, pre-selects that biomarker
+- [x] **Feature:** Trends promoted to top-level patient tab — first-class tab with `?tab=trends` URL support; `initialBiomarkerCode` prop for deep-linking
+- [x] **DB:** Migration 016 — `document_upload` timeline trigger (patient_documents INSERT) + visit completion trigger + backfill
 
 ## Lab & Biomarker Enhancements
 

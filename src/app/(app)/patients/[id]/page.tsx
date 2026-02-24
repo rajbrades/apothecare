@@ -5,10 +5,13 @@ import { PatientProfile } from "@/components/patients/patient-profile";
 
 export default async function PatientDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
+  const { tab } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect("/auth/login");
 
@@ -57,6 +60,9 @@ export default async function PatientDetailPage({
 
   if (error || !patient) notFound();
 
+  const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline"];
+  const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" : "overview";
+
   return (
     <PatientProfile
       patient={patient}
@@ -64,6 +70,7 @@ export default async function PatientDetailPage({
       labReports={labReports || []}
       visits={visits || []}
       supplements={supplements || []}
+      initialTab={initialTab}
     />
   );
 }

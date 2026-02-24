@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
 import type { BiomarkerData, BiomarkerPanelData, QualitativeData } from "@/components/chat/biomarker-range-bar";
 import { LabStatusBadge } from "./lab-status-badge";
+import { AssignPatientButton } from "./assign-patient-button";
 import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
 import type { LabReportStatus, LabVendor, BiomarkerFlag as DbFlag } from "@/types/database";
 
@@ -44,7 +45,8 @@ interface ReportData {
   raw_file_url: string;
   is_archived?: boolean;
   parsed_data?: { qualitative_results?: ParsedQualitativeResult[] } | null;
-  patients?: { first_name: string | null; last_name: string | null; date_of_birth: string | null; sex: string | null } | null;
+  patient_id?: string | null;
+  patients?: { id?: string | null; first_name: string | null; last_name: string | null; date_of_birth: string | null; sex: string | null } | null;
 }
 
 interface LabReportDetailProps {
@@ -52,6 +54,7 @@ interface LabReportDetailProps {
   biomarkers: BiomarkerRow[];
   pdfUrl: string | null;
   previousValues?: Record<string, number>;
+  fromPatient?: { id: string; name: string };
 }
 
 const VENDOR_LABELS: Partial<Record<LabVendor, string>> = {
@@ -298,12 +301,14 @@ function buildPanels(
   });
 }
 
-export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl, previousValues }: LabReportDetailProps) {
+export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl, previousValues, fromPatient }: LabReportDetailProps) {
   const [report, setReport] = useState(initialReport);
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
   const [pdfUrl, setPdfUrl] = useState(initialPdfUrl);
   const [retrying, setRetrying] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pushed, setPushed] = useState(false);
   const isArchived = report.is_archived ?? false;
 
   const isProcessing = PROCESSING_STATUSES.includes(report.status);
@@ -382,6 +387,23 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
     }
   }, [report.id, isArchived]);
 
+  const handlePushToRecord = useCallback(async () => {
+    setPushing(true);
+    try {
+      const res = await fetch(`/api/labs/${report.id}/push-to-record`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to push to record");
+      }
+      setPushed(true);
+      toast.success("Lab results pushed to patient record");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to push to record");
+    } finally {
+      setPushing(false);
+    }
+  }, [report.id]);
+
   const patientName = report.patients
     ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ")
     : null;
@@ -410,14 +432,29 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-6">
-        <Link
-          href="/labs"
-          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-        >
-          Labs
-        </Link>
-        <span className="text-[var(--color-text-muted)]">&gt;</span>
-        <span className="text-[var(--color-text-primary)]">{displayName}</span>
+        {fromPatient ? (
+          <>
+            <Link
+              href={`/patients/${fromPatient.id}?tab=documents`}
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              {fromPatient.name}
+            </Link>
+            <span className="text-[var(--color-text-muted)]">&gt;</span>
+            <span className="text-[var(--color-text-primary)]">{displayName}</span>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/labs"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            >
+              Labs
+            </Link>
+            <span className="text-[var(--color-text-muted)]">&gt;</span>
+            <span className="text-[var(--color-text-primary)]">{displayName}</span>
+          </>
+        )}
       </nav>
 
       {/* Header */}
@@ -495,6 +532,24 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : isArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
             {isArchived ? "Unarchive" : "Archive"}
           </button>
+
+          <AssignPatientButton
+            labId={report.id}
+            currentPatient={report.patients?.id ? { id: report.patients.id, first_name: report.patients.first_name, last_name: report.patients.last_name } : null}
+            onAssigned={(p) => setReport((prev) => ({ ...prev, patients: p ? { ...p, date_of_birth: null, sex: null } : null, patient_id: p?.id ?? null }))}
+            variant="button"
+          />
+
+          {report.status === "complete" && report.patients && (
+            <button
+              onClick={handlePushToRecord}
+              disabled={pushing}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-brand-600)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+            >
+              {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
+              {pushed ? "Update Record" : "Push to Record"}
+            </button>
+          )}
         </div>
       </div>
 

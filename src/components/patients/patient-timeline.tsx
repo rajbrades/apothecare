@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Brain,
   Activity,
+  FileText,
   Loader2,
   Clock,
 } from "lucide-react";
@@ -52,6 +53,12 @@ const EVENT_CONFIG: Record<
     accentColor: "#f59e0b",
     bgColor: "#fffbeb",
   },
+  document_upload: {
+    label: "Document",
+    icon: FileText,
+    accentColor: "#64748b",
+    bgColor: "#f8fafc",
+  },
   symptom_log: {
     label: "Symptom",
     icon: Activity,
@@ -84,6 +91,7 @@ const FILTER_TYPES: TimelineEventType[] = [
   "supplement_start",
   "supplement_stop",
   "supplement_dose_change",
+  "document_upload",
   "protocol_milestone",
   "symptom_log",
   "patient_reported",

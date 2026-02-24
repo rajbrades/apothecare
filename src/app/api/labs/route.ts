@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const parsed = labListQuerySchema.safeParse(params);
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
-    const { cursor, limit, status, test_type, lab_vendor, patient_id, search, include_archived } = parsed.data;
+    const { cursor, limit, status, test_type, lab_vendor, patient_id, search, include_archived, unlinked } = parsed.data;
 
     let query = supabase
       .from("lab_reports")
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
     if (test_type) query = query.eq("test_type", test_type);
     if (lab_vendor) query = query.eq("lab_vendor", lab_vendor);
     if (patient_id) query = query.eq("patient_id", patient_id);
+    if (unlinked) query = query.is("patient_id", null);
     if (cursor) query = query.lt("created_at", cursor);
     if (search) {
       // Search across test_name and raw_file_name (patient name filtering done client-side from joined data)

@@ -2,6 +2,35 @@
 
 All notable changes to Apotheca will be documented in this file.
 
+## [0.15.0] - 2026-02-23
+
+### Added — Labs: Patient Search, Assign & Browse
+- **Searchable patient combobox** (`src/components/ui/patient-search-combobox.tsx`): Replaces the HTML `<select>` on the labs filter bar. 300ms debounced search → `GET /api/patients?search={term}&limit=15`. Div-based popover, no Radix dependency.
+- **Assign patient to lab** (`src/components/labs/assign-patient-button.tsx`): UserPlus/UserCheck icon on lab cards and detail page. PATCH to `/api/labs/[id]` assigns the patient and syncs `biomarker_results.patient_id` so biomarker timeline includes the lab's data.
+- **Browse-by-patient mode**: `[List] [By Patient]` toggle in lab list. Fetches `/api/labs/patients-summary` for patient cards with lab count + last lab date. Clicking a card filters list to that patient. "Unlinked Labs (N)" card shows labs with no patient.
+- **Unlinked filter**: `GET /api/labs?unlinked=true` returns labs where `patient_id IS NULL`.
+
+### Added — Labs: Push to Patient Record
+- **`POST /api/labs/[id]/push-to-record`**: Pushes a completed lab as a `lab_result` timeline event. Idempotent — re-pushing the same lab upserts the existing event. Detail payload includes flagged biomarker list (name, value, unit, flag).
+- **Push to Record button** on lab detail page (shown when `status === "complete"` and patient is assigned).
+
+### Added — Patient Record: Lab Navigation & Context
+- **Contextual back-link**: Navigating from a patient's Documents tab to a full lab page passes `?from=patient&patientId=X&patientName=Y`. Lab detail breadcrumb shows "Patient Name → Lab Name" with a back-link to `/patients/[id]?tab=documents`.
+- **Lab detail slide-over drawer** (`src/components/labs/lab-detail-sheet.tsx`): 500px right panel, backdrop click + Escape to close, body scroll lock. Shows flagged biomarkers with flag badges and all results grouped by category. Fetches `/api/labs/${labId}` client-side; no page navigation required.
+
+### Added — Auto-Timeline for All Clinical Events (Migration 016)
+- **`document_upload` event type**: Added to `timeline_event_type` enum and to all client-side filter arrays.
+- **Document upload trigger** (`on_document_uploaded`): Fires on `patient_documents` INSERT — auto-creates a `document_upload` timeline event with type-specific summary (lab report, intake form, imaging, etc.).
+- **Visit completion trigger** (`on_visit_completed`): Fires on `visits` UPDATE when `status → 'completed'` — updates the existing visit timeline event title/summary/detail rather than duplicating.
+- **Backfill**: Existing documents without timeline events are back-populated at migration time.
+
+### Changed — Patient Profile: Trends Promoted to Top-Level Tab
+- **Trends tab**: `BiomarkerTimeline` moved from a Documents sub-toggle to a dedicated first-class **Trends** tab between Documents and Pre-Chart. Tab bar is now 7 tabs.
+- **Documents tab simplified**: Sub-toggle removed; always shows file list with Upload Lab link.
+- **View Trend deep-link**: Each flagged biomarker in `LabDetailSheet` has a TrendingUp button — clicking closes the drawer, switches to Trends, and pre-selects that biomarker's chart.
+- **`initialBiomarkerCode` prop** on `BiomarkerTimeline`: Secondary `useEffect` syncs `selectedCode` from prop once the biomarker list loads.
+- **`?tab=trends` URL support**: `patients/[id]/page.tsx` includes `"trends"` in `validTabs`.
+
 ## [0.14.0] - 2026-02-22
 
 ### Added — Freeform Supplement Reviews

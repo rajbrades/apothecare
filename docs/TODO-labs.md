@@ -68,6 +68,48 @@
 
 ---
 
+## P2.5 — Patient Context & Navigation ✅ COMPLETE (Feb 23)
+
+### Searchable Patient Combobox ✅
+- [x] Create `src/components/ui/patient-search-combobox.tsx` — controlled input, 300ms debounce → `GET /api/patients?search={term}&limit=15`
+- [x] Div-based popover (no Radix), matches `source-filter-popover.tsx` pattern
+- [x] Replace HTML `<select>` in `lab-list-client.tsx` with `PatientSearchCombobox`
+
+### Assign Patient to Lab ✅
+- [x] Extend PATCH `/api/labs/[id]` — accept `patient_id: uuid | null`, verify ownership, sync `biomarker_results.patient_id`
+- [x] Extend `patchLabSchema` in `src/lib/validations/lab.ts`
+- [x] Create `src/components/labs/assign-patient-button.tsx` (UserPlus/UserCheck icon + combobox popover)
+- [x] Wire into `lab-report-card.tsx` hover actions + `lab-report-detail.tsx` action row
+- [x] Optimistic update in `lab-list-client.tsx` via `handleAssign` callback
+
+### Browse-by-Patient Mode ✅
+- [x] Create `GET /api/labs/patients-summary` — patient-level lab counts + last lab date
+- [x] Add `unlinked: boolean` to `labListSchema`; `GET /api/labs?unlinked=true` filters `patient_id IS NULL`
+- [x] `[List] [By Patient]` toggle in `lab-list-client.tsx`
+- [x] Patient cards with lab count + date; "Unlinked Labs (N)" card
+- [x] Card click → sets `patientFilter`, switches to list mode
+
+### Contextual Back-Link ✅
+- [x] `lab-report-detail.tsx` accepts `fromPatient?: { id, name }` prop — breadcrumb shows "Patient Name → Lab Name" with back-link
+- [x] `src/app/(app)/labs/[id]/page.tsx` reads `?from=patient&patientId&patientName` and passes to detail component
+- [x] `document-list.tsx` links to lab detail with `?from=patient` params
+
+### Lab Detail Slide-Over Drawer ✅
+- [x] Create `src/components/labs/lab-detail-sheet.tsx` — 500px right panel, backdrop + Escape close, body scroll lock
+- [x] Shows: flagged biomarkers (flag badges + "View Trend" button), all results by category
+- [x] `document-list.tsx` — `onLabClick` prop; lab rows clickable with Eye icon button
+- [x] `patient-profile.tsx` — `selectedLabId` state, `<LabDetailSheet>` at root
+
+### Push Lab to Patient Timeline ✅
+- [x] Create `POST /api/labs/[id]/push-to-record` — builds `lab_result` timeline event; upserts on `source_table="lab_reports"` + `source_id` (idempotent)
+- [x] Push button on `lab-report-detail.tsx` (complete + has patient)
+
+### Trends Deep-Link from Drawer ✅
+- [x] `LabDetailSheet` — `onOpenTrends?: (biomarkerCode?) => void` prop + TrendingUp button per flagged biomarker
+- [x] `BiomarkerTimeline` — `initialBiomarkerCode?: string` prop; secondary useEffect syncs selection after list loads
+- [x] `patient-profile.tsx` — Trends top-level tab; `onOpenTrends` closes drawer + sets code + switches tab
+- [x] `patients/[id]/page.tsx` — `"trends"` added to `validTabs`
+
 ## P3 — Future
 
 ### Practice-Level Analytics Dashboard
@@ -120,4 +162,4 @@
 ### Sprint 8 (Biomarker Timeline)
 - [x] Biomarker timeline API + Recharts visualization
 - [x] previousValue trend indicators on range bars
-- [x] Patient "Lab Trends" tab with biomarker selector
+- [x] Patient "Lab Trends" tab with biomarker selector (originally Documents sub-toggle; promoted to top-level Trends tab in Sprint 11)

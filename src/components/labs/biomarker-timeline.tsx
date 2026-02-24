@@ -46,6 +46,7 @@ interface TimelineResponse {
 
 interface BiomarkerTimelineProps {
   patientId: string;
+  initialBiomarkerCode?: string;
 }
 
 // ── Flag mapping ──────────────────────────────────────────────────────
@@ -144,7 +145,7 @@ function CustomTooltip({ active, payload, unit }: any) {
 
 // ── Main component ────────────────────────────────────────────────────
 
-export function BiomarkerTimeline({ patientId }: BiomarkerTimelineProps) {
+export function BiomarkerTimeline({ patientId, initialBiomarkerCode }: BiomarkerTimelineProps) {
   const router = useRouter();
   const [biomarkerList, setBiomarkerList] = useState<BiomarkerListItem[]>([]);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
@@ -171,6 +172,13 @@ export function BiomarkerTimeline({ patientId }: BiomarkerTimelineProps) {
         setLoadingList(false);
       });
   }, [patientId]);
+
+  // Deep-link to a specific biomarker when initialBiomarkerCode is set
+  useEffect(() => {
+    if (!initialBiomarkerCode || biomarkerList.length === 0) return;
+    const match = biomarkerList.find((b) => b.biomarker_code === initialBiomarkerCode);
+    if (match) setSelectedCode(match.biomarker_code);
+  }, [initialBiomarkerCode, biomarkerList]);
 
   // Fetch timeline when selection changes
   useEffect(() => {

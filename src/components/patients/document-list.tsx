@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, Trash2, RefreshCcw, ExternalLink, Loader2, FlaskConical } from "lucide-react";
+import { FileText, Trash2, RefreshCcw, ExternalLink, Eye, Loader2, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { ExtractionStatusBadge } from "./extraction-status-badge";
 import type { LabReportItem } from "./patient-profile";
@@ -25,6 +25,7 @@ interface DocumentListProps {
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
   onLabDeleted?: (labId: string) => void;
+  onLabClick?: (labId: string) => void;
   groupBy?: boolean;
 }
 
@@ -98,7 +99,7 @@ function buildUnified(documents: DocumentItem[], labReports: LabReportItem[]): U
   });
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted, groupBy = false }: DocumentListProps) {
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted, onLabClick, groupBy = false }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reextracting, setReextracting] = useState<string | null>(null);
   const [docStatuses, setDocStatuses] = useState<Record<string, string>>({});
@@ -182,7 +183,8 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
           return (
             <div
               key={`lab-${lab.id}`}
-              className="flex items-center justify-between p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)]"
+              className={`flex items-center justify-between p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)] transition-colors ${onLabClick ? "cursor-pointer hover:bg-[var(--color-surface-secondary)] hover:border-[var(--color-brand-200)]" : ""}`}
+              onClick={() => onLabClick?.(lab.id)}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
@@ -208,14 +210,24 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0 ml-3">
-                <Link
-                  href={`/labs/${lab.id}`}
-                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-                  title="View lab results"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+              <div className="flex items-center gap-1 shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
+                {onLabClick ? (
+                  <button
+                    onClick={() => onLabClick(lab.id)}
+                    className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                    title="Preview lab results"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <Link
+                    href={`/labs/${lab.id}`}
+                    className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                    title="View lab results"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
                 <button
                   onClick={() => handleDeleteLab(lab.id)}
                   disabled={deleting === lab.id}

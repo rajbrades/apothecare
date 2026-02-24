@@ -39,6 +39,18 @@ export const labListQuerySchema = z.object({
   patient_id: z.string().uuid().optional(),
   search: z.string().max(200).optional(),
   include_archived: z.coerce.boolean().optional().default(false),
+  unlinked: z.coerce.boolean().optional().default(false),
 });
 
 export type LabListQuery = z.infer<typeof labListQuerySchema>;
+
+// ── Patch Lab Report ──────────────────────────────────────────────────
+export const patchLabSchema = z.object({
+  is_archived: z.boolean().optional(),
+  patient_id: z.string().uuid().nullable().optional(),
+}).refine(
+  (d) => d.is_archived !== undefined || "patient_id" in d,
+  "Must provide is_archived or patient_id"
+);
+
+export type PatchLabInput = z.infer<typeof patchLabSchema>;
