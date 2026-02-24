@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fmTimelineDataSchema } from "./fm-timeline";
 
 // ── Create Patient ─────────────────────────────────────────────────────
 export const createPatientSchema = z.object({
@@ -13,6 +14,7 @@ export const createPatientSchema = z.object({
   allergies: z.array(z.string().max(200)).max(50).nullable().optional(),
   notes: z.string().max(10000).nullable().optional(),
   ifm_matrix: z.record(z.unknown()).optional(),
+  fm_timeline_data: fmTimelineDataSchema.nullable().optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;

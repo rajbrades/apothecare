@@ -52,7 +52,7 @@ export function FeaturesGrid() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <ScrollReveal key={f.title} delay={i * 100}>
-              <div className="h-full p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border-light)]">
+              <div className="h-full p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border-light)] transition-colors duration-200 hover:border-[var(--color-brand-300)]">
                 <div className="space-y-4">
                   <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-tertiary)] flex items-center justify-center">
                     {f.icon}

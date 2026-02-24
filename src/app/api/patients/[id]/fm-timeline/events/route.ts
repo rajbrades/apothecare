@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
+import { pushFMEventSchema } from "@/lib/validations/fm-timeline";
 import type { FMTimelineEvent, FMTimelineData } from "@/types/database";
 
 function jsonError(message: string, status: number) {
@@ -37,11 +39,8 @@ export async function POST(
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
     const body = await request.json();
-    const { category, life_stage, title, notes, year, source = "practitioner" } = body;
-
-    if (!category || !life_stage || !title?.trim()) {
-      return jsonError("category, life_stage, and title are required", 400);
-    }
+    const parsed = pushFMEventSchema.safeParse(body);
+    if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
     // Read current fm_timeline_data
     const { data: patient } = await supabase
@@ -57,12 +56,12 @@ export async function POST(
 
     const newEvent: FMTimelineEvent = {
       id: newId(),
-      category,
-      life_stage,
-      title: title.trim(),
-      notes: notes?.trim() || undefined,
-      year: year ? Number(year) : undefined,
-      source,
+      category: parsed.data.category,
+      life_stage: parsed.data.life_stage,
+      title: parsed.data.title.trim(),
+      notes: parsed.data.notes?.trim() || undefined,
+      year: parsed.data.year ?? undefined,
+      source: parsed.data.source,
     };
 
     const updatedData: FMTimelineData = {
@@ -74,6 +73,15 @@ export async function POST(
       .update({ fm_timeline_data: updatedData })
       .eq("id", patientId)
       .eq("practitioner_id", practitioner.id);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "update",
+      resourceType: "fm_timeline",
+      resourceId: patientId,
+      detail: { action: "push_event", category: newEvent.category, life_stage: newEvent.life_stage },
+    });
 
     return NextResponse.json({ event: newEvent, fm_timeline_data: updatedData });
   } catch {

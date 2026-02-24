@@ -23,7 +23,7 @@ export default async function PatientDetailPage({
   const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }, { data: supplements }] = await Promise.all([
     supabase
       .from("patients")
-      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, ifm_matrix, is_archived, created_at, updated_at")
+      .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, ifm_matrix, fm_timeline_data, is_archived, created_at, updated_at")
       .eq("id", id)
       .eq("practitioner_id", practitioner.id)
       .single(),
@@ -60,8 +60,8 @@ export default async function PatientDetailPage({
 
   if (error || !patient) notFound();
 
-  const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline"];
-  const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" : "overview";
+  const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline", "fm_timeline"];
+  const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "fm_timeline" : "overview";
 
   return (
     <PatientProfile

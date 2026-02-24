@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateCsrf } from "@/lib/api/csrf";
+import { auditLog } from "@/lib/api/audit";
 import { createCompletion, MODELS } from "@/lib/ai/provider";
+import { analyzeFMTimelineSchema } from "@/lib/validations/fm-timeline";
 import type { FMTimelineEvent } from "@/types/database";
 
 function jsonError(message: string, status: number) {
@@ -33,11 +35,10 @@ export async function POST(
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
     const body = await request.json();
-    const events: FMTimelineEvent[] = body.events ?? [];
+    const parsed = analyzeFMTimelineSchema.safeParse(body);
+    if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
 
-    if (events.length === 0) {
-      return jsonError("No timeline events to analyze", 400);
-    }
+    const events = parsed.data.events;
 
     // Fetch patient context
     const { data: patient } = await supabase
@@ -116,6 +117,15 @@ Be specific. Reference actual events, life stages, and temporal patterns from th
     } catch {
       return jsonError("AI returned invalid JSON. Please try again.", 500);
     }
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "generate",
+      resourceType: "fm_timeline",
+      resourceId: patientId,
+      detail: { event_count: events.length },
+    });
 
     return NextResponse.json({ result });
   } catch {
