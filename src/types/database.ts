@@ -67,6 +67,25 @@ export interface PatientClinicalSummary {
   last_updated?: string;
 }
 
+// ── FM Timeline ──────────────────────────────────────────────────────
+export type FMLifeStage = "prenatal" | "birth" | "childhood" | "adolescence" | "adulthood";
+export type FMCategory = "antecedent" | "trigger" | "mediator";
+
+export interface FMTimelineEvent {
+  id: string;
+  category: FMCategory;
+  life_stage: FMLifeStage;
+  title: string;
+  notes?: string;
+  year?: number;
+  // "patient" will be used when the patient portal adds events directly
+  source?: "practitioner" | "patient";
+}
+
+export interface FMTimelineData {
+  events: FMTimelineEvent[];
+}
+
 export interface Patient {
   id: string;
   practitioner_id: string;
@@ -82,6 +101,7 @@ export interface Patient {
   notes: string | null;
   clinical_summary: PatientClinicalSummary;
   ifm_matrix: IFMMatrix | Record<string, unknown>;
+  fm_timeline_data: FMTimelineData | null;
   is_archived: boolean;
   created_at: string;
   updated_at: string;

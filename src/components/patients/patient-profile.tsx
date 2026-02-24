@@ -8,15 +8,16 @@ import {
   User, Calendar, FileText, ClipboardList, Grid3x3,
   Stethoscope, Upload, Loader2, Clock, TrendingUp,
   Pencil, Check, X, Plus, Archive, ArchiveRestore,
-  Trash2, AlertTriangle, MoreVertical,
+  Trash2, AlertTriangle, MoreVertical, GitBranch,
 } from "lucide-react";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { LabDetailSheet } from "@/components/labs/lab-detail-sheet";
 import { PreChartView } from "./pre-chart-view";
 import { SupplementList } from "./supplement-list";
-import type { Patient, PatientDocument, PatientSupplement } from "@/types/database";
+import type { Patient, PatientDocument, PatientSupplement, FMTimelineData, FMCategory, FMLifeStage } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
+import type { TimelineEvent } from "@/hooks/use-timeline";
 
 const BiomarkerTimeline = dynamic(
   () => import("@/components/labs/biomarker-timeline").then((m) => m.BiomarkerTimeline),
@@ -54,6 +55,18 @@ const PatientTimeline = dynamic(
   }
 );
 
+const FMTimeline = dynamic(
+  () => import("@/components/patients/fm-timeline").then((m) => m.FMTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
 const IFMMatrixView = dynamic(
   () => import("@/components/visits/ifm-matrix-view").then((m) => m.IFMMatrixView),
   {
@@ -66,7 +79,7 @@ const IFMMatrixView = dynamic(
   }
 );
 
-type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends";
+type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline";
 
 interface VisitItem {
   id: string;
@@ -113,6 +126,9 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [initialBiomarkerCode, setInitialBiomarkerCode] = useState<string | null>(null);
   const [trendsView, setTrendsView] = useState<"biomarkers" | "vitals">("biomarkers");
+  const [fmTimelineData, setFmTimelineData] = useState<FMTimelineData | null>(
+    initialPatient.fm_timeline_data ?? null
+  );
 
   // Archive / Delete state
   const [showMenu, setShowMenu] = useState(false);
@@ -137,6 +153,32 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     } catch {
       // Could add toast — silently fail for now
     }
+  }, [patient.id]);
+
+  const handlePushToFMTimeline = useCallback(async (
+    event: TimelineEvent,
+    category: FMCategory,
+    lifeStage: FMLifeStage
+  ) => {
+    const year = new Date(event.event_date).getFullYear();
+    const res = await fetch(`/api/patients/${patient.id}/fm-timeline/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category,
+        life_stage: lifeStage,
+        title: event.title,
+        notes: event.summary ?? undefined,
+        year,
+        source: "practitioner",
+      }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || "Failed to push event");
+    }
+    const data = await res.json();
+    setFmTimelineData(data.fm_timeline_data);
   }, [patient.id]);
 
   const handleArchiveToggle = async () => {
@@ -190,6 +232,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     { key: "ifm_matrix", label: "IFM Matrix", icon: Grid3x3 },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
     { key: "timeline", label: "Timeline", icon: Clock },
+    { key: "fm_timeline", label: "FM Timeline", icon: GitBranch },
   ];
 
   const handleDocumentUploaded = (newDoc: typeof documents[0]) => {
@@ -520,7 +563,17 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "timeline" && (
-          <PatientTimeline patientId={patient.id} />
+          <PatientTimeline
+            patientId={patient.id}
+            onPushToFMTimeline={handlePushToFMTimeline}
+          />
+        )}
+
+        {activeTab === "fm_timeline" && (
+          <FMTimeline
+            patientId={patient.id}
+            initialData={fmTimelineData}
+          />
         )}
       </div>
 

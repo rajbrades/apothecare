@@ -15,11 +15,14 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  GitBranch,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTimeline } from "@/hooks/use-timeline";
 import type { TimelineEvent, TimelineFilters } from "@/hooks/use-timeline";
 import type { TimelineEventType } from "@/lib/validations/timeline";
+import type { FMCategory, FMLifeStage } from "@/types/database";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -243,12 +246,118 @@ function AIInsightDetail({ detail }: { detail: AISynthesisDetail }) {
   );
 }
 
+// ── Push to FM Timeline form ───────────────────────────────────────────
+
+const FM_CATEGORIES: { key: FMCategory; label: string; color: string }[] = [
+  { key: "antecedent", label: "Antecedent", color: "text-violet-700 bg-violet-50 border-violet-200" },
+  { key: "trigger",    label: "Trigger",    color: "text-orange-700 bg-orange-50 border-orange-200" },
+  { key: "mediator",   label: "Mediator",   color: "text-amber-700 bg-amber-50 border-amber-200" },
+];
+
+const FM_STAGES: { key: FMLifeStage; label: string }[] = [
+  { key: "adulthood",   label: "Adulthood" },
+  { key: "adolescence", label: "Adolescence" },
+  { key: "childhood",   label: "Childhood" },
+  { key: "birth",       label: "Birth" },
+  { key: "prenatal",    label: "Pre-Birth" },
+];
+
+function PushToFMForm({
+  event,
+  onPush,
+  onCancel,
+}: {
+  event: TimelineEvent;
+  onPush: (category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [category, setCategory] = useState<FMCategory>("trigger");
+  const [lifeStage, setLifeStage] = useState<FMLifeStage>("adulthood");
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    await onPush(category, lifeStage);
+    setSaving(false);
+  };
+
+  return (
+    <div
+      className="mt-2 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+        Push to FM Timeline
+      </p>
+      <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1 italic">&quot;{event.title}&quot;</p>
+
+      {/* Category */}
+      <div>
+        <p className="text-[10px] text-[var(--color-text-muted)] mb-1">Category</p>
+        <div className="flex items-center gap-1">
+          {FM_CATEGORIES.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => setCategory(c.key)}
+              className={`px-2 py-0.5 text-xs font-medium rounded-full border transition-colors ${
+                category === c.key ? c.color : "border-transparent text-[var(--color-text-muted)] bg-transparent"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Life stage */}
+      <div>
+        <p className="text-[10px] text-[var(--color-text-muted)] mb-1">Life Stage</p>
+        <select
+          value={lifeStage}
+          onChange={(e) => setLifeStage(e.target.value as FMLifeStage)}
+          className="w-full text-xs px-2 py-1 border border-[var(--color-border)] rounded bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+        >
+          {FM_STAGES.map((s) => (
+            <option key={s.key} value={s.key}>{s.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center justify-end gap-1.5">
+        <button
+          onClick={onCancel}
+          className="px-2 py-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-[var(--color-brand-600)] hover:bg-[var(--color-brand-500)] rounded disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+          Push
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── EventRow ──────────────────────────────────────────────────────────
 
-function TimelineEventRow({ event }: { event: TimelineEvent }) {
+function TimelineEventRow({
+  event,
+  onPushToFMTimeline,
+}: {
+  event: TimelineEvent;
+  onPushToFMTimeline?: (event: TimelineEvent, category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
+}) {
   const config = EVENT_CONFIG[event.event_type];
   const Icon = config.icon;
   const detail = event.detail as Record<string, unknown>;
+  const [showPushForm, setShowPushForm] = useState(false);
+  const [pushed, setPushed] = useState(false);
+  const canPush = !!onPushToFMTimeline && event.event_type !== "ai_insight";
 
   return (
     <div
@@ -270,9 +379,27 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
           <h4 className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
             {event.title}
           </h4>
-          <span className="flex-shrink-0 text-xs text-[var(--color-text-muted)] whitespace-nowrap">
-            {relativeTime(event.event_date)}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {canPush && (
+              pushed ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
+                  <Check className="w-3 h-3" /> Added
+                </span>
+              ) : (
+                <button
+                  onClick={() => setShowPushForm((p) => !p)}
+                  title="Push to FM Timeline"
+                  className="inline-flex items-center gap-1 text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                >
+                  <GitBranch className="w-3 h-3" />
+                  FM
+                </button>
+              )
+            )}
+            <span className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">
+              {relativeTime(event.event_date)}
+            </span>
+          </div>
         </div>
 
         {event.summary && (
@@ -365,6 +492,19 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
         {event.event_type === "ai_insight" && (
           <AIInsightDetail detail={detail as AISynthesisDetail} />
         )}
+
+        {/* Push to FM Timeline inline form */}
+        {showPushForm && canPush && (
+          <PushToFMForm
+            event={event}
+            onPush={async (category, lifeStage) => {
+              await onPushToFMTimeline!(event, category, lifeStage);
+              setPushed(true);
+              setShowPushForm(false);
+            }}
+            onCancel={() => setShowPushForm(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -375,9 +515,11 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
 function TimelineDateGroup({
   month,
   events,
+  onPushToFMTimeline,
 }: {
   month: string;
   events: TimelineEvent[];
+  onPushToFMTimeline?: (event: TimelineEvent, category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
 }) {
   return (
     <div className="mb-6">
@@ -389,7 +531,11 @@ function TimelineDateGroup({
       </div>
       <div>
         {events.map((event) => (
-          <TimelineEventRow key={event.id} event={event} />
+          <TimelineEventRow
+            key={event.id}
+            event={event}
+            onPushToFMTimeline={onPushToFMTimeline}
+          />
         ))}
       </div>
     </div>
@@ -427,9 +573,10 @@ function LoadMoreTrigger({ onIntersect }: { onIntersect: () => void }) {
 
 interface PatientTimelineProps {
   patientId: string;
+  onPushToFMTimeline?: (event: TimelineEvent, category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
 }
 
-export function PatientTimeline({ patientId }: PatientTimelineProps) {
+export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimelineProps) {
   const [excludedTypes, setExcludedTypes] = useState<Set<TimelineEventType>>(new Set());
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -552,6 +699,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
               key={month}
               month={month}
               events={monthEvents}
+              onPushToFMTimeline={onPushToFMTimeline}
             />
           ))}
 
