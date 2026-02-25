@@ -1,6 +1,6 @@
 # PRD: Clinical Visits Module
 
-**Product:** Apotheca
+**Product:** Apothecare
 **Module:** Visits
 **Status:** v1.0 — Implemented
 **Last Updated:** 2026-02-13
@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-The Visits module is the core clinical documentation system in Apotheca. It provides functional medicine practitioners with a structured workflow for creating, documenting, and generating AI-assisted clinical notes for patient encounters. The module supports four encounter types, a block-based editor with collapsible template sections, voice input (live dictation + AI Scribe), multi-phase AI generation (SOAP → IFM Matrix → Protocol), and export to clipboard/PDF.
+The Visits module is the core clinical documentation system in Apothecare. It provides functional medicine practitioners with a structured workflow for creating, documenting, and generating AI-assisted clinical notes for patient encounters. The module supports four encounter types, a block-based editor with collapsible template sections, voice input (live dictation + AI Scribe), multi-phase AI generation (SOAP → IFM Matrix → Protocol), and export to clipboard/PDF.
 
 ---
 

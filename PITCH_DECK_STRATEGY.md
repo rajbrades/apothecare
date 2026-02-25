@@ -1,7 +1,7 @@
-# Apotheca — Pitch Deck Strategy & Team Audit
+# Apothecare — Pitch Deck Strategy & Team Audit
 
 **Date:** February 14, 2026
-**Produced By:** Apotheca Strategic Agent Team
+**Produced By:** Apothecare Strategic Agent Team
 
 ---
 
@@ -30,7 +30,7 @@ We have assembled a specialized agent team to review the codebase and `BUSINESS_
 
 ### 🚀 Social/Growth Audit
 *   **The Viral Loop:** The *Patient Education Studio* (NotebookLM style) is our secret weapon. Every PDF or Video generated is a marketing asset.
-*   **Strategy:** For the pitch, do not just list "Marketing." Show "Network Effects." When a practitioner sends a protocol to a patient, that patient sees Apotheca branding.
+*   **Strategy:** For the pitch, do not just list "Marketing." Show "Network Effects." When a practitioner sends a protocol to a patient, that patient sees Apothecare branding.
 
 ---
 
@@ -40,9 +40,9 @@ We have assembled a specialized agent team to review the codebase and `BUSINESS_
 
 | Slide | Title | Key Content (Team contributions) |
 | :--- | :--- | :--- |
-| **1** | **Title** | "Apotheca: The AI-Native Clinical OS for Functional Medicine." (Clean, minimal, Gold Logo). |
+| **1** | **Title** | "Apothecare: The AI-Native Clinical OS for Functional Medicine." (Clean, minimal, Gold Logo). |
 | **2** | **The Problem** | **(Comms):** "Functional Medicine is data-heavy. Practitioners spend 2 hours documenting for every 1 hour of care." <br> **(Design):** Visual of a practitioner buried in paperwork vs. complex lab results. |
-| **3** | **The Solution** | **(Design):** Split screen: Left = Chaos, Right = Apotheca Dashboard (Calm, Structured). <br> **(Comms):** "Scribe + Deep Reasoning + Protocol Engine." |
+| **3** | **The Solution** | **(Design):** Split screen: Left = Chaos, Right = Apothecare Dashboard (Calm, Structured). <br> **(Comms):** "Scribe + Deep Reasoning + Protocol Engine." |
 | **4** | **The Secret Sauce** | **(Comms):** "Deep Consult." Not just Chat. *Reasoning*. <br> **(Design):** Show the *IFM Matrix* mapping visualization. |
 | **5** | **Business Model** | **(Social/Growth):** Highlight the **Dual Revenue Stream**: 1. SaaS ($89/mo) + 2. **Marketplace (Supplement Formularies)**. This is the "Uber for Supplements" angle. |
 | **6** | **The Institute Moat** | **(Comms):** "We aren't just selling to doctors; we are the Runtime OS for A4M and IFM." Explain the *Curriculum Compliance* partnership model. |

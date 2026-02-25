@@ -28,7 +28,7 @@ export const ComparisonCard = memo(function ComparisonCard({
     <div className="comparison-card-entrance">
       {/* Preamble */}
       {sections.preamble && (
-        <div className="prose-apotheca mb-4">
+        <div className="prose-apothecare mb-4">
           <PanelMarkdown content={sections.preamble} />
         </div>
       )}
@@ -43,7 +43,7 @@ export const ComparisonCard = memo(function ComparisonCard({
               Conventional Approach
             </h3>
           </div>
-          <div className="prose-apotheca px-4 py-3 max-h-[500px] overflow-y-auto">
+          <div className="prose-apothecare px-4 py-3 max-h-[500px] overflow-y-auto">
             <PanelMarkdown content={sections.conventional} />
           </div>
         </div>
@@ -56,7 +56,7 @@ export const ComparisonCard = memo(function ComparisonCard({
               Functional/Integrative Approach
             </h3>
           </div>
-          <div className="prose-apotheca px-4 py-3 max-h-[500px] overflow-y-auto">
+          <div className="prose-apothecare px-4 py-3 max-h-[500px] overflow-y-auto">
             <PanelMarkdown content={sections.functional} />
           </div>
         </div>
@@ -70,14 +70,14 @@ export const ComparisonCard = memo(function ComparisonCard({
             Clinical Synthesis
           </h3>
         </div>
-        <div className="prose-apotheca px-4 py-3">
+        <div className="prose-apothecare px-4 py-3">
           <PanelMarkdown content={sections.synthesis} />
         </div>
       </div>
 
       {/* Epilogue */}
       {sections.epilogue && (
-        <div className="prose-apotheca mt-4">
+        <div className="prose-apothecare mt-4">
           <PanelMarkdown content={sections.epilogue} />
         </div>
       )}

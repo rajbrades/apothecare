@@ -2,7 +2,7 @@
 
 ## Overview
 
-Apotheca is a Next.js 15 application using the App Router with React Server Components. It follows a hybrid architecture: Supabase Cloud handles auth, database, and file storage (all under one HIPAA BAA), while the Next.js application is deployed to Vercel (dev) or AWS Amplify (production, HIPAA-eligible). AI inference is handled by Anthropic's Claude API (separate HIPAA BAA with zero data retention). Audio transcription uses OpenAI's Whisper API for the AI Scribe feature.
+Apothecare is a Next.js 15 application using the App Router with React Server Components. It follows a hybrid architecture: Supabase Cloud handles auth, database, and file storage (all under one HIPAA BAA), while the Next.js application is deployed to Vercel (dev) or AWS Amplify (production, HIPAA-eligible). AI inference is handled by Anthropic's Claude API (separate HIPAA BAA with zero data retention). Audio transcription uses OpenAI's Whisper API for the AI Scribe feature.
 
 ## System Diagram
 

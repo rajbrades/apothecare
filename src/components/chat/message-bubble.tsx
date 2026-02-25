@@ -67,7 +67,7 @@ function AssistantContent({ message }: { message: ChatMessage }) {
       {comparison ? (
         <ComparisonCard sections={comparison} />
       ) : (
-        <div className="prose-apotheca">
+        <div className="prose-apothecare">
           <ReactMarkdown
             rehypePlugins={markdownRehypePlugins}
             components={markdownComponents}
@@ -117,7 +117,7 @@ export const MessageBubble = memo(function MessageBubble({
             {isEmpty && isStreaming ? (
               <ThinkingIndicator />
             ) : isStreaming ? (
-              <div className="prose-apotheca">
+              <div className="prose-apothecare">
                 <StreamingRenderer content={message.content} />
               </div>
             ) : (

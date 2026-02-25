@@ -1,4 +1,4 @@
-# Apotheca Patient Portal: Deep Research Document
+# Apothecare Patient Portal: Deep Research Document
 
 > **Research Date:** February 20, 2026
 > **Platform Context:** Next.js 15 App Router + React 19 + Supabase/PostgreSQL + AI Clinical Decision Support
@@ -27,7 +27,7 @@
 17. [FHIR/HL7 Interoperability](#17-fhir-interoperability)
 18. [Voice-First Interfaces & Accessibility](#18-accessibility)
 19. [Predictive Health Insights](#19-predictive-insights)
-20. [Technical Architecture for Apotheca](#20-technical-architecture)
+20. [Technical Architecture for Apothecare](#20-technical-architecture)
 21. [AI Patient Health Memory](#21-ai-patient-health-memory)
 22. [Competitive Analysis: Superpower Health](#22-superpower-health)
 23. [Prioritized Feature Investment Recommendations](#23-feature-prioritization)
@@ -47,7 +47,7 @@
 - **Care Companion** monitors at-home treatments and sends data back to providers.
 - **E-check-in** lets patients complete pre-visit tasks from home.
 
-**Apotheca takeaway:** MyChart's AI agent that answers questions from patient-specific data is the feature to emulate. Their biometric login and wearable integration set the bar for patient experience.
+**Apothecare takeaway:** MyChart's AI agent that answers questions from patient-specific data is the feature to emulate. Their biometric login and wearable integration set the bar for patient experience.
 
 Sources: [MyChart](https://www.mychart.org/) | [Epic MyChart Central](https://www.techtarget.com/patientengagement/news/366629635/Epic-unveils-MyChart-Central-to-link-disparate-patient-portals) | [Epic MyChart 2025 Update](https://www.healthcareittoday.com/2025/09/04/an-update-on-epic-mychart-with-taylor-seale-during-epic-ugm/)
 
@@ -56,14 +56,14 @@ Sources: [MyChart](https://www.mychart.org/) | [Epic MyChart Central](https://ww
 ### Cerbo (Best-in-Class for Functional Medicine)
 
 **What they do well:**
-- **Editable Wellness Plan** shared through the patient portal — patients can follow complex treatment plans in an easy-to-understand format. This is the single most relevant feature for Apotheca.
+- **Editable Wellness Plan** shared through the patient portal — patients can follow complex treatment plans in an easy-to-understand format. This is the single most relevant feature for Apothecare.
 - **50+ integrated labs** with structured data results and a historical lab result dashboard for tracking biomarker trends over time.
 - **IV therapy and supplement protocol tracking** with custom protocol support shared via the patient portal.
 - Patients can ask questions about lab results, view results, request refills, and manage appointments.
 - Fully cloud-based with multi-location, remote care, and telehealth support.
 - **Fullscript integration** for supplement dispensing.
 
-**Apotheca takeaway:** Cerbo's Wellness Plan tracker is the closest analog to what Apotheca should build — a patient-facing view of their full protocol (supplements, lifestyle recommendations, lab monitoring schedule) that they can interact with. The historical lab dashboard with structured data is also directly relevant given Apotheca's biomarker timeline feature.
+**Apothecare takeaway:** Cerbo's Wellness Plan tracker is the closest analog to what Apothecare should build — a patient-facing view of their full protocol (supplements, lifestyle recommendations, lab monitoring schedule) that they can interact with. The historical lab dashboard with structured data is also directly relevant given Apothecare's biomarker timeline feature.
 
 Sources: [Cerbo Patient Portal](https://www.cer.bo/patient-portal-for-functional-integrative-medicine-providers) | [Cerbo Functional Medicine](https://www.cer.bo/who-we-serve/functional-and-integrative-medicine) | [Cerbo Lab Integration](https://www.cer.bo/post/functional-medicine-labs)
 
@@ -80,7 +80,7 @@ Sources: [Cerbo Patient Portal](https://www.cer.bo/patient-portal-for-functional
 - **Collaborative goal tracking** between practitioner and patient.
 - **Self-scheduling** with booking, rescheduling, and cancellation.
 
-**Apotheca takeaway:** The engagement measurement feature is brilliant — practitioners should see at a glance which patients are actively engaging with their protocols vs. going dark. The food/lifestyle journal creates ongoing touchpoints between visits, which is critical for functional medicine where lifestyle changes drive outcomes.
+**Apothecare takeaway:** The engagement measurement feature is brilliant — practitioners should see at a glance which patients are actively engaging with their protocols vs. going dark. The food/lifestyle journal creates ongoing touchpoints between visits, which is critical for functional medicine where lifestyle changes drive outcomes.
 
 Sources: [Practice Better Portal](https://practicebetter.io/features/client-portal) | [Practice Better](https://practicebetter.io/)
 
@@ -95,7 +95,7 @@ Sources: [Practice Better Portal](https://practicebetter.io/features/client-port
 - **Journal entries, document sharing, and secure chat** in the portal.
 - **45,000 clinicians serving 17 million patients** — meaningful scale validation.
 
-**Apotheca takeaway:** Healthie's approach of making AI "native, secure, and deeply integrated" rather than bolted on is the right philosophy. Their API-first architecture validates building a custom patient experience rather than using an off-the-shelf portal.
+**Apothecare takeaway:** Healthie's approach of making AI "native, secure, and deeply integrated" rather than bolted on is the right philosophy. Their API-first architecture validates building a custom patient experience rather than using an off-the-shelf portal.
 
 Sources: [Healthie Patient Portal](https://www.gethealthie.com/patient-portal) | [Healthie 2025 Year in Review](https://www.gethealthie.com/blog/2025-year-end-company-update) | [Healthie Platform](https://www.gethealthie.com/platform-overview)
 
@@ -110,7 +110,7 @@ Sources: [Healthie Patient Portal](https://www.gethealthie.com/patient-portal) |
 - **Multi-language portal support** with customizable instructions and how-to videos.
 - **Pre-visit screeners and consent forms** captured digitally before appointments.
 
-**Apotheca takeaway:** The PDEI concept is worth emulating — a dashboard that shows practitioners how engaged each patient is with their digital tools. Multi-language support matters for inclusive care.
+**Apothecare takeaway:** The PDEI concept is worth emulating — a dashboard that shows practitioners how engaged each patient is with their digital tools. Multi-language support matters for inclusive care.
 
 Sources: [Athenahealth Patient Engagement](https://www.athenahealth.com/solutions/patient-engagement) | [Athenahealth PDEI Research](https://www.athenahealth.com/resources/blog/patient-digital-engagement-research-2025) | [Athenahealth Portal Benefits](https://www.athenahealth.com/resources/blog/patient-portals-provider-benefits)
 
@@ -125,7 +125,7 @@ Sources: [Athenahealth Patient Engagement](https://www.athenahealth.com/solution
 - **Communication preference management** — patients choose how they want to receive reminders.
 - **Pronoun and identity support** as a portal feature.
 
-**Apotheca takeaway:** Jane's simplicity is instructive — they do fewer things but do them cleanly. The bidirectional profile sync is a pattern to follow for supplement list management.
+**Apothecare takeaway:** Jane's simplicity is instructive — they do fewer things but do them cleanly. The bidirectional profile sync is a pattern to follow for supplement list management.
 
 Sources: [Jane App Patient Portal](https://jane.app/guide/my-account-your-patient-client-portal) | [Jane App Features](https://jane.app/features)
 
@@ -139,7 +139,7 @@ Sources: [Jane App Patient Portal](https://jane.app/guide/my-account-your-patien
 - **Weight-based dosing calculator and AI-powered scribe** integrated into workflows.
 - **Free implementation** with 24/7 premium support.
 
-**Apotheca takeaway:** The "Passport" branding is clever — framing the portal as the patient's identity document for their health journey. The family portal concept is relevant for functional medicine practices serving families.
+**Apothecare takeaway:** The "Passport" branding is clever — framing the portal as the patient's identity document for their health journey. The family portal concept is relevant for functional medicine practices serving families.
 
 Sources: [Elation Patient Passport](https://www.elationhealth.com/solutions/ehr/patient-passport/) | [Elation Health](https://www.elationhealth.com/)
 
@@ -153,7 +153,7 @@ The HIPAA landscape is undergoing its **first major update in nearly 20 years**.
 
 #### Mandatory Requirements (Effective 2026)
 
-| Requirement | Detail | Apotheca Impact |
+| Requirement | Detail | Apothecare Impact |
 |---|---|---|
 | **MFA required for all ePHI access** | No longer "addressable" — it is mandatory. Applies to internal and remote access. | Must implement MFA for all patient logins, not just practitioner logins. |
 | **Encryption of ePHI at rest AND in transit** | AES-256 for data at rest, TLS 1.2+ for data in transit. No exceptions. | Supabase provides TLS in transit. Need to verify/enable encryption at rest for all PHI tables. |
@@ -165,7 +165,7 @@ The HIPAA landscape is undergoing its **first major update in nearly 20 years**.
 #### Patient Access API Requirement
 
 HHS will consider it a **HIPAA violation** to deny patients access to their PHI via an app of their choosing, unless it can be demonstrated that systems would be endangered. This means:
-- Apotheca must support patient data export.
+- Apothecare must support patient data export.
 - Consider FHIR-based API access for patient data portability.
 - Document any legitimate security reasons for access restrictions.
 
@@ -180,7 +180,7 @@ Patients can now provide a **single written consent** allowing SUD records to be
 - **Role-Based Access Control (RBAC)** with documented policies.
 - **Encryption key access** must follow least-privilege principles with audit logs.
 
-**Apotheca already has:** `auditLog()` fire-and-forget pattern in `src/lib/api/audit.ts`. This foundation must be extended to cover all patient portal PHI access events.
+**Apothecare already has:** `auditLog()` fire-and-forget pattern in `src/lib/api/audit.ts`. This foundation must be extended to cover all patient portal PHI access events.
 
 Sources: [HIPAA Journal Updates 2026](https://www.hipaajournal.com/hipaa-updates-hipaa-changes/) | [HIPAA Security Rule Changes](https://www.rubinbrown.com/insights-events/insight-articles/hipaa-security-rule-changes-2025-2026-hipaa-updates/) | [HIPAA MFA Requirements](https://www.strongdm.com/blog/hipaa-mfa-requirements) | [HIPAA Encryption Requirements](https://www.hipaajournal.com/hipaa-encryption-requirements/) | [HIPAA Privacy Rule Update](https://www.accountablehq.com/post/hipaa-privacy-rule-update-2025-what-changed-and-how-to-comply)
 
@@ -188,7 +188,7 @@ Sources: [HIPAA Journal Updates 2026](https://www.hipaajournal.com/hipaa-updates
 
 ## 3. Patient Identity Verification & Authentication {#3-authentication}
 
-### Recommended Authentication Stack for Apotheca
+### Recommended Authentication Stack for Apothecare
 
 #### Layer 1: Account Creation & Identity Verification
 
@@ -299,9 +299,9 @@ The Veterans Affairs developed the **Secure Messaging for Medication Reconciliat
 - Clinical pharmacist reviews patient changes and updates the EHR.
 - Updated list is posted for all providers to see.
 
-**This is the exact pattern Apotheca should implement for supplement reconciliation.**
+**This is the exact pattern Apothecare should implement for supplement reconciliation.**
 
-### Apotheca-Specific Workflow Design
+### Apothecare-Specific Workflow Design
 
 ```
 Patient View:
@@ -392,7 +392,7 @@ This is moving fast. Two major implementations in 2025:
 - Trained on 550,000+ medical concepts and 264,000 plain-language definitions.
 - Returns the same result every time (unlike ChatGPT).
 
-### Apotheca Implementation Plan
+### Apothecare Implementation Plan
 
 ```
 Patient views lab result:
@@ -423,7 +423,7 @@ Patient views lab result:
 1. **Provider-approved templates** for common biomarker explanations (curated library).
 2. **AI-generated explanations** for less common results, always with the disclaimer: "This explanation is AI-generated and reviewed by your care team. It is not medical advice."
 3. **Provider review queue** — AI drafts patient-facing explanations, provider approves/edits before release (Stanford model).
-4. **Functional medicine lens** — explanations reference optimal ranges, not just conventional ranges, aligned with the Clinical Lens toggle already in Apotheca.
+4. **Functional medicine lens** — explanations reference optimal ranges, not just conventional ranges, aligned with the Clinical Lens toggle already in Apothecare.
 5. **Never generate diagnoses or treatment recommendations** — only explain what a result means in plain language (Oracle guardrail).
 
 Sources: [Oracle AI Patient Portal](https://www.oracle.com/news/announcement/oracle-to-bring-new-ai-capabilities-to-its-patient-portal-2025-09-10/) | [Stanford AI Lab Results](https://med.stanford.edu/news/all-news/2025/01/ai-test-results) | [RosettaMD](https://www.archimedesmedical.com/insightscompanynews/insightsandcompanynews)
@@ -481,7 +481,7 @@ My Health Data
   └─────────────────────────────────────────────────────────┘
 ```
 
-**Important:** Apple Health has NO web API. To access Apple Health data, Apotheca would need either a native iOS app or a React Native wrapper. The Terra mobile SDK (available in Swift, React Native, and Flutter) handles this. This is a strong argument for eventually building a native mobile app or at minimum a React Native shell.
+**Important:** Apple Health has NO web API. To access Apple Health data, Apothecare would need either a native iOS app or a React Native wrapper. The Terra mobile SDK (available in Swift, React Native, and Flutter) handles this. This is a strong argument for eventually building a native mobile app or at minimum a React Native shell.
 
 Sources: [Terra API](https://tryterra.co/) | [Terra Integrations](https://tryterra.co/integrations) | [Terra Pricing](https://tryterra.co/pricing) | [Open Wearables](https://www.themomentum.ai/blog/introducing-open-wearables-the-open-source-api-for-wearable-health-intelligence) | [Wearables + Bloodwork Integration](https://insider.fitt.co/wearables-integrate-bloodwork-oura-health-panels/)
 
@@ -497,7 +497,7 @@ The medication adherence app market is projected to reach $12.44 billion by 2032
 - **DoseMed:** Built-in AI health assistant offering personalized support and real-time scheduling adjustments.
 - **Nudge:** Physical device with escalating reminders (green light -> beep -> push notification to caregiver after 1 hour).
 
-### Apotheca Supplement Adherence Feature Design
+### Apothecare Supplement Adherence Feature Design
 
 #### Core Features (MVP)
 
@@ -561,7 +561,7 @@ Sources: [Top Medication Reminder Apps 2026](https://dosepacker.com/blog/top-med
 - HIPAA-compliant ChatGPT wrapper for healthcare.
 - Audit trails for all AI interactions.
 
-### Apotheca Patient AI Chat Design
+### Apothecare Patient AI Chat Design
 
 #### What the AI CAN do:
 
@@ -612,7 +612,7 @@ Patient sends message
 ```
 
 #### Technical Note:
-Apotheca already has SSE streaming (`streamCompletion()` in `src/lib/ai/provider.ts`). The patient AI chat can reuse this infrastructure with a different system prompt that enforces the guardrails above.
+Apothecare already has SSE streaming (`streamCompletion()` in `src/lib/ai/provider.ts`). The patient AI chat can reuse this infrastructure with a different system prompt that enforces the guardrails above.
 
 Sources: [California AI Guardrails SB 243](https://healthtechmagazine.net/article/2026/01/california-adds-guardrails-ai-powered-medical-chats) | [Oracle AI Patient Portal](https://www.healthcaredive.com/news/oracle-launch-ai-patient-portal/759894/) | [Amazon One Medical AI](https://www.healthcaredive.com/news/amazon-one-medical-health-ai-assistant-chatbot/810235/) | [AI Chatbot Healthcare Guide](https://hiverhq.com/healthcare-chatbots)
 
@@ -707,7 +707,7 @@ The patient intake software market is growing from $1.8B (2023) to $4B by 2031. 
 - **Real-time validation** flags errors and missing data instantly.
 - **Historical data pre-population** — e.g., pulling a diabetic patient's last HbA1c into intake forms (DocResponse).
 
-### Apotheca Intake Form Strategy
+### Apothecare Intake Form Strategy
 
 #### For New Patients:
 
@@ -755,7 +755,7 @@ Current AI/ML approaches for symptom pattern detection:
 3. **Trigger identification:** "Your GI symptoms worsen 24-48 hours after high-stress days."
 4. **Progress visualization:** Show patients their improvement trajectory vs. a flat view of daily symptoms.
 
-### Apotheca Symptom Tracker Design
+### Apothecare Symptom Tracker Design
 
 #### Daily Check-In (2 minutes max)
 
@@ -811,23 +811,23 @@ Sources: [AI in Remote Patient Monitoring](https://www.delveinsight.com/blog/art
 
 ### Fullscript API Capabilities
 
-| Module | What It Does | Apotheca Use Case |
+| Module | What It Does | Apothecare Use Case |
 |---|---|---|
 | **Professional Catalog** | Access the comprehensive nutraceutical database | Search and reference supplements in protocols |
 | **Granular Search** | Filter by brand, product name, or ingredient | Patient searches within their portal |
 | **Create Supplement Plans** | Create plans sent to patients via email/SMS | Provider creates plan -> appears in patient portal |
-| **Patient Management** | Create/manage patient records with metadata | Sync Apotheca patient IDs with Fullscript patient records |
-| **Treatment Plans** | Attach external identifiers, manage plans | Link Apotheca protocol to Fullscript treatment plan |
+| **Patient Management** | Create/manage patient records with metadata | Sync Apothecare patient IDs with Fullscript patient records |
+| **Treatment Plans** | Attach external identifiers, manage plans | Link Apothecare protocol to Fullscript treatment plan |
 | **Allergens/Ingredients** | Query allergen and ingredient data | Flag supplements containing patient allergens |
 | **Third-Party Certifications** | Access certification data (GMP, NSF, etc.) | Display quality certifications to patients |
 
 ### Integration Architecture
 
 ```
-Apotheca Patient Portal
+Apothecare Patient Portal
   │
   ├── Provider creates protocol with supplement recommendations
-  │   └── Apotheca stores: supplement_name, dose, frequency, rationale
+  │   └── Apothecare stores: supplement_name, dose, frequency, rationale
   │
   ├── Fullscript API sync
   │   ├── Match supplement_name to Fullscript catalog product
@@ -835,7 +835,7 @@ Apotheca Patient Portal
   │   └── Patient receives Fullscript email with order link
   │
   └── Patient Portal view
-      ├── "Your Supplement Protocol" (from Apotheca)
+      ├── "Your Supplement Protocol" (from Apothecare)
       ├── "Order / Reorder" button (links to Fullscript checkout)
       ├── "Estimated refill date" (calculated from dose/quantity)
       └── "Order history" (synced from Fullscript)
@@ -843,14 +843,14 @@ Apotheca Patient Portal
 
 ### Refill and Adherence Loop
 
-1. Provider prescribes supplement protocol in Apotheca.
+1. Provider prescribes supplement protocol in Apothecare.
 2. Fullscript treatment plan created via API.
-3. Patient orders through Fullscript (within or linked from Apotheca portal).
-4. Apotheca tracks adherence (daily check-ins).
-5. When supply is predicted to run low, Apotheca notifies patient: "Time to reorder your Magnesium Glycinate. [Reorder on Fullscript]"
+3. Patient orders through Fullscript (within or linked from Apothecare portal).
+4. Apothecare tracks adherence (daily check-ins).
+5. When supply is predicted to run low, Apothecare notifies patient: "Time to reorder your Magnesium Glycinate. [Reorder on Fullscript]"
 6. Fullscript order data syncs back to confirm refill.
 
-**Note:** Apotheca already has `fullscript-stub-button.tsx` showing a toast. This stub should be replaced with real API integration.
+**Note:** Apothecare already has `fullscript-stub-button.tsx` showing a toast. This stub should be replaced with real API integration.
 
 Sources: [Fullscript API Documentation](https://support.fullscript.com/articles/api-documentation/) | [Fullscript API Changelog](https://us.fullscript.com/docs/api/changelog) | [Fullscript](https://fullscript.com)
 
@@ -912,7 +912,7 @@ Sources: [Athenahealth Patient Engagement Research 2025](https://www.athenahealt
 | **Twilio Video** | Programmable video API | Battle-tested, HIPAA BAA available | Complex pricing |
 | **Custom WebRTC** | Build from scratch | Full control | Enormous effort, not recommended |
 
-**Recommendation for Apotheca:** **Daily.co** or **LiveKit** for the telehealth video layer.
+**Recommendation for Apothecare:** **Daily.co** or **LiveKit** for the telehealth video layer.
 
 - Daily.co is faster to integrate (drop-in iframe or React component).
 - LiveKit offers more control and can be self-hosted for maximum HIPAA compliance.
@@ -960,7 +960,7 @@ Sources: [Daily.co Telehealth](https://www.daily.co/use-cases/telehealth/) | [HI
 
 The **21st Century Cures Act** requires all EHR systems in the US to incorporate a universal API such as SMART on FHIR. Over 70% of countries report active FHIR use in at least some use cases (2025 HL7 survey).
 
-For Apotheca's patient portal, FHIR interoperability enables:
+For Apothecare's patient portal, FHIR interoperability enables:
 1. **Importing patient records** from other EHR systems (Epic, Cerner, etc.).
 2. **Exporting patient data** to other providers when patients transfer care.
 3. **Connecting third-party apps** that patients already use.
@@ -968,18 +968,18 @@ For Apotheca's patient portal, FHIR interoperability enables:
 
 ### SMART on FHIR App Launch Framework
 
-SMART on FHIR allows apps to launch from inside or outside an EHR system. For Apotheca:
+SMART on FHIR allows apps to launch from inside or outside an EHR system. For Apothecare:
 
-- **EHR Launch:** A practitioner using Epic could launch Apotheca as a SMART app within their EHR to view functional medicine-specific data.
-- **Standalone Launch:** Apotheca's patient portal could authenticate against a FHIR server to pull patient records from other systems.
-- **Patient Access:** Patients could authorize Apotheca to read their records from their health system's FHIR endpoint.
+- **EHR Launch:** A practitioner using Epic could launch Apothecare as a SMART app within their EHR to view functional medicine-specific data.
+- **Standalone Launch:** Apothecare's patient portal could authenticate against a FHIR server to pull patient records from other systems.
+- **Patient Access:** Patients could authorize Apothecare to read their records from their health system's FHIR endpoint.
 
-### Key FHIR Resources for Apotheca
+### Key FHIR Resources for Apothecare
 
-| FHIR Resource | Apotheca Use |
+| FHIR Resource | Apothecare Use |
 |---|---|
 | `Patient` | Import/export patient demographics |
-| `Observation` | Lab results (the core of Apotheca's value) |
+| `Observation` | Lab results (the core of Apothecare's value) |
 | `DiagnosticReport` | Lab report metadata |
 | `MedicationStatement` | Current medications |
 | `MedicationRequest` | Prescribed medications |
@@ -992,9 +992,9 @@ SMART on FHIR allows apps to launch from inside or outside an EHR system. For Ap
 
 ### Implementation Priority
 
-**Phase 1:** FHIR R4 data export (patient can download their Apotheca data as FHIR JSON).
+**Phase 1:** FHIR R4 data export (patient can download their Apothecare data as FHIR JSON).
 **Phase 2:** FHIR R4 data import (patient can connect their health system account and pull in lab results from other providers).
-**Phase 3:** SMART on FHIR app launch (Apotheca can be launched from within other EHR systems).
+**Phase 3:** SMART on FHIR app launch (Apothecare can be launched from within other EHR systems).
 
 Sources: [SMART on FHIR](https://docs.smarthealthit.org/) | [FHIR Guide](https://www.capminds.com/blog/the-complete-guide-to-fhir-in-healthcare-architecture-use-cases-and-implementation/) | [SMART on FHIR API](https://smarthealthit.org/smart-on-fhir-api/) | [HL7 FHIR Interoperability](https://ignitedata.com/hl7-hl7-fhir-smart-on-fhir-are-solving-the-interoperability-conundrum/)
 
@@ -1016,7 +1016,7 @@ Key findings from the 2025 Digital Accessibility Index:
 |---|---|
 | **Keyboard navigation** | All interactive elements reachable and operable via keyboard |
 | **Screen reader compatibility** | Proper ARIA labels, semantic HTML, role attributes |
-| **Color contrast** | 4.5:1 minimum for text, 3:1 for large text (Apotheca already uses OKLCH — verify contrast ratios) |
+| **Color contrast** | 4.5:1 minimum for text, 3:1 for large text (Apothecare already uses OKLCH — verify contrast ratios) |
 | **Text resizing** | Content readable at 200% zoom without horizontal scrolling |
 | **Focus indicators** | Visible focus outlines on all interactive elements |
 | **Error identification** | Form errors clearly described in text (not just color) |
@@ -1033,7 +1033,7 @@ Key findings from the 2025 Digital Accessibility Index:
 - **Audio descriptions** for lab result charts and biomarker timelines.
 - **Read-aloud capability** for visit notes and protocol instructions.
 
-### Apotheca-Specific Accessibility Notes
+### Apothecare-Specific Accessibility Notes
 
 - Lab result charts (biomarker timelines using Recharts) need data table alternatives for screen reader users.
 - Evidence badges (RCT/META/COHORT) need accessible text, not just visual indicators.
@@ -1050,9 +1050,9 @@ Sources: [WCAG 2.1 AA Healthcare 2026](https://pilotdigital.com/blog/what-wcag-2
 
 When patients arrive with organized longitudinal data and predictive insights, visits become more collaborative and genuinely preventive. This is the future of functional medicine.
 
-### What's Possible with Apotheca's Existing Data
+### What's Possible with Apothecare's Existing Data
 
-Given that Apotheca already tracks biomarker timelines and supplement protocols, the following predictions become feasible:
+Given that Apothecare already tracks biomarker timelines and supplement protocols, the following predictions become feasible:
 
 #### Biomarker Trajectory Predictions
 
@@ -1100,7 +1100,7 @@ Sources: [Biomarker Predictive Models](https://www.frontiersin.org/journals/publ
 
 ---
 
-## 20. Technical Architecture for Apotheca {#20-technical-architecture}
+## 20. Technical Architecture for Apothecare {#20-technical-architecture}
 
 ### Multi-Tenant Auth: Patient vs. Practitioner
 
@@ -1442,7 +1442,7 @@ Sources: [Supabase Realtime](https://supabase.com/realtime) | [Supabase RLS](htt
 
 ## Key Differentiators vs. Competitors
 
-If Apotheca executes this patient portal well, it will have features that no current functional medicine EHR provides in a unified experience:
+If Apothecare executes this patient portal well, it will have features that no current functional medicine EHR provides in a unified experience:
 
 1. **AI-powered lab explanations with functional medicine context** (optimal ranges, not just conventional).
 2. **Bidirectional supplement reconciliation** with provider approval workflow.
@@ -1474,7 +1474,7 @@ AMIE uses a **two-agent architecture**:
 - **Dialogue Agent:** Manages patient interactions, collects clinical information, and ensures consistent communication across visits.
 - **Management Reasoning (Mx) Agent:** Processes clinical data, guidelines, and patient history to generate structured treatment and monitoring plans.
 
-In randomized studies, AMIE matched or exceeded clinicians' management reasoning over multi-visit consultations, including planning investigations, treatments, prescriptions, and appropriately using clinical guidelines. This two-agent pattern — one for interaction, one for deep reasoning — is directly applicable to Apotheca's architecture.
+In randomized studies, AMIE matched or exceeded clinicians' management reasoning over multi-visit consultations, including planning investigations, treatments, prescriptions, and appropriately using clinical guidelines. This two-agent pattern — one for interaction, one for deep reasoning — is directly applicable to Apothecare's architecture.
 
 **Google Cloud — MedLM Clinical Intelligence Engine:**
 
@@ -1521,7 +1521,7 @@ Temporal knowledge graphs add a time dimension to health data, enabling reasonin
 **Temporal Knowledge Graph for Clinical Outcome Prediction:** Recent 2025 research represents patient care pathways as temporal knowledge graphs, predicting clinical outcomes from the sequence and timing of clinical events.
 
 ```
-Temporal Health Knowledge Graph Structure (Apotheca):
+Temporal Health Knowledge Graph Structure (Apothecare):
 
 Patient Node (central)
   │
@@ -1661,7 +1661,7 @@ Clinical data requires domain-specific chunking — generic fixed-length splitti
 | **Fixed-length chunking** | 50% (baseline) | Low | Never use for clinical data |
 | **Proposition chunking** | 73% | Medium | Simple clinical notes |
 | **Semantic chunking** | 80% | High | Narrative clinical documents |
-| **Adaptive chunking** | 87% | 93% | **Recommended for Apotheca** |
+| **Adaptive chunking** | 87% | 93% | **Recommended for Apothecare** |
 
 **Adaptive Chunking for Clinical Data:**
 
@@ -1704,7 +1704,7 @@ Intake Forms:
   → Version each section for change detection across intakes
 ```
 
-**Embedding Model Recommendation:** BGE (BAAI General Embedding) significantly outperformed all other models tested for clinical text retrieval, despite scoring lower on general benchmarks. For Apotheca, consider `bge-large-en-v1.5` (1024 dims) or OpenAI `text-embedding-3-small` (1536 dims) as the embedding model.
+**Embedding Model Recommendation:** BGE (BAAI General Embedding) significantly outperformed all other models tested for clinical text retrieval, despite scoring lower on general benchmarks. For Apothecare, consider `bge-large-en-v1.5` (1024 dims) or OpenAI `text-embedding-3-small` (1536 dims) as the embedding model.
 
 Sources: [Advanced Chunking for Clinical RAG](https://pmc.ncbi.nlm.nih.gov/articles/PMC12649634/) | [CLI-RAG Clinical Framework](https://arxiv.org/html/2507.06715v1) | [Best Chunking Strategies 2025](https://www.firecrawl.dev/blog/best-chunking-strategies-rag-2025) | [Embedding Models for Clinical Retrieval](https://pmc.ncbi.nlm.nih.gov/articles/PMC11756698/) | [Hospital Chunking Evaluation](https://pubmed.ncbi.nlm.nih.gov/40899531/)
 
@@ -1862,7 +1862,7 @@ Sources: [Context Compression Framework](https://arxiv.org/html/2509.09199v1) | 
 
 **Mem0 (Production-Ready Memory Layer):**
 
-Mem0 is the most mature production memory system for AI agents (April 2025 paper, deployed at scale). Its architecture is directly applicable to Apotheca's patient health memory.
+Mem0 is the most mature production memory system for AI agents (April 2025 paper, deployed at scale). Its architecture is directly applicable to Apothecare's patient health memory.
 
 **Core Architecture:**
 
@@ -1932,7 +1932,7 @@ Decomposes agent memory into interacting subsystems:
 3. **Salience-Aware Selection:** Determines which memories are most relevant to the current interaction based on clinical importance and recency.
 4. **Intent-Conditioned Control:** Filters memory retrieval based on the purpose of the query (diagnostic vs. treatment planning vs. patient education).
 
-**Memory Types for Apotheca Patient Health Memory:**
+**Memory Types for Apothecare Patient Health Memory:**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -2076,7 +2076,7 @@ Knowledge graph-based interaction detection leverages the patient's complete med
 
 Recent research (2025) demonstrates that graph neural networks combined with knowledge graph embeddings achieve the highest accuracy for drug-drug interaction prediction. Transformer-based models like DrugBERT and BioBERT enable advanced interaction detection through semantic understanding from medical literature.
 
-For Apotheca, the practical approach:
+For Apothecare, the practical approach:
 
 ```
 Interaction Check Pipeline:
@@ -2130,7 +2130,7 @@ A landmark 2025 paper in *npj Digital Medicine* demonstrated that large language
 - Advanced liver regeneration modeling with real-time simulation
 - Enhanced glucose management in diabetes through digital twin predictions
 
-**Apotheca Opportunity:** A lightweight version of the digital twin concept — using the patient health memory to power trajectory projections and treatment simulations — is achievable with current technology. The full computational modeling requires significantly more data and infrastructure.
+**Apothecare Opportunity:** A lightweight version of the digital twin concept — using the patient health memory to power trajectory projections and treatment simulations — is achievable with current technology. The full computational modeling requires significantly more data and infrastructure.
 
 Sources: [Medical Digital Twins Lancet 2025](https://www.thelancet.com/journals/landig/article/PIIS2589-7500(25)00028-7/fulltext) | [LLMs Forecast Patient Trajectories](https://www.nature.com/articles/s41746-025-02004-3) | [Digital Twins Personalized Medicine](https://pmc.ncbi.nlm.nih.gov/articles/PMC12653454/) | [Digital Twins Healthcare Review](https://www.frontiersin.org/journals/digital-health/articles/10.3389/fdgth.2025.1633539/full) | [Digital Twin JMIR](https://medinform.jmir.org/2025/1/e53542)
 
@@ -2138,7 +2138,7 @@ Sources: [Medical Digital Twins Lancet 2025](https://www.thelancet.com/journals/
 
 Multi-agent AI systems for healthcare (MASH) are emerging as the next paradigm in medical AI. Instead of a single monolithic AI, specialized agents focus on different domains:
 
-**Hypothetical Apotheca Multi-Agent Architecture:**
+**Hypothetical Apothecare Multi-Agent Architecture:**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -2179,10 +2179,10 @@ Sources: [Multi-Agent AI Systems Healthcare](https://pmc.ncbi.nlm.nih.gov/articl
 
 #### Federated Learning Across Patient Populations
 
-Federated learning enables Apotheca to derive population-level insights without sharing individual patient data between practices:
+Federated learning enables Apothecare to derive population-level insights without sharing individual patient data between practices:
 
-**How it works for Apotheca:**
-1. Multiple Apotheca practices train local models on their patient data (e.g., "which supplement protocols most effectively reduce zonulin?").
+**How it works for Apothecare:**
+1. Multiple Apothecare practices train local models on their patient data (e.g., "which supplement protocols most effectively reduce zonulin?").
 2. Only model parameters (gradients/weights) are shared — never raw patient data.
 3. A central server aggregates parameters to improve the global model.
 4. Each practice benefits from collective insights while maintaining HIPAA compliance.
@@ -2254,7 +2254,7 @@ Research demonstrates that non-invasive smartwatch data (HRV, skin temperature, 
 **Memory Update Pipeline for Real-Time Data:**
 
 ```
-Wearable Data → Terra API → Apotheca Backend
+Wearable Data → Terra API → Apothecare Backend
   │
   ├── Raw data: Store in wearable_data table (high-frequency)
   │
@@ -2312,7 +2312,7 @@ Sources: [LLMs Temporal Reasoning Clinical Summarization](https://www.larknlp.co
 
 As described in the Autonomous Health Agents section above, multi-agent systems where specialist agents focus on different body systems are emerging as a research-backed architecture for comprehensive patient health management.
 
-A practical implementation for Apotheca could start with a simpler version — a single AI agent with **domain-specific system prompts** that are dynamically selected based on the query context, before evolving into true multi-agent orchestration.
+A practical implementation for Apothecare could start with a simpler version — a single AI agent with **domain-specific system prompts** that are dynamically selected based on the query context, before evolving into true multi-agent orchestration.
 
 ---
 
@@ -2337,7 +2337,7 @@ Under HIPAA, AI workflows should only access the PHI needed to perform their fun
 - California SB 243 / AB 489 (effective January 2026): Continuous disclosure that the patient is interacting with AI, not a human.
 - Colorado AI Act (enforcement June 2026): Disclosure whenever AI is used in high-risk decisions, annual impact assessments, anti-bias controls, record-keeping for at least three years.
 
-**Consent Model for Apotheca:**
+**Consent Model for Apothecare:**
 
 ```sql
 -- AI memory consent (extends consent_records table from Section 4)
@@ -2454,7 +2454,7 @@ Sources: [HIPAA Compliant AI 2026 Guide](https://www.getprosper.ai/blog/hipaa-co
 
 ---
 
-### 21.7 Technical Implementation Patterns for Apotheca
+### 21.7 Technical Implementation Patterns for Apothecare
 
 #### Complete pgvector Schema for Patient Health Memory
 
@@ -2918,7 +2918,7 @@ CREATE TRIGGER on_lab_result_insert
 
 ### 21.8 Industry Landscape: Who Is Building What (2025-2026)
 
-| Company | Focus | Patient Memory Approach | Key Insight for Apotheca |
+| Company | Focus | Patient Memory Approach | Key Insight for Apothecare |
 |---|---|---|---|
 | **Hippocratic AI** | Patient-facing AI agents | 115M+ clinical interactions, 50+ health systems, $3.5B valuation | Empathy inference + safety-first agent design |
 | **Abridge** | Ambient clinical documentation | EHR context integration, predicted problems section | Adding patient history context improved doc quality 18% |
@@ -2936,13 +2936,13 @@ Sources: [Hippocratic AI $126M Series C](https://www.fiercehealthcare.com/ai-and
 
 ---
 
-### 21.9 Proposed Architecture for Apotheca Patient Health Memory
+### 21.9 Proposed Architecture for Apothecare Patient Health Memory
 
 #### System Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    APOTHECA PATIENT HEALTH MEMORY                    │
+│                    APOTHECARE PATIENT HEALTH MEMORY                    │
 │                                                                      │
 │  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  ┌───────────┐ │
 │  │ Data Sources │  │ Embedding    │  │ Memory     │  │ Retrieval │ │
@@ -3078,13 +3078,13 @@ Superpower Health (superpower.com) is a DTC preventive health platform founded b
 
 Sources: [Superpower vs Function Health](https://superpower.com/superpower-vs-function-health) | [Superpower AI Blog](https://superpower.com/blog/superpower-ai-a-new-kind-of-health-intelligence) | [TechCrunch](https://techcrunch.com/2025/04/22/superpower-wants-to-help-people-detect-and-address-health-issues-before-symptoms-appear/) | [Product Review](https://www.productpep.com/blog/2025/10/27/what-is-superpowers-superpower)
 
-### Where Superpower Falls Short (Apotheca's Opportunity)
+### Where Superpower Falls Short (Apothecare's Opportunity)
 
-| Gap | Details | Apotheca Advantage |
+| Gap | Details | Apothecare Advantage |
 |-----|---------|-------------------|
-| **Generic AI analysis** | Doesn't explain biomarker relationships or build narratives. Reviewers describe output as "surface-level." | Apotheca's functional vs. conventional ranges, cross-lab correlation, and evidence citation system go deeper |
+| **Generic AI analysis** | Doesn't explain biomarker relationships or build narratives. Reviewers describe output as "surface-level." | Apothecare's functional vs. conventional ranges, cross-lab correlation, and evidence citation system go deeper |
 | **Safety failures** | Recommended a pre-hormone supplement without flagging prostate cancer family history contraindication | Provider approval loop + interaction detection + health memory (including family history) prevents this |
-| **No practitioner layer** | DTC only — no provider collaboration, no approval workflows, no clinical oversight beyond internal team | Apotheca keeps the practitioner central to every patient interaction |
+| **No practitioner layer** | DTC only — no provider collaboration, no approval workflows, no clinical oversight beyond internal team | Apothecare keeps the practitioner central to every patient interaction |
 | **No longitudinal memory** | Snapshot-based analysis. No tracking of how interventions affect biomarkers over time | AI Health Memory tracks "zonulin down 40% since starting L-glutamine 3 months ago" |
 | **Black-box analysis** | No transparency into methodology or reasoning | Evidence badges, citation system, and clinical lens give full visibility |
 | **No mobile app** | Web only (rated C- by reviewers) | PWA-first architecture planned |
@@ -3092,7 +3092,7 @@ Sources: [Superpower vs Function Health](https://superpower.com/superpower-vs-fu
 
 ### Strategic Insight
 
-Superpower validates the market demand for AI-powered health intelligence at consumer scale. However, their DTC approach creates a fundamental safety gap: **no clinical oversight on AI-generated recommendations.** Apotheca's strategic advantage is the practitioner-patient loop — every patient-facing feature strengthens the clinical relationship rather than replacing it.
+Superpower validates the market demand for AI-powered health intelligence at consumer scale. However, their DTC approach creates a fundamental safety gap: **no clinical oversight on AI-generated recommendations.** Apothecare's strategic advantage is the practitioner-patient loop — every patient-facing feature strengthens the clinical relationship rather than replacing it.
 
 ---
 
@@ -3100,7 +3100,7 @@ Superpower validates the market demand for AI-powered health intelligence at con
 
 ### Strategic Thesis
 
-> **Superpower and Function Health are DTC plays that cut out the provider. Apotheca should make the provider-patient relationship BETTER, not replace it.** Every patient feature should strengthen that bond. This is the moat — it's harder to build but creates stickier relationships on both sides.
+> **Superpower and Function Health are DTC plays that cut out the provider. Apothecare should make the provider-patient relationship BETTER, not replace it.** Every patient feature should strengthen that bond. This is the moat — it's harder to build but creates stickier relationships on both sides.
 
 ### Tier 1 — Build First (Highest ROI)
 
@@ -3108,7 +3108,7 @@ Superpower validates the market demand for AI-powered health intelligence at con
 - **Impact:** 10 | **Feasibility:** 9 | **Differentiation:** 8
 - Already have the lab interpretation engine. Add a "patient voice" output layer.
 - Example: *"Your TSH is 3.8 — within conventional range, but your practitioner considers 1-2.5 optimal for functional medicine. This may relate to the fatigue you've reported."*
-- Superpower does this generically. Apotheca can do it with functional context + evidence citations.
+- Superpower does this generically. Apothecare can do it with functional context + evidence citations.
 - **Effort:** Low — reuse existing AI, add patient-facing prompt template.
 - **Leverages:** Existing lab interpretation engine, clinical lens toggle, evidence badges.
 
@@ -3178,7 +3178,7 @@ Superpower validates the market demand for AI-powered health intelligence at con
 | **Telehealth** | Commoditized. Zoom/Doxy.me work fine. Don't build a video platform. |
 | **Voice-first interfaces** | Niche audience, expensive to build well, low ROI for a clinical tool. |
 | **Full FHIR/HL7 interoperability** | Massive engineering effort for marginal early benefit. Do PDF/CSV import first. |
-| **Prescription management** | Regulatory minefield. Stick to supplements (OTC) where Apotheca already has expertise. |
+| **Prescription management** | Regulatory minefield. Stick to supplements (OTC) where Apothecare already has expertise. |
 
 ### Implementation Roadmap
 
@@ -3226,13 +3226,13 @@ Phase 4 (Weeks 13+):   Symptom-biomarker correlation AI
 
 ### 24.1 Overview
 
-The Unified Patient Health Timeline is Apotheca's signature feature -- a three-layer visualization and intelligence system that transforms scattered patient health data into a coherent, navigable, AI-enriched narrative. It combines:
+The Unified Patient Health Timeline is Apothecare's signature feature -- a three-layer visualization and intelligence system that transforms scattered patient health data into a coherent, navigable, AI-enriched narrative. It combines:
 
 1. **Visual Layer** -- A chronological timeline of every patient health event
 2. **Data Layer** -- Biomarker trend overlays with clinical context markers
 3. **Intelligence Layer** -- AI-generated narrative summaries of the patient's health journey
 
-No competitor in the functional medicine EHR space offers all three layers in a unified view. Cerbo provides a basic historical lab dashboard. Superpower provides snapshot analysis. Practice Better provides engagement metrics. Apotheca's Unified Timeline connects the dots across labs, visits, supplements, symptoms, wearables, and protocols -- then explains what the connections mean.
+No competitor in the functional medicine EHR space offers all three layers in a unified view. Cerbo provides a basic historical lab dashboard. Superpower provides snapshot analysis. Practice Better provides engagement metrics. Apothecare's Unified Timeline connects the dots across labs, visits, supplements, symptoms, wearables, and protocols -- then explains what the connections mean.
 
 ---
 
@@ -3461,7 +3461,7 @@ On mobile (< 768px), the timeline renders as a single-column card stack with a s
 
 ```sql
 -- ===========================================
--- APOTHECA - Unified Patient Health Timeline
+-- APOTHECARE - Unified Patient Health Timeline
 -- ===========================================
 -- Migration 009: Timeline events, narratives, and correlation data
 
@@ -3808,7 +3808,7 @@ CREATE TRIGGER on_visit_created
 
 ### 24.5 API Endpoints
 
-All timeline endpoints follow existing Apotheca patterns: CSRF validation, auth check, rate limiting, Zod validation, audit logging.
+All timeline endpoints follow existing Apothecare patterns: CSRF validation, auth check, rate limiting, Zod validation, audit logging.
 
 #### 24.5.1 Timeline Events
 
@@ -4925,7 +4925,7 @@ This maps to the existing Section 23 roadmap as follows:
 #### 24.9.1 Performance
 
 **Large Dataset Handling:**
-- Timeline events use cursor-based pagination (consistent with existing Apotheca pattern), not offset pagination.
+- Timeline events use cursor-based pagination (consistent with existing Apothecare pattern), not offset pagination.
 - Events are loaded in batches of 20, with an intersection observer triggering `loadMore()`.
 - Biomarker overlay queries are limited to the visible date range to avoid loading years of data.
 - The `timeline_events` table is a denormalized projection -- no JOINs needed for rendering the event stream.

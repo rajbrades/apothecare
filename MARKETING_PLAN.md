@@ -1,7 +1,7 @@
-# Apotheca Marketing Plan: The "Institute OS" Strategy
+# Apothecare Marketing Plan: The "Institute OS" Strategy
 
 **Status:** DRAFT
-**Objective:** Establish Apotheca as the standard-of-care operating system for functional medicine by 2027.
+**Objective:** Establish Apothecare as the standard-of-care operating system for functional medicine by 2027.
 **Core Narrative:** "We operationalize your best intentions. We close the gap between the conference and the clinic."
 
 ---
@@ -13,9 +13,9 @@ We are selling **Curriculum Compliance** and **Clinical Authority**.
 
 **Our positioning:**
 *   **Competitors:** "We save you time." (Utility)
-*   **Apotheca:** "We make you a better doctor." (Efficacy)
+*   **Apothecare:** "We make you a better doctor." (Efficacy)
 
-*   **Apotheca:** "We make you a better doctor." (Efficacy)
+*   **Apothecare:** "We make you a better doctor." (Efficacy)
 
 ### The "WOW" Factors (Future Roadmap)
 *   **"The Living Matrix"**: Dynamic, animated functional matrix visualization.
@@ -32,15 +32,15 @@ We are selling **Curriculum Compliance** and **Clinical Authority**.
 *   **Channel:**
     *   **Conference Booths:** Live demos of "A4M Mode" vs "Standard Mode."
     *   **Webinars:** "How to actually implement the Module IV Hormone Protocol on Monday morning."
-    *   **Course Bundles:** 1-year Apotheca Pro included in certification tuition.
+    *   **Course Bundles:** 1-year Apothecare Pro included in certification tuition.
 
 ### Loop B: The Patient Education Viral Loop (Bottom-Up)
-*   **Mechanism:** Every protocol sent to a patient includes a high-quality, Apotheca-branded "Patient Guide" (PDF/Audio).
+*   **Mechanism:** Every protocol sent to a patient includes a high-quality, Apothecare-branded "Patient Guide" (PDF/Audio).
 *   **The Viral Coefficient:**
     *   Patient receives amazing AI-generated explainer of their labs.
     *   Patient shares it with spouse/friends ("Look at this report my doctor gave me!").
-    *   Friends ask: "Who is your doctor?" -> "Does your doctor use Apotheca?"
-*   **Action:** Ensure every patient-facing asset has a "Powered by Apotheca" footer with a QR code for *practitioners* to learn more.
+    *   Friends ask: "Who is your doctor?" -> "Does your doctor use Apothecare?"
+*   **Action:** Ensure every patient-facing asset has a "Powered by Apothecare" footer with a QR code for *practitioners* to learn more.
 
 ---
 
@@ -64,29 +64,29 @@ We are selling **Curriculum Compliance** and **Clinical Authority**.
 Instead of generic health tips, we publish **Engineering-Grade Clinical Workflows**.
 
 *   *Example Article:* "The 7-Step SIBO Protocol: How to automate it in your EMR."
-*   *Example Video:* "Watch Apotheca analyze a complex mold toxicity case in 45 seconds." (Showcasing the Deep Consult logic).
+*   *Example Video:* "Watch Apothecare analyze a complex mold toxicity case in 45 seconds." (Showcasing the Deep Consult logic).
 
 ### Social Media Strategy: "The Open Source Clinic"
 
-**Goal:** Position Apotheca not as a software company, but as a **Clinical Media Company**.
+**Goal:** Position Apothecare not as a software company, but as a **Clinical Media Company**.
 
 | Platform | Strategy | Content Pillars |
 | :--- | :--- | :--- |
 | **LinkedIn** | **Professional Authority** | Peer-to-peer case studies. "Why typical AI fails in functional medicine." Clips from A4M/IFM lectures. |
 | **Instagram** | **Visual Evidence** | High-fidelity carousels of "Before/After" charting. "The Gap" memes (Conference excitement vs. Monday dread). |
-| **YouTube** | **Deep Dives** | "Apotheca vs. Human Scribe" speed tests. Full breakdown of complex protocols (e.g., Bredesen). |
+| **YouTube** | **Deep Dives** | "Apothecare vs. Human Scribe" speed tests. Full breakdown of complex protocols (e.g., Bredesen). |
 | **TikTok** | **The "Hidden" Reality** | Behind-the-scenes of improved work-life balance. "POV: You finished charting at 4:30 PM." |
 
 **Influencer Strategy: The "Micro-KOLs"**
 Instead of massive influencers, we target the **Institute Faculty**.
-*   **Tactic:** Gift Apotheca Pro to every module instructor at IFM/A4M.
+*   **Tactic:** Gift Apothecare Pro to every module instructor at IFM/A4M.
 *   **Ask:** "Just use it in your teaching if you like it."
-*   **Result:** When they teach a protocol, they show it *inside Apotheca*.
+*   **Result:** When they teach a protocol, they show it *inside Apothecare*.
 
 **The "Hallucination-Free" Campaign:**
 *   Aggressively market our **RAG Architecture**.
-*   "ChatGPT guesses. Apotheca cites."
-*   Show side-by-side comparisons of generic AI vs. Apotheca's cited output.
+*   "ChatGPT guesses. Apothecare cites."
+*   Show side-by-side comparisons of generic AI vs. Apothecare's cited output.
 
 ---
 
@@ -94,7 +94,7 @@ Instead of massive influencers, we target the **Institute Faculty**.
 
 | Channel | Priority | Tactic |
 | :--- | :--- | :--- |
-| **Direct Sales** | High | **"The 5-Day Automation Challenge"**: Email nurture campaign teaching clinicians how to automate one specific workflow per day. <br> **Direct Mail**: Physical "Apotheca Field Guides" sent to high-volume clinics. |
+| **Direct Sales** | High | **"The 5-Day Automation Challenge"**: Email nurture campaign teaching clinicians how to automate one specific workflow per day. <br> **Direct Mail**: Physical "Apothecare Field Guides" sent to high-volume clinics. |
 | **Conferences** | High | A4M World Congress (Vegas), IFM AIC. The "Live Demo" booth. |
 | **Partnerships** | High | **Fullscript Integration**. Leveraging their distribution for our mutual benefit. |
 | **SEO** | Medium | "Functional Medicine Scribe", "AI for Functional Medicine". |

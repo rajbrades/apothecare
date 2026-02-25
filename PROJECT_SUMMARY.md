@@ -1,13 +1,13 @@
-# Apotheca — Project Summary & Handoff Document
+# Apothecare — Project Summary & Handoff Document
 
 **Last updated:** February 24, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
 
-## What Is Apotheca
+## What Is Apothecare
 
-Apotheca is an AI-powered clinical decision support platform for functional and integrative medicine practitioners. It provides evidence-cited chat (Claude-powered), multi-modal lab interpretation, protocol generation, and visit documentation — all grounded in functional medicine research from IFM, A4M, and peer-reviewed literature.
+Apothecare is an AI-powered clinical decision support platform for functional and integrative medicine practitioners. It provides evidence-cited chat (Claude-powered), multi-modal lab interpretation, protocol generation, and visit documentation — all grounded in functional medicine research from IFM, A4M, and peer-reviewed literature.
 
 **Target users:** MDs, DOs, NPs, PAs, DCs, NDs practicing functional medicine.
 **Business model:** Freemium — Free (2 queries/day) → Pro ($89/mo, unlimited).
@@ -542,7 +542,7 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 ANTHROPIC_API_KEY=sk-ant-api03-...
 OPENAI_API_KEY=sk-proj-...
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=Apotheca
+NEXT_PUBLIC_APP_NAME=Apothecare
 ```
 
 **Note:** `OPENAI_API_KEY` is required for AI Scribe (Whisper audio transcription). Get it from [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
@@ -589,10 +589,10 @@ NEXT_PUBLIC_APP_NAME=Apotheca
 ## How To Resume Development
 
 ```bash
-cd ~/Development/Apotheca
+cd ~/Development/Apothecare
 git pull
 npm install
 npm run dev
 ```
 
-Then tell Claude: "Continue Apotheca development from the project summary. Next up: [specific task from TODO.md]"
+Then tell Claude: "Continue Apothecare development from the project summary. Next up: [specific task from TODO.md]"

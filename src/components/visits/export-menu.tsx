@@ -37,7 +37,7 @@ function formatSOAPText(visit: Visit): string {
     parts.push(`\n── PLAN ──\n${visit.plan}`);
   }
 
-  parts.push(`\n──────────────────\nGenerated with Apotheca — AI Clinical Decision Support\nNote: AI-generated content. Review and verify before clinical use.`);
+  parts.push(`\n──────────────────\nGenerated with Apothecare — AI Clinical Decision Support\nNote: AI-generated content. Review and verify before clinical use.`);
 
   return parts.join("\n");
 }

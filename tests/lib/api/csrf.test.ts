@@ -4,13 +4,13 @@ import { NextRequest } from "next/server";
 
 describe("validateCsrf", () => {
   beforeEach(() => {
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.apotheca.com");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.apothecare.com");
   });
 
   function makeRequest(origin?: string): NextRequest {
     const headers = new Headers();
     if (origin) headers.set("origin", origin);
-    return new NextRequest("https://app.apotheca.com/api/test", {
+    return new NextRequest("https://app.apothecare.com/api/test", {
       method: "POST",
       headers,
     });
@@ -22,7 +22,7 @@ describe("validateCsrf", () => {
   });
 
   it("returns null for matching origin", () => {
-    const result = validateCsrf(makeRequest("https://app.apotheca.com"));
+    const result = validateCsrf(makeRequest("https://app.apothecare.com"));
     expect(result).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe("validateCsrf", () => {
   });
 
   it("returns 403 for subdomain mismatch", () => {
-    const result = validateCsrf(makeRequest("https://sub.apotheca.com"));
+    const result = validateCsrf(makeRequest("https://sub.apothecare.com"));
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);
   });

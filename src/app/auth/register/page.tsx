@@ -191,7 +191,7 @@ export default function RegisterPage() {
 
           <p className="text-[11px] text-[var(--color-text-muted)] text-center mt-4 leading-relaxed">
             By creating an account, you agree to our Terms of Service and Privacy
-            Policy. Apotheca is HIPAA-compliant and your data is encrypted at
+            Policy. Apothecare is HIPAA-compliant and your data is encrypted at
             rest and in transit.
           </p>
         </div>

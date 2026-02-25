@@ -1,4 +1,4 @@
-# Apotheca — Business Plan & Strategy
+# Apothecare — Business Plan & Strategy
 
 **Version:** 1.0  
 **Date:** February 14, 2026
@@ -7,7 +7,7 @@
 
 ## 1. Executive Summary
 
-Apotheca is an AI-native Clinical Decision Support System (CDSS) built specifically for functional and integrative medicine practitioners. Unlike generic AI scribes, Apotheca is deeply grounded in functional medicine frameworks (IFM, A4M) and peer-reviewed literature. It automates the most complex parts of the functional medicine workflow: matrix mapping, protocol generation, and deep clinical analysis, freeing practitioners to focus on patient care.
+Apothecare is an AI-native Clinical Decision Support System (CDSS) built specifically for functional and integrative medicine practitioners. Unlike generic AI scribes, Apothecare is deeply grounded in functional medicine frameworks (IFM, A4M) and peer-reviewed literature. It automates the most complex parts of the functional medicine workflow: matrix mapping, protocol generation, and deep clinical analysis, freeing practitioners to focus on patient care.
 
 ## 2. Market Opportunity
 
@@ -17,7 +17,7 @@ Functional medicine encounters are complex, requiring the synthesis of patient h
 *   **Information Overload:** Practitioners struggle to keep up with the latest research and supplement protocols.
 *   **Generic Tools Fail:** Standard AI scribes (Heidi, Ambience) lack the specific knowledge base of functional medicine (e.g., they don't understand "OAT markers for fungal overgrowth").
 
-### The Solution: Apotheca
+### The Solution: Apothecare
 *   **AI Scribe + CDSS:** Automates documentation *and* provides clinical intelligence.
 *   **Evidence-Based:** All capabilities are grounded in cited research (RCTs, Meta-analyses, Guidelines).
 *   **Functional First:** Native support for the IFM Matrix, functional lab ranges, and root-cause analysis.
@@ -43,7 +43,7 @@ Functional medicine encounters are complex, requiring the synthesis of patient h
         *   **Curated Video Library:** Embeds relevant educational videos for specific conditions/interventions.
 
 ### **New: Brand-Specific Formularies** (Key Differentiator)
-Apotheca allows practitioners to define **Supplement Brand Preferences**.
+Apothecare allows practitioners to define **Supplement Brand Preferences**.
 *   **Custom Formularies:** Practitioners can select preferred professional brands (e.g., *Apex Energetics*, *Orthomolecular*, *Designs for Health*, *Pure Encapsulations*).
 *   **Smart Auto-Suggest:** When generating protocols, the AI prioritizes products from the practitioner's trusted brands.
 *   **Precise Dosing:** Recommendations include brand-specific SKUs, forms, and dosing instructions.
@@ -53,7 +53,7 @@ Apotheca allows practitioners to define **Supplement Brand Preferences**.
 
 ## 4. Monetization Strategy
 
-Apotheca employs a dual-revenue model: SaaS subscriptions and affiliate/marketplace revenue.
+Apothecare employs a dual-revenue model: SaaS subscriptions and affiliate/marketplace revenue.
 
 ### A. SaaS Subscription
 *   **Free Tier:**
@@ -91,7 +91,7 @@ The **Supplement Brand Preference** feature opens a massive secondary revenue st
 
 ## 6. Competitive Advantage (The "Moat")
 
-| Feature | Generic Scribes (Heidi, Nabla) | Generic LLMs (ChatGPT) | **Apotheca** |
+| Feature | Generic Scribes (Heidi, Nabla) | Generic LLMs (ChatGPT) | **Apothecare** |
 | :--- | :---: | :---: | :---: |
 | **Ambient Scribe** | ✅ | ❌ | ✅ |
 | **IFM Matrix Mapping** | ❌ | ❌ | ✅ |
@@ -108,7 +108,7 @@ The **Supplement Brand Preference** feature opens a massive secondary revenue st
 ### The "Curriculum Compliance" Strategy
 Partner with major functional medicine institutes (A4M, IFM) to become the **official digital runtime** for their education.
 *   **Problem:** Graduates struggle to implement complex protocols in practice ("The Monday Morning Gap").
-*   **Solution:** Apotheca operationalizes their curriculum. When a doctor sees a patient, Apotheca surfaces *their* specific protocols.
+*   **Solution:** Apothecare operationalizes their curriculum. When a doctor sees a patient, Apothecare surfaces *their* specific protocols.
 *   **Institute Mode:** Premium feature where the AI strictly follows one institute's guidelines (e.g., "A4M Mode" vs "IFM Mode").
 *   **Revenue Share:** Institutes receive royalties on subscriptions attributed to their alumni network.
 

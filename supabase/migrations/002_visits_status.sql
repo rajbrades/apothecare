@@ -1,5 +1,5 @@
 -- ===========================================
--- APOTHECA - Visits Module Schema Additions
+-- APOTHECARE - Visits Module Schema Additions
 -- ===========================================
 -- Adds status lifecycle, visit type, and AI protocol column
 -- to the existing visits table.

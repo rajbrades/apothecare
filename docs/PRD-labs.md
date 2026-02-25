@@ -1,6 +1,6 @@
 # PRD: Lab Results Module — Phase 2
 
-**Product:** Apotheca
+**Product:** Apothecare
 **Module:** Labs
 **Status:** Phase 2 — Partially Implemented (Sprint 7-8)
 **Last Updated:** 2026-02-17

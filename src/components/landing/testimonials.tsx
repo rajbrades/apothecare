@@ -38,7 +38,7 @@ export function Testimonials() {
               Trusted by practitioners
             </h2>
             <p className="text-lg text-[var(--color-text-secondary)]">
-              Functional medicine clinicians using Apotheca in practice
+              Functional medicine clinicians using Apothecare in practice
             </p>
           </div>
         </ScrollReveal>

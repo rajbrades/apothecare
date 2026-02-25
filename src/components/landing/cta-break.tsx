@@ -14,7 +14,7 @@ export function CtaBreak() {
             <span className="text-[var(--color-brand-300)]">Not hours of literature search.</span>
           </h2>
           <p className="text-[var(--color-brand-200)] text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            Join practitioners using Apotheca to deliver better care, faster.
+            Join practitioners using Apothecare to deliver better care, faster.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link

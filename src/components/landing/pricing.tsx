@@ -25,7 +25,7 @@ export function Pricing() {
                 <div>
                   <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Free</h3>
                   <p className="text-sm text-[var(--color-text-secondary)]">
-                    Try Apotheca risk-free
+                    Try Apothecare risk-free
                   </p>
                 </div>
                 <div className="flex items-baseline gap-1">

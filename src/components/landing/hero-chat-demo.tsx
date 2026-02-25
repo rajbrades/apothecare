@@ -161,7 +161,7 @@ export function HeroChatDemo() {
           <div className="flex-1 flex items-center justify-center gap-2">
             <LogoAvatar size={20} />
             <span className="text-xs text-[var(--color-text-secondary)] font-medium">
-              Apotheca Clinical Chat
+              Apothecare Clinical Chat
             </span>
           </div>
           <div className="w-[54px]" />

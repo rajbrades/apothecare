@@ -40,7 +40,7 @@ const envSchema = z.object({
 
   // ── App ───────────────────────────────────────────────────────────────
   NEXT_PUBLIC_APP_URL: requiredUrl,
-  NEXT_PUBLIC_APP_NAME: requiredString.default("Apotheca"),
+  NEXT_PUBLIC_APP_NAME: requiredString.default("Apothecare"),
 
   // ── Admin ─────────────────────────────────────────────────────────────
   ADMIN_EMAILS: z.string().optional(), // Comma-separated list of emails

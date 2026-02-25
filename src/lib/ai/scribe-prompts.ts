@@ -9,7 +9,7 @@ export function buildScribeSystemPrompt(sections: TemplateSectionDef[]): string 
     .map((s) => `- **"${s.key}"** (${s.heading}): ${s.placeholder}`)
     .join("\n");
 
-  return `You are Apotheca's AI Medical Scribe. Your job is to listen to a transcribed provider-patient encounter and organize the conversation into structured clinical documentation sections.
+  return `You are Apothecare's AI Medical Scribe. Your job is to listen to a transcribed provider-patient encounter and organize the conversation into structured clinical documentation sections.
 
 ## Your Task
 Given a raw transcript of a clinical encounter (which may be a provider-patient conversation, provider dictation, or a mix), parse the content and assign relevant information to each documentation section.

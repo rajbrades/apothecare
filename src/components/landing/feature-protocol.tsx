@@ -1,4 +1,4 @@
-import { ClipboardList, CheckCircle2 } from "lucide-react";
+import { FileText, CheckCircle2 } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
 
 const phases = [
@@ -89,7 +89,7 @@ export function FeatureProtocol() {
           <ScrollReveal direction="none" className="order-1 lg:order-2">
             <div className="space-y-6">
               <div className="w-11 h-11 rounded-xl bg-[var(--color-brand-50)] flex items-center justify-center">
-                <ClipboardList className="w-5 h-5 text-[var(--color-brand-600)]" />
+                <FileText className="w-5 h-5 text-[var(--color-brand-600)]" />
               </div>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--color-text-primary)]">
                 Evidence-backed protocol generation

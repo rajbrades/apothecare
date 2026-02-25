@@ -11,8 +11,8 @@
 ### Local Development
 
 ```bash
-git clone https://github.com/rajbrades/apotheca.git
-cd apotheca
+git clone https://github.com/rajbrades/apothecare.git
+cd apothecare
 npm install
 cp .env.example .env.local
 # Fill in .env.local
@@ -23,14 +23,14 @@ npm run dev
 
 ```bash
 # First time
-createdb apotheca
-psql apotheca -c "CREATE EXTENSION IF NOT EXISTS vector;"
-psql apotheca -f supabase/migrations/001_initial_schema.sql
+createdb apothecare
+psql apothecare -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql apothecare -f supabase/migrations/001_initial_schema.sql
 
 # Reset database
-dropdb apotheca && createdb apotheca
-psql apotheca -c "CREATE EXTENSION IF NOT EXISTS vector;"
-psql apotheca -f supabase/migrations/001_initial_schema.sql
+dropdb apothecare && createdb apothecare
+psql apothecare -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql apothecare -f supabase/migrations/001_initial_schema.sql
 ```
 
 ## Code Conventions

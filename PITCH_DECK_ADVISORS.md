@@ -1,4 +1,4 @@
-# Apotheca — Medical Advisor Deck
+# Apothecare — Medical Advisor Deck
 **Target Audience:** Clinical Key Opinion Leaders (KOLs), Medical Board Candidates
 **Theme:** Restoring the Art of Medicine with AI
 **Est. Time:** 10 Minutes (10 Slides)
@@ -9,7 +9,7 @@
 **Headline:** Making Root-Cause Medicine Scalable.
 **Sub-headline:** Empowering practitioners to focus on the patient, not the paperwork.
 **Visual:** High-quality photo of a doctor-patient interaction, warm tone.
-**Speaker Notes:** "We founded Apotheca with one mission: to let doctors be doctors again. To remove the clerical burden so you can focus on the art of healing."
+**Speaker Notes:** "We founded Apothecare with one mission: to let doctors be doctors again. To remove the clerical burden so you can focus on the art of healing."
 
 ---
 
@@ -24,13 +24,13 @@
 
 ---
 
-## Slide 3: Our Solution: Apotheca
+## Slide 3: Our Solution: Apothecare
 **Headline:** An AI Partner, Not Just a Tool.
 **Body:**
 *   **Listening:** Our Ambient Scribe captures the *clinical nuance*, not just the words.
 *   **Synthesizing:** We map findings directly to the **IFM Matrix** and **Analysis of the 7 Core Systems**.
 *   **Supporting:** We provide real-time evidence for protocol decisions.
-**Visual:** Screen capture of the **IFM Matrix View** in Apotheca, showing "Assimilation", "Defense & Repair", etc., automatically filled.
+**Visual:** Screen capture of the **IFM Matrix View** in Apothecare, showing "Assimilation", "Defense & Repair", etc., automatically filled.
 **Speaker Notes:** "Imagine if your notes wrote themselves, but strictly organized by the IFM Matrix. That is what we built."
 
 ---
@@ -42,7 +42,7 @@
 *   **Trusted Sources:** Built on **PubMed, IFM, A4M**, and peer-reviewed journals.
 *   **Transparency:** Every AI claim has a citation badge.
 **Visual:** Zoom in on a **Reference** popup in the app. "Source: Journal of Functional Medicine, 2024".
-**Speaker Notes:** "We know AI can be inaccurate. That's why we built Apotheca differently. It functions like a literature review engine. If it can't cite it, it doesn't say it."
+**Speaker Notes:** "We know AI can be inaccurate. That's why we built Apothecare differently. It functions like a literature review engine. If it can't cite it, it doesn't say it."
 
 ---
 
@@ -71,9 +71,9 @@
 **Headline:** Engagement = Adherence.
 **Body:**
 *   **The Gap:** Patients forget 80% of what is said in the consult.
-*   **The Fix:** Apotheca's **Patient Education Studio**.
+*   **The Fix:** Apothecare's **Patient Education Studio**.
 *   **The Deliverable:** Personalized audio summaries and visual guides explaining *why* they are taking these supplements.
-**Visual:** Side-by-side: A confusing generic discharge paper vs. Apotheca's beautiful "Patient Guide".
+**Visual:** Side-by-side: A confusing generic discharge paper vs. Apothecare's beautiful "Patient Guide".
 **Speaker Notes:** "We don't just help you. We help your patients understand and stick to your protocols."
 
 ---
@@ -103,6 +103,6 @@
 **Headline:** Let's Build the Future Together.
 **Body:**
 *   [Your Name]
-*   Apotheca Clinical Team
+*   Apothecare Clinical Team
 **Visual:** Clean closing slide.
 **Speaker Notes:** "Thank you. I'd love to hear your thoughts on the IFM Matrix implementation."

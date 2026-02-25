@@ -24,7 +24,7 @@
 
 ## 2. Competitor Landscape
 
-The market can be segmented into three meaningful categories: **Admin/Records**, **Ordering/Logistics**, and **Clinical Intelligence** (Apotheca's Blue Ocean).
+The market can be segmented into three meaningful categories: **Admin/Records**, **Ordering/Logistics**, and **Clinical Intelligence** (Apothecare's Blue Ocean).
 
 ### A. The "Pipes" (Ordering & Logistics)
 **1. Rupa Health**
@@ -53,12 +53,12 @@ The market can be segmented into three meaningful categories: **Admin/Records**,
 *   **Focus:** D2C Lab Testing Membership ($499/yr).
 *   **Status:** Valued at $2.5B (Nov 2025).
 *   **Strength:** Democratizing access to data.
-*   **Gap:** "I have my data, now what?" They rely on generic AI summaries or referring out to doctors. They bypass the practitioner relationship, whereas Apotheca empowers it.
+*   **Gap:** "I have my data, now what?" They rely on generic AI summaries or referring out to doctors. They bypass the practitioner relationship, whereas Apothecare empowers it.
 
-### D. The Gap (Apotheca's Opportunity)
-**Where Apotheca Wins:**
+### D. The Gap (Apothecare's Opportunity)
+**Where Apothecare Wins:**
 *   Competitors digitize the **Admin** (Cerbo) or the **Transaction** (Rupa/Fullscript).
-*   Apotheca digitizes the **Expertise** (The Brain).
+*   Apothecare digitizes the **Expertise** (The Brain).
 *   **Differentiation:** We are the only "Active Reasoning Engine" that maps unstructured patient stories to the rigid Functional Medicine Matrix.
 
 ---

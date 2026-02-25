@@ -143,7 +143,7 @@ function parseAuthorYear(citation: string): { author: string; year: string } {
 
 const CROSSREF_BASE = "https://api.crossref.org/works";
 const REQUEST_TIMEOUT_MS = 5000;
-const USER_AGENT = "Apotheca/1.0 (https://apotheca.ai; mailto:support@apotheca.ai)";
+const USER_AGENT = "Apothecare/1.0 (https://apothecare.ai; mailto:support@apothecare.ai)";
 
 /**
  * Extract 3-5 meaningful keywords from context for the CrossRef query.

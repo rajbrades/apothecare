@@ -14,12 +14,12 @@
 **Script:** "We have the world's best curriculum. But the friction of modern practice prevents doctors from implementing it fully. How many protocols are learned on Saturday but forgotten by Tuesday?"
 
 ## Slide 2: The Solution
-**Visual:** Apotheca logo + A4M logo.
-**Text:** "Apotheca: The Official Runtime for A4M Medicine."
+**Visual:** Apothecare logo + A4M logo.
+**Text:** "Apothecare: The Official Runtime for A4M Medicine."
 **Script:** "We don't want to change your curriculum. We want to install it directly into the doctor's workflow. We are the 'Intel Inside' for your clinical protocols."
 
 ## Slide 3: How It Works (Institute Mode)
-**Visual:** High-fidelity mockup of the Apotheca Interface.
+**Visual:** High-fidelity mockup of the Apothecare Interface.
 *   **Callout:** A toggle switch at the top: **"Mode: A4M Optimized"**.
 *   **Result:** The AI output shows a citation: *Source: A4M Module IV: Hormone Optimization, Slide 42.*
 **Script:** "Imagine an AI that doesn't just 'search the web.' When 'A4M Mode' is on, it *only* thinks in A4M protocols. It cites *your* modules. It reinforces *your* teachings with every patient encounter."
@@ -27,11 +27,11 @@
 ## Slide 4: Compliance as a Service
 **Visual:** A complex patient case (hypothyroid + adrenal fatigue).
 *   **Animation:** The AI maps it to the A4M Metabolic Code.
-**Script:** "We enable 'Curriculum Compliance.' You teach the 'Why' at the conference. Apotheca handles the 'How' in the exam room. We make it impossible for a doctor to skip a step in your protocol."
+**Script:** "We enable 'Curriculum Compliance.' You teach the 'Why' at the conference. Apothecare handles the 'How' in the exam room. We make it impossible for a doctor to skip a step in your protocol."
 
 ## Slide 5: The Business Model (Revenue)
 **Visual:** Three pillars of value.
-1.  **Member Benefit:** "Free access to Apotheca Lite for all A4M Members." (Retention tool)
+1.  **Member Benefit:** "Free access to Apothecare Lite for all A4M Members." (Retention tool)
 2.  **Course Bundles:** "Tuition + Tool." Sell the certification with a 1-year Pro subscription.
 3.  **Royalty Stream:** A4M earns revenue on every subscription attributed to the 'A4M Mode' usage.
 **Script:** "This isn't a cost. It's a revenue stream. You earn royalties on the software that makes your members more successful."

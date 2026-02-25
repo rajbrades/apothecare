@@ -83,7 +83,7 @@ export function NewVisitForm({ patients: initialPatients }: { patients: PatientO
           New Visit
         </h1>
         <p className="text-sm text-[var(--color-text-secondary)] max-w-md">
-          Apotheca captures your visit and generates a structured clinical note with IFM mapping and protocol recommendations.
+          Apothecare captures your visit and generates a structured clinical note with IFM mapping and protocol recommendations.
         </p>
       </div>
 

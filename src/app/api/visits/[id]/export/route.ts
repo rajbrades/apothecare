@@ -199,7 +199,7 @@ export async function GET(
   </div>` : ""}
 
   <div class="footer">
-    <div>Generated with Apotheca — AI Clinical Decision Support</div>
+    <div>Generated with Apothecare — AI Clinical Decision Support</div>
     <div>AI-generated content. Review and verify before clinical use.</div>
   </div>
 </body>

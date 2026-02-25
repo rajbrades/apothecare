@@ -1,6 +1,6 @@
 # PRD: Structured Supplement Management
 
-**Product:** Apotheca
+**Product:** Apothecare
 **Module:** Supplements → Patient Profile Integration
 **Status:** Phase 2 Complete — Phase 3 (Patient Portal) Pending
 **Last Updated:** 2026-02-22

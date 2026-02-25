@@ -27,7 +27,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function createTestUser() {
-  const testEmail = 'test@apotheca.com';
+  const testEmail = 'test@apothecare.com';
   const testPassword = 'Test123456!';
 
   console.log('🔧 Creating test user...');

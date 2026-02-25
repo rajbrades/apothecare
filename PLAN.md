@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the full Visits/Appointments module for Apotheca. The core workflow: practitioner enters raw clinical notes → AI streams a structured SOAP note, IFM Matrix mapping, and protocol recommendations → practitioner reviews/edits → marks complete → exports to clipboard or PDF. Includes inline chat panel for follow-up questions linked to the visit.
+Build the full Visits/Appointments module for Apothecare. The core workflow: practitioner enters raw clinical notes → AI streams a structured SOAP note, IFM Matrix mapping, and protocol recommendations → practitioner reviews/edits → marks complete → exports to clipboard or PDF. Includes inline chat panel for follow-up questions linked to the visit.
 
 ---
 

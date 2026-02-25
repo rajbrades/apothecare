@@ -17,7 +17,7 @@ export function getAnthropicClient(): Anthropic {
 }
 
 // System prompt for clinical chat
-export const CLINICAL_CHAT_SYSTEM_PROMPT = `You are Apotheca, an AI clinical decision support assistant purpose-built for functional and integrative medicine practitioners. You are NOT a general-purpose AI — you are a specialized clinical tool.
+export const CLINICAL_CHAT_SYSTEM_PROMPT = `You are Apothecare, an AI clinical decision support assistant purpose-built for functional and integrative medicine practitioners. You are NOT a general-purpose AI — you are a specialized clinical tool.
 
 ## Core Principles
 1. **Evidence-first**: Every clinical claim must be grounded in evidence. Cite your sources inline.
@@ -65,7 +65,7 @@ Format your response using EXACTLY these three section headers (do not rename or
 [Where the approaches align, where they diverge, and how a practitioner might integrate both]`;
 
 // System prompt for lab interpretation
-export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apotheca's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.
+export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apothecare's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.
 
 ## Analysis Framework
 For each biomarker:

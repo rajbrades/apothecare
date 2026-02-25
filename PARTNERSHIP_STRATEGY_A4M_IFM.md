@@ -14,8 +14,8 @@
 *   Graduates leave seminars inspired but overwhelmed, failing to implement complex protocols in practice ("The Monday Morning Gap").
 *   They have no visibility into how their teachings are applied clinically.
 
-**The Solution (Apotheca):**
-*   Apotheca is not just a tool; it is the **Runtime Environment** for their curriculum.
+**The Solution (Apothecare):**
+*   Apothecare is not just a tool; it is the **Runtime Environment** for their curriculum.
 *   We turn their static PDFs into active, patient-specific clinical decision support.
 *   We are the "bridge" between the seminar room and the exam room.
 
@@ -27,7 +27,7 @@ To partner, they will need four things in return. You must be prepared to offer 
 
 ### A. Revenue / Licensing (The Financial Hook)
 *   **Royalties:** A % of revenue from users who activate their specific "Knowledge Module."
-*   **Wholesale/Reseller:** They sell Apotheca subscriptions bundled with their certification courses (e.g., "Tuition includes 1 year of Apotheca Pro").
+*   **Wholesale/Reseller:** They sell Apothecare subscriptions bundled with their certification courses (e.g., "Tuition includes 1 year of Apothecare Pro").
 *   **Affiliate:** Standard affiliate commission (20-30%) for referring their alumni network.
 
 ### B. Brand Protection & Control (The Trust Hook)
@@ -38,7 +38,7 @@ To partner, they will need four things in return. You must be prepared to offer 
 
 ### C. Gated Access (The Membership Hook)
 *   They want to protect their IP. They don't want non-paying users accessing their proprietary protocols via your AI.
-*   *Solution:* **OAuth Integration / Membership Validation**. Users must "Log in with A4M" to unlock the "A4M Protocol Engine" within Apotheca. This drives *their* membership retention.
+*   *Solution:* **OAuth Integration / Membership Validation**. Users must "Log in with A4M" to unlock the "A4M Protocol Engine" within Apothecare. This drives *their* membership retention.
 
 ### D. Data Intelligence (The Hidden Hook)
 *   They have no idea what conditions are trending in real-time.
@@ -54,12 +54,12 @@ To partner, they will need four things in return. You must be prepared to offer 
 *   **Tech:** Ingest public white papers. Add `source: 'IFM'` to `evidence_documents`.
 
 ### Phase 2: The "Alumni Tool" (Medium Risk)
-*   **Pitch:** "Your graduates are overwhelmed. Bundle Apotheca with your certification to ensure they succeed."
+*   **Pitch:** "Your graduates are overwhelmed. Bundle Apothecare with your certification to ensure they succeed."
 *   **Goal:** Bulk user acquisition (CAC = 0).
-*   **Tech:** Dedicated landing page (`apotheca.ai/ifm`). Discount codes.
+*   **Tech:** Dedicated landing page (`apothecare.ai/ifm`). Discount codes.
 
 ### Phase 3: The "Sanctioned OS" (High Potential)
-*   **Pitch:** "Official Technology Partner. The 'IFM Matrix' in Apotheca is the *only* approved digital version."
+*   **Pitch:** "Official Technology Partner. The 'IFM Matrix' in Apothecare is the *only* approved digital version."
 *   **Goal:** Deep moat. Competitors cannot legally copy the specific matrix logic/content.
 *   **Tech:** Deep API integration. "Institute Mode" toggle in the UI.
 
@@ -87,6 +87,6 @@ To support this, we need to enhance the RAG and User Profile systems:
 
 > "Dr. [Name], A4M has the world's best anti-aging curriculum. But on Monday morning, your graduates are drowning in paperwork and forgetting the nuances of the protocols.
 >
-> Apotheca isn't just an AI scribe. It's a **Compliance Engine** for your curriculum. When a doctor sees a patient with low T3 and high Reverse T3, Apotheca reminds them of *your* specific thyroid protocol, citing *your* modules, right in the chart.
+> Apothecare isn't just an AI scribe. It's a **Compliance Engine** for your curriculum. When a doctor sees a patient with low T3 and high Reverse T3, Apothecare reminds them of *your* specific thyroid protocol, citing *your* modules, right in the chart.
 >
 > We don't want to replace your education. We want to be the tool that ensures it's actually used."

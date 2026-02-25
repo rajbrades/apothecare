@@ -214,7 +214,7 @@ export default function OnboardingPage() {
             <Logomark size="md" />
           </div>
           <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mt-4 font-[var(--font-display)]">
-            Welcome to Apotheca
+            Welcome to Apothecare
           </h1>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Tell us about your practice so we can customize your experience.
@@ -444,7 +444,7 @@ export default function OnboardingPage() {
                   disabled={loading}
                   className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-50"
                 >
-                  {loading ? "Setting up..." : "Launch Apotheca →"}
+                  {loading ? "Setting up..." : "Launch Apothecare →"}
                 </button>
               </div>
             </div>

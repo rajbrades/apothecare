@@ -1,4 +1,4 @@
-# Apotheca — Investor Pitch Deck
+# Apothecare — Investor Pitch Deck
 **Target Audience:** Angel Investors, Pre-Seed/Seed VCs
 **Theme:** The Operating System for Functional Medicine
 **Est. Time:** 10 Minutes (12 Slides)
@@ -6,10 +6,10 @@
 ---
 
 ## Slide 1: Title
-**Headline:** Apotheca
+**Headline:** Apothecare
 **Sub-headline:** The AI-Native Clinical Operating System for Functional Medicine.
 **Visual:** Clean dark background (`#1a2e2a`), Gold Logo centered. Minimal text.
-**Speaker Notes:** "Good morning. We are Apotheca. We are building the intelligence layer for the fastest-growing sector in healthcare: Functional Medicine."
+**Speaker Notes:** "Good morning. We are Apothecare. We are building the intelligence layer for the fastest-growing sector in healthcare: Functional Medicine."
 
 ---
 
@@ -25,13 +25,13 @@
 ---
 
 ## Slide 3: The Solution
-**Headline:** Apotheca: Automated Intelligence.
+**Headline:** Apothecare: Automated Intelligence.
 **Body:**
 *   **Scribe + Reason + Act.**
 *   Not just a transcription tool. A **Clinical Decision Support System (CDSS)**.
 *   **Deep Reasoning:** We map unstructured conversation → Structured IFM Matrix → Evidence-Based Protocol.
 **Visual:** A flowchart showing "Audio (Whisper)" flow into "Reasoning Engine (Claude)" flow into "Final Matrix & Protocol (UI)".
-**Speaker Notes:** "Apotheca is not just a scribe. It's a second brain. It listens, structures the data into the functional medicine framework, and drafts the treatment plan in seconds, not hours."
+**Speaker Notes:** "Apothecare is not just a scribe. It's a second brain. It listens, structures the data into the functional medicine framework, and drafts the treatment plan in seconds, not hours."
 
 ---
 
@@ -42,7 +42,7 @@
 *   **Feature 2:** The IFM Matrix (auto-mapped root cause analysis).
 *   **Feature 3:** Protocol Engine (supplements, lifestyle, diet).
 **Visual:** Use a high-fidelity screenshot of the **Visit Workspace**. Show the "IFM Matrix" tab with colorful nodes populated.
-**Speaker Notes:** "This is the workspace. While the doctor talks, Apotheca fills out the Matrix—the core heuristic of functional medicine—identifying triggers and mediators automatically."
+**Speaker Notes:** "This is the workspace. While the doctor talks, Apothecare fills out the Matrix—the core heuristic of functional medicine—identifying triggers and mediators automatically."
 
 ---
 
@@ -51,7 +51,7 @@
 **Body:**
 *   **RAG Architecture:** Grounded in peer-reviewed literature (PubMed, IFM, A4M).
 *   **Deep Consult:** We use advanced reasoning models (Claude Opus) for complex case analysis.
-*   **Why We Win:** Generic LLMs guess. Apotheca cites.
+*   **Why We Win:** Generic LLMs guess. Apothecare cites.
 **Visual:** A close-up of a Chat response showing **Gold "Evidence Badges"** [RCT] [Meta-Analysis] next to recommendations.
 **Speaker Notes:** "In medicine, you can't make things up. Our 'Deep Consult' feature cites every claim with real medical journals. This trust layer is our moat against generic tools like ChatGPT."
 
@@ -91,12 +91,12 @@
 *   **Quadrants:**
     *   **Bottom Left (EMRs):** Cerbo, Charm (Administrative burden).
     *   **Top Left (Logistics):** Rupa Health, Fullscript (Ordering only).
-    *   **Top Right (Apotheca):** The only "Active Reasoning Engine."
+    *   **Top Right (Apothecare):** The only "Active Reasoning Engine."
 **Body:**
 *   **EMRs (Cerbo):** Great filing cabinets, but don't help you think.
 *   **Logistics (Rupa/Fullscript):** Great pipes, but don't help you diagnose.
 *   **Consumer (Function Health):** Great data access, but bypasses the doctor.
-*   **Apotheca:** We empower the doctor with AI reasoning to close the gap.
+*   **Apothecare:** We empower the doctor with AI reasoning to close the gap.
 **Speaker Notes:** "Everyone else is building better filing cabinets or faster pipes. We are building a better brain. We don't compete with the EMR on admin; we compete on clinical value."
 
 ---
@@ -120,7 +120,7 @@
 **Headline:** Viral Growth Loop.
 **Body:**
 *   **Product-Led Growth:** Every protocol sent includes AI-generated **Audio Overviews** and **Visual Guides** for the patient.
-*   **Network Effect:** Patients share these high-quality assets. Apotheca branding travels with the patient.
+*   **Network Effect:** Patients share these high-quality assets. Apothecare branding travels with the patient.
 **Visual:** A mockup of a "Patient Protocol PDF" and a "Podcast Player" interface on a mobile phone.
 **Speaker Notes:** "We turn the output into a marketing asset. Patients get a personalized 'podcast' explaining their plan. They share it. Their friends ask, 'Who is your doctor?' and the loop continues."
 
@@ -165,7 +165,7 @@
 **Headline:** Join Us.
 **Body:**
 *   Ryan Brady
-*   ryan@apotheca.ai
-*   Apotheca Logo
+*   ryan@apothecare.ai
+*   Apothecare Logo
 **Visual:** Large Logo on Dark Background.
 **Speaker Notes:** "Thank you. Questions?"

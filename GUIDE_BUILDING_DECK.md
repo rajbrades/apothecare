@@ -2,8 +2,8 @@
 
 You have the content scripts (`PITCH_DECK_INVESTORS.md` and `PITCH_DECK_ADVISORS.md`). Now you need to turn them into visual slides.
 
-## Option A: The "Pro" Route (Figma) — *Recommended for Apotheca's Aesthetic*
-Since Apotheca has a specific "Dark Mode / Premium Clinical" vibe, creating the deck in Figma allows you to reuse your actual UI assets directly.
+## Option A: The "Pro" Route (Figma) — *Recommended for Apothecare's Aesthetic*
+Since Apothecare has a specific "Dark Mode / Premium Clinical" vibe, creating the deck in Figma allows you to reuse your actual UI assets directly.
 
 1.  **Open Figma:** Create a new design file.
 2.  **Set Frame Size:** Use `1920 x 1080` (Standard 16:9 Presentation).
@@ -26,7 +26,7 @@ If you want it done in 30 minutes, use an AI slide builder.
 2.  **Import:** Some allowing pasting markdown directly.
 3.  **Theme:** Choose a "Dark / Medical" or "Elegant" template. Look for one with Serif headings to match your brand.
 4.  **Customize:**
-    *   Replace the stock photos with **actual screenshots** of Apotheca.
+    *   Replace the stock photos with **actual screenshots** of Apothecare.
     *   *Crucial:* Don't use generic "doctor with stethoscope" stock photos. Use your **Real UI** (The Matrix View, The Chat).
 
 ## Option C: The "Classic" Route (Keynote/PowerPoint)

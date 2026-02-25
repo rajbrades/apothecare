@@ -1,5 +1,5 @@
 -- ===========================================
--- APOTHECA - Initial Database Schema
+-- APOTHECARE - Initial Database Schema
 -- ===========================================
 -- Functional Medicine AI Clinical Decision Support Platform
 -- HIPAA-compliant schema with Row-Level Security

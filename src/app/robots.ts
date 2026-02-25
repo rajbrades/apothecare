@@ -16,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
         "/auth/onboarding",
       ],
     },
-    sitemap: "https://apotheca.ai/sitemap.xml",
+    sitemap: "https://apothecare.ai/sitemap.xml",
   };
 }

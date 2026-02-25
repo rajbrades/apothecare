@@ -1,4 +1,4 @@
-# Apotheca
+# Apothecare
 
 <p align="center">
   <strong>AI Clinical Decision Support for Functional & Integrative Medicine</strong>
@@ -25,7 +25,7 @@
 
 Functional medicine practitioners spend **30–60 minutes per complex patient case** cobbling together evidence from ChatGPT, PubMed, UpToDate, IFM toolkits, and supplement databases. There's no dedicated AI clinical decision support tool for this $90B (and growing) market.
 
-**OpenEvidence** serves conventional medicine with a $3.5B valuation and 40% of US physicians. Apotheca is the functional medicine equivalent — purpose-built for practitioners who work with the IFM Matrix, interpret GI-MAPs alongside blood panels, and think in terms of root causes rather than symptom suppression.
+**OpenEvidence** serves conventional medicine with a $3.5B valuation and 40% of US physicians. Apothecare is the functional medicine equivalent — purpose-built for practitioners who work with the IFM Matrix, interpret GI-MAPs alongside blood panels, and think in terms of root causes rather than symptom suppression.
 
 ## Features
 
@@ -102,8 +102,8 @@ Every biomarker displayed with both conventional and functional/optimal ranges. 
 ### Installation
 
 ```bash
-git clone https://github.com/rajbrades/apotheca.git
-cd apotheca
+git clone https://github.com/rajbrades/apothecare.git
+cd apothecare
 npm install
 cp .env.example .env.local
 # Edit .env.local with your values
@@ -336,5 +336,5 @@ Proprietary — All rights reserved.
 ---
 
 <p align="center">
-  <strong>Apotheca</strong> — The storehouse of remedies, reimagined for modern functional medicine.
+  <strong>Apothecare</strong> — The storehouse of remedies, reimagined for modern functional medicine.
 </p>

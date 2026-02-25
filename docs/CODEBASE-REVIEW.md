@@ -1,4 +1,4 @@
-# Apotheca Codebase Review -- Consolidated Report
+# Apothecare Codebase Review -- Consolidated Report
 
 **Date**: 2026-02-14
 **Reviewers**: 6 automated agents (Security, Performance, Test Coverage, Usability, UI Design, Graphic Design)

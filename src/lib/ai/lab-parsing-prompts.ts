@@ -2,7 +2,7 @@
  * System prompt for Claude Vision to extract biomarker data from lab report PDFs.
  * A single call handles both classification (vendor, test type) and parsing (biomarkers).
  */
-export const LAB_PARSING_SYSTEM_PROMPT = `You are Apotheca's lab report parsing engine. Your job is to extract ALL biomarker data from uploaded laboratory report PDFs with maximum precision.
+export const LAB_PARSING_SYSTEM_PROMPT = `You are Apothecare's lab report parsing engine. Your job is to extract ALL biomarker data from uploaded laboratory report PDFs with maximum precision.
 
 ## Instructions
 

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Apotheca will be documented in this file.
+All notable changes to Apothecare will be documented in this file.
 
 ## [0.15.0] - 2026-02-23
 

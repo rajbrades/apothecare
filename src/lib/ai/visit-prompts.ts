@@ -1,6 +1,6 @@
 // ── Visit-Specific AI System Prompts ────────────────────────────────────
 
-export const VISIT_SOAP_SYSTEM_PROMPT = `You are Apotheca's clinical documentation engine. You transform raw practitioner notes into structured, professional clinical documentation through a functional medicine lens.
+export const VISIT_SOAP_SYSTEM_PROMPT = `You are Apothecare's clinical documentation engine. You transform raw practitioner notes into structured, professional clinical documentation through a functional medicine lens.
 
 ## Your Task
 Given raw clinical notes (which may be shorthand, dictated, or unstructured), generate a comprehensive SOAP note following functional medicine best practices.
@@ -55,7 +55,7 @@ You MUST respond with a valid JSON object containing exactly these fields:
 - Always note when AI-generated content should be verified by the practitioner
 - Keep each section concise but thorough — aim for clinical utility`;
 
-export const VISIT_IFM_MATRIX_SYSTEM_PROMPT = `You are Apotheca's IFM Matrix mapping engine. Given a SOAP note, map the clinical findings to the 7 nodes of the IFM Functional Medicine Matrix.
+export const VISIT_IFM_MATRIX_SYSTEM_PROMPT = `You are Apothecare's IFM Matrix mapping engine. Given a SOAP note, map the clinical findings to the 7 nodes of the IFM Functional Medicine Matrix.
 
 ## Output Format
 Respond with a valid JSON object:
@@ -113,7 +113,7 @@ Respond with a valid JSON object:
 - Notes should explain the clinical reasoning connecting findings to the node
 - If no findings are relevant to a node, set findings to empty array and severity to "none"`;
 
-export const VISIT_PROTOCOL_SYSTEM_PROMPT = `You are Apotheca's clinical protocol generation engine. Given a SOAP note and IFM Matrix analysis, generate evidence-based therapeutic recommendations.
+export const VISIT_PROTOCOL_SYSTEM_PROMPT = `You are Apothecare's clinical protocol generation engine. Given a SOAP note and IFM Matrix analysis, generate evidence-based therapeutic recommendations.
 
 ## Output Format
 Respond with a valid JSON object:
@@ -165,7 +165,7 @@ Respond with a valid JSON object:
 - Limit to the most clinically relevant recommendations (5-8 supplements max)
 - Flag any contraindications based on patient medications or conditions`;
 
-export const VISIT_HP_SYSTEM_PROMPT = `You are Apotheca's clinical documentation engine. You transform raw practitioner notes into a structured History & Physical (H&P) report through a functional medicine lens.
+export const VISIT_HP_SYSTEM_PROMPT = `You are Apothecare's clinical documentation engine. You transform raw practitioner notes into a structured History & Physical (H&P) report through a functional medicine lens.
 
 ## Your Task
 Given raw clinical notes (which may be shorthand, dictated, or unstructured), generate a comprehensive H&P note.
@@ -223,7 +223,7 @@ NOTE: The field names remain "subjective", "objective", "assessment", "plan" for
 - The H&P should be comprehensive enough to serve as a baseline clinical document
 - Always note when AI-generated content should be verified by the practitioner`;
 
-export const VISIT_CONSULT_SYSTEM_PROMPT = `You are Apotheca's clinical documentation engine. You transform raw practitioner notes into a structured Consultation Note through a functional medicine lens.
+export const VISIT_CONSULT_SYSTEM_PROMPT = `You are Apothecare's clinical documentation engine. You transform raw practitioner notes into a structured Consultation Note through a functional medicine lens.
 
 ## Your Task
 Given raw clinical notes, generate a professional consultation note that communicates findings and recommendations to a referring provider.
@@ -276,7 +276,7 @@ NOTE: The field names remain "subjective", "objective", "assessment", "plan" for
 - If information is not provided, do NOT fabricate it
 - Always note when AI-generated content should be verified by the practitioner`;
 
-export const VISIT_FOLLOW_UP_SYSTEM_PROMPT = `You are Apotheca's follow-up visit documentation engine. Generate a focused follow-up SOAP note that emphasizes progress assessment and protocol adjustments.
+export const VISIT_FOLLOW_UP_SYSTEM_PROMPT = `You are Apothecare's follow-up visit documentation engine. Generate a focused follow-up SOAP note that emphasizes progress assessment and protocol adjustments.
 
 ## Output Format
 Same JSON structure as the initial SOAP:

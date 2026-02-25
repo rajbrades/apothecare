@@ -1,4 +1,4 @@
-# Apotheca — TODO
+# Apothecare — TODO
 
 Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 

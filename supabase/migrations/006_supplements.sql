@@ -1,5 +1,5 @@
 -- ===========================================
--- APOTHECA - Supplement Intelligence Module
+-- APOTHECARE - Supplement Intelligence Module
 -- ===========================================
 -- Sprint 6: AI-powered supplement reviews, interaction checking, brand formulary
 

@@ -1,9 +1,9 @@
 /**
- * Apotheca Logomark
+ * Apothecare Logomark
  *
  * SVG-based logo combining a mortar/pestle bowl silhouette with a leaf motif,
  * representing the intersection of traditional apothecary and modern botanical
- * medicine. The name "Apotheca" derives from the Latin/Greek for storehouse
+ * medicine. The name "Apothecare" derives from the Latin/Greek for storehouse
  * of remedies.
  *
  * Available in three size presets: sm (28px), md (32px), lg (56px).
@@ -47,7 +47,7 @@ export function Logomark({ size = "md", withText = false, className = "" }: Logo
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        aria-label="Apotheca logo"
+        aria-label="Apothecare logo"
         className="logo-breathe flex-shrink-0"
       >
         {/* Background circle */}
@@ -76,7 +76,7 @@ export function Logomark({ size = "md", withText = false, className = "" }: Logo
         <span
           className={`font-semibold tracking-tight text-[var(--color-text-primary)] ${TEXT_SIZES[size]}`}
         >
-          Apotheca
+          Apothecare
         </span>
       )}
     </span>
@@ -106,7 +106,7 @@ export function LogoAvatar({ size = 32, className = "" }: LogoAvatarProps) {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        aria-label="Apotheca"
+        aria-label="Apothecare"
       >
         {/* Letter "A" */}
         <text

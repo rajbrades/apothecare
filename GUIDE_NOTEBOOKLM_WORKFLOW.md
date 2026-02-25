@@ -12,7 +12,7 @@ Since you want to use **NotebookLM** (Google), here is the specific workflow to 
 
 ### Step A: Load Your "Brain"
 1.  Go to [notebooklm.google.com](https://notebooklm.google.com).
-2.  Create a New Notebook called **"Apotheca Pitch"**.
+2.  Create a New Notebook called **"Apothecare Pitch"**.
 3.  **Upload Sources:** Upload the following files we created (you may need to copy-paste the text if it doesn't accept .md directly, or convert to PDF first):
     *   `BUSINESS_PLAN.md`
     *   `PITCH_DECK_INVESTORS.md`
@@ -31,7 +31,7 @@ Ask NotebookLM these prompts to sharpen your deck:
 
 ### Step C: The "Audio Overview" (The Viral Asset)
 1.  Click **"Generate Audio Overview"** (the Deep Dive podcast feature).
-2.  **Listen:** It will create a 5-10 minute conversation between two AI hosts discussing Apotheca.
+2.  **Listen:** It will create a 5-10 minute conversation between two AI hosts discussing Apothecare.
 3.  **Use It:**
     *   **Internal Review:** Listen to it yourself to hear how your business sounds "from the outside."
     *   **Investor Teaser:** Send the audio link *before* the meeting. "Here’s a 5-min AI-generated podcast about what we’re building." (Meta, since your product is AI).

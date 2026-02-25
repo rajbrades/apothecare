@@ -4,15 +4,15 @@ import { GeistMono } from "geist/font/mono";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const siteTitle = "Apotheca — AI Clinical Decision Support for Functional Medicine";
+const siteTitle = "Apothecare — AI Clinical Decision Support for Functional Medicine";
 const siteDescription =
   "Evidence-based clinical decision support powered by AI. Built for MDs, DOs, NPs, PAs, DCs, and NDs practicing functional and integrative medicine.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://apotheca.ai"),
+  metadataBase: new URL("https://apothecare.ai"),
   title: {
     default: siteTitle,
-    template: "%s | Apotheca",
+    template: "%s | Apothecare",
   },
   description: siteDescription,
   keywords: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: siteTitle,
     description: siteDescription,
-    siteName: "Apotheca",
+    siteName: "Apothecare",
     type: "website",
   },
   twitter: {

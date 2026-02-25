@@ -4,7 +4,7 @@
 
 All API routes are located under `src/app/api/`. They are Next.js Route Handlers running server-side. Authentication is enforced via Supabase JWT verification on every request. All endpoints that touch PHI write to the `audit_logs` table with IP address and user agent.
 
-**Base URL:** `http://localhost:3000/api` (dev) / `https://apotheca.health/api` (prod)
+**Base URL:** `http://localhost:3000/api` (dev) / `https://apothecare.health/api` (prod)
 
 ---
 

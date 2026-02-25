@@ -7,12 +7,12 @@ export function Footer() {
         <div className="flex flex-col items-center gap-4 text-center">
           <Logomark size="xs" withText />
           <p className="text-sm text-[var(--color-text-muted)] max-w-2xl">
-            Apotheca is a clinical decision support tool. It is not a substitute for
+            Apothecare is a clinical decision support tool. It is not a substitute for
             professional medical judgment. All treatment decisions remain with the licensed
             practitioner.
           </p>
           <p className="text-xs text-[var(--color-text-muted)]">
-            &copy; {new Date().getFullYear()} Apotheca. All rights reserved.
+            &copy; {new Date().getFullYear()} Apothecare. All rights reserved.
           </p>
         </div>
       </div>
