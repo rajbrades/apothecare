@@ -1,5 +1,5 @@
 // ===========================================
-// APOTHECA - Database Types
+// APOTHECARE - Database Types
 // ===========================================
 // These types mirror the PostgreSQL schema.
 // Regenerate with: npx supabase gen types typescript --local > src/types/database.ts
@@ -24,6 +24,9 @@ export type InteractionSeverity = "critical" | "caution" | "safe" | "unknown";
 export type SupplementAction = "keep" | "modify" | "discontinue" | "add";
 export type PatientSupplementStatus = "active" | "discontinued" | "pending_patient";
 export type PatientSupplementSource = "manual" | "review" | "patient_reported" | "protocol";
+export type PatientReportType = "symptom" | "side_effect" | "improvement" | "concern" | "general";
+export type AiInsightType = "clinical_correlation" | "risk_flag" | "trend_observation" | "recommendation";
+export type AiInsightConfidence = "high" | "medium" | "low";
 
 // ===========================================
 // Table Row Types
@@ -125,6 +128,67 @@ export interface PatientSupplement {
   discontinued_at: string | null;
   notes: string | null;
   sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SymptomLog {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  symptom_name: string;
+  severity: number | null;
+  body_system: string | null;
+  onset_date: string | null;
+  resolved_at: string | null;
+  notes: string | null;
+  visit_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProtocolMilestone {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  title: string;
+  description: string | null;
+  milestone_date: string;
+  category: string | null;
+  visit_id: string | null;
+  clinical_review_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PatientReport {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  report_type: PatientReportType;
+  title: string;
+  content: string | null;
+  severity: number | null;
+  reported_date: string;
+  related_supplement_id: string | null;
+  visit_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AiInsight {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  insight_type: AiInsightType;
+  title: string;
+  content: string;
+  confidence: AiInsightConfidence | null;
+  source_type: string;
+  source_id: string;
+  body_systems: string[] | null;
+  biomarker_codes: string[] | null;
+  is_dismissed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -492,6 +556,26 @@ export interface Database {
         Row: PractitionerBrandPreference;
         Insert: Omit<PractitionerBrandPreference, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<PractitionerBrandPreference, "id" | "created_at">>;
+      };
+      symptom_logs: {
+        Row: SymptomLog;
+        Insert: Omit<SymptomLog, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<SymptomLog, "id" | "created_at">>;
+      };
+      protocol_milestones: {
+        Row: ProtocolMilestone;
+        Insert: Omit<ProtocolMilestone, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<ProtocolMilestone, "id" | "created_at">>;
+      };
+      patient_reports: {
+        Row: PatientReport;
+        Insert: Omit<PatientReport, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<PatientReport, "id" | "created_at">>;
+      };
+      ai_insights: {
+        Row: AiInsight;
+        Insert: Omit<AiInsight, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<AiInsight, "id" | "created_at">>;
       };
     };
     Functions: {

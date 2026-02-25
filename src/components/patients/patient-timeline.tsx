@@ -480,6 +480,119 @@ function TimelineEventRow({
             </span>
           ) : null}
 
+          {/* Symptom log: severity + resolved status */}
+          {event.event_type === "symptom_log" && (
+            <>
+              {detail.severity != null && (
+                <span
+                  className="text-xs font-medium"
+                  style={{
+                    color:
+                      Number(detail.severity) >= 7
+                        ? "#ef4444"
+                        : Number(detail.severity) >= 4
+                          ? "#f59e0b"
+                          : "#22c55e",
+                  }}
+                >
+                  Severity {String(detail.severity)}/10
+                </span>
+              )}
+              {detail.resolved && (
+                <>
+                  <span className="text-[var(--color-text-muted)]">&middot;</span>
+                  <span className="text-xs text-green-600 font-medium">Resolved</span>
+                  {detail.duration_days != null && (
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      after {String(Math.round(Number(detail.duration_days)))} days
+                    </span>
+                  )}
+                </>
+              )}
+              {detail.body_system && (
+                <>
+                  <span className="text-[var(--color-text-muted)]">&middot;</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    {String(detail.body_system)}
+                  </span>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Protocol milestone: category */}
+          {event.event_type === "protocol_milestone" && detail.category ? (
+            <span className="text-xs text-[var(--color-text-muted)] italic">
+              {String(detail.category)}
+            </span>
+          ) : null}
+
+          {/* Patient reported: type + severity */}
+          {event.event_type === "patient_reported" && (
+            <>
+              {detail.report_type && detail.report_type !== "general" && (
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {String(detail.report_type).replace(/_/g, " ")}
+                </span>
+              )}
+              {detail.severity != null && (
+                <>
+                  <span className="text-[var(--color-text-muted)]">&middot;</span>
+                  <span
+                    className="text-xs font-medium"
+                    style={{
+                      color:
+                        Number(detail.severity) >= 7
+                          ? "#ef4444"
+                          : Number(detail.severity) >= 4
+                            ? "#f59e0b"
+                            : "#22c55e",
+                    }}
+                  >
+                    Severity {String(detail.severity)}/10
+                  </span>
+                </>
+              )}
+            </>
+          )}
+
+          {/* AI insight: type + confidence + source */}
+          {event.event_type === "ai_insight" && (
+            <>
+              {detail.insight_type && (
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {String(detail.insight_type).replace(/_/g, " ")}
+                </span>
+              )}
+              {detail.confidence && (
+                <>
+                  <span className="text-[var(--color-text-muted)]">&middot;</span>
+                  <span
+                    className="text-xs font-medium"
+                    style={{
+                      color:
+                        detail.confidence === "high"
+                          ? "#22c55e"
+                          : detail.confidence === "medium"
+                            ? "#f59e0b"
+                            : "#9ca3af",
+                    }}
+                  >
+                    {String(detail.confidence)} confidence
+                  </span>
+                </>
+              )}
+              {detail.source_type && (
+                <>
+                  <span className="text-[var(--color-text-muted)]">&middot;</span>
+                  <span className="text-xs text-[var(--color-text-muted)] italic">
+                    from {String(detail.source_type).replace(/_/g, " ")}
+                  </span>
+                </>
+              )}
+            </>
+          )}
+
           {/* Body systems as inline text */}
           {event.body_systems && event.body_systems.length > 0 && (
             <span className="text-xs text-[var(--color-text-muted)]">
@@ -689,7 +802,7 @@ export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimeli
             No timeline events yet
           </p>
           <p className="text-xs text-[var(--color-text-muted)] mt-1">
-            Events will appear as labs, visits, and supplement changes are recorded
+            Events will appear as labs, visits, supplements, symptoms, milestones, and insights are recorded
           </p>
         </div>
       ) : (
