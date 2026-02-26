@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCi
 import { toast } from "sonner";
 import { FullscriptStubButton } from "./fullscript-stub-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EvidenceBadge, type EvidenceLevel, type Citation } from "@/components/chat/evidence-badge";
 import type { SupplementReviewItem, SupplementAction, InteractionSeverity } from "@/types/database";
 
 interface SupplementReviewDetailProps {
@@ -45,15 +46,28 @@ const ACTION_BADGE_CONFIG: Record<
   },
 };
 
-const EVIDENCE_LABELS: Record<string, string> = {
-  meta_analysis: "Meta-Analysis",
+/** Map supplement underscore-format evidence levels to shared EvidenceBadge levels */
+const EVIDENCE_LEVEL_MAP: Record<string, EvidenceLevel> = {
+  meta_analysis: "meta-analysis",
+  rct: "rct",
+  cohort_study: "cohort",
+  case_study: "case-study",
+  clinical_guideline: "guideline",
+  expert_consensus: "case-study",
+  in_vitro: "case-study",
+  other: "case-study",
+};
+
+/** Map supplement evidence level keys to display labels for the popover */
+const EVIDENCE_LABEL_MAP: Record<string, string> = {
+  meta_analysis: "META",
   rct: "RCT",
-  cohort_study: "Cohort Study",
-  case_study: "Case Study",
-  clinical_guideline: "Clinical Guideline",
-  expert_consensus: "Expert Consensus",
-  in_vitro: "In Vitro",
-  other: "Other",
+  cohort_study: "COHORT",
+  case_study: "CASE",
+  clinical_guideline: "GUIDELINE",
+  expert_consensus: "CONSENSUS",
+  in_vitro: "IN VITRO",
+  other: "OTHER",
 };
 
 const SEVERITY_STYLES: Record<InteractionSeverity, string> = {
@@ -156,6 +170,7 @@ function SupplementItemCard({
   onActionChange?: (name: string, action: SupplementAction) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [badgeHovered, setBadgeHovered] = useState(false);
   const currentAction = actionOverride || item.action;
 
   const hasDetails =
@@ -168,7 +183,7 @@ function SupplementItemCard({
     (item.biomarker_correlations && item.biomarker_correlations.length > 0);
 
   return (
-    <div className={`border rounded-[var(--radius-md)] bg-[var(--color-surface)] ${currentAction === "discontinue" ? "border-red-200" : "border-[var(--color-border-light)]"}`}>
+    <div className={`relative border rounded-[var(--radius-md)] bg-[var(--color-surface)] overflow-visible ${badgeHovered ? "z-40" : ""} ${currentAction === "discontinue" ? "border-red-200" : "border-[var(--color-border-light)]"}`}>
       {/* Always visible header */}
       <button
         onClick={() => hasDetails && setExpanded(!expanded)}
@@ -198,11 +213,56 @@ function SupplementItemCard({
               <p className="text-xs text-[var(--color-text-secondary)] mt-1 leading-relaxed">
                 {item.rationale}
               </p>
-              {item.evidence_level && (
-                <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)]">
-                  {EVIDENCE_LABELS[item.evidence_level] || item.evidence_level}
-                </span>
-              )}
+              {/* Evidence badges — verified citations (new) or legacy fallback */}
+              {(() => {
+                const citations: Citation[] = [];
+
+                if (item.verified_citations && item.verified_citations.length > 0) {
+                  // New: up to 3 verified citations from CrossRef/PubMed/curated DB
+                  for (const vc of item.verified_citations) {
+                    const level = EVIDENCE_LEVEL_MAP[vc.evidence_level] || "case-study";
+                    citations.push({
+                      level,
+                      label: EVIDENCE_LABEL_MAP[vc.evidence_level] || vc.evidence_level.toUpperCase(),
+                      title: vc.title,
+                      authors: vc.authors,
+                      year: vc.year,
+                      source: vc.source,
+                      doi: vc.doi,
+                      summary: item.rationale,
+                    });
+                  }
+                } else if (item.evidence_level) {
+                  // Legacy fallback for existing reviews without verified_citations
+                  const level = EVIDENCE_LEVEL_MAP[item.evidence_level] || "case-study";
+                  citations.push({
+                    level,
+                    label: EVIDENCE_LABEL_MAP[item.evidence_level] || item.evidence_level.toUpperCase(),
+                    title: item.name,
+                    doi: item.evidence_doi,
+                    summary: item.rationale,
+                  });
+                }
+
+                if (citations.length === 0) return null;
+
+                return (
+                  <span
+                    className="mt-1.5 inline-flex flex-wrap gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={() => setBadgeHovered(true)}
+                    onMouseLeave={() => setBadgeHovered(false)}
+                  >
+                    {citations.map((citation, i) => (
+                      <EvidenceBadge
+                        key={`${citation.doi || citation.title}-${i}`}
+                        citation={citation}
+                        index={citations.length > 1 ? i + 1 : undefined}
+                      />
+                    ))}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <ActionBadge

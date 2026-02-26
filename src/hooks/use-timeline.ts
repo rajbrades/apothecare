@@ -28,6 +28,7 @@ export interface TimelineFilters {
 
 interface UseTimelineReturn {
   events: TimelineEvent[];
+  availableTypes: TimelineEventType[];
   isLoading: boolean;
   isLoadingMore: boolean;
   hasMore: boolean;
@@ -42,6 +43,7 @@ interface UseTimelineReturn {
 
 export function useTimeline(patientId: string): UseTimelineReturn {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [availableTypes, setAvailableTypes] = useState<TimelineEventType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -67,6 +69,20 @@ export function useTimeline(patientId: string): UseTimelineReturn {
     },
     [patientId, filters]
   );
+
+  // Fetch distinct event types for filter bar
+  const fetchAvailableTypes = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/patients/${patientId}/timeline/types`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.types) {
+        setAvailableTypes(data.types as TimelineEventType[]);
+      }
+    } catch {
+      // Non-critical — filter bar will show all types as fallback
+    }
+  }, [patientId]);
 
   const fetchEvents = useCallback(
     async (append = false) => {
@@ -112,6 +128,11 @@ export function useTimeline(patientId: string): UseTimelineReturn {
     fetchEvents(false);
   }, [fetchEvents]);
 
+  // Fetch available types on mount
+  useEffect(() => {
+    fetchAvailableTypes();
+  }, [fetchAvailableTypes]);
+
   const loadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
       fetchEvents(true);
@@ -120,7 +141,8 @@ export function useTimeline(patientId: string): UseTimelineReturn {
 
   const refresh = useCallback(() => {
     fetchEvents(false);
-  }, [fetchEvents]);
+    fetchAvailableTypes();
+  }, [fetchEvents, fetchAvailableTypes]);
 
   const setFilters = useCallback((newFilters: TimelineFilters) => {
     setFiltersState(newFilters);
@@ -128,6 +150,7 @@ export function useTimeline(patientId: string): UseTimelineReturn {
 
   return {
     events,
+    availableTypes,
     isLoading,
     isLoadingMore,
     hasMore,

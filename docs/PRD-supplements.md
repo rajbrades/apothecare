@@ -2,8 +2,8 @@
 
 **Product:** Apothecare
 **Module:** Supplements → Patient Profile Integration
-**Status:** Phase 2 Complete — Phase 3 (Patient Portal) Pending
-**Last Updated:** 2026-02-22
+**Status:** Phase 2 Complete, Citation Pipeline Complete — Phase 3 (Patient Portal) Pending
+**Last Updated:** 2026-02-26
 
 ---
 
@@ -140,6 +140,74 @@ Same pattern as all other tables: `practitioner_id IN (SELECT id FROM practition
 
 ---
 
+## 6.5 Citation Integrity Pipeline ✅ COMPLETE
+
+### Problem
+AI-generated DOIs in supplement reviews frequently pointed to irrelevant or nonexistent papers (e.g., a bone fracture article cited for thyroid supplement recommendations). This undermined practitioner trust in the evidence badges.
+
+### Solution: 3-Tier Validation Pipeline
+
+Each supplement in a review gets up to 3 verified, real citations ranked by evidence strength.
+
+| Tier | Source | Trust Level | Maintenance |
+|------|--------|-------------|-------------|
+| Tier 3 | Curated `supplement_evidence` table | Highest — human-verified | Grows organically via future practitioner verify button |
+| Tier 1 | CrossRef API (`api.crossref.org`) | High — real metadata, relevance-checked | Zero — live API |
+| Tier 2 | PubMed API (ESearch + ESummary) | High — real papers | Zero — live API |
+
+### Data Model
+
+**Table: `supplement_evidence`** (Migration 020)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID PK | |
+| `supplement_name` | TEXT | Supplement name (GIN trigram index) |
+| `doi` | TEXT | DOI URL |
+| `title` | TEXT | Paper title |
+| `authors` | TEXT[] | Author list |
+| `year` | INT | Publication year |
+| `journal` | TEXT | Journal name |
+| `evidence_level` | TEXT | meta_analysis, rct, clinical_guideline, cohort_study, case_study |
+| `evidence_rank` | INT | Numeric rank (1=meta_analysis, 5=case_study) |
+| `abstract_snippet` | TEXT | Optional abstract excerpt |
+| `is_verified` | BOOLEAN | Human-verified flag |
+
+**Indexes:**
+- GIN trigram index on `supplement_name` for fuzzy matching
+- Unique on `(lower(supplement_name), doi)` to prevent duplicates
+
+**RLS:** Read-only for authenticated users (practitioners)
+
+**Seed data:** 17 verified citations for 13 common supplements (Vitamin D, Magnesium, Omega-3, Probiotics, CoQ10, Curcumin, Berberine, NAC, Ashwagandha, Zinc, Iron, Melatonin, B12)
+
+### Type: `VerifiedCitation`
+
+```typescript
+interface VerifiedCitation {
+  doi: string;           // DOI URL or PubMed URL
+  title: string;         // Real paper title
+  authors?: string[];    // Formatted authors
+  year?: number;         // Publication year
+  source?: string;       // Journal name
+  evidence_level: string; // Classified from title
+  origin: "crossref" | "pubmed" | "curated";
+}
+```
+
+Added to `SupplementReviewItem.verified_citations?: VerifiedCitation[]` (deprecated `evidence_doi` and `evidence_title`).
+
+### Key Files
+- `src/lib/citations/validate-supplement.ts` — Pipeline engine with 30+ supplement alias mappings
+- `supabase/migrations/020_supplement_evidence.sql` — Curated evidence table + seed data
+- `src/components/supplements/supplement-review-detail.tsx` — Multi-badge rendering (up to 3 per supplement)
+- `src/components/chat/evidence-badge.tsx` — Shared badge component with hover popover
+
+### Future: Practitioner Verify Button (TODO)
+After a supplement review, practitioners can "verify" individual citations as accurate. Verified citations are saved to the curated `supplement_evidence` table, growing the Tier 3 database organically from real clinical usage.
+
+---
+
 ## 7. Phase 3 — Patient Portal Reconciliation (Future)
 
 Follows the SMMRT pattern from portal research (§5):
@@ -155,9 +223,10 @@ Follows the SMMRT pattern from portal research (§5):
 - Approve/reject workflow → updates supplement status
 - Auto-prompt reconciliation before visits
 
-### 7.3 Timeline Integration
+### 7.3 Timeline Integration ✅ COMPLETE (Migration 015)
 - Supplement start/stop/dose changes emit `timeline_events` (types: `supplement_start`, `supplement_stop`, `supplement_dose_change`)
-- Completes the timeline event types that are currently placeholder
+- Trigger function `insert_timeline_event_for_supplement()` fires on INSERT/UPDATE of `patient_supplements` with priority chain: INSERT (active→start, discontinued→stop), UPDATE (discontinued→stop > active→start > dose_change)
+- Backfill included for existing active/discontinued supplements
 
 ---
 

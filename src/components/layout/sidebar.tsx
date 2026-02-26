@@ -23,6 +23,12 @@ import { Logomark } from "@/components/ui/logomark";
 import { createClient } from "@/lib/supabase/client";
 import { ConversationEntry, type ConversationItem } from "./sidebar-conversation";
 
+interface FavoriteItem {
+  id: string;
+  title: string | null;
+  updated_at: string;
+}
+
 interface SidebarProps {
   practitioner: {
     full_name: string;
@@ -30,6 +36,7 @@ interface SidebarProps {
     subscription_tier: string;
   };
   recentConversations?: ConversationItem[];
+  favoriteConversations?: FavoriteItem[];
   recentVisits?: Array<{
     id: string;
     visit_date: string;
@@ -50,10 +57,10 @@ const navItems = [
 
 
 // ─── Main Sidebar ──────────────────────────────────────────────────
-export function Sidebar({ practitioner, recentConversations = [], recentVisits = [] }: SidebarProps) {
+export function Sidebar({ practitioner, recentConversations = [], favoriteConversations = [], recentVisits = [] }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [favoritesOpen, setFavoritesOpen] = useState(favoriteConversations.length > 0);
   const [visitsOpen, setVisitsOpen] = useState(true);
   const [conversationsOpen, setConversationsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -266,15 +273,44 @@ export function Sidebar({ practitioner, recentConversations = [], recentVisits =
             >
               <Star size={12} />
               Favorites
+              {favoriteConversations.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-[var(--color-brand-100)] text-[var(--color-brand-700)] rounded-full">
+                  {favoriteConversations.length}
+                </span>
+              )}
               <ChevronDown
                 size={12}
                 className={`ml-auto transition-transform ${favoritesOpen ? "" : "-rotate-90"}`}
               />
             </button>
             {favoritesOpen && (
-              <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
-                Star responses to save them here
-              </p>
+              <div className="mt-1 space-y-0.5">
+                {favoriteConversations.length === 0 ? (
+                  <p className="px-3 pl-7 py-1.5 text-xs text-[var(--color-text-muted)] italic">
+                    Star responses to save them here
+                  </p>
+                ) : (
+                  favoriteConversations.map((fav) => {
+                    const isActive = activeConvId === fav.id;
+                    return (
+                      <Link
+                        key={fav.id}
+                        href={`/chat?id=${fav.id}`}
+                        className={`flex items-center gap-2 px-3 pl-7 py-1.5 rounded-md transition-colors ${
+                          isActive
+                            ? "bg-white text-[var(--color-brand-600)] font-medium"
+                            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+                        }`}
+                      >
+                        <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />
+                        <span className="text-sm truncate">
+                          {fav.title || "Untitled conversation"}
+                        </span>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
             )}
           </div>
 

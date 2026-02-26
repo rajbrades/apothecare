@@ -53,7 +53,7 @@ export default async function DashboardPage() {
 
       {/* Search input */}
       <div className="w-full max-w-2xl mb-6">
-        <DashboardSearch patients={patients || []} />
+        <DashboardSearch patients={patients || []} defaultSources={practitioner.preferred_evidence_sources} />
 
         {/* Query limit indicator for free users */}
         {isFree && (

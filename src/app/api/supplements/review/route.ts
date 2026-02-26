@@ -10,6 +10,7 @@ import { supplementReviewRequestSchema } from "@/lib/validations/supplement";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
+import { validateAllReviewCitations } from "@/lib/citations/validate-supplement";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -204,12 +205,20 @@ export async function POST(request: NextRequest) {
           );
 
           // Parse JSON from AI response
-          let reviewData = {};
+          let reviewData: Record<string, unknown> = {};
           try {
             const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
             if (jsonMatch) reviewData = JSON.parse(jsonMatch[0]);
           } catch {
             /* use empty */
+          }
+
+          // Validate & enrich citations via CrossRef + PubMed + curated DB
+          // Replaces AI-hallucinated single DOI with up to 3 verified citations per item
+          try {
+            await validateAllReviewCitations(reviewData, supabase);
+          } catch (err) {
+            console.warn("Citation validation failed (non-fatal):", err);
           }
 
           // Update review row

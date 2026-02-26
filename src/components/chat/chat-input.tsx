@@ -18,6 +18,8 @@ interface ChatInputProps {
   onCycleClinicalLens: () => void;
   selectedSources: SourceId[];
   onChangeSources: (sources: SourceId[]) => void;
+  savedDefault?: SourceId[];
+  onDefaultSaved?: (sources: SourceId[]) => void;
   placeholder?: string;
   disabled?: boolean;
   queriesRemaining?: number | null;
@@ -34,6 +36,8 @@ export function ChatInput({
   onCycleClinicalLens,
   selectedSources,
   onChangeSources,
+  savedDefault,
+  onDefaultSaved,
   placeholder = "Ask a clinical question...",
   disabled = false,
   queriesRemaining,
@@ -278,6 +282,8 @@ export function ChatInput({
                     selectedSources={selectedSources}
                     onChangeSources={onChangeSources}
                     onClose={() => setShowSourceFilter(false)}
+                    savedDefault={savedDefault}
+                    onDefaultSaved={onDefaultSaved}
                   />
                 )}
               </div>

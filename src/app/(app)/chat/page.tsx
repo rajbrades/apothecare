@@ -1,7 +1,15 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 
-export default function ChatPage() {
+export default async function ChatPage() {
+  const user = await getAuthUser();
+  if (!user) redirect("/auth/login");
+
+  const practitioner = await getPractitioner(user.id);
+  if (!practitioner) redirect("/auth/onboarding");
+
   return (
     <Suspense
       fallback={
@@ -14,7 +22,7 @@ export default function ChatPage() {
         </div>
       }
     >
-      <ChatInterface />
+      <ChatInterface defaultSources={practitioner.preferred_evidence_sources ?? null} />
     </Suspense>
   );
 }

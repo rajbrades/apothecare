@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
-import { X, Check, BookOpen } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { X, Check, BookOpen, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   EVIDENCE_SOURCES,
   SOURCE_PRESETS,
@@ -14,6 +15,8 @@ interface SourceFilterPopoverProps {
   selectedSources: SourceId[];
   onChangeSources: (sources: SourceId[]) => void;
   onClose: () => void;
+  savedDefault?: SourceId[];
+  onDefaultSaved?: (sources: SourceId[]) => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -28,8 +31,41 @@ export function SourceFilterPopover({
   selectedSources,
   onChangeSources,
   onClose,
+  savedDefault,
+  onDefaultSaved,
 }: SourceFilterPopoverProps) {
   const activePreset = matchPreset(selectedSources);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const selectionDiffersFromSaved = useMemo(() => {
+    if (!savedDefault || !onDefaultSaved) return false;
+    const currentSorted = [...selectedSources].sort();
+    const savedSorted = [...savedDefault].sort();
+    if (currentSorted.length !== savedSorted.length) return true;
+    return currentSorted.some((s, i) => s !== savedSorted[i]);
+  }, [selectedSources, savedDefault, onDefaultSaved]);
+
+  const handleSaveDefault = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/practitioners/evidence-sources", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sources: selectedSources }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Failed to save default");
+        return;
+      }
+      toast.success("Default sources saved");
+      onDefaultSaved?.(selectedSources);
+    } catch {
+      toast.error("Failed to save default");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedSources, onDefaultSaved]);
 
   const toggleSource = useCallback(
     (sourceId: SourceId) => {
@@ -152,11 +188,21 @@ export function SourceFilterPopover({
         ))}
       </div>
 
-      {/* Footer hint */}
-      <div className="px-4 py-2 border-t border-[var(--color-border-light)]">
+      {/* Footer */}
+      <div className="px-4 py-2 border-t border-[var(--color-border-light)] flex items-center justify-between">
         <p className="text-[11px] text-[var(--color-text-muted)]">
-          Filters which evidence sources the AI prioritizes in its response.
+          Filters which evidence sources the AI prioritizes.
         </p>
+        {selectionDiffersFromSaved && (
+          <button
+            onClick={handleSaveDefault}
+            disabled={isSaving}
+            className="text-[11px] font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors disabled:opacity-50 flex items-center gap-1 flex-shrink-0 ml-2"
+          >
+            {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
+            Save as Default
+          </button>
+        )}
       </div>
     </div>
   );

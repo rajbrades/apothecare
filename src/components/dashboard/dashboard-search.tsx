@@ -16,15 +16,18 @@ interface PatientOption {
 
 interface DashboardSearchProps {
   patients: PatientOption[];
+  defaultSources?: string[] | null;
 }
 
-export function DashboardSearch({ patients }: DashboardSearchProps) {
+export function DashboardSearch({ patients, defaultSources }: DashboardSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [patientId, setPatientId] = useState("");
   const [isDeepConsult, setIsDeepConsult] = useState(false);
   const [clinicalLens, setClinicalLens] = useState<"functional" | "conventional" | "both">("functional");
-  const [selectedSources, setSelectedSources] = useState<SourceId[]>([...ALL_SOURCE_IDS]);
+  const [selectedSources, setSelectedSources] = useState<SourceId[]>(
+    defaultSources?.length ? (defaultSources as SourceId[]) : [...ALL_SOURCE_IDS]
+  );
   const [showSourceFilter, setShowSourceFilter] = useState(false);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [uploading, setUploading] = useState(false);

@@ -53,6 +53,14 @@ export async function GET(
     ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
     : "No patient linked";
 
+  const patientDob = visit.patients?.date_of_birth
+    ? new Date(visit.patients.date_of_birth + "T00:00:00").toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+
   const visitDate = new Date(visit.visit_date).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -160,15 +168,14 @@ export async function GET(
       </div>
     </div>
     <div class="meta">
-      <div><strong>${escapeHtml(practitioner.full_name)}</strong></div>
-      ${practitioner.license_type ? `<div>${practitioner.license_type.toUpperCase()}</div>` : ""}
-      ${practitioner.npi ? `<div>NPI: ${escapeHtml(practitioner.npi)}</div>` : ""}
+      <div><strong>${escapeHtml(practitioner.full_name)}${practitioner.license_type ? `, ${practitioner.license_type.toUpperCase()}` : ""}${practitioner.npi ? `, NPI: ${escapeHtml(practitioner.npi)}` : ""}</strong></div>
       ${practitioner.practice_name ? `<div>${escapeHtml(practitioner.practice_name)}</div>` : ""}
     </div>
   </div>
 
   <div class="patient-bar">
     <div><strong>Patient:</strong> ${escapeHtml(patientName)}</div>
+    ${patientDob ? `<div><strong>DOB:</strong> ${patientDob}</div>` : ""}
     <div><strong>Date:</strong> ${visitDate}</div>
     <div><strong>Type:</strong> ${visit.visit_type === "follow_up" ? "Follow-up" : "SOAP"}</div>
     <div><strong>Status:</strong> ${visit.status === "completed" ? "Completed" : "Draft"}</div>

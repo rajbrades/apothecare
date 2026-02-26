@@ -32,13 +32,13 @@
   --color-text-primary: #111827;
   --color-text-secondary: #4b5563;
   --color-text-tertiary: #6b7280;
-  --color-text-muted: #9ca3af;
+  --color-text-muted: #6b7280;
 
   /* Evidence level badge colors */
   --color-evidence-meta: #f59e0b;
   --color-evidence-rct: #3b82f6;
   --color-evidence-guideline: #10b981;
-  --color-evidence-cohort: #8b5cf6;
+  --color-evidence-cohort: #64748b;
   --color-evidence-case: #6b7280;
 
   /* Biomarker traffic light */
@@ -115,7 +115,7 @@ html.dark {
     --color-evidence-meta: #fbbf24;
     --color-evidence-rct: #60a5fa;
     --color-evidence-guideline: #34d399;
-    --color-evidence-cohort: #a78bfa;
+    --color-evidence-cohort: #94a3b8;
     --color-evidence-case: #9ca3af;
 
     /* Biomarker — slightly brighter on dark */
@@ -135,7 +135,7 @@ html.dark {
   .evidence-meta { background: #422006; color: #fcd34d; }
   .evidence-rct { background: #1e3a5f; color: #93c5fd; }
   .evidence-guideline { background: #064e3b; color: #6ee7b7; }
-  .evidence-cohort { background: #2e1065; color: #c4b5fd; }
+  .evidence-cohort { background: #1e293b; color: #cbd5e1; }
   .evidence-case { background: #1f2937; color: #d1d5db; }
 
   /* Range bar marker border adapts to dark surface */
@@ -363,6 +363,101 @@ main {
 }
 
 /* ===================================
+   Chat Prose — List & Typography System
+   =================================== */
+
+/* Top-level bullet: 6px filled sage circle */
+.prose-apothecare .chat-bullet {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-brand-500);
+}
+
+/* Nested list: indent + smaller hollow bullet */
+.prose-apothecare .chat-list .chat-list {
+  margin-top: 8px;
+  margin-bottom: 0;
+  margin-left: 18px;
+}
+
+/* Override Tailwind space-y-3 for nested lists */
+.prose-apothecare .chat-list .chat-list > * + * {
+  margin-top: 0;
+}
+
+.prose-apothecare .chat-list .chat-list > .chat-list-item {
+  gap: 10px;
+}
+
+.prose-apothecare .chat-list .chat-list .chat-bullet {
+  width: 5px;
+  height: 5px;
+  background-color: transparent;
+  border: 1.5px solid var(--color-brand-400);
+}
+
+/* Nested spacing is tighter than top-level */
+.prose-apothecare .chat-list .chat-list > .chat-list-item + .chat-list-item {
+  margin-top: 6px;
+}
+
+/* Ordered list counter */
+.prose-apothecare .chat-list-ordered {
+  counter-reset: chat-ol;
+}
+
+.prose-apothecare .chat-list-ordered > .chat-list-item {
+  counter-increment: chat-ol;
+}
+
+.prose-apothecare .chat-list-ordered > .chat-list-item > .chat-bullet {
+  display: none;
+}
+
+.prose-apothecare .chat-list-ordered > .chat-list-item::before {
+  content: counter(chat-ol) ".";
+  color: var(--color-brand-600);
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 24px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Bold labels that start a list item — slight size bump already in TSX,
+   add subtle letter-spacing for scannability */
+.prose-apothecare .chat-list-item > span > strong:first-child {
+  letter-spacing: -0.01em;
+}
+
+/* --- Section break rhythm ---
+   24px before content zone transitions (p→list, list→callout)
+   8px after headings to tightly couple with their content */
+.prose-apothecare > p + .chat-list,
+.prose-apothecare > p + .chat-list-ordered {
+  margin-top: 4px;
+}
+
+.prose-apothecare > .chat-list + .clinical-callout,
+.prose-apothecare > .chat-list-ordered + .clinical-callout {
+  margin-top: 24px;
+}
+
+.prose-apothecare > h1 + .chat-list,
+.prose-apothecare > h2 + .chat-list,
+.prose-apothecare > h3 + .chat-list,
+.prose-apothecare > h1 + .chat-list-ordered,
+.prose-apothecare > h2 + .chat-list-ordered,
+.prose-apothecare > h3 + .chat-list-ordered,
+.prose-apothecare > h1 + p,
+.prose-apothecare > h2 + p,
+.prose-apothecare > h3 + p {
+  margin-top: 0;
+}
+
+/* ===================================
    Citation Badge
    =================================== */
 .citation-badge {
@@ -375,7 +470,7 @@ main {
   cursor: pointer;
   transition: all 0.15s ease;
   vertical-align: middle;
-  margin: 0 2px;
+  margin: 0 2px 0 6px;
 }
 
 .citation-badge:hover {
@@ -387,7 +482,7 @@ main {
 .evidence-meta { background: #fef3c7; color: #92400e; }
 .evidence-rct { background: #dbeafe; color: #1e40af; }
 .evidence-guideline { background: #d1fae5; color: #065f46; }
-.evidence-cohort { background: #ede9fe; color: #5b21b6; }
+.evidence-cohort { background: #f1f5f9; color: #475569; }
 .evidence-case { background: #f3f4f6; color: #374151; }
 
 /* ===================================

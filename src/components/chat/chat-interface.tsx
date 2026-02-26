@@ -1,18 +1,25 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useChat } from "@/hooks/use-chat";
+import { createClient } from "@/lib/supabase/client";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ArrowRight, Leaf, Loader2, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 import { ALL_SOURCE_IDS, type SourceId } from "@/lib/ai/source-filter";
 import type { ChatAttachment } from "@/types/database";
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  defaultSources?: string[] | null;
+}
+
+export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams.get("q");
   const convId = searchParams.get("id");
   const initialPatientId = searchParams.get("patient_id");
@@ -23,9 +30,13 @@ export function ChatInterface() {
 
   const [isDeepConsult, setIsDeepConsult] = useState(initialDeepConsult);
   const [clinicalLens, setClinicalLens] = useState<"functional" | "conventional" | "both">(initialLens || "functional");
+  const resolvedDefault = defaultSources?.length
+    ? (defaultSources as SourceId[])
+    : [...ALL_SOURCE_IDS];
   const [selectedSources, setSelectedSources] = useState<SourceId[]>(
-    initialSourceFilter ? initialSourceFilter.split(",") as SourceId[] : [...ALL_SOURCE_IDS]
+    initialSourceFilter ? initialSourceFilter.split(",") as SourceId[] : resolvedDefault
   );
+  const [savedDefault, setSavedDefault] = useState<SourceId[]>(resolvedDefault);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +66,8 @@ export function ChatInterface() {
     hasMoreMessages,
     conversationId,
     queriesRemaining,
+    isFavorited,
+    setIsFavorited,
     error,
     sendMessage,
     stopStreaming,
@@ -90,6 +103,30 @@ export function ChatInterface() {
       container.scrollTop = newScrollHeight - previousScrollHeight;
     });
   }, [loadMoreMessages]);
+
+  // Toggle favorite on the current conversation
+  const handleToggleFavorite = useCallback(async () => {
+    if (!conversationId) return;
+
+    const newValue = !isFavorited;
+    // Optimistic update
+    setIsFavorited(newValue);
+
+    const supabase = createClient();
+    const { error: err } = await supabase
+      .from("conversations")
+      .update({ is_favorited: newValue, updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+
+    if (err) {
+      // Revert on failure
+      setIsFavorited(!newValue);
+      toast.error("Failed to update favorite");
+    } else {
+      toast.success(newValue ? "Added to favorites" : "Removed from favorites");
+      router.refresh(); // Revalidate sidebar data
+    }
+  }, [conversationId, isFavorited, setIsFavorited, router]);
 
   // Load conversation when convId changes (including switching between conversations)
   useEffect(() => {
@@ -235,7 +272,12 @@ export function ChatInterface() {
             )}
 
             {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isFavorited={isFavorited}
+                onToggleFavorite={handleToggleFavorite}
+              />
             ))}
 
             {/* Error display */}
@@ -283,6 +325,8 @@ export function ChatInterface() {
         }}
         selectedSources={selectedSources}
         onChangeSources={setSelectedSources}
+        savedDefault={savedDefault}
+        onDefaultSaved={setSavedDefault}
         queriesRemaining={queriesRemaining}
         initialAttachments={pendingAttachments}
       />

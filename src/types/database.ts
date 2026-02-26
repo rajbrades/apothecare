@@ -408,12 +408,29 @@ export interface InteractionWarning {
   recommendation: string;
 }
 
+/** A single verified citation with real metadata from CrossRef/PubMed/curated DB */
+export interface VerifiedCitation {
+  doi: string;
+  title: string;
+  authors?: string[];
+  year?: number;
+  source?: string;
+  evidence_level: string;
+  origin: "crossref" | "pubmed" | "curated";
+}
+
 export interface SupplementReviewItem {
   name: string;
   current_dosage?: string;
   action: SupplementAction;
   rationale: string;
   evidence_level?: EvidenceLevel;
+  /** @deprecated Use verified_citations instead */
+  evidence_doi?: string;
+  /** @deprecated Use verified_citations instead */
+  evidence_title?: string;
+  /** Up to 3 verified citations, ranked by evidence strength (strongest first) */
+  verified_citations?: VerifiedCitation[];
   recommended_dosage?: string;
   recommended_form?: string;
   recommended_timing?: string;

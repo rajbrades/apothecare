@@ -30,7 +30,7 @@ export default async function AppLayout({
     redirect("/auth/onboarding");
   }
 
-  const { recentConversations, recentVisits } = await getSidebarData(
+  const { recentConversations, favoriteConversations, recentVisits } = await getSidebarData(
     practitioner.id
   );
 
@@ -49,6 +49,7 @@ export default async function AppLayout({
           subscription_tier: practitioner.subscription_tier,
         }}
         recentConversations={recentConversations}
+        favoriteConversations={favoriteConversations}
         recentVisits={recentVisits}
       />
       <main id="main-content" className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>

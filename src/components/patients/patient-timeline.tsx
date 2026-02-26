@@ -17,12 +17,17 @@ import {
   ChevronUp,
   GitBranch,
   Check,
+  Plus,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTimeline } from "@/hooks/use-timeline";
 import type { TimelineEvent, TimelineFilters } from "@/hooks/use-timeline";
 import type { TimelineEventType } from "@/lib/validations/timeline";
 import type { FMCategory, FMLifeStage } from "@/types/database";
+import { AddSymptomLogForm } from "./add-symptom-log-form";
+import { AddMilestoneForm } from "./add-milestone-form";
+import { AddPatientReportForm } from "./add-patient-report-form";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -105,16 +110,9 @@ const FILTER_TYPES: TimelineEventType[] = [
   "ai_insight",
 ];
 
-// ── Helpers ───────────────────────────────────────────────────────────
+type AddFormType = "symptom" | "milestone" | "report" | null;
 
-function formatEventDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+// ── Helpers ───────────────────────────────────────────────────────────
 
 function formatMonthGroup(dateStr: string): string {
   const date = new Date(dateStr);
@@ -148,18 +146,83 @@ function groupByMonth(events: TimelineEvent[]): Map<string, TimelineEvent[]> {
   return groups;
 }
 
+// ── Add Event Dropdown ───────────────────────────────────────────────
+
+function AddEventDropdown({ onSelect }: { onSelect: (type: AddFormType) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-500)] hover:text-[var(--color-brand-600)] transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Add Event
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-lg z-20 py-1">
+          <button
+            onClick={() => { onSelect("symptom"); setOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+          >
+            <Activity className="w-3.5 h-3.5 text-indigo-500" />
+            Log Symptom
+          </button>
+          <button
+            onClick={() => { onSelect("milestone"); setOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+          >
+            <Flag className="w-3.5 h-3.5 text-purple-500" />
+            Add Milestone
+          </button>
+          <button
+            onClick={() => { onSelect("report"); setOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+          >
+            <MessageCircle className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+            Log Patient Report
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── FilterBar ─────────────────────────────────────────────────────────
 
 function TimelineFilterBar({
   excludedTypes,
   onToggleType,
+  availableTypes,
 }: {
   excludedTypes: Set<TimelineEventType>;
   onToggleType: (type: TimelineEventType) => void;
+  availableTypes: TimelineEventType[];
 }) {
+  // Only show filter chips for types that have events
+  const visibleTypes =
+    availableTypes.length > 0
+      ? FILTER_TYPES.filter((t) => availableTypes.includes(t))
+      : [];
+
+  if (visibleTypes.length === 0) return null;
+
   return (
     <div className="flex flex-wrap gap-2 mb-4">
-      {FILTER_TYPES.map((type) => {
+      {visibleTypes.map((type) => {
         const config = EVENT_CONFIG[type];
         const isActive = !excludedTypes.has(type);
         return (
@@ -347,17 +410,38 @@ function PushToFMForm({
 
 function TimelineEventRow({
   event,
+  patientId,
   onPushToFMTimeline,
+  onResolveSymptom,
 }: {
   event: TimelineEvent;
+  patientId: string;
   onPushToFMTimeline?: (event: TimelineEvent, category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
+  onResolveSymptom?: (sourceId: string) => Promise<void>;
 }) {
   const config = EVENT_CONFIG[event.event_type];
   const Icon = config.icon;
   const detail = event.detail as Record<string, unknown>;
   const [showPushForm, setShowPushForm] = useState(false);
   const [pushed, setPushed] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const canPush = !!onPushToFMTimeline && event.event_type !== "ai_insight";
+
+  // Unresolved symptom: event is symptom_log without resolved=true
+  const isUnresolvedSymptom =
+    event.event_type === "symptom_log" &&
+    !detail.resolved &&
+    !!onResolveSymptom;
+
+  const handleResolve = async () => {
+    if (!onResolveSymptom) return;
+    setResolving(true);
+    try {
+      await onResolveSymptom(event.source_id);
+    } finally {
+      setResolving(false);
+    }
+  };
 
   return (
     <div
@@ -380,6 +464,22 @@ function TimelineEventRow({
             {event.title}
           </h4>
           <div className="flex items-center gap-2 shrink-0">
+            {/* Resolve symptom button */}
+            {isUnresolvedSymptom && (
+              <button
+                onClick={handleResolve}
+                disabled={resolving}
+                title="Mark symptom as resolved"
+                className="inline-flex items-center gap-1 text-[10px] text-[var(--color-text-muted)] hover:text-green-600 transition-colors disabled:opacity-50"
+              >
+                {resolving ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-3 h-3" />
+                )}
+                Resolve
+              </button>
+            )}
             {canPush && (
               pushed ? (
                 <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
@@ -628,11 +728,15 @@ function TimelineEventRow({
 function TimelineDateGroup({
   month,
   events,
+  patientId,
   onPushToFMTimeline,
+  onResolveSymptom,
 }: {
   month: string;
   events: TimelineEvent[];
+  patientId: string;
   onPushToFMTimeline?: (event: TimelineEvent, category: FMCategory, lifeStage: FMLifeStage) => Promise<void>;
+  onResolveSymptom?: (sourceId: string) => Promise<void>;
 }) {
   return (
     <div className="mb-6">
@@ -647,7 +751,9 @@ function TimelineDateGroup({
           <TimelineEventRow
             key={event.id}
             event={event}
+            patientId={patientId}
             onPushToFMTimeline={onPushToFMTimeline}
+            onResolveSymptom={onResolveSymptom}
           />
         ))}
       </div>
@@ -692,9 +798,11 @@ interface PatientTimelineProps {
 export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimelineProps) {
   const [excludedTypes, setExcludedTypes] = useState<Set<TimelineEventType>>(new Set());
   const [analyzing, setAnalyzing] = useState(false);
+  const [activeForm, setActiveForm] = useState<AddFormType>(null);
 
   const {
     events,
+    availableTypes,
     isLoading,
     isLoadingMore,
     hasMore,
@@ -713,16 +821,18 @@ export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimeli
       } else {
         next.add(type);
       }
-      // Update the API filter to only include non-excluded types
-      const activeTypes = FILTER_TYPES.filter((t) => !next.has(t));
-      // If all are active, send empty array (meaning "all")
+      // Use availableTypes for the active filter set
+      const visibleTypes = availableTypes.length > 0
+        ? FILTER_TYPES.filter((t) => availableTypes.includes(t))
+        : FILTER_TYPES;
+      const activeTypes = visibleTypes.filter((t) => !next.has(t));
       setFilters({
         ...filters,
-        eventTypes: activeTypes.length === FILTER_TYPES.length ? [] : activeTypes,
+        eventTypes: activeTypes.length === visibleTypes.length ? [] : activeTypes,
       });
       return next;
     });
-  }, [filters, setFilters]);
+  }, [filters, setFilters, availableTypes]);
 
   const handleLoadMore = useCallback(() => {
     loadMore();
@@ -747,6 +857,35 @@ export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimeli
       setAnalyzing(false);
     }
   }, [patientId, refresh]);
+
+  const handleResolveSymptom = useCallback(async (sourceId: string) => {
+    try {
+      const res = await fetch(
+        `/api/patients/${patientId}/symptom-logs/${sourceId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            resolved_at: new Date().toISOString(),
+          }),
+        }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to resolve symptom");
+      }
+      toast.success("Symptom marked as resolved");
+      refresh();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to resolve symptom"
+      );
+    }
+  }, [patientId, refresh]);
+
+  const handleFormCreated = useCallback(() => {
+    refresh();
+  }, [refresh]);
 
   const grouped = groupByMonth(events);
 
@@ -778,22 +917,58 @@ export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimeli
             Health Timeline
           </h2>
         </div>
-        <button
-          onClick={handleSynthesize}
-          disabled={analyzing}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
-          title="AI analyzes all clinical data and surfaces trends, correlations, and root causes"
-        >
-          {analyzing ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="w-3.5 h-3.5" />
-          )}
-          {analyzing ? "Analyzing…" : "Synthesize"}
-        </button>
+        <div className="flex items-center gap-2">
+          <AddEventDropdown onSelect={setActiveForm} />
+          <button
+            onClick={handleSynthesize}
+            disabled={analyzing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors disabled:opacity-50"
+            title="AI analyzes all clinical data and surfaces trends, correlations, and root causes"
+          >
+            {analyzing ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            {analyzing ? "Analyzing…" : "Synthesize"}
+          </button>
+        </div>
       </div>
 
-      <TimelineFilterBar excludedTypes={excludedTypes} onToggleType={handleToggleType} />
+      {/* Inline add-event forms */}
+      {activeForm === "symptom" && (
+        <div className="mb-4">
+          <AddSymptomLogForm
+            patientId={patientId}
+            onClose={() => setActiveForm(null)}
+            onCreated={handleFormCreated}
+          />
+        </div>
+      )}
+      {activeForm === "milestone" && (
+        <div className="mb-4">
+          <AddMilestoneForm
+            patientId={patientId}
+            onClose={() => setActiveForm(null)}
+            onCreated={handleFormCreated}
+          />
+        </div>
+      )}
+      {activeForm === "report" && (
+        <div className="mb-4">
+          <AddPatientReportForm
+            patientId={patientId}
+            onClose={() => setActiveForm(null)}
+            onCreated={handleFormCreated}
+          />
+        </div>
+      )}
+
+      <TimelineFilterBar
+        excludedTypes={excludedTypes}
+        onToggleType={handleToggleType}
+        availableTypes={availableTypes}
+      />
 
       {events.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-[var(--color-border-light)] rounded-lg">
@@ -812,7 +987,9 @@ export function PatientTimeline({ patientId, onPushToFMTimeline }: PatientTimeli
               key={month}
               month={month}
               events={monthEvents}
+              patientId={patientId}
               onPushToFMTimeline={onPushToFMTimeline}
+              onResolveSymptom={handleResolveSymptom}
             />
           ))}
 

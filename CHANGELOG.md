@@ -2,6 +2,35 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.17.0] - 2026-02-26
+
+### Added — 3-Tier Citation Integrity Pipeline
+- **`src/lib/citations/validate-supplement.ts`** (NEW): Three-tier citation validation pipeline for supplement reviews. Replaces single AI-hallucinated DOIs with up to 3 verified, real citations per supplement, ranked by evidence strength.
+  - **Tier 1 — CrossRef**: Validates AI-provided DOIs via `api.crossref.org`, checks paper relevance against supplement name using keyword matching with 30+ supplement alias mappings.
+  - **Tier 2 — PubMed**: When DOIs are invalid or missing, searches PubMed via ESearch + ESummary for real papers matching the supplement and clinical context.
+  - **Tier 3 — Curated DB**: Queries local `supplement_evidence` table for known-good, human-verified citations with pg_trgm fuzzy matching.
+- **`VerifiedCitation` interface** in `src/types/database.ts`: New type with `doi`, `title`, `authors`, `year`, `source`, `evidence_level`, and `origin` ("crossref" | "pubmed" | "curated") fields. Added `verified_citations?: VerifiedCitation[]` to `SupplementReviewItem`. Deprecated `evidence_doi` and `evidence_title`.
+- **Migration 020** (`supabase/migrations/020_supplement_evidence.sql`): Curated `supplement_evidence` table with `pg_trgm` extension for trigram fuzzy search, GIN index on `supplement_name`, unique constraint on `(lower(supplement_name), doi)`, RLS read-only for authenticated users. Seeded with 17 verified citations for 13 common supplements (Vitamin D, Magnesium, Omega-3, Probiotics, CoQ10, Curcumin, Berberine, NAC, Ashwagandha, Zinc, Iron, Melatonin, B12).
+
+### Changed — Supplement Review Pipeline
+- **`src/app/api/supplements/review/route.ts`**: Replaced HEAD-only DOI validation with `validateAllReviewCitations(reviewData, supabase)` — runs all 3 tiers in parallel per supplement, deduplicates by DOI, sorts by evidence strength, caps at 3 per item.
+- **`src/lib/ai/supplement-prompts.ts`**: Removed `evidence_title` from AI prompt JSON schema. Added stricter DOI instructions: "ONLY include if you are CERTAIN the DOI resolves to the correct paper. Do NOT guess or fabricate DOIs. Omit the field entirely if unsure."
+
+### Changed — Supplement Evidence Badge UX
+- **`src/components/supplements/supplement-review-detail.tsx`**: Now uses shared `EvidenceBadge` component from chat for consistent hover popover behavior. Renders up to 3 numbered badges per supplement with `EVIDENCE_LEVEL_MAP` (underscore→hyphenated) and `EVIDENCE_LABEL_MAP` translation constants. Legacy fallback for existing reviews without `verified_citations`.
+- **Dynamic z-index management**: `badgeHovered` state + `overflow-visible` on card container prevents popover clipping by sibling cards. Card elevates to `z-40` when badge is hovered.
+
+## [0.16.0] - 2026-02-25
+
+### Added — Timeline Phase 2: Event Producers & Smart Filter Bar
+- **4 producer tables with auto-insert triggers** (Migration 019): `symptom_logs`, `protocol_milestones`, `patient_reports`, `ai_insights` — each has AFTER INSERT/UPDATE triggers that auto-create `timeline_events` entries.
+- **Supplement timeline triggers** (Migration 015): INSERT/UPDATE on `patient_supplements` fires `supplement_start`, `supplement_stop`, or `supplement_dose_change` timeline events via priority chain logic.
+- **CRUD API routes** for all 4 producer types: `GET/POST /api/patients/[id]/symptom-logs`, `protocol-milestones`, `patient-reports`, `ai-insights` with individual `PATCH/DELETE` sub-routes. All follow standard CSRF → auth → Zod validate → audit pattern.
+- **"Add Event" dropdown** on Timeline tab: 3 options (Log Symptom, Add Milestone, Log Patient Report) — each expands an inline form below the header.
+- **Inline forms**: `add-symptom-log-form.tsx` (symptom name, severity 1-10, body system, onset date, notes), `add-milestone-form.tsx` (title, date, category, description), `add-patient-report-form.tsx` (title, type, severity, date, details). All POST to their respective API endpoints with toast feedback.
+- **Resolve symptom button**: Unresolved `symptom_log` timeline events show a "Resolve" action — PATCH sets `resolved_at`, DB trigger auto-creates a "Resolved: {name}" timeline event.
+- **Smart filter bar**: New `GET /api/patients/[id]/timeline/types` endpoint returns distinct event types for the patient. Filter chips only appear for types that have at least one event.
+
 ## [0.15.0] - 2026-02-23
 
 ### Added — Labs: Patient Search, Assign & Browse

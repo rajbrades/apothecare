@@ -75,10 +75,10 @@ const LEVEL_CONFIG: Record<
   cohort: {
     label: "Cohort Study",
     shortLabel: "COHORT",
-    bgClass: "bg-[#ede9fe]",
-    textClass: "text-[#5b21b6]",
-    borderClass: "border-[#ddd6fe]",
-    hoverBgClass: "bg-[#ede9fe]",
+    bgClass: "bg-[#f1f5f9]",
+    textClass: "text-[#475569]",
+    borderClass: "border-[#e2e8f0]",
+    hoverBgClass: "bg-[#f1f5f9]",
     icon: Users,
     description: "Observational population study",
   },
@@ -121,7 +121,7 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
     }
   }, [isExpanded]);
 
-  // Close on outside click
+  // Close on outside click or Escape key
   useEffect(() => {
     if (!isExpanded) return;
 
@@ -136,8 +136,18 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isExpanded]);
 
   const handleMouseEnter = () => {

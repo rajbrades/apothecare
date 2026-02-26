@@ -13,6 +13,7 @@ You MUST respond with a valid JSON object:
       "action": "keep|modify|discontinue|add",
       "rationale": "Evidence-based reasoning for this recommendation",
       "evidence_level": "meta_analysis|rct|clinical_guideline|cohort_study|case_study|expert_consensus",
+      "evidence_doi": "DOI URL (e.g. https://doi.org/10.xxxx/...) or PubMed URL — ONLY include if you are certain this DOI/URL exists and resolves to the correct paper",
       "recommended_dosage": "Specific amount",
       "recommended_form": "capsule|softgel|liquid|powder|sublingual|etc",
       "recommended_timing": "When and how to take it",
@@ -38,6 +39,7 @@ You MUST respond with a valid JSON object:
       "action": "add",
       "rationale": "Why this should be added",
       "evidence_level": "meta_analysis|rct|clinical_guideline|cohort_study|case_study|expert_consensus",
+      "evidence_doi": "DOI URL or PubMed URL — ONLY if certain it exists",
       "recommended_dosage": "Specific amount",
       "recommended_form": "Form",
       "recommended_timing": "Timing",
@@ -58,6 +60,7 @@ You MUST respond with a valid JSON object:
 - Include biomarker correlations (e.g., low ferritin → iron supplementation assessment)
 - Contraindications from the allergy list are ALWAYS "critical" severity
 - Evidence citations must reference: IFM, A4M, peer-reviewed journals, Cleveland Clinic FM
+- CRITICAL: Only include evidence_doi if you are CERTAIN the DOI resolves to the correct paper for this specific supplement and indication. Do NOT guess or fabricate DOIs. Omit the field entirely if unsure
 - Dosage recommendations must be specific: amount, form, timing, duration
 - Limit additions to 5-8 most clinically relevant new supplements
 - If a supplement is appropriate but the dose should change, use "modify" not "keep"

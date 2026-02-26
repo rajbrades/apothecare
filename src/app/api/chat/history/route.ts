@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const { data: conversation } = await supabase
       .from("conversations")
-      .select("id")
+      .select("id, is_favorited")
       .eq("id", conversation_id)
       .eq("practitioner_id", practitioner.id)
       .single();
@@ -97,7 +97,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ messages, nextCursor, hasMore });
+    return NextResponse.json({
+      messages,
+      nextCursor,
+      hasMore,
+      is_favorited: conversation.is_favorited ?? false,
+    });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

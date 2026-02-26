@@ -21,7 +21,7 @@ export const getPractitioner = cache(async (authUserId: string) => {
   const supabase = await createClient();
   const { data: practitioner } = await supabase
     .from("practitioners")
-    .select("id, full_name, email, subscription_tier, subscription_status, daily_query_count, daily_query_reset_at, default_note_template, verification_status, practice_name, specialty_focus")
+    .select("id, full_name, email, subscription_tier, subscription_status, daily_query_count, daily_query_reset_at, default_note_template, verification_status, practice_name, specialty_focus, preferred_evidence_sources")
     .eq("auth_user_id", authUserId)
     .single();
   return practitioner;
@@ -29,7 +29,7 @@ export const getPractitioner = cache(async (authUserId: string) => {
 
 export const getSidebarData = cache(async (practitionerId: string) => {
   const supabase = await createClient();
-  const [{ data: recentConversations }, { data: recentVisits }] =
+  const [{ data: recentConversations }, { data: favoriteConversations }, { data: recentVisits }] =
     await Promise.all([
       supabase
         .from("conversations")
@@ -38,6 +38,14 @@ export const getSidebarData = cache(async (practitionerId: string) => {
         .eq("is_archived", false)
         .order("updated_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("conversations")
+        .select("id, title, updated_at")
+        .eq("practitioner_id", practitionerId)
+        .eq("is_favorited", true)
+        .eq("is_archived", false)
+        .order("updated_at", { ascending: false })
+        .limit(10),
       supabase
         .from("visits")
         .select("id, visit_date, visit_type, chief_complaint, patients(first_name, last_name)")
@@ -49,6 +57,7 @@ export const getSidebarData = cache(async (practitionerId: string) => {
 
   return {
     recentConversations: recentConversations || [],
+    favoriteConversations: favoriteConversations || [],
     recentVisits: recentVisits || [],
   };
 });

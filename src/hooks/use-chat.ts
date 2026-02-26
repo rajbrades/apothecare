@@ -43,6 +43,7 @@ export function useChat(options: UseChatOptions = {}) {
     options.conversationId || null
   );
   const [queriesRemaining, setQueriesRemaining] = useState<number | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingContentRef = useRef<string>("");
@@ -276,6 +277,7 @@ export function useChat(options: UseChatOptions = {}) {
           data.messages.map((m: ChatMessage) => ({ ...m, isStreaming: false }))
         );
         setConversationId(convId);
+        setIsFavorited(data.is_favorited ?? false);
         setHasMoreMessages(data.hasMore ?? false);
         nextCursorRef.current = data.nextCursor ?? null;
       } catch {
@@ -340,6 +342,7 @@ export function useChat(options: UseChatOptions = {}) {
   const clearMessages = useCallback(() => {
     setMessages([]);
     setConversationId(null);
+    setIsFavorited(false);
     setError(null);
   }, []);
 
@@ -350,6 +353,8 @@ export function useChat(options: UseChatOptions = {}) {
     hasMoreMessages,
     conversationId,
     queriesRemaining,
+    isFavorited,
+    setIsFavorited,
     error,
     sendMessage,
     stopStreaming,

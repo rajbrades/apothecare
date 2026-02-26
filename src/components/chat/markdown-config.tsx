@@ -2,7 +2,8 @@
 
 import { useContext } from "react";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Stethoscope } from "lucide-react";
+import { Children, isValidElement } from "react";
 import type { Components } from "react-markdown";
 import type { PluggableList } from "unified";
 import type { ReactNode } from "react";
@@ -83,17 +84,99 @@ function CitationLink({
   );
 }
 
+/** Patterns that trigger the clinical callout treatment. */
+const CALLOUT_PATTERNS = [
+  "clinical consideration",
+  "clinical pearl",
+  "practice point",
+  "key takeaway",
+  "clinical note",
+  "important note",
+];
+
+/**
+ * Detect if a paragraph starts with a bold clinical callout label.
+ * Returns the matched label text (e.g. "Clinical consideration") or null.
+ */
+function detectCalloutLabel(children: ReactNode): string | null {
+  // Flatten the entire paragraph to plain text and check the start
+  const fullText = flattenChildren(children);
+  const lower = fullText.toLowerCase();
+  for (const pattern of CALLOUT_PATTERNS) {
+    if (lower.startsWith(pattern)) {
+      // Extract the label portion (up to and including the colon)
+      const colonIdx = fullText.indexOf(":");
+      return colonIdx !== -1 ? fullText.slice(0, colonIdx) : pattern;
+    }
+  }
+  return null;
+}
+
+/**
+ * Renders a clinical callout box with left border, tinted background, and icon.
+ * The bold label is stripped from children and rendered as an uppercase header.
+ */
+function ClinicalCallout({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  const cleanLabel = label.replace(/:?\s*$/, "");
+
+  // Strip the leading bold element so the label isn't duplicated.
+  // The first child is the <strong> (custom or native), rest is body text.
+  const childArray = Children.toArray(children);
+  const first = childArray[0];
+  let rest: ReactNode[];
+
+  if (isValidElement(first)) {
+    // Skip the bold label element entirely
+    rest = childArray.slice(1);
+  } else if (typeof first === "string") {
+    // If it's a plain string starting with the label, strip it
+    const stripped = first.replace(new RegExp(`^${label}:?\\s*`, "i"), "");
+    rest = [stripped, ...childArray.slice(1)];
+  } else {
+    rest = childArray;
+  }
+
+  return (
+    <div className="clinical-callout mt-5 mb-4 last:mb-0 rounded-lg bg-[var(--color-brand-50)] border-l-[3px] border-l-[var(--color-brand-400)] px-4 py-3">
+      <div className="flex items-center gap-2 mb-2">
+        <Stethoscope
+          size={14}
+          className="text-[var(--color-brand-600)] flex-shrink-0"
+        />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-brand-600)]">
+          {cleanLabel}
+        </span>
+      </div>
+      <p className="text-[var(--color-text-primary)] text-[16px] leading-[1.7] m-0">
+        {rest}
+      </p>
+    </div>
+  );
+}
+
 export const markdownComponents: Components = {
   a: ({ href, children }) => (
     <CitationLink href={href}>{children}</CitationLink>
   ),
-  p: ({ children }) => (
-    <p className="text-[var(--color-text-primary)] text-[15px] leading-[1.75] mb-3 last:mb-0">
-      {children}
-    </p>
-  ),
+  p: ({ children }) => {
+    const calloutLabel = detectCalloutLabel(children);
+    if (calloutLabel) {
+      return <ClinicalCallout label={calloutLabel}>{children}</ClinicalCallout>;
+    }
+    return (
+      <p className="text-[var(--color-text-primary)] text-[16px] leading-[1.7] mb-4 last:mb-0">
+        {children}
+      </p>
+    );
+  },
   strong: ({ children }) => (
-    <strong className="font-semibold text-[var(--color-text-primary)]">
+    <strong className="font-semibold text-[var(--color-text-primary)] text-[16px]">
       {children}
     </strong>
   ),
@@ -116,19 +199,17 @@ export const markdownComponents: Components = {
     </h3>
   ),
   ul: ({ children }) => (
-    <ul className="space-y-1.5 mb-3 ml-1">{children}</ul>
+    <ul className="chat-list space-y-3 mb-4 ml-0.5">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="space-y-1.5 mb-3 ml-1 list-decimal list-inside">
+    <ol className="chat-list chat-list-ordered space-y-3 mb-4 ml-0.5 list-none">
       {children}
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-[15px] leading-[1.7] text-[var(--color-text-primary)] flex gap-2">
-      <span className="text-[var(--color-brand-500)] mt-1.5 flex-shrink-0">
-        •
-      </span>
-      <span>{children}</span>
+    <li className="chat-list-item text-[16px] leading-[1.7] text-[var(--color-text-primary)] flex gap-3 items-start">
+      <span className="chat-bullet mt-[10px] flex-shrink-0" aria-hidden="true" />
+      <span className="flex-1 min-w-0">{children}</span>
     </li>
   ),
   code: ({ className, children }) => {

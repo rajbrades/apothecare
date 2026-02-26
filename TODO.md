@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
+Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
 
 ---
 
@@ -116,7 +116,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature:** Merge utility (`src/lib/ifm/merge.ts`) — pure functions for node + matrix merging
 - [x] **Refactor:** Simplified `ifm-matrix-view.tsx` from ~530 to ~155 lines — removed inline DnD editing, cards are display-only → click opens modal
 
-## Patient Timeline ✅ Phase 1 + Phase 2 (Partial) Complete
+## Patient Timeline ✅ Phase 1 + Phase 2 Complete
 
 - [x] **DB:** Migration 009 — `timeline_events` table with full enum type, RLS, auto-insert triggers (lab completion + visit creation), and historical data backfill
 - [x] **Feature:** Timeline API — `GET /api/patients/[id]/timeline` cursor-paginated, filterable by event type
@@ -124,9 +124,12 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **DB:** Migration 016 — `document_upload` enum value + `on_document_uploaded` trigger (patient_documents INSERT) + `on_visit_completed` trigger (visits UPDATE → completed) + backfill for existing documents
 - [x] **Feature:** `document_upload` events: auto-created for every patient document upload with type-specific summary and detail
 - [x] **Feature:** Visit completion events: existing visit event updated (not duplicated) when visit status → completed
-- [ ] **Feature (Phase 2):** `supplement_start`/`supplement_stop`/`supplement_dose_change` event producers from `patient_supplements` changes
-- [ ] **Feature (Phase 2):** `symptom_log`, `protocol_milestone`, `patient_reported`, `ai_insight` event producers
-- [ ] **Feature (Phase 2):** Filter bar should hide unused event types until producers exist
+- [x] **DB:** Migration 015 — `supplement_start`/`supplement_stop`/`supplement_dose_change` triggers on `patient_supplements` INSERT/UPDATE with priority chain + backfill
+- [x] **DB:** Migration 019 — `symptom_logs`, `protocol_milestones`, `patient_reports`, `ai_insights` tables with RLS, indexes, and auto-insert triggers → `timeline_events`
+- [x] **Feature:** CRUD APIs for all 4 producer types (GET/POST + PATCH/DELETE per record) with Zod validation
+- [x] **Feature:** "Add Event" dropdown on Timeline tab — Log Symptom, Add Milestone, Log Patient Report inline forms
+- [x] **Feature:** "Resolve" button on unresolved symptom_log events — PATCH sets `resolved_at`, trigger auto-creates "Resolved:" timeline event
+- [x] **Feature:** Smart filter bar — only shows event type chips for types that have at least one event (powered by `/api/patients/[id]/timeline/types` endpoint)
 
 ## Inline-Editable Patient Overview ✅ COMPLETE
 
@@ -166,6 +169,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 16, 2026.
 - [x] **Feature (Phase 2):** Clinician action overrides — Clickable `ActionBadge` dropdown lets practitioners override AI recommendations before pushing. Ring indicator + strikethrough for overridden items.
 - [x] **Feature:** Freeform supplement reviews — Patient-free mode with textarea + structured item builder. Inserts review with `patient_id: null` (Migration 014).
 - [x] **Feature:** Push protocol supplements — Visit workspace Protocol tab pushes AI-recommended supplements to `patient_supplements` with `source: "protocol"` and `visit_id` provenance (Migration 013).
+- [ ] **Feature:** Practitioner citation verify button — After a supplement review, allow practitioners to "verify" individual citations they confirm as accurate. Verified citations are saved to the curated `supplement_evidence` table, growing the Tier 3 citation database organically from real clinical usage. Over time this reduces reliance on live CrossRef/PubMed lookups for commonly reviewed supplements.
 - [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
 
 ---
@@ -307,6 +311,20 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Feature:** "View Trend" per flagged biomarker in drawer — TrendingUp button closes drawer, switches to Trends tab, pre-selects that biomarker
 - [x] **Feature:** Trends promoted to top-level patient tab — first-class tab with `?tab=trends` URL support; `initialBiomarkerCode` prop for deep-linking
 - [x] **DB:** Migration 016 — `document_upload` timeline trigger (patient_documents INSERT) + visit completion trigger + backfill
+
+## Sprint 12 — Citation Integrity Pipeline & Evidence Badge UX (Feb 25–26) ✅ COMPLETE
+
+- [x] **Feature:** 3-tier citation validation pipeline (`src/lib/citations/validate-supplement.ts`) — CrossRef DOI validation + PubMed search + curated DB lookup. Replaces AI-hallucinated single DOIs with up to 3 verified citations per supplement.
+- [x] **Feature:** Supplement alias dictionary — 30+ supplements mapped to common names, chemical names, and brand names for relevance matching (e.g., "Vitamin D3" → "cholecalciferol", "25-hydroxy")
+- [x] **DB:** Migration 020 — `supplement_evidence` table with pg_trgm fuzzy search, GIN trigram index, 17 seed citations for 13 common supplements, RLS read-only
+- [x] **Feature:** `VerifiedCitation` interface — `doi`, `title`, `authors`, `year`, `source`, `evidence_level`, `origin` ("crossref" | "pubmed" | "curated")
+- [x] **Feature:** Multi-badge rendering — supplement review cards show up to 3 numbered `EvidenceBadge` components per supplement, ranked by evidence strength
+- [x] **Feature:** Shared evidence badge — supplement review cards now use the same `EvidenceBadge` component as chat, with hover popover (title, authors, year, journal, DOI link)
+- [x] **Fix:** Dynamic z-index management — `badgeHovered` state elevates hovered card to `z-40` to prevent popover clipping by sibling cards
+- [x] **Fix:** AI prompt hardened — removed `evidence_title` field from schema, added strict DOI accuracy instructions ("omit entirely if unsure")
+- [x] **Fix:** Fake citations — DOI links no longer point to irrelevant papers (e.g., bone fracture article for thyroid supplements)
+
+---
 
 ## Lab & Biomarker Enhancements
 

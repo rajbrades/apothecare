@@ -27,7 +27,7 @@ Apothecare is a Next.js 15 application using the App Router with React Server Co
 │  CSRF protected          │   │  ┌─────────────────────────────────┐│
 │  Audit logged (IP+UA)    │   │  │  PostgreSQL 17 + pgvector       ││
 │                          │   │  │  Row-Level Security              ││
-└──────────┬───────────────┘   │  │  18+ tables + audit logs          ││
+└──────────┬───────────────┘   │  │  25+ tables + audit logs          ││
            │                   │  │  17 seeded biomarkers             ││
      ┌─────┼──────────┐       │  └─────────────────────────────────┘│
      ▼     ▼          ▼       │  HIPAA: Supabase Pro BAA             │
@@ -73,8 +73,14 @@ Patient mode:
 6. Insert supplement_reviews row (status: generating, patient_id set)
 7. Stream AI response via SSE: review_id, text_delta, review_complete, error
 8. Parse JSON: items[] (keep/modify/discontinue per supplement) + additions[] + summary
-9. Update row (status: complete, review_data JSONB)
-10. Audit log with IP, user agent, patient_id
+9. Validate & enrich citations via 3-tier pipeline (validateAllReviewCitations):
+   a. Tier 3 — Curated DB: check supplement_evidence table (pg_trgm fuzzy match, human-verified)
+   b. Tier 1 — CrossRef: validate AI-provided DOI, check relevance via keyword matching + alias dictionary
+   c. Tier 2 — PubMed: search ESearch + ESummary for real papers when DOI is missing/irrelevant
+   d. Deduplicate by DOI, rank by evidence strength, cap at 3 per supplement
+   e. Replace evidence_doi with verified_citations[] array on each item
+10. Update row (status: complete, review_data JSONB with verified_citations)
+11. Audit log with IP, user agent, patient_id
 
 Freeform mode:
 1. Practitioner toggles to "Freeform" mode → POST /api/supplements/review { supplements, medications?, medical_context? }
@@ -92,10 +98,12 @@ Push to Patient File:
 
 **Key files:**
 - `src/lib/ai/supplement-prompts.ts` — Review + interaction system prompts, `buildSupplementReviewPrompt()`, `formatLabContextForReview()`
+- `src/lib/citations/validate-supplement.ts` — 3-tier citation pipeline (CrossRef + PubMed + curated DB), `validateAllReviewCitations()`, `validateSupplementCitations()`, `lookupCuratedEvidence()`
 - `src/lib/validations/supplement.ts` — Zod schemas + `SUPPORTED_BRANDS` const; `.refine()` requires patient_id OR supplements
 - `src/lib/validations/patient-supplement.ts` — `pushReviewSchema` with `action_overrides` record
 - `src/hooks/use-supplement-review.ts` — SSE streaming hook; accepts `{ patient_id }` or `{ supplements, medications?, medical_context? }`
 - `src/app/api/patients/[id]/supplements/push-review/route.ts` — Push-review API with override support
+- `supabase/migrations/020_supplement_evidence.sql` — Curated evidence table with pg_trgm, 17 seed citations
 
 ### Interaction Check Flow (Current Implementation)
 
@@ -125,6 +133,42 @@ Push to Patient File:
 5. Active brands are injected into supplement review prompts as soft hints
 6. AI prioritizes (but is not restricted to) preferred brands in recommendations
 ```
+
+### Citation Validation Pipeline (Current Implementation)
+
+Supplement reviews use a 3-tier pipeline to replace AI-hallucinated DOIs with verified citations:
+
+```
+Per supplement item (all items run in parallel):
+
+1. Tier 3 — Curated DB (highest trust, checked first):
+   a. Query supplement_evidence table using pg_trgm fuzzy match on supplement name
+   b. Filter by is_verified = true, order by evidence_rank ASC
+   c. Return up to 3 known-good VerifiedCitation objects
+
+2. Tier 1 — CrossRef (validate AI-provided DOI):
+   a. If AI provided evidence_doi and < 3 citations so far
+   b. Fetch metadata from api.crossref.org/works/{doi}
+   c. Run relevance check: isRelevant(supplementName, title, abstract, subjects)
+   d. Uses getSupplementSearchTerms() alias dictionary (30+ supplements)
+   e. Returns VerifiedCitation with origin: "crossref" if relevant; null if not
+
+3. Tier 2 — PubMed (fill remaining slots):
+   a. Build search query: supplementName + context keywords + "supplementation"
+   b. ESearch → get PMIDs → ESummary → get metadata (JSON)
+   c. Each result becomes a VerifiedCitation with origin: "pubmed"
+
+4. Post-processing:
+   a. Deduplicate by DOI across all tiers
+   b. Sort by evidence strength (meta_analysis > rct > guideline > cohort > case_study)
+   c. Cap at 3 citations per supplement
+   d. Replace item.evidence_doi with item.verified_citations[]
+```
+
+**Key files:**
+- `src/lib/citations/validate-supplement.ts` — Pipeline engine, `validateAllReviewCitations()`, alias dictionary
+- `supabase/migrations/020_supplement_evidence.sql` — Curated evidence table, 17 seed citations
+- `src/types/database.ts` — `VerifiedCitation` interface, `SupplementReviewItem.verified_citations`
 
 ## Data Flow Patterns
 
@@ -380,7 +424,21 @@ src/
 │   │   │   │   ├── supplements/
 │   │   │   │   │   ├── [supId]/route.ts      # PATCH/DELETE supplement
 │   │   │   │   │   └── route.ts              # GET list / POST create
-│   │   │   │   ├── timeline/route.ts         # GET patient timeline events
+│   │   │   │   ├── timeline/
+│   │   │   │   │   ├── route.ts              # GET patient timeline events
+│   │   │   │   │   └── types/route.ts        # GET distinct event types for filter bar
+│   │   │   │   ├── symptom-logs/
+│   │   │   │   │   ├── [logId]/route.ts      # PATCH/DELETE symptom log
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── protocol-milestones/
+│   │   │   │   │   ├── [milestoneId]/route.ts # PATCH/DELETE milestone
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── patient-reports/
+│   │   │   │   │   ├── [reportId]/route.ts   # PATCH/DELETE report
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── ai-insights/
+│   │   │   │   │   ├── [insightId]/route.ts  # PATCH (dismiss) insight
+│   │   │   │   │   └── route.ts              # GET list / POST create
 │   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
@@ -438,7 +496,10 @@ src/
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
 │   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: Overview, Documents, Trends, Pre-Chart, IFM Matrix, Visits, Timeline, FM Timeline)
-│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM
+│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM, Add Event, Resolve
+│   │   ├── add-symptom-log-form.tsx  # Inline form for logging symptom events
+│   │   ├── add-milestone-form.tsx    # Inline form for adding protocol milestones
+│   │   ├── add-patient-report-form.tsx # Inline form for logging patient reports
 │   │   ├── fm-timeline.tsx        # FM Health Timeline (ATM framework, life stages, AI root cause analysis)
 │   │   ├── vitals-timeline.tsx    # Vitals + pillars of health tracking with Recharts
 │   │   ├── supplement-list.tsx    # Structured supplement list (CRUD, inline add/edit/discontinue)
@@ -474,7 +535,8 @@ src/
 │   ├── use-speech-recognition.ts   # Web Speech API wrapper
 │   ├── use-visit-stream.ts         # Visit generation SSE hook
 │   ├── use-supplement-review.ts    # Supplement review SSE hook
-│   └── use-interaction-check.ts    # Interaction check SSE hook
+│   ├── use-interaction-check.ts    # Interaction check SSE hook
+│   └── use-timeline.ts             # Timeline data hook (events, filters, available types)
 ├── lib/
 │   ├── ai/
 │   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
@@ -484,6 +546,9 @@ src/
 │   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext React context
 │   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel classifier
 │   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
+│   ├── citations/
+│   │   ├── resolve.ts              # CrossRef DOI resolution (3-pass) for chat citations
+│   │   └── validate-supplement.ts  # 3-tier citation pipeline (CrossRef + PubMed + curated DB) for supplement reviews
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
 │   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts
 │   │   ├── visit-prompts.ts        # SOAP/IFM/Protocol generation prompts
@@ -522,6 +587,11 @@ src/
 │       ├── visit.ts                # Visit create/update/generate schemas
 │       ├── patient.ts              # Patient create/update schemas
 │       ├── patient-supplement.ts   # Patient supplement CRUD schemas
+│       ├── timeline.ts             # Timeline event types + filters
+│       ├── symptom-log.ts          # Symptom log create/update schemas
+│       ├── protocol-milestone.ts   # Protocol milestone create/update schemas
+│       ├── patient-report.ts       # Patient report create/update schemas (report_type enum)
+│       ├── ai-insight.ts           # AI insight create/update schemas (insight_type, confidence enums)
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -557,7 +627,13 @@ supabase/migrations/
 ├── 011_patient_ifm_matrix.sql      # patients.ifm_matrix JSONB column (persistent IFM Matrix)
 ├── 012_supplement_review_pushed_at.sql  # supplement_reviews.pushed_at timestamp for idempotency
 ├── 013_protocol_push.sql           # patient_supplement_source 'protocol' enum value, patient_supplements.visit_id, visits.protocol_pushed_at
-└── 014_freeform_reviews.sql        # supplement_reviews.patient_id nullable (freeform reviews without a patient)
+├── 014_freeform_reviews.sql        # supplement_reviews.patient_id nullable (freeform reviews without a patient)
+├── 015_supplement_timeline_triggers.sql  # supplement_start/stop/dose_change auto-insert triggers + backfill
+├── 016_document_timeline_triggers.sql   # document_upload event type, upload/visit completion triggers + backfill
+├── 017_vitals_health_ratings.sql        # patient_vitals table for vitals + pillars of health tracking
+├── 018_fm_timeline.sql                  # patients.fm_timeline_data JSONB column (FM Health Timeline)
+├── 019_timeline_event_producers.sql     # 4 producer tables (symptom_logs, protocol_milestones, patient_reports, ai_insights) + auto-insert triggers
+└── 020_supplement_evidence.sql          # Curated supplement evidence table with pg_trgm, 17 seed citations, RLS read-only
 ```
 
 ## Test Infrastructure

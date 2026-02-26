@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** February 24, 2026
+**Last updated:** February 26, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -81,7 +81,21 @@ src/
 │   │   │   │   ├── supplements/
 │   │   │   │   │   ├── [supId]/route.ts      # PATCH/DELETE supplement
 │   │   │   │   │   └── route.ts              # GET list / POST create
-│   │   │   │   ├── timeline/route.ts         # GET patient timeline events
+│   │   │   │   ├── timeline/
+│   │   │   │   │   ├── route.ts              # GET patient timeline events
+│   │   │   │   │   └── types/route.ts        # GET distinct event types for filter bar
+│   │   │   │   ├── symptom-logs/
+│   │   │   │   │   ├── [logId]/route.ts      # PATCH/DELETE symptom log
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── protocol-milestones/
+│   │   │   │   │   ├── [milestoneId]/route.ts # PATCH/DELETE milestone
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── patient-reports/
+│   │   │   │   │   ├── [reportId]/route.ts   # PATCH/DELETE report
+│   │   │   │   │   └── route.ts              # GET list / POST create
+│   │   │   │   ├── ai-insights/
+│   │   │   │   │   ├── [insightId]/route.ts  # PATCH (dismiss) insight
+│   │   │   │   │   └── route.ts              # GET list / POST create
 │   │   │   │   └── route.ts        # GET/PATCH/DELETE patient
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
@@ -129,7 +143,10 @@ src/
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
 │   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: overview, documents, trends, prechart, ifm_matrix, visits, timeline, fm_timeline)
-│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM
+│   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM, Add Event, Resolve
+│   │   ├── add-symptom-log-form.tsx  # Inline form for logging symptom events
+│   │   ├── add-milestone-form.tsx    # Inline form for adding protocol milestones
+│   │   ├── add-patient-report-form.tsx # Inline form for logging patient reports
 │   │   ├── fm-timeline.tsx        # FM Health Timeline (ATM framework, life stages, AI root cause analysis)
 │   │   ├── vitals-timeline.tsx    # Vitals + pillars of health tracking with Recharts
 │   │   ├── supplement-list.tsx    # Structured supplement list (CRUD, inline add/edit/discontinue)
@@ -166,6 +183,7 @@ src/
 │   ├── use-visit-stream.ts         # Visit generation SSE hook
 │   ├── use-supplement-review.ts    # Supplement review SSE hook
 │   ├── use-interaction-check.ts    # Interaction check SSE hook
+│   ├── use-timeline.ts             # Timeline data hook (events, filters, available types)
 │   └── use-keyboard-shortcuts.ts   # Global keyboard shortcuts
 ├── lib/
 │   ├── ai/
@@ -190,7 +208,8 @@ src/
 │   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel
 │   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
 │   ├── citations/
-│   │   └── resolve.ts              # CrossRef DOI resolution (3-pass) + CitationResolvedData
+│   │   ├── resolve.ts              # CrossRef DOI resolution (3-pass) + CitationResolvedData
+│   │   └── validate-supplement.ts  # 3-tier citation pipeline (CrossRef + PubMed + curated DB) for supplement reviews
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
 │   ├── labs/
@@ -216,6 +235,10 @@ src/
 │       ├── patient-supplement.ts   # Patient supplement CRUD schemas
 │       ├── fm-timeline.ts          # FM Timeline push/analyze/data schemas
 │       ├── timeline.ts             # Timeline event types + filters
+│       ├── symptom-log.ts          # Symptom log create/update schemas
+│       ├── protocol-milestone.ts   # Protocol milestone create/update schemas
+│       ├── patient-report.ts       # Patient report create/update schemas (report_type enum)
+│       ├── ai-insight.ts           # AI insight create/update schemas (insight_type, confidence enums)
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -230,14 +253,14 @@ src/
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_reports, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
 **Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences, patient_supplements
-**Timeline:** timeline_events (polymorphic via source_table/source_id, auto-triggers)
+**Timeline:** timeline_events (polymorphic via source_table/source_id, auto-triggers), symptom_logs, protocol_milestones, patient_reports, ai_insights
 **FM Timeline:** patients.fm_timeline_data (JSONB — ATM events across life stages)
-**Evidence:** evidence_sources, evidence_embeddings
+**Evidence:** evidence_sources, evidence_embeddings, supplement_evidence (curated citations with pg_trgm fuzzy search)
 **System:** audit_logs, usage_tracking, rate_limits
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migrations:** 18 applied (see "Database Migrations" section below).
+**Migrations:** 20 applied (see "Database Migrations" section below).
 
 ---
 
@@ -477,6 +500,31 @@ src/
 9. ✅ Patient profile wiring — new `fm_timeline` tab (8th tab), `fm_timeline_data` fetched in page query, dynamic import
 10. ✅ Migration 018 — `fm_timeline_data JSONB` column on patients table
 
+### Sprint 15 — Timeline Phase 2: Event Producers & Smart Filter (Feb 25, 2026)
+
+1. ✅ Supplement timeline triggers (Migration 015) — `supplement_start`, `supplement_stop`, `supplement_dose_change` auto-fire on `patient_supplements` INSERT/UPDATE
+2. ✅ 4 producer tables + triggers (Migration 019) — `symptom_logs`, `protocol_milestones`, `patient_reports`, `ai_insights` with auto-insert into `timeline_events`
+3. ✅ Full CRUD API routes for all 4 producer types with Zod validation + CSRF + auth + audit
+4. ✅ "Add Event" dropdown on Timeline tab — 3 inline forms (Log Symptom, Add Milestone, Log Patient Report)
+5. ✅ Resolve symptom button — PATCH `resolved_at` on symptom_logs, DB trigger auto-creates "Resolved: {name}" event
+6. ✅ Smart filter bar — `GET /api/patients/[id]/timeline/types` returns distinct event types; filter chips only appear for types with data
+7. ✅ `use-timeline.ts` hook updated with `availableTypes` state from types endpoint
+
+### Sprint 16 — Citation Integrity Pipeline & Evidence Badges (Feb 25–26, 2026)
+
+1. ✅ 3-tier citation validation pipeline (`src/lib/citations/validate-supplement.ts`):
+   - Tier 1: CrossRef DOI validation with relevance checking via keyword matching + supplement alias dictionary (30+ supplements)
+   - Tier 2: PubMed ESearch + ESummary fallback search for real papers when DOI is invalid/missing
+   - Tier 3: Curated `supplement_evidence` table with pg_trgm fuzzy matching for known-good citations
+2. ✅ Curated evidence DB (Migration 020): `supplement_evidence` table with 17 seed citations for common supplements (Vitamin D, Magnesium, Omega-3, Probiotics, CoQ10, Curcumin, Berberine, NAC, Ashwagandha, Zinc, Iron, Melatonin, B12)
+3. ✅ Multi-citation support: each supplement gets up to 3 verified citations, ranked by evidence strength (meta-analysis > RCT > guideline > cohort > case study)
+4. ✅ `VerifiedCitation` interface with `origin` field tracking citation source ("crossref" | "pubmed" | "curated")
+5. ✅ Supplement review API updated: `validateAllReviewCitations(reviewData, supabase)` replaces old HEAD-only DOI validation
+6. ✅ Shared `EvidenceBadge` component: supplement review cards now use the same hover popover as chat evidence badges
+7. ✅ Multi-badge rendering: `supplement-review-detail.tsx` renders up to 3 numbered badges per supplement with legacy fallback
+8. ✅ Dynamic z-index management: `badgeHovered` state elevates hovered card above siblings to prevent popover clipping
+9. ✅ AI prompt hardened: removed `evidence_title` field, added strict DOI accuracy instructions ("omit entirely if unsure")
+
 ### Landing → App Transition (Feb 24, 2026)
 
 1. ✅ Functional hero input — landing page search input is now typeable (was readOnly); on submit, redirects to `/auth/register?next=/chat?q=<encoded_query>`
@@ -495,6 +543,7 @@ src/
 - [ ] **Source filter persistence** — "Save as Default" → `preferred_evidence_sources` column
 - [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
+- [ ] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table
 
 ### Homepage Design Fixes (from Playwright audit Feb 18)
 - [ ] Move chat product mockup into hero viewport — no visual anchor above fold
@@ -553,7 +602,7 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 
 ## Database Migrations
 
-18 migrations must be applied in order in Supabase SQL Editor:
+20 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
@@ -573,6 +622,8 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 16. `016_timeline_enhancements.sql` — additional timeline event types and trigger improvements
 17. `017_visit_notes_search.sql` — visit notes full-text search and patient linking
 18. `018_fm_timeline.sql` — patients.fm_timeline_data JSONB column for FM Health Timeline (ATM framework)
+19. `019_timeline_event_producers.sql` — 4 producer tables (symptom_logs, protocol_milestones, patient_reports, ai_insights) + auto-insert triggers
+20. `020_supplement_evidence.sql` — Curated supplement evidence table with pg_trgm fuzzy search, 17 seed citations, RLS read-only for authenticated users
 
 ## Known Issues / Gotchas
 
