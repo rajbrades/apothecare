@@ -1,14 +1,31 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Check, Weight, Activity, Heart, Moon, Zap, Dumbbell, Leaf, Waves, Battery, Smile, Droplets } from "lucide-react";
+import { Check, Weight, Activity, Heart, Moon, Zap, Dumbbell, Leaf, Waves, Battery, Smile, Droplets, Save, Loader2, User } from "lucide-react";
+import { toast } from "sonner";
+import { EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
 import type { VitalsData, HealthRatings } from "@/types/database";
+
+interface PatientContext {
+  id: string;
+  chief_complaints: string[] | null;
+  medical_history: string | null;
+  current_medications: string | null;
+  allergies: string[] | null;
+  notes: string | null;
+}
 
 interface VitalsPanelProps {
   visitId: string;
   initialVitals: VitalsData | null;
   initialRatings: HealthRatings | null;
   readOnly?: boolean;
+  patientId?: string | null;
+  patient?: PatientContext | null;
+  onPatientFieldSaved?: (field: string, value: unknown) => void;
+  onPushToChart?: () => void;
+  pushingToChart?: boolean;
+  vitalsPushedAt?: string | null;
 }
 
 const PILLARS: {
@@ -64,36 +81,61 @@ function bmiColor(bmiVal: string): string {
   return "text-red-600 bg-red-50 border-red-200";
 }
 
-export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly = false }: VitalsPanelProps) {
+export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly = false, patientId, patient, onPatientFieldSaved, onPushToChart, pushingToChart, vitalsPushedAt }: VitalsPanelProps) {
   const [vitals, setVitals] = useState<VitalsData>(initialVitals ?? {});
   const [ratings, setRatings] = useState<HealthRatings>(initialRatings ?? {});
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
   const saveTimer = useRef<NodeJS.Timeout | null>(null);
   const savedTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const scheduleSave = useCallback(
-    (nextVitals: VitalsData, nextRatings: HealthRatings) => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(async () => {
-        try {
-          await fetch(`/api/visits/${visitId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              vitals_data: Object.keys(nextVitals).length > 0 ? nextVitals : null,
-              health_ratings: Object.keys(nextRatings).length > 0 ? nextRatings : null,
-            }),
-          });
-          setSaved(true);
-          if (savedTimer.current) clearTimeout(savedTimer.current);
-          savedTimer.current = setTimeout(() => setSaved(false), 2500);
-        } catch {
-          // silent — user can retry
-        }
-      }, 800);
+  const doSave = useCallback(
+    async (nextVitals: VitalsData, nextRatings: HealthRatings) => {
+      const res = await fetch(`/api/visits/${visitId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vitals_data: Object.keys(nextVitals).length > 0 ? nextVitals : null,
+          health_ratings: Object.keys(nextRatings).length > 0 ? nextRatings : null,
+        }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      setDirty(false);
+      setSaved(true);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaved(false), 2500);
     },
     [visitId]
   );
+
+  const scheduleSave = useCallback(
+    (nextVitals: VitalsData, nextRatings: HealthRatings) => {
+      setDirty(true);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(async () => {
+        try {
+          await doSave(nextVitals, nextRatings);
+        } catch {
+          // silent — user can retry via Save button
+        }
+      }, 800);
+    },
+    [doSave]
+  );
+
+  const handleManualSave = useCallback(async () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setManualSaving(true);
+    try {
+      await doSave(vitals, ratings);
+      toast.success("Vitals & health ratings saved");
+    } catch {
+      toast.error("Failed to save — please try again");
+    } finally {
+      setManualSaving(false);
+    }
+  }, [vitals, ratings, doSave]);
 
   const updateVital = useCallback(
     (key: keyof VitalsData, raw: string) => {
@@ -117,13 +159,51 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
 
   const computedBmi = bmi(vitals.weight_kg, vitals.height_cm);
 
+  const hasData = Object.keys(vitals).length > 0 || Object.keys(ratings).length > 0;
+
   return (
     <div className="space-y-8">
-      {/* Saved indicator */}
-      <div className={`flex justify-end transition-opacity duration-500 ${saved ? "opacity-100" : "opacity-0"}`}>
-        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
-          <Check className="w-3 h-3" /> Saved
-        </span>
+      {/* Action bar */}
+      <div className="flex items-center justify-between">
+        <div className={`transition-opacity duration-500 ${saved ? "opacity-100" : "opacity-0"}`}>
+          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
+            <Check className="w-3 h-3" /> Saved
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {!readOnly && (
+            <button
+              onClick={handleManualSave}
+              disabled={manualSaving}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)] transition-colors disabled:opacity-50"
+            >
+              {manualSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              Save
+            </button>
+          )}
+          {patientId && hasData && onPushToChart && (
+            <button
+              onClick={onPushToChart}
+              disabled={pushingToChart}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors disabled:opacity-50 ${
+                vitalsPushedAt
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                  : "text-[var(--color-brand-600)] border-[var(--color-brand-200)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)]"
+              }`}
+            >
+              {pushingToChart ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <User className="w-3.5 h-3.5" />
+              )}
+              {vitalsPushedAt ? "Update Patient Chart" : "Push to Patient Chart"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Vitals ── */}
@@ -326,6 +406,58 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
           })}
         </div>
       </section>
+
+      {/* ── Patient Context ── */}
+      {patient && patientId && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <User className="w-4 h-4 text-[var(--color-brand-600)]" />
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Patient History</h2>
+          </div>
+
+          <EditableTagSection
+            title="Chief Complaints"
+            values={patient.chief_complaints}
+            patientId={patientId}
+            fieldName="chief_complaints"
+            onSaved={(field, value) => onPatientFieldSaved?.(field, value)}
+            readOnly={readOnly}
+          />
+          <EditableTextSection
+            title="Medical History"
+            value={patient.medical_history}
+            patientId={patientId}
+            fieldName="medical_history"
+            onSaved={(field, value) => onPatientFieldSaved?.(field, value)}
+            readOnly={readOnly}
+          />
+          <EditableTextSection
+            title="Current Medications"
+            value={patient.current_medications}
+            patientId={patientId}
+            fieldName="current_medications"
+            onSaved={(field, value) => onPatientFieldSaved?.(field, value)}
+            readOnly={readOnly}
+          />
+          <EditableTagSection
+            title="Allergies"
+            values={patient.allergies}
+            patientId={patientId}
+            fieldName="allergies"
+            onSaved={(field, value) => onPatientFieldSaved?.(field, value)}
+            tagColor="red"
+            readOnly={readOnly}
+          />
+          <EditableTextSection
+            title="Notes"
+            value={patient.notes}
+            patientId={patientId}
+            fieldName="notes"
+            onSaved={(field, value) => onPatientFieldSaved?.(field, value)}
+            readOnly={readOnly}
+          />
+        </section>
+      )}
     </div>
   );
 }

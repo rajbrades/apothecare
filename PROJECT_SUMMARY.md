@@ -176,7 +176,7 @@ src/
 │       ├── protocol-panel.tsx      # Protocol recommendations panel
 │       └── export-menu.tsx         # Visit export options
 ├── hooks/
-│   ├── use-chat.ts                 # SSE streaming hook (chat + citation_metadata handler)
+│   ├── use-chat.ts                 # SSE streaming hook (chat + citation_metadata_multi handler)
 │   ├── use-editor-dictation.ts     # Dictation + AI Scribe → editor bridge
 │   ├── use-audio-recorder.ts       # MediaRecorder wrapper
 │   ├── use-speech-recognition.ts   # Web Speech API wrapper
@@ -204,11 +204,12 @@ src/
 │   │   ├── csrf.ts                 # Shared CSRF validation utility
 │   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
 │   ├── chat/
-│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext React context
-│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel
+│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext (Map<string, CitationMeta[]>)
+│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title, pubTypes?) — PubMed pub types + title keywords → EvidenceLevel
+│   │   ├── process-citations.ts    # processCitations() — citation text preprocessing
 │   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
 │   ├── citations/
-│   │   ├── resolve.ts              # CrossRef DOI resolution (3-pass) + CitationResolvedData
+│   │   ├── resolve.ts              # CrossRef + PubMed multi-citation resolution (3-pass + relevance gate + up to 3 per citation)
 │   │   └── validate-supplement.ts  # 3-tier citation pipeline (CrossRef + PubMed + curated DB) for supplement reviews
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
@@ -525,6 +526,19 @@ src/
 8. ✅ Dynamic z-index management: `badgeHovered` state elevates hovered card above siblings to prevent popover clipping
 9. ✅ AI prompt hardened: removed `evidence_title` field, added strict DOI accuracy instructions ("omit entirely if unsure")
 
+### Sprint 17 — Chat Citation Relevance & Multi-Citation Badges (Feb 26, 2026)
+
+1. ✅ CrossRef relevance gate on all 3 matching passes via `isClinicallyRelevant()`:
+   - Layer 1: `NON_MEDICAL_DOMAINS` blocklist (30+ non-medical fields: economics, physics, law, etc.)
+   - Layer 2: keyword overlap — clinical keywords from context vs paper title/abstract/subjects/journal
+   - Requests `subject` and `abstract` from CrossRef API for richer verification
+2. ✅ PubMed relevance filtering: `isPubMedResultRelevant()` checks each result title/journal against clinical keywords before accepting
+3. ✅ PubMed publication types: `pubtype` field on `PubMedSummaryResult` drives evidence classification — more reliable than title keywords
+4. ✅ Improved PubMed search: prefers systematic reviews, meta-analyses, RCTs via `[pt]` filter; falls back to generic when sparse
+5. ✅ Evidence classifier upgrade: `classifyEvidenceLevel(title, pubTypes?)` — PubMed pub types as primary, expanded title keyword patterns as fallback
+6. ✅ Multi-citation chat badges: up to 3 evidence badges per `[Author, Year]` citation via `resolveCitationsMulti()` → `citation_metadata_multi` SSE event → `citationsByKey` on `ChatMessage` → `EvidenceBadgeList` rendering
+7. ✅ `CitationMetaContext` changed from `Map<string, CitationMeta>` to `Map<string, CitationMeta[]>` for multi-citation support
+
 ### Landing → App Transition (Feb 24, 2026)
 
 1. ✅ Functional hero input — landing page search input is now typeable (was readOnly); on submit, redirects to `/auth/register?next=/chat?q=<encoded_query>`
@@ -634,6 +648,7 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 5. **Block editor backward compatibility** — Visits with `template_content: null` (created before the editor) fall back to the legacy textarea. New visits always use the block editor.
 6. **Web Speech API** (live dictation) only works in Chrome/Edge. Safari and Firefox have limited support.
 7. **Evidence badges only appear on DOI-resolved citations** — if CrossRef lookup fails, citations render as plain Scholar links (no badge). This is intentional — no badge degradation on unresolved citations.
+8. **Chat citations use relevance filtering** — both CrossRef and PubMed results pass through clinical relevance checks. If all results fail relevance, the citation falls back to a Google Scholar link with no badge rather than showing an irrelevant paper.
 
 ---
 

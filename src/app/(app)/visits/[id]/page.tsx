@@ -16,14 +16,23 @@ export default async function VisitDetailPage({
   if (!practitioner) redirect("/auth/onboarding");
 
   const supabase = await createClient();
-  const { data: visit, error } = await supabase
-    .from("visits")
-    .select("*, patients(id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies)")
-    .eq("id", id)
-    .eq("practitioner_id", practitioner.id)
-    .single();
+  const [{ data: visit, error }, { data: patients }] = await Promise.all([
+    supabase
+      .from("visits")
+      .select("*, patients(id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes)")
+      .eq("id", id)
+      .eq("practitioner_id", practitioner.id)
+      .single(),
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("last_name", { ascending: true })
+      .limit(500),
+  ]);
 
   if (error || !visit) notFound();
 
-  return <VisitWorkspace visit={visit} />;
+  return <VisitWorkspace visit={visit} patients={patients || []} />;
 }

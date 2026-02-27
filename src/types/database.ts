@@ -332,6 +332,7 @@ export interface Visit {
   conversation_id: string | null;
   is_archived: boolean;
   protocol_pushed_at: string | null;
+  vitals_pushed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -353,6 +354,7 @@ export interface LabReport {
   error_message: string | null;
   parsing_model: string | null;
   parsing_confidence: number | null;
+  source_document_id: string | null;
   created_at: string;
   updated_at: string;
 }

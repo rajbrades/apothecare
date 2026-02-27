@@ -35,7 +35,7 @@ export default async function PatientDetailPage({
       .order("uploaded_at", { ascending: false }),
     supabase
       .from("visits")
-      .select("id, visit_date, visit_type, status, chief_complaint")
+      .select("id, visit_date, visit_type, status, chief_complaint, subjective, assessment")
       .eq("patient_id", id)
       .eq("practitioner_id", practitioner.id)
       .eq("is_archived", false)

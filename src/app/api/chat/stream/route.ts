@@ -7,7 +7,7 @@ import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
-import { extractCitations, resolveCitations, applyCitationLinks } from "@/lib/citations/resolve";
+import { extractCitations, resolveCitations, resolveCitationsMulti, applyCitationLinks } from "@/lib/citations/resolve";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -200,14 +200,20 @@ export async function POST(request: NextRequest) {
             }
           );
 
-          // Resolve citations via CrossRef (best-effort, non-blocking on failure)
+          // Resolve citations via CrossRef + PubMed (best-effort, non-blocking on failure)
           let resolvedContent = fullContent;
           let resolvedCitationsForDB: object[] = [];
           try {
             const citations = extractCitations(fullContent);
             if (citations.length > 0) {
-              const resolvedMap = await resolveCitations(citations);
-              resolvedContent = applyCitationLinks(fullContent, resolvedMap);
+              // Resolve multi-citation (up to 3 per reference)
+              const multiMap = await resolveCitationsMulti(citations);
+
+              // Build single-citation map for inline DOI link replacement
+              const singleMap = new Map(
+                [...multiMap].map(([key, arr]) => [key, arr[0]])
+              );
+              resolvedContent = applyCitationLinks(fullContent, singleMap);
 
               // Send resolved content to client so it can update the message
               controller.enqueue(
@@ -216,23 +222,43 @@ export async function POST(request: NextRequest) {
                 )
               );
 
-              // Send citation metadata for badge rendering (only DOI-resolved citations)
-              const metadataList = [...resolvedMap.values()].filter((r) => r.doi);
-              if (metadataList.length > 0) {
+              // Send multi-citation metadata for badge rendering
+              // Each citation key maps to an array of up to 3 references
+              const metadataByKey: Record<string, object[]> = {};
+              for (const [key, arr] of multiMap) {
+                const withDoi = arr.filter((r) => r.doi);
+                if (withDoi.length > 0) {
+                  metadataByKey[key] = withDoi.map((r) => ({
+                    citationText: r.citationText,
+                    title: r.title,
+                    source: r.source,
+                    authors: r.authors,
+                    year: r.year,
+                    doi: r.doi,
+                    evidenceLevel: r.evidenceLevel,
+                  }));
+                }
+              }
+
+              if (Object.keys(metadataByKey).length > 0) {
                 controller.enqueue(
                   encoder.encode(
-                    `data: ${JSON.stringify({ type: "citation_metadata", citations: metadataList })}\n\n`
+                    `data: ${JSON.stringify({ type: "citation_metadata_multi", citationsByKey: metadataByKey })}\n\n`
                   )
                 );
-                resolvedCitationsForDB = metadataList.map((r) => ({
-                  citationText: r.citationText,
-                  title: r.title,
-                  source: r.source,
-                  authors: r.authors,
-                  year: r.year ? parseInt(r.year) : undefined,
-                  doi: r.doi,
-                  evidence_level: r.evidenceLevel,
-                }));
+
+                // Flatten all citations for DB storage
+                resolvedCitationsForDB = Object.values(metadataByKey)
+                  .flat()
+                  .map((r: any) => ({
+                    citationText: r.citationText,
+                    title: r.title,
+                    source: r.source,
+                    authors: r.authors,
+                    year: r.year ? parseInt(r.year) : undefined,
+                    doi: r.doi,
+                    evidence_level: r.evidenceLevel,
+                  }));
               }
             }
           } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import {
   Plus, X, Pencil, Trash2, Sparkles, Loader2, GitBranch,
   ChevronDown, ChevronUp,
@@ -57,6 +57,7 @@ const CATEGORIES: Record<FMCategory, {
 interface FMTimelineProps {
   patientId: string;
   initialData: FMTimelineData | null;
+  onDataChange?: (data: FMTimelineData) => void;
 }
 
 interface AddingState {
@@ -309,7 +310,7 @@ function AISynthesisPanel({ synthesis }: { synthesis: AISynthesis }) {
 
 // ── Main component ────────────────────────────────────────────────────
 
-export function FMTimeline({ patientId, initialData }: FMTimelineProps) {
+export function FMTimeline({ patientId, initialData, onDataChange }: FMTimelineProps) {
   const [events, setEvents] = useState<FMTimelineEvent[]>(initialData?.events ?? []);
   const [adding, setAdding] = useState<AddingState | null>(null);
   const [editing, setEditing] = useState<EditingState | null>(null);
@@ -318,26 +319,25 @@ export function FMTimeline({ patientId, initialData }: FMTimelineProps) {
   const [analyzing, setAnalyzing] = useState(false);
   const [synthesis, setSynthesis] = useState<AISynthesis | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ── Persist ────────────────────────────────────────────────────────
+  // ── Persist (immediate — no debounce so tab switches don't lose data) ──
 
   const persist = useCallback(async (next: FMTimelineEvent[]) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      setSaving(true);
-      try {
-        await fetch(`/api/patients/${patientId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fm_timeline_data: { events: next } }),
-        });
-        setSavedAt(new Date());
-      } finally {
-        setSaving(false);
-      }
-    }, 600);
-  }, [patientId]);
+    const nextData = { events: next };
+    onDataChange?.(nextData);
+    setSaving(true);
+    try {
+      await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fm_timeline_data: nextData }),
+      });
+      setSavedAt(new Date());
+    } catch {
+      // silently fail — data is at least in parent state
+    } finally {
+      setSaving(false);
+    }
+  }, [patientId, onDataChange]);
 
   // ── CRUD ───────────────────────────────────────────────────────────
 

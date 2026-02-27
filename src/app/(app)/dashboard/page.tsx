@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Dna, Stethoscope, Users } from "lucide-react";
+import { Dna, MessageSquare, Stethoscope, Users } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
-import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
+import { getAuthUser, getPractitioner, getSidebarData } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
+import { CreateVisitButton } from "@/components/visits/create-visit-button";
+import { formatRelativeTime, type ConversationItem } from "@/components/layout/sidebar-conversation";
 
 export default async function DashboardPage() {
   // These calls are deduplicated by React cache() — the parent (app) layout
@@ -28,15 +30,20 @@ export default async function DashboardPage() {
   const isFree = practitioner?.subscription_tier === "free";
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
-  // Fetch patient list for the patient selector
+  // Fetch patient list + recent conversations (deduped via React cache)
   const supabase = await createClient();
-  const { data: patients } = await supabase
-    .from("patients")
-    .select("id, first_name, last_name")
-    .eq("practitioner_id", practitioner.id)
-    .eq("is_archived", false)
-    .order("last_name", { ascending: true })
-    .limit(500);
+  const [{ data: patients }, { recentConversations }] = await Promise.all([
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("last_name", { ascending: true })
+      .limit(500),
+    getSidebarData(practitioner.id),
+  ]);
+
+  const hasConversations = recentConversations.length > 0;
 
   const suggestedQuestions = [
     "What are evidence-based interventions for elevated zonulin and intestinal permeability?",
@@ -73,49 +80,92 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Suggested questions */}
+      {/* Recent conversations or suggested questions */}
       <div className="w-full max-w-2xl space-y-2">
-        {suggestedQuestions.map((q) => (
-          <Link
-            key={q}
-            href={`/chat?q=${encodeURIComponent(q)}`}
-            className="flex items-center justify-between w-full px-5 py-3.5 text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all group"
-          >
-            <span>{q}</span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] transition-colors flex-shrink-0 ml-3"
+        {hasConversations ? (
+          <>
+            <div className="flex items-center gap-2 mb-1 px-1">
+              <MessageSquare className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+                Recent conversations
+              </span>
+            </div>
+            {recentConversations.map((conv: ConversationItem) => (
+              <Link
+                key={conv.id}
+                href={`/chat?id=${conv.id}`}
+                className="flex items-center justify-between w-full px-5 py-3.5 text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all group"
+              >
+                <span className="truncate mr-3">{conv.title || "Untitled conversation"}</span>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    {formatRelativeTime(conv.updated_at)}
+                  </span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] transition-colors"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </>
+        ) : (
+          suggestedQuestions.map((q) => (
+            <Link
+              key={q}
+              href={`/chat?q=${encodeURIComponent(q)}`}
+              className="flex items-center justify-between w-full px-5 py-3.5 text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all group"
             >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </Link>
-        ))}
-
+              <span>{q}</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] transition-colors flex-shrink-0 ml-3"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          ))
+        )}
       </div>
 
       {/* Quick action cards */}
       <div className="flex flex-wrap justify-center gap-4 mt-12">
-        {[
-          { href: "/labs", icon: <Dna className="icon-feature" />, label: "Upload Labs" },
-          { href: "/visits/new", icon: <Stethoscope className="icon-feature" />, label: "Start Visit" },
-          { href: "/patients", icon: <Users className="icon-feature" />, label: "Patients" },
-        ].map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
-          >
-            {action.icon}
-            {action.label}
-          </Link>
-        ))}
+        <Link
+          href="/labs"
+          className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
+        >
+          <Dna className="icon-feature" />
+          Upload Labs
+        </Link>
+        <CreateVisitButton
+          className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
+        >
+          <Stethoscope className="icon-feature" />
+          Start Visit
+        </CreateVisitButton>
+        <Link
+          href="/patients"
+          className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
+        >
+          <Users className="icon-feature" />
+          Patients
+        </Link>
       </div>
     </div>
   );

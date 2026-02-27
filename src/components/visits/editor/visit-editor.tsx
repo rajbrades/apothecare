@@ -27,6 +27,8 @@ interface VisitEditorProps {
   onContentChange?: (json: JSONContent, text: string) => void;
   /** Called when user clicks "Complete Note" from dictation bar */
   onCompleteNote?: () => void;
+  /** Sections from workspace-level AI Scribe — populates editor when set */
+  scribedSections?: Record<string, string> | null;
 }
 
 export function VisitEditor({
@@ -37,6 +39,7 @@ export function VisitEditor({
   disabled,
   onContentChange,
   onCompleteNote,
+  scribedSections,
 }: VisitEditorProps) {
   const isInitialized = useRef(false);
 
@@ -118,6 +121,13 @@ export function VisitEditor({
     },
     [editor, visitType, onContentChange]
   );
+
+  // Populate editor when workspace-level AI Scribe provides sections
+  useEffect(() => {
+    if (scribedSections && editor) {
+      handleScribeComplete(scribedSections);
+    }
+  }, [scribedSections, editor, handleScribeComplete]);
 
   if (!editor) {
     return (

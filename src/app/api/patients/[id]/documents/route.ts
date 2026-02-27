@@ -33,13 +33,16 @@ export async function GET(
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
     // Verify patient ownership
-    const { data: patient } = await supabase
+    const { data: patient, error: patientError } = await supabase
       .from("patients")
       .select("id")
       .eq("id", patientId)
       .eq("practitioner_id", practitioner.id)
       .single();
-    if (!patient) return jsonError("Patient not found", 404);
+    if (patientError || !patient) {
+      console.error("[GET documents] Patient lookup failed:", { patientId, practitionerId: practitioner.id, error: patientError?.message });
+      return jsonError("Patient not found", 404);
+    }
 
     const queryParams = Object.fromEntries(request.nextUrl.searchParams);
     const parsed = documentListQuerySchema.safeParse(queryParams);
@@ -97,6 +100,18 @@ export async function POST(
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
+    // Verify patient ownership before consuming a query credit
+    const { data: patient, error: patientError } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("id", patientId)
+      .eq("practitioner_id", practitioner.id)
+      .single();
+    if (patientError || !patient) {
+      console.error("[POST documents] Patient lookup failed:", { patientId, practitionerId: practitioner.id, error: patientError?.message });
+      return jsonError("Patient not found", 404);
+    }
+
     // Check query limits (AI extraction counts as a query)
     const { data: allowed } = await supabase.rpc(
       "check_and_increment_query",
@@ -109,15 +124,6 @@ export async function POST(
         429
       );
     }
-
-    // Verify patient ownership
-    const { data: patient } = await supabase
-      .from("patients")
-      .select("id")
-      .eq("id", patientId)
-      .eq("practitioner_id", practitioner.id)
-      .single();
-    if (!patient) return jsonError("Patient not found", 404);
 
     // Parse multipart form data
     const formData = await request.formData();

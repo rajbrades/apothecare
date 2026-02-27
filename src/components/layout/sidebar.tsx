@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
+  LayoutDashboard,
   MessageSquare,
   Stethoscope,
   FlaskConical,
@@ -47,7 +48,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/dashboard", icon: MessageSquare, label: "Dashboard" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/visits", icon: Stethoscope, label: "Visits" },
   { href: "/labs", icon: FlaskConical, label: "Labs" },
   { href: "/supplements", icon: Pill, label: "Supplements" },

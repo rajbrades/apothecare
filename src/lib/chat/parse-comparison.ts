@@ -11,11 +11,13 @@ export interface ComparisonSections {
   epilogue: string | null;
 }
 
+// Match both markdown headers (## Title) and bold-text headers (**Title**)
+// AI models sometimes output bold text instead of markdown headers despite prompt instructions
 const HEADING_CONVENTIONAL =
-  /^##\s+conventional\s*(?:approach|perspective|medicine)?\s*$/im;
+  /^(?:##\s+|\*\*\s*)conventional\s*(?:approach|perspective|medicine)?\s*\**\s*$/im;
 const HEADING_FUNCTIONAL =
-  /^##\s+functional\/?(?:\s*integrative)?\s*(?:approach|perspective|medicine)?\s*$/im;
-const HEADING_SYNTHESIS = /^##\s+clinical\s+synthesis\s*$/im;
+  /^(?:##\s+|\*\*\s*)functional\/?(?:\s*integrative)?\s*(?:approach|perspective|medicine)?\s*\**\s*$/im;
+const HEADING_SYNTHESIS = /^(?:##\s+|\*\*\s*)clinical\s+synthesis\s*\**\s*$/im;
 
 interface HeadingMatch {
   key: "conventional" | "functional" | "synthesis";

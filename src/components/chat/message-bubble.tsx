@@ -44,24 +44,44 @@ function StreamingRenderer({ content }: { content: string }) {
 }
 
 function AssistantContent({ message }: { message: ChatMessage }) {
-  // Build citation metadata map keyed by [Author, Year] text
+  // Build multi-citation metadata map keyed by [Author, Year] text
   const citationMap = useMemo(() => {
-    const map = new Map<string, CitationMeta>();
-    for (const c of message.citations ?? []) {
-      if (c.citationText) {
-        map.set(c.citationText, {
-          citationText: c.citationText,
-          title: c.title,
-          authors: c.authors,
-          year: c.year,
-          doi: c.doi,
-          source: c.source,
-          evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
-        });
+    const map = new Map<string, CitationMeta[]>();
+
+    // Prefer citationsByKey (multi-citation, up to 3 per reference)
+    if (message.citationsByKey) {
+      for (const [key, arr] of Object.entries(message.citationsByKey)) {
+        map.set(
+          key,
+          arr.map((c) => ({
+            citationText: c.citationText,
+            title: c.title,
+            authors: c.authors,
+            year: c.year,
+            doi: c.doi,
+            source: c.source,
+            evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+          }))
+        );
+      }
+    } else {
+      // Fallback: legacy single-citation from flat citations array
+      for (const c of message.citations ?? []) {
+        if (c.citationText) {
+          map.set(c.citationText, [{
+            citationText: c.citationText,
+            title: c.title,
+            authors: c.authors,
+            year: c.year,
+            doi: c.doi,
+            source: c.source,
+            evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+          }]);
+        }
       }
     }
     return map;
-  }, [message.citations]);
+  }, [message.citations, message.citationsByKey]);
 
   const comparison = parseComparisonSections(message.content);
 

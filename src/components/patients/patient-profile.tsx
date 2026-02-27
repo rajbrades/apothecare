@@ -1,20 +1,24 @@
  "use client";
 
-import { useState, useCallback, useRef, type KeyboardEvent } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   User, Calendar, FileText, ClipboardList, Grid3x3,
-  Stethoscope, Upload, Loader2, Clock, TrendingUp,
-  Pencil, Check, X, Plus, Archive, ArchiveRestore,
+  Stethoscope, Loader2, Clock, TrendingUp,
+  Archive, ArchiveRestore, ChevronDown, ExternalLink,
   Trash2, AlertTriangle, MoreVertical, GitBranch,
 } from "lucide-react";
+import { toast } from "sonner";
+import { CreateVisitButton } from "@/components/visits/create-visit-button";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
+import { PopulateFromDocsBanner } from "./populate-from-docs";
 import { LabDetailSheet } from "@/components/labs/lab-detail-sheet";
 import { PreChartView } from "./pre-chart-view";
 import { SupplementList } from "./supplement-list";
+import { EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
 import type { Patient, PatientDocument, PatientSupplement, FMTimelineData, FMCategory, FMLifeStage } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 import type { TimelineEvent } from "@/hooks/use-timeline";
@@ -87,6 +91,8 @@ interface VisitItem {
   visit_type: string;
   status: string;
   chief_complaint: string | null;
+  subjective: string | null;
+  assessment: string | null;
 }
 
 export interface LabReportItem {
@@ -130,6 +136,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     initialPatient.fm_timeline_data ?? null
   );
 
+  const [expandedVisitId, setExpandedVisitId] = useState<string | null>(null);
+
   // Archive / Delete state
   const [showMenu, setShowMenu] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -137,8 +145,14 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const [archiving, setArchiving] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const extractedDocCount = documents.filter((d) => d.status === "extracted").length;
+
   const handleFieldSaved = useCallback((field: string, value: unknown) => {
     setPatient((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handlePopulated = useCallback((data: Partial<Patient>) => {
+    setPatient((prev) => ({ ...prev, ...data }));
   }, []);
 
   const handleMatrixUpdate = useCallback(async (matrix: import("@/types/database").IFMMatrix) => {
@@ -243,6 +257,32 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     setDocuments((prev) => prev.filter((d) => d.id !== docId));
   };
 
+  const handleDocumentRenamed = (docId: string, newTitle: string) => {
+    setDocuments((prev) => prev.map((d) => d.id === docId ? { ...d, title: newTitle } : d));
+  };
+
+  const handleParseAsLab = async (docId: string) => {
+    try {
+      const res = await fetch(`/api/patients/${patient.id}/documents/${docId}/parse-as-lab`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to start lab parsing");
+      }
+      const { labReport, existing } = await res.json();
+      if (existing) {
+        toast.info("Lab report already exists — opening results");
+        setSelectedLabId(labReport.id);
+      } else {
+        setLabReports((prev) => [labReport, ...prev]);
+        toast.success("Lab parsing started");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to parse as lab");
+    }
+  };
+
   const handleLabDeleted = (labId: string) => {
     setLabReports((prev) => prev.filter((l) => l.id !== labId));
   };
@@ -310,13 +350,13 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
         <div className="flex items-center gap-2">
           {!patient.is_archived && (
-            <Link
-              href={`/visits/new?patient_id=${patient.id}`}
+            <CreateVisitButton
+              patientId={patient.id}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
             >
               <Stethoscope className="w-3.5 h-3.5" />
               New Visit
-            </Link>
+            </CreateVisitButton>
           )}
 
           {/* Actions menu */}
@@ -411,6 +451,11 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
       <div className="min-h-[400px]">
         {activeTab === "overview" && (
           <div className="space-y-4">
+            <PopulateFromDocsBanner
+              patient={patient}
+              extractedDocCount={extractedDocCount}
+              onPopulated={handlePopulated}
+            />
             <EditableTagSection
               title="Chief Complaints"
               values={patient.chief_complaints}
@@ -455,28 +500,19 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "documents" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-end">
-              <Link
-                href={`/labs?patient_id=${patient.id}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Upload Lab
-              </Link>
-            </div>
-            <div className="space-y-6">
-              <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
-              <DocumentList
-                patientId={patient.id}
-                documents={documents}
-                labReports={labReports}
-                onDeleted={handleDocumentDeleted}
-                onLabDeleted={handleLabDeleted}
-                onLabClick={setSelectedLabId}
-                groupBy
-              />
-            </div>
+          <div className="space-y-6">
+            <DocumentUpload patientId={patient.id} onUploaded={handleDocumentUploaded} />
+            <DocumentList
+              patientId={patient.id}
+              documents={documents}
+              labReports={labReports}
+              onDeleted={handleDocumentDeleted}
+              onRenamed={handleDocumentRenamed}
+              onParseAsLab={handleParseAsLab}
+              onLabDeleted={handleLabDeleted}
+              onLabClick={setSelectedLabId}
+              groupBy
+            />
           </div>
         )}
 
@@ -517,12 +553,20 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "ifm_matrix" && (
-          <IFMMatrixView
-            matrix={patient.ifm_matrix}
-            status="complete"
-            readOnly={false}
-            onUpdate={handleMatrixUpdate}
-          />
+          <div className="space-y-4">
+            <PopulateFromDocsBanner
+              patient={patient}
+              extractedDocCount={extractedDocCount}
+              sectionsFilter={["ifm_matrix"]}
+              onPopulated={handlePopulated}
+            />
+            <IFMMatrixView
+              matrix={patient.ifm_matrix}
+              status="complete"
+              readOnly={false}
+              onUpdate={handleMatrixUpdate}
+            />
+          </div>
         )}
 
         {activeTab === "visits" && (
@@ -532,32 +576,78 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                 No visits linked to this patient
               </p>
             ) : (
-              visits.map((visit) => (
-                <Link
-                  key={visit.id}
-                  href={`/visits/${visit.id}`}
-                  className="flex items-center justify-between p-3 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Stethoscope className="w-4 h-4 text-[var(--color-brand-600)]" />
-                    <div>
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                        {visit.chief_complaint || "Visit"}
-                      </p>
-                      <p className="text-xs text-[var(--color-text-muted)]">
-                        {new Date(visit.visit_date).toLocaleDateString()} &middot; {visit.visit_type === "follow_up" ? "Follow-up" : "SOAP"}
-                      </p>
-                    </div>
+              visits.map((visit) => {
+                const hasSoap = !!(visit.subjective || visit.assessment);
+                const isExpanded = expandedVisitId === visit.id;
+
+                return (
+                  <div
+                    key={visit.id}
+                    className="rounded-[var(--radius-md)] border border-[var(--color-border-light)] overflow-hidden transition-colors"
+                  >
+                    {/* Visit header row */}
+                    <button
+                      onClick={() => {
+                        if (hasSoap) setExpandedVisitId(isExpanded ? null : visit.id);
+                      }}
+                      className={`w-full flex items-center justify-between p-3 text-left transition-colors ${
+                        hasSoap ? "hover:bg-[var(--color-surface-secondary)] cursor-pointer" : "cursor-default"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Stethoscope className="w-4 h-4 text-[var(--color-brand-600)] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                            {visit.chief_complaint || "Visit"}
+                          </p>
+                          <p className="text-xs text-[var(--color-text-muted)]">
+                            {new Date(visit.visit_date).toLocaleDateString()} &middot; {visit.visit_type === "follow_up" ? "Follow-up" : "SOAP"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          visit.status === "completed"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}>
+                          {visit.status === "completed" ? "Completed" : "Draft"}
+                        </span>
+                        {hasSoap && (
+                          <ChevronDown className={`w-3.5 h-3.5 text-[var(--color-text-muted)] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Expanded SOAP summary */}
+                    {isExpanded && hasSoap && (
+                      <div className="px-4 pb-3 pt-0 border-t border-[var(--color-border-light)] bg-[var(--color-surface-secondary)]">
+                        <div className="space-y-2.5 pt-3">
+                          {visit.subjective && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">Subjective</p>
+                              <p className="text-xs text-[var(--color-text-secondary)] line-clamp-3">{visit.subjective}</p>
+                            </div>
+                          )}
+                          {visit.assessment && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">Assessment</p>
+                              <p className="text-xs text-[var(--color-text-secondary)] line-clamp-3">{visit.assessment}</p>
+                            </div>
+                          )}
+                          <Link
+                            href={`/visits/${visit.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors pt-1"
+                          >
+                            Open full note
+                            <ExternalLink className="w-3 h-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    visit.status === "completed"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-amber-50 text-amber-700"
-                  }`}>
-                    {visit.status === "completed" ? "Completed" : "Draft"}
-                  </span>
-                </Link>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -573,6 +663,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
           <FMTimeline
             patientId={patient.id}
             initialData={fmTimelineData}
+            onDataChange={setFmTimelineData}
           />
         )}
       </div>
@@ -719,330 +810,5 @@ function PermanentDeleteDialog({
         </div>
       </div>
     </div>
-  );
-}
-
-// ── Editable Section Primitives ──────────────────────────────────────
-
-function SectionShell({
-  title,
-  isEditing,
-  isSaving,
-  onEdit,
-  onSave,
-  onCancel,
-  children,
-}: {
-  title: string;
-  isEditing: boolean;
-  isSaving: boolean;
-  onEdit: () => void;
-  onSave: () => void;
-  onCancel: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-          {title}
-        </h3>
-        {isEditing ? (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onCancel}
-              disabled={isSaving}
-              className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
-              title="Cancel"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={onSave}
-              disabled={isSaving}
-              className="p-1 rounded-[var(--radius-sm)] text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] transition-colors"
-              title="Save"
-            >
-              {isSaving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Check className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={onEdit}
-            className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
-            title={`Edit ${title.toLowerCase()}`}
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-      <div className="text-[var(--color-text-primary)]">{children}</div>
-    </div>
-  );
-}
-
-function EditableTextSection({
-  title,
-  value,
-  patientId,
-  fieldName,
-  onSaved,
-}: {
-  title: string;
-  value: string | null;
-  patientId: string;
-  fieldName: string;
-  onSaved: (field: string, value: string | null) => void;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
-  const [error, setError] = useState<string | null>(null);
-
-  const handleEdit = () => {
-    setDraft(value ?? "");
-    setError(null);
-    setIsEditing(true);
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setError(null);
-  };
-
-  const handleSave = async () => {
-    const trimmed = draft.trim();
-    const newValue = trimmed || null;
-    if (newValue === value) {
-      setIsEditing(false);
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/patients/${patientId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [fieldName]: newValue }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to save");
-      }
-      onSaved(fieldName, newValue);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <SectionShell
-      title={title}
-      isEditing={isEditing}
-      isSaving={isSaving}
-      onEdit={handleEdit}
-      onSave={handleSave}
-      onCancel={handleCancel}
-    >
-      {isEditing ? (
-        <>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={4}
-            className="w-full text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] p-2 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] resize-y"
-            autoFocus
-          />
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
-        </>
-      ) : value ? (
-        <p className="text-sm whitespace-pre-wrap">{value}</p>
-      ) : (
-        <button
-          onClick={handleEdit}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors flex items-center gap-1"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add {title.toLowerCase()}
-        </button>
-      )}
-    </SectionShell>
-  );
-}
-
-function EditableTagSection({
-  title,
-  values,
-  patientId,
-  fieldName,
-  onSaved,
-  tagColor = "brand",
-}: {
-  title: string;
-  values: string[] | null;
-  patientId: string;
-  fieldName: string;
-  onSaved: (field: string, value: string[] | null) => void;
-  tagColor?: "brand" | "red";
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [draft, setDraft] = useState<string[]>(values ?? []);
-  const [inputValue, setInputValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const colorMap = {
-    brand: { bg: "bg-[var(--color-brand-50)]", text: "text-[var(--color-brand-700)]" },
-    red: { bg: "bg-red-50", text: "text-red-700" },
-  };
-  const colors = colorMap[tagColor];
-
-  const handleEdit = () => {
-    setDraft(values ?? []);
-    setInputValue("");
-    setError(null);
-    setIsEditing(true);
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setError(null);
-  };
-
-  const addTag = () => {
-    const trimmed = inputValue.trim();
-    if (trimmed && !draft.includes(trimmed)) {
-      setDraft((prev) => [...prev, trimmed]);
-    }
-    setInputValue("");
-    inputRef.current?.focus();
-  };
-
-  const removeTag = (tag: string) => {
-    setDraft((prev) => prev.filter((t) => t !== tag));
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
-    }
-    if (e.key === "Backspace" && inputValue === "" && draft.length > 0) {
-      setDraft((prev) => prev.slice(0, -1));
-    }
-  };
-
-  const handleSave = async () => {
-    const newValue = draft.length > 0 ? draft : null;
-    const unchanged =
-      (newValue === null && (values === null || values.length === 0)) ||
-      (newValue !== null && values !== null && JSON.stringify(newValue) === JSON.stringify(values));
-
-    if (unchanged) {
-      setIsEditing(false);
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/patients/${patientId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [fieldName]: newValue }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to save");
-      }
-      onSaved(fieldName, newValue);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <SectionShell
-      title={title}
-      isEditing={isEditing}
-      isSaving={isSaving}
-      onEdit={handleEdit}
-      onSave={handleSave}
-      onCancel={handleCancel}
-    >
-      {isEditing ? (
-        <>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {draft.map((tag) => (
-              <span
-                key={tag}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs ${colors.bg} ${colors.text} rounded-full`}
-              >
-                {tag}
-                <button
-                  onClick={() => removeTag(tag)}
-                  className="hover:opacity-70"
-                  type="button"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={`Add ${title.toLowerCase().replace(/s$/, "")}...`}
-              className="flex-1 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-              autoFocus
-            />
-            <button
-              onClick={addTag}
-              disabled={!inputValue.trim()}
-              className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] transition-colors disabled:opacity-30"
-              type="button"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
-        </>
-      ) : values && values.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {values.map((tag) => (
-            <span
-              key={tag}
-              className={`px-2 py-0.5 text-xs ${colors.bg} ${colors.text} rounded-full`}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <button
-          onClick={handleEdit}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors flex items-center gap-1"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add {title.toLowerCase()}
-        </button>
-      )}
-    </SectionShell>
   );
 }

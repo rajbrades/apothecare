@@ -2,6 +2,30 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.18.0] - 2026-02-26
+
+### Fixed — Chat Citation Relevance & Evidence Level Accuracy
+- **`src/lib/citations/resolve.ts`**: CrossRef results now pass through `isClinicallyRelevant()` two-layer gate (domain blocker + keyword overlap) on all 3 matching passes. Prevents irrelevant papers (e.g., finance/economics articles) from appearing as evidence badges.
+  - Added `subject` and `abstract` to CrossRef API `select` fields for richer relevance checking.
+  - Added `NON_MEDICAL_DOMAINS` blocklist (30+ non-medical academic fields) and `isNonMedicalDomain()` check.
+  - Added `extractClinicalKeywords()` for context-aware keyword extraction.
+  - Increased CrossRef `rows` from 3 to 5 for more matching candidates.
+- **PubMed relevance filtering**: `searchPubMedForCitation()` now checks each PubMed result title/journal against clinical keywords before accepting. Prevents off-topic papers (e.g., "Hypertrophic Scars and Keloids" for stress management context).
+- **PubMed publication types**: Added `pubtype` to `PubMedSummaryResult` interface. PubMed publication type labels (e.g., "Randomized Controlled Trial", "Meta-Analysis") are now passed to `classifyEvidenceLevel()` as the primary classifier, fixing the issue where all badges showed "COHORT".
+- **Improved PubMed search query**: Changed from generic `contextTerms supplementation OR treatment` to `(contextTerms) AND (systematic review[pt] OR meta-analysis[pt] OR randomized controlled trial[pt] OR clinical trial[pt] OR review[pt])`. Falls back to generic query when filtered query returns too few results.
+- **Over-fetching with filtering**: PubMed now fetches `limit * 3` results (minimum 8) to ensure enough remain after relevance filtering.
+
+### Added — Multi-Citation Support in Chat (Up to 3 Badges per Citation)
+- **`src/lib/citations/resolve.ts`**: Added `resolveSingleCitationMulti()` — collects up to 3 relevant matches from CrossRef + PubMed per citation. Added `resolveCitationsMulti()` public API returning `Map<string, CitationResolvedData[]>`.
+- **`src/app/api/chat/stream/route.ts`**: Uses `resolveCitationsMulti()` and sends new `citation_metadata_multi` SSE event with `citationsByKey` record.
+- **`src/lib/chat/citation-meta-context.ts`**: Changed from `Map<string, CitationMeta>` to `Map<string, CitationMeta[]>` for multi-citation support.
+- **`src/hooks/use-chat.ts`**: Added `ChatMessageCitation` interface. Added `citationsByKey?: Record<string, ChatMessageCitation[]>` to `ChatMessage`. Handles `citation_metadata_multi` event.
+- **`src/components/chat/message-bubble.tsx`**: Builds `Map<string, CitationMeta[]>` from `citationsByKey` (preferred) or falls back to legacy `citations` array.
+- **`src/components/chat/markdown-config.tsx`**: Renders `EvidenceBadgeList` for multiple citations or single `EvidenceBadge` for one.
+
+### Changed — Evidence Level Classifier
+- **`src/lib/chat/classify-evidence.ts`**: `classifyEvidenceLevel()` now accepts optional `pubTypes?: string[]` parameter. PubMed publication type matching is the primary classification method (more reliable than title keywords). Expanded title keyword patterns: added "double-blind", "placebo-controlled", "pilot study", "cross-sectional", "longitudinal", "population-based", "position statement", "expert consensus", "umbrella review", "open-label", "pilot trial".
+
 ## [0.17.0] - 2026-02-26
 
 ### Added — 3-Tier Citation Integrity Pipeline

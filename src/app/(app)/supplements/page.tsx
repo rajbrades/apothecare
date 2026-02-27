@@ -3,7 +3,12 @@ import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { SupplementsPageClient } from "@/components/supplements/supplements-page-client";
 
-export default async function SupplementsPage() {
+export default async function SupplementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ patientId?: string }>;
+}) {
+  const { patientId: initialPatientId } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect("/auth/login");
 
@@ -69,6 +74,7 @@ export default async function SupplementsPage() {
       <SupplementsPageClient
         initialReviews={reviews || []}
         patients={mergedPatients}
+        initialPatientId={initialPatientId}
       />
     </div>
   );

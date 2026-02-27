@@ -53,7 +53,7 @@ export const COMPARISON_LENS_ADDENDUM = `
 ## Clinical Lens Override: Dual-Perspective Comparison
 For this query, present BOTH conventional and functional/integrative perspectives in a structured comparison.
 
-Format your response using EXACTLY these three section headers (do not rename or reorder them):
+Format your response using EXACTLY these three markdown level-2 headers with the ## prefix (do not rename, reorder, or use bold **text** instead of ## headers):
 
 ## Conventional Approach
 [Standard-of-care perspective with conventional guidelines, pharmaceutical options, conventional lab ranges]
@@ -62,7 +62,9 @@ Format your response using EXACTLY these three section headers (do not rename or
 [Functional medicine perspective with IFM framework, optimal ranges, nutraceutical protocols]
 
 ## Clinical Synthesis
-[Where the approaches align, where they diverge, and how a practitioner might integrate both]`;
+[Where the approaches align, where they diverge, and how a practitioner might integrate both]
+
+IMPORTANT: Each section MUST start with "## " (markdown header syntax), NOT "**" (bold). This is required for the UI to render the comparison layout correctly.`;
 
 // System prompt for lab interpretation
 export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apothecare's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.

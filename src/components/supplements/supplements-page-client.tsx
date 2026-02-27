@@ -26,6 +26,7 @@ interface ReviewItem {
 interface SupplementsPageClientProps {
   initialReviews: ReviewItem[];
   patients: PatientOption[];
+  initialPatientId?: string;
 }
 
 type Tab = "reviews" | "interactions" | "brands";
@@ -39,9 +40,10 @@ const tabs: { id: Tab; label: string; icon: typeof ClipboardList }[] = [
 export function SupplementsPageClient({
   initialReviews,
   patients,
+  initialPatientId,
 }: SupplementsPageClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>("reviews");
-  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId ?? "");
 
   return (
     <div>

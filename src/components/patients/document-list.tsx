@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, Trash2, RefreshCcw, ExternalLink, Eye, Loader2, FlaskConical } from "lucide-react";
+import { FileText, Trash2, ExternalLink, Eye, Loader2, FlaskConical, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { ExtractionStatusBadge } from "./extraction-status-badge";
 import type { LabReportItem } from "./patient-profile";
@@ -24,6 +24,8 @@ interface DocumentListProps {
   documents: DocumentItem[];
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
+  onRenamed?: (docId: string, newTitle: string) => void;
+  onParseAsLab?: (docId: string) => void;
   onLabDeleted?: (labId: string) => void;
   onLabClick?: (labId: string) => void;
   groupBy?: boolean;
@@ -99,10 +101,11 @@ function buildUnified(documents: DocumentItem[], labReports: LabReportItem[]): U
   });
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted, onLabDeleted, onLabClick, groupBy = false }: DocumentListProps) {
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onRenamed, onParseAsLab, onLabDeleted, onLabClick, groupBy = false }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [reextracting, setReextracting] = useState<string | null>(null);
-  const [docStatuses, setDocStatuses] = useState<Record<string, string>>({});
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
 
   const handleDelete = async (docId: string) => {
     if (!confirm("Delete this document? This cannot be undone.")) return;
@@ -112,6 +115,41 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
       onDeleted(docId);
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const startRename = (doc: DocumentItem) => {
+    setRenamingId(doc.id);
+    setRenameValue(doc.title || doc.file_name);
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue("");
+  };
+
+  const saveRename = async (docId: string) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    setRenameSaving(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}/documents/${docId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Rename failed");
+      }
+      onRenamed?.(docId, trimmed);
+      toast.success("Document renamed");
+      setRenamingId(null);
+      setRenameValue("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Rename failed");
+    } finally {
+      setRenameSaving(false);
     }
   };
 
@@ -127,35 +165,6 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
     } finally {
       setDeleting(null);
     }
-  };
-
-  const handleReextract = async (docId: string) => {
-    setReextracting(docId);
-    setDocStatuses((prev) => ({ ...prev, [docId]: "extracting" }));
-    try {
-      const res = await fetch(`/api/patients/${patientId}/documents/${docId}/extract`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to start re-extraction");
-      toast.success("Re-extraction started");
-      pollStatus(docId);
-    } catch {
-      toast.error("Failed to start re-extraction");
-      setDocStatuses((prev) => ({ ...prev, [docId]: "error" }));
-    } finally {
-      setReextracting(null);
-    }
-  };
-
-  const pollStatus = async (docId: string) => {
-    const poll = async () => {
-      const res = await fetch(`/api/patients/${patientId}/documents/${docId}`);
-      if (!res.ok) return;
-      const { document } = await res.json();
-      setDocStatuses((prev) => ({ ...prev, [docId]: document.status }));
-      if (document.status === "extracting" || document.status === "uploading") {
-        setTimeout(poll, 3000);
-      }
-    };
-    setTimeout(poll, 3000);
   };
 
   const handleViewPdf = async (docId: string) => {
@@ -243,7 +252,6 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
 
         // Regular document
         const doc = item.data;
-        const currentStatus = docStatuses[doc.id] || doc.status;
 
         return (
           <div
@@ -255,18 +263,51 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                 <FileText className="w-4.5 h-4.5 text-[var(--color-text-muted)]" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                  {doc.title || doc.file_name}
-                </p>
+                {renamingId === doc.id ? (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); saveRename(doc.id); }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Escape") cancelRename(); }}
+                      className="flex-1 px-2 py-0.5 text-sm font-medium rounded border border-[var(--color-brand-300)] bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:ring-1 focus:ring-[var(--color-brand-400)]"
+                      disabled={renameSaving}
+                    />
+                    <button
+                      type="submit"
+                      disabled={renameSaving || !renameValue.trim()}
+                      className="p-1 text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] disabled:opacity-50"
+                      title="Save"
+                    >
+                      {renameSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelRename}
+                      disabled={renameSaving}
+                      className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </form>
+                ) : (
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                    {doc.title || doc.file_name}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
                   <span className="capitalize">{formatDocType(doc.document_type)}</span>
                   <span>&middot;</span>
                   <span>{formatFileSize(doc.file_size)}</span>
                   <span>&middot;</span>
                   <span>{new Date(doc.uploaded_at).toLocaleDateString()}</span>
-                  <ExtractionStatusBadge status={currentStatus} />
+                  <ExtractionStatusBadge status={doc.status} />
                 </div>
-                {doc.error_message && currentStatus === "error" && (
+                {doc.error_message && doc.status === "error" && (
                   <p className="text-xs text-red-600 mt-0.5 truncate">{doc.error_message}</p>
                 )}
               </div>
@@ -280,14 +321,20 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
-              {(currentStatus === "error" || currentStatus === "extracted") && (
+              <button
+                onClick={() => startRename(doc)}
+                className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                title="Rename"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              {doc.document_type === "lab_report" && onParseAsLab && (
                 <button
-                  onClick={() => handleReextract(doc.id)}
-                  disabled={reextracting === doc.id}
-                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors disabled:opacity-50"
-                  title="Re-extract"
+                  onClick={() => onParseAsLab(doc.id)}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-emerald-600 transition-colors"
+                  title="Parse biomarkers"
                 >
-                  {reextracting === doc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                  <FlaskConical className="w-3.5 h-3.5" />
                 </button>
               )}
               <button

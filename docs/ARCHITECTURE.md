@@ -206,14 +206,22 @@ Per supplement item (all items run in parallel):
        OR COMPARISON_LENS_ADDENDUM (if lens = "both")
     c. + buildSourceFilterAddendum() (if non-default source selection)
 13. Call AI provider via SSE streaming (standard or advanced model)
-14. Resolve citations via CrossRef DOI lookup (3-pass: strict year+author → relaxed → author-only fallback)
-    Classify evidence level from paper title → classifyEvidenceLevel() in src/lib/chat/classify-evidence.ts
-15. Send citation_metadata SSE event (title, authors, year, journal, DOI, evidenceLevel) for DOI-resolved only
-16. Save user message + assistant response (resolved citations); messages.citations JSONB populated
+14. Resolve citations via resolveCitationsMulti() — up to 3 references per citation:
+    a. CrossRef 3-pass matching (strict → relaxed → author-only) with relevance gate:
+       - Layer 1: NON_MEDICAL_DOMAINS blocklist rejects non-clinical papers
+       - Layer 2: keyword overlap verifies context match against title/abstract/subjects
+    b. PubMed search fills remaining slots (up to 3 total per citation):
+       - Prefers systematic reviews, meta-analyses, RCTs via publication type filter
+       - Relevance filtering checks PubMed titles against clinical keywords
+       - PubMed publication types drive evidence level classification
+    c. classifyEvidenceLevel(title, pubTypes) in src/lib/chat/classify-evidence.ts
+15. Send citation_metadata_multi SSE event (citationsByKey: Record<string, CitationMeta[]>)
+16. Save user message + assistant response; messages.citations JSONB populated
 17. Insert audit_log entry (action: 'query', ip_address, user_agent,
     clinical_lens, source_filter, attachment_count)
 18. Stream response tokens to client via Server-Sent Events
-19. Client: hook handles citation_metadata → CitationMetaContext → inline EvidenceBadge on resolved links
+19. Client: hook handles citation_metadata_multi → citationsByKey on ChatMessage
+    → CitationMetaContext (Map<string, CitationMeta[]>) → EvidenceBadge or EvidenceBadgeList
 ```
 
 ### Visit Generation Flow (Current Implementation)
@@ -529,7 +537,7 @@ src/
 │       ├── protocol-panel.tsx      # Protocol recommendations panel
 │       └── export-menu.tsx         # Visit export options
 ├── hooks/
-│   ├── use-chat.ts                 # SSE streaming hook (chat)
+│   ├── use-chat.ts                 # SSE streaming hook (chat + citation_metadata_multi handler)
 │   ├── use-editor-dictation.ts     # Dictation + AI Scribe → editor bridge
 │   ├── use-audio-recorder.ts       # MediaRecorder wrapper
 │   ├── use-speech-recognition.ts   # Web Speech API wrapper
@@ -543,11 +551,12 @@ src/
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
 │   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
 │   ├── chat/
-│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext React context
-│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title) — paper title → EvidenceLevel classifier
+│   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext (Map<string, CitationMeta[]>)
+│   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title, pubTypes?) — PubMed pub types + title keywords → EvidenceLevel
+│   │   ├── process-citations.ts    # processCitations() — citation text preprocessing
 │   │   └── parse-comparison.ts     # parseComparisonSections() — "Both" lens response parser
 │   ├── citations/
-│   │   ├── resolve.ts              # CrossRef DOI resolution (3-pass) for chat citations
+│   │   ├── resolve.ts              # CrossRef + PubMed multi-citation resolution (3-pass + relevance gate + up to 3 per citation)
 │   │   └── validate-supplement.ts  # 3-tier citation pipeline (CrossRef + PubMed + curated DB) for supplement reviews
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
 │   │   ├── supplement-prompts.ts   # Supplement review + interaction check prompts

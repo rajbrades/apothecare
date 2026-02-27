@@ -8,7 +8,7 @@ import type { Components } from "react-markdown";
 import type { PluggableList } from "unified";
 import type { ReactNode } from "react";
 import { CitationMetaContext } from "@/lib/chat/citation-meta-context";
-import { EvidenceBadge } from "@/components/chat/evidence-badge";
+import { EvidenceBadge, EvidenceBadgeList } from "@/components/chat/evidence-badge";
 import type { EvidenceLevel } from "@/components/chat/evidence-badge";
 
 export const markdownRehypePlugins: PluggableList = [
@@ -43,25 +43,31 @@ function CitationLink({
 }) {
   const citationMap = useContext(CitationMetaContext);
   const citationText = flattenChildren(children);
-  const meta = citationMap.get(citationText);
+  const metaArr = citationMap.get(citationText);
 
   const isCitation =
     href?.includes("doi.org/") ||
     href?.includes("scholar.google.com/scholar");
 
-  if (isCitation && meta?.evidenceLevel) {
-    return (
-      <EvidenceBadge
-        citation={{
-          level: meta.evidenceLevel as EvidenceLevel,
-          title: meta.title,
-          authors: meta.authors,
-          year: meta.year,
-          source: meta.source,
-          doi: meta.doi,
-        }}
-      />
-    );
+  if (isCitation && metaArr && metaArr.length > 0) {
+    // Multiple citations → render badge list (up to 3)
+    const badges = metaArr
+      .filter((m) => m.evidenceLevel)
+      .map((m) => ({
+        level: m.evidenceLevel as EvidenceLevel,
+        title: m.title,
+        authors: m.authors,
+        year: m.year,
+        source: m.source,
+        doi: m.doi,
+      }));
+
+    if (badges.length > 1) {
+      return <EvidenceBadgeList citations={badges} />;
+    }
+    if (badges.length === 1) {
+      return <EvidenceBadge citation={badges[0]} />;
+    }
   }
 
   // Plain citation (Scholar fallback, no metadata) or regular link

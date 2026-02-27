@@ -9,6 +9,7 @@ export type RateLimitAction =
   | "visit_transcribe"
   | "lab_upload"
   | "doc_extract"
+  | "doc_populate"
   | "supplement_review"
   | "interaction_check";
 
@@ -26,6 +27,7 @@ const RATE_LIMITS: Record<RateLimitAction, RateLimitConfig> = {
   visit_transcribe: { free: 10,  pro: 200, window: "1 day" },
   lab_upload:       { free: 3,   pro: 50,  window: "1 day" },
   doc_extract:      { free: 10,  pro: 100, window: "1 day" },
+  doc_populate:     { free: 10,  pro: 100, window: "1 day" },
   supplement_review:{ free: 5,   pro: 50,  window: "1 day" },
   interaction_check:{ free: 10,  pro: 100, window: "1 day" },
 };

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, type KeyboardEvent } from "react";
+import Link from "next/link";
 import {
-  Pill, Plus, Pencil, Check, X, Loader2, Trash2,
+  Pill, Plus, Pencil, Check, X, Loader2, Trash2, FlaskConical,
 } from "lucide-react";
 import type { PatientSupplement } from "@/types/database";
 
@@ -387,15 +388,27 @@ export function SupplementList({ patientId, initialSupplements }: SupplementList
         <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
           Current Supplements
         </h3>
-        {!isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
-            title="Add supplement"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {supplements.length > 0 && (
+            <Link
+              href={`/supplements?patientId=${patientId}`}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)] rounded-[var(--radius-sm)] transition-colors"
+              title="Review supplements with AI"
+            >
+              <FlaskConical className="w-3 h-3" />
+              Review
+            </Link>
+          )}
+          {!isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              title="Add supplement"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="text-[var(--color-text-primary)]">

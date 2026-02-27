@@ -1,12 +1,14 @@
 /**
- * Server-side citation resolution via the CrossRef API.
+ * Server-side citation resolution via CrossRef + PubMed.
  *
  * After the AI finishes streaming, we extract [Author, Year] citations,
  * query CrossRef to resolve each to a DOI, and replace the plain citations
  * with markdown links pointing to https://doi.org/{DOI}.
  *
- * Enriched metadata (title, authors, journal, evidence level) is returned
- * alongside each resolved URL for client-side badge rendering.
+ * Each citation is enriched with up to 3 verified references (CrossRef +
+ * PubMed search), with relevance checking to prevent off-topic matches.
+ * Metadata (title, authors, journal, evidence level) is returned for
+ * client-side badge rendering.
  */
 
 import { classifyEvidenceLevel } from "@/lib/chat/classify-evidence";
@@ -50,6 +52,8 @@ interface CrossRefItem {
   title?: string[];
   author?: Array<{ family?: string; given?: string }>;
   "container-title"?: string[];
+  subject?: string[];
+  abstract?: string;
   published?: { "date-parts"?: number[][] };
   "published-print"?: { "date-parts"?: number[][] };
   "published-online"?: { "date-parts"?: number[][] };
@@ -182,6 +186,276 @@ function extractContextKeywords(context: string, author: string): string {
   return unique.slice(0, 5).join(" ");
 }
 
+// ── Relevance checking ─────────────────────────────────────────────────────
+
+/**
+ * Non-medical academic domains. Papers from these fields are almost certainly
+ * irrelevant to clinical citations and should be rejected immediately.
+ */
+const NON_MEDICAL_DOMAINS = new Set([
+  "economics", "finance", "financial", "accounting", "banking",
+  "physics", "astrophysics", "astronomy", "cosmology",
+  "mathematics", "algebra", "geometry", "topology",
+  "engineering", "mechanical", "electrical", "civil",
+  "computer science", "artificial intelligence", "machine learning",
+  "law", "legal", "jurisprudence", "criminology",
+  "political science", "politics", "international relations",
+  "sociology", "anthropology", "archaeology",
+  "linguistics", "literature", "philosophy",
+  "education", "pedagogy", "library science",
+  "business", "management", "marketing", "operations research",
+  "agriculture", "agronomy", "forestry",
+  "geology", "geophysics", "meteorology", "oceanography",
+  "art", "music", "theater", "film",
+  "history", "religion", "theology",
+]);
+
+/**
+ * Check if a CrossRef item is from a non-medical domain.
+ * Uses both the journal name (container-title) and CrossRef subject tags.
+ */
+function isNonMedicalDomain(item: CrossRefItem): boolean {
+  const journal = (item["container-title"]?.[0] || "").toLowerCase();
+  const subjects = (item.subject || []).join(" ").toLowerCase();
+  const corpus = `${journal} ${subjects}`;
+
+  for (const domain of NON_MEDICAL_DOMAINS) {
+    if (corpus.includes(domain)) return true;
+  }
+  return false;
+}
+
+/**
+ * Extract clinical/medical keywords from the citation context.
+ * These are used to verify that a CrossRef result is topically relevant.
+ */
+function extractClinicalKeywords(context: string): string[] {
+  const cleaned = context.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ");
+
+  // Generic stop words that carry no clinical meaning
+  const stopWords = new Set([
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "has", "have", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "can", "this", "that", "these", "those",
+    "it", "its", "they", "their", "them", "we", "our", "you", "your",
+    "he", "she", "his", "her", "also", "such", "than", "more", "most",
+    "not", "no", "nor", "so", "as", "if", "then", "else", "when",
+    "which", "who", "whom", "what", "how", "all", "each", "every",
+    "both", "few", "many", "some", "any", "other", "new", "old",
+    "et", "al", "shown", "found", "study", "studies", "research",
+    "demonstrated", "reported", "suggests", "according", "based",
+    "including", "however", "therefore", "although", "while", "between",
+    "approach", "perspective", "used", "use", "using", "level", "levels",
+    "high", "low", "increase", "decrease", "associated", "effect", "effects",
+    "conventional", "functional", "integrative", "evidence", "clinical",
+    "treatment", "therapy", "consider", "considering", "important",
+    "recommended", "recommendation", "help", "support", "role",
+  ]);
+
+  return cleaned
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !stopWords.has(w))
+    .map((w) => w.replace(/[^a-z0-9-]/g, ""))
+    .filter((w) => w.length > 2);
+}
+
+/**
+ * Check if a CrossRef result is clinically relevant to the citation context.
+ *
+ * Two-layer check:
+ *   1. Domain blocker: reject papers from non-medical fields (economics, etc.)
+ *   2. Keyword overlap: at least one clinical keyword from the context must
+ *      appear in the paper's title, abstract, subjects, or journal name
+ */
+function isClinicallyRelevant(
+  item: CrossRefItem,
+  contextKeywords: string[]
+): boolean {
+  // Layer 1: reject non-medical domains outright
+  if (isNonMedicalDomain(item)) return false;
+
+  // Layer 2: check keyword overlap
+  const title = (item.title?.[0] || "").toLowerCase();
+  const abstract = stripJatsXml(item.abstract || "").toLowerCase();
+  const subjects = (item.subject || []).join(" ").toLowerCase();
+  const journal = (item["container-title"]?.[0] || "").toLowerCase();
+  const corpus = `${title} ${abstract} ${subjects} ${journal}`;
+
+  // At least one context keyword must appear in the paper's corpus
+  return contextKeywords.some((kw) => corpus.includes(kw));
+}
+
+/** Strip JATS XML tags from CrossRef abstracts */
+function stripJatsXml(text: string): string {
+  return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// ── PubMed search (fills remaining citation slots) ─────────────────────────
+
+const PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
+const PUBMED_SUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi";
+
+interface PubMedSummaryResult {
+  uid: string;
+  title: string;
+  authors: Array<{ name: string }>;
+  source: string;
+  pubdate: string;
+  articleids: Array<{ idtype: string; value: string }>;
+  /** PubMed publication types, e.g. ["Randomized Controlled Trial", "Journal Article"] */
+  pubtype?: string[];
+}
+
+/**
+ * Check if a PubMed article title is clinically relevant to the citation context.
+ * Uses the same keyword extraction approach as CrossRef relevance checking.
+ */
+function isPubMedResultRelevant(
+  articleTitle: string,
+  journalName: string,
+  clinicalKeywords: string[]
+): boolean {
+  if (clinicalKeywords.length === 0) return true; // No keywords = accept all
+  const corpus = `${articleTitle} ${journalName}`.toLowerCase();
+  return clinicalKeywords.some((kw) => corpus.includes(kw));
+}
+
+/**
+ * Search PubMed for papers matching the clinical context of a citation.
+ * Returns up to `limit` relevant results as CitationResolvedData.
+ *
+ * Uses PubMed publication types for accurate evidence level classification
+ * and filters results for clinical relevance before returning.
+ */
+async function searchPubMedForCitation(
+  citationText: string,
+  context: string,
+  limit: number = 2
+): Promise<CitationResolvedData[]> {
+  try {
+    // Build a focused search query from the clinical context
+    const contextTerms = context
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 3)
+      .filter((w) => !PUBMED_STOP_WORDS.has(w))
+      .slice(0, 4)
+      .join(" ");
+
+    if (!contextTerms) return [];
+
+    // Prefer higher-evidence study types in PubMed search
+    const query = `(${contextTerms}) AND (systematic review[pt] OR meta-analysis[pt] OR randomized controlled trial[pt] OR clinical trial[pt] OR review[pt])`;
+
+    // Fetch more results than needed so we have enough after relevance filtering
+    const fetchCount = Math.max(limit * 3, 8);
+
+    const searchUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai`;
+
+    const searchRes = await fetch(searchUrl, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!searchRes.ok) return [];
+
+    const searchData = await searchRes.json();
+    let pmids: string[] = searchData.esearchresult?.idlist || [];
+
+    // If the filtered query returned too few results, retry without type filter
+    if (pmids.length < 2) {
+      const fallbackQuery = `${contextTerms} supplementation OR treatment`;
+      const fallbackUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(fallbackQuery)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai`;
+      const fallbackRes = await fetch(fallbackUrl, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      if (fallbackRes.ok) {
+        const fallbackData = await fallbackRes.json();
+        const fallbackPmids: string[] = fallbackData.esearchresult?.idlist || [];
+        // Merge, keeping originals first
+        const seen = new Set(pmids);
+        for (const id of fallbackPmids) {
+          if (!seen.has(id)) {
+            pmids.push(id);
+            seen.add(id);
+          }
+        }
+      }
+    }
+
+    if (pmids.length === 0) return [];
+
+    const summaryUrl = `${PUBMED_SUMMARY}?db=pubmed&id=${pmids.join(",")}&retmode=json&tool=apothecare&email=support@apothecare.ai`;
+
+    const summaryRes = await fetch(summaryUrl, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!summaryRes.ok) return [];
+
+    const summaryData = await summaryRes.json();
+    const results: CitationResolvedData[] = [];
+
+    // Extract clinical keywords for relevance filtering
+    const clinicalKeywords = extractClinicalKeywords(context);
+
+    for (const pmid of pmids) {
+      if (results.length >= limit) break;
+
+      const article: PubMedSummaryResult = summaryData.result?.[pmid];
+      if (!article?.title) continue;
+
+      const title = article.title.replace(/\.$/, "");
+      const journalName = article.source || "";
+
+      // Relevance check: reject PubMed results that don't match clinical context
+      if (!isPubMedResultRelevant(title, journalName, clinicalKeywords)) {
+        continue;
+      }
+
+      const doiEntry = article.articleids?.find((a) => a.idtype === "doi");
+      const url = doiEntry?.value
+        ? `https://doi.org/${doiEntry.value}`
+        : `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
+
+      const yearMatch = article.pubdate?.match(/\d{4}/);
+
+      // Pass PubMed publication types to classifier for accurate evidence levels
+      const pubTypes = article.pubtype || [];
+
+      results.push({
+        citationText,
+        url,
+        doi: doiEntry?.value,
+        title,
+        authors: article.authors?.map((a) => a.name).slice(0, 3),
+        year: yearMatch?.[0],
+        source: journalName || undefined,
+        evidenceLevel: classifyEvidenceLevel(title, pubTypes),
+      });
+    }
+
+    return results;
+  } catch (err) {
+    console.warn(`[Citations] PubMed search failed for "${citationText}":`, err);
+    return [];
+  }
+}
+
+const PUBMED_STOP_WORDS = new Set([
+  "the", "and", "for", "with", "that", "this", "from", "have", "been",
+  "will", "would", "could", "should", "which", "their", "there", "about",
+  "also", "more", "other", "than", "into", "some", "only", "when",
+  "where", "after", "before", "between", "each", "every", "these",
+  "those", "over", "under", "such", "very", "most", "just",
+  "approach", "perspective", "conventional", "functional", "integrative",
+  "evidence", "clinical", "shown", "studies", "study", "research",
+  "demonstrated", "reported", "suggests", "based", "including",
+  "however", "therefore", "although", "while", "used", "using",
+  "support", "help", "role", "important", "consider",
+]);
+
 /** Format a CrossRef author object as "Family G" */
 function formatAuthor(a: { family?: string; given?: string }): string {
   const family = a.family || "";
@@ -221,15 +495,32 @@ function buildResolvedData(
 async function resolveSingleCitation(
   citation: ExtractedCitation
 ): Promise<CitationResolvedData> {
+  const results = await resolveSingleCitationMulti(citation);
+  return results[0]; // Primary result (CrossRef match or Scholar fallback)
+}
+
+/**
+ * Query CrossRef + PubMed for a single citation and return up to 3
+ * enriched results. The primary CrossRef match is used for the inline
+ * DOI link; additional PubMed results provide supplementary evidence badges.
+ */
+async function resolveSingleCitationMulti(
+  citation: ExtractedCitation
+): Promise<CitationResolvedData[]> {
   const { text, context, author, year } = citation;
   const keywords = extractContextKeywords(context, author);
+  const clinicalKeywords = extractClinicalKeywords(context);
 
-  // Build CrossRef query — include container-title for journal name
+  const results: CitationResolvedData[] = [];
+  const seenDois = new Set<string>();
+
+  // ── CrossRef resolution ──────────────────────────────────────────────
+
   const params = new URLSearchParams({
     "query.author": author,
     "query.bibliographic": [year, keywords].filter(Boolean).join(" "),
-    rows: "3",
-    select: "DOI,title,author,published,published-print,published-online,container-title",
+    rows: "5",
+    select: "DOI,title,author,published,published-print,published-online,container-title,subject,abstract",
   });
 
   const url = `${CROSSREF_BASE}?${params.toString()}`;
@@ -255,18 +546,27 @@ async function resolveSingleCitation(
     const data: CrossRefResponse = await response.json();
     const items = data.message?.items || [];
 
-    // Pass 1 — strict: exact author family name + year matches
+    // Collect ALL relevant matches across all 3 passes (up to 3)
+    const addIfRelevant = (item: CrossRefItem) => {
+      if (results.length >= 3) return;
+      if (seenDois.has(item.DOI)) return;
+      if (!isClinicallyRelevant(item, clinicalKeywords)) return;
+      seenDois.add(item.DOI);
+      results.push(buildResolvedData(text, item));
+    };
+
+    // Pass 1 — strict: exact author family name + year
     for (const item of items) {
       const itemYear = getPublicationYear(item);
       const authorMatch = item.author?.some(
         (a) => a.family?.toLowerCase() === author.toLowerCase()
       );
       if (authorMatch && itemYear === year) {
-        return buildResolvedData(text, item);
+        addIfRelevant(item);
       }
     }
 
-    // Pass 2 — relaxed: partial author name + year matches
+    // Pass 2 — relaxed: partial author name + year
     for (const item of items) {
       const itemYear = getPublicationYear(item);
       const authorPresent = item.author?.some((a) =>
@@ -274,36 +574,57 @@ async function resolveSingleCitation(
         author.toLowerCase().includes(a.family?.toLowerCase() || "")
       );
       if (authorPresent && itemYear === year) {
-        return buildResolvedData(text, item);
+        addIfRelevant(item);
       }
     }
 
-    // Pass 3 — best-effort: author match without year requirement.
-    // Handles cases where the AI cited the wrong year (e.g. "2013" for a 2018 paper).
-    // CrossRef already filtered by author + context keywords, so the first author
-    // match is the most topically relevant paper by that author.
+    // Pass 3 — best-effort: author match without year requirement
     for (const item of items) {
       const authorMatch = item.author?.some(
         (a) => a.family?.toLowerCase() === author.toLowerCase()
       );
       if (authorMatch && item.DOI) {
-        return buildResolvedData(text, item);
+        addIfRelevant(item);
       }
     }
+
+    if (results.length === 0 && items.length > 0) {
+      const topTitle = items[0]?.title?.[0] || "unknown";
+      console.warn(
+        `[Citations] All ${items.length} CrossRef results for "${text}" failed relevance check. Top result: "${topTitle}"`
+      );
+    }
   } catch (err) {
-    // Log but don't throw — fall back to Scholar
     console.warn(
       `[Citations] CrossRef lookup failed for "${text}":`,
       err instanceof Error ? err.message : err
     );
   }
 
-  // Fallback: Google Scholar with context keywords for better results
-  const scholarQuery = [author, year, keywords].filter(Boolean).join(" ");
-  return {
-    citationText: text,
-    url: `https://scholar.google.com/scholar?q=${encodeURIComponent(scholarQuery)}`,
-  };
+  // ── PubMed search to fill remaining slots ────────────────────────────
+
+  const remaining = 3 - results.length;
+  if (remaining > 0) {
+    const pubmedResults = await searchPubMedForCitation(text, context, remaining + 1);
+    for (const pm of pubmedResults) {
+      if (results.length >= 3) break;
+      if (pm.doi && seenDois.has(pm.doi)) continue;
+      if (pm.doi) seenDois.add(pm.doi);
+      results.push(pm);
+    }
+  }
+
+  // ── Fallback ─────────────────────────────────────────────────────────
+
+  if (results.length === 0) {
+    const scholarQuery = [author, year, keywords].filter(Boolean).join(" ");
+    results.push({
+      citationText: text,
+      url: `https://scholar.google.com/scholar?q=${encodeURIComponent(scholarQuery)}`,
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -322,21 +643,41 @@ function getPublicationYear(item: CrossRefItem): string {
 
 /**
  * Resolve all citations in a text via CrossRef.
- * Returns a map from citation text to full resolved data (URL + metadata).
+ * Returns a map from citation text to the primary resolved data (URL + metadata).
+ * Used by applyCitationLinks() for inline DOI link replacement.
  */
 export async function resolveCitations(
   citations: ExtractedCitation[]
 ): Promise<Map<string, CitationResolvedData>> {
   if (citations.length === 0) return new Map();
 
+  const multiMap = await resolveCitationsMulti(citations);
+  const resolved = new Map<string, CitationResolvedData>();
+  for (const [key, arr] of multiMap) {
+    if (arr.length > 0) resolved.set(key, arr[0]);
+  }
+  return resolved;
+}
+
+/**
+ * Resolve all citations with up to 3 references each (CrossRef + PubMed).
+ * Returns a map from citation text to an array of resolved data.
+ * The first item is the primary match (used for inline DOI links);
+ * additional items provide supplementary evidence badges.
+ */
+export async function resolveCitationsMulti(
+  citations: ExtractedCitation[]
+): Promise<Map<string, CitationResolvedData[]>> {
+  if (citations.length === 0) return new Map();
+
   const results = await Promise.allSettled(
-    citations.map((c) => resolveSingleCitation(c))
+    citations.map((c) => resolveSingleCitationMulti(c))
   );
 
-  const resolved = new Map<string, CitationResolvedData>();
+  const resolved = new Map<string, CitationResolvedData[]>();
   for (const result of results) {
-    if (result.status === "fulfilled") {
-      resolved.set(result.value.citationText, result.value);
+    if (result.status === "fulfilled" && result.value.length > 0) {
+      resolved.set(result.value[0].citationText, result.value);
     }
   }
 

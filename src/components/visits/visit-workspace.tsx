@@ -7,6 +7,7 @@ import {
   Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
   Grid3x3, Pill, HeartPulse, UserCheck, Trash2, Activity,
+  Mic, Square, Play, Pause,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -33,10 +34,17 @@ import { ProtocolPanel } from "./protocol-panel";
 import { VitalsPanel } from "./vitals-panel";
 import { ExportMenu } from "./export-menu";
 import { useVisitStream } from "@/hooks/use-visit-stream";
+import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import type { Visit, VisitType, IFMMatrix, VitalsData, HealthRatings } from "@/types/database";
 import type { JSONContent } from "@tiptap/react";
 
 type Tab = "soap" | "ifm" | "protocol" | "intake";
+
+interface PatientOption {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}
 
 interface VisitWorkspaceProps {
   visit: Visit & {
@@ -44,8 +52,17 @@ interface VisitWorkspaceProps {
       id: string;
       first_name: string | null;
       last_name: string | null;
+      date_of_birth: string | null;
+      sex: string | null;
+      chief_complaints: string[] | null;
+      medical_history: string | null;
+      current_medications: string | null;
+      supplements: string | null;
+      allergies: string[] | null;
+      notes: string | null;
     } | null;
   };
+  patients?: PatientOption[];
 }
 
 const VISIT_TYPE_LABELS: Record<string, string> = {
@@ -71,7 +88,13 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
+function formatRecorderDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWorkspaceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoGenerate = searchParams.get("generate") === "true";
@@ -100,6 +123,62 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
 
   const VisitIcon = VISIT_TYPE_ICONS[visit.visit_type] || Stethoscope;
   const isFollowUp = visit.visit_type === "follow_up";
+
+  // Detect fresh/new visit — editable type + patient selectors
+  const isFreshVisit = !visit.raw_notes && !visit.subjective && !visit.objective && !visit.assessment && !visit.plan && !visit.template_content;
+  const [updatingVisitType, setUpdatingVisitType] = useState(false);
+  const [updatingPatient, setUpdatingPatient] = useState(false);
+
+  const handleVisitTypeChange = useCallback(async (newType: string) => {
+    setUpdatingVisitType(true);
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visit_type: newType }),
+      });
+      if (res.ok) {
+        setVisit((prev) => ({ ...prev, visit_type: newType as VisitType }));
+      }
+    } catch {
+      toast.error("Failed to update visit type");
+    }
+    setUpdatingVisitType(false);
+  }, [visit.id]);
+
+  const handlePatientChange = useCallback(async (patientId: string) => {
+    setUpdatingPatient(true);
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patientId || null }),
+      });
+      if (res.ok) {
+        const selected = patients.find((p) => p.id === patientId);
+        setVisit((prev) => ({
+          ...prev,
+          patient_id: patientId || null,
+          patients: selected ? {
+            id: selected.id,
+            first_name: selected.first_name,
+            last_name: selected.last_name,
+            date_of_birth: null,
+            sex: null,
+            chief_complaints: null,
+            medical_history: null,
+            current_medications: null,
+            supplements: null,
+            allergies: null,
+            notes: null,
+          } : null,
+        }));
+      }
+    } catch {
+      toast.error("Failed to update patient");
+    }
+    setUpdatingPatient(false);
+  }, [visit.id, patients]);
 
   // Auto-generate on mount if redirected from new visit with notes
   useEffect(() => {
@@ -156,6 +235,94 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
   // Push visit to patient timeline state
   const [pushingToRecord, setPushingToRecord] = useState(false);
   const [pushedToRecord, setPushedToRecord] = useState<"idle" | "pushed" | "already">( "idle");
+
+  // Push vitals to patient chart state
+  const [pushingVitals, setPushingVitals] = useState(false);
+  const [vitalsPushedAt, setVitalsPushedAt] = useState<string | null>(
+    visit.vitals_pushed_at || null
+  );
+
+  // --- Encounter Recorder (workspace-level AI Scribe) ---
+  const encounterRecorder = useAudioRecorder({
+    maxDuration: 3600, // 60 min for full encounters
+    onError: (err) => toast.error(err),
+  });
+  const [scribeStatus, setScribeStatus] = useState<"idle" | "transcribing" | "assigning" | "done" | "error">("idle");
+  const [scribedSections, setScribedSections] = useState<Record<string, string> | null>(null);
+  const [isPlayingEncounter, setIsPlayingEncounter] = useState(false);
+  const [encounterAudioEl, setEncounterAudioEl] = useState<HTMLAudioElement | null>(null);
+
+  const isScribing = scribeStatus === "transcribing" || scribeStatus === "assigning";
+
+  const handleEncounterPlayPause = useCallback(() => {
+    if (!encounterRecorder.audioUrl) return;
+    if (encounterAudioEl && isPlayingEncounter) {
+      encounterAudioEl.pause();
+      setIsPlayingEncounter(false);
+      return;
+    }
+    const audio = new Audio(encounterRecorder.audioUrl);
+    audio.onended = () => setIsPlayingEncounter(false);
+    audio.play();
+    setEncounterAudioEl(audio);
+    setIsPlayingEncounter(true);
+  }, [encounterRecorder.audioUrl, encounterAudioEl, isPlayingEncounter]);
+
+  const handleEncounterScribe = useCallback(async () => {
+    if (!encounterRecorder.audioBlob) return;
+
+    setScribeStatus("transcribing");
+    try {
+      // Step 1: Transcribe audio via Whisper
+      const formData = new FormData();
+      formData.append("audio", encounterRecorder.audioBlob, "recording.webm");
+
+      const transcribeRes = await fetch(`/api/visits/${visit.id}/transcribe`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!transcribeRes.ok) {
+        const data = await transcribeRes.json().catch(() => ({}));
+        throw new Error(data.error || "Transcription failed");
+      }
+      const { transcript } = await transcribeRes.json();
+
+      // Step 2: Assign transcript to note sections via AI Scribe
+      setScribeStatus("assigning");
+      const scribeRes = await fetch(`/api/visits/${visit.id}/scribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript }),
+      });
+      if (!scribeRes.ok) {
+        const data = await scribeRes.json().catch(() => ({}));
+        throw new Error(data.error || "Section assignment failed");
+      }
+      const { sections } = await scribeRes.json();
+
+      // Pass sections to VisitEditor for population
+      setScribedSections(sections);
+      setScribeStatus("done");
+      setShowNotes(true);
+      encounterRecorder.clear();
+      toast.success("Encounter processed — review your note sections below");
+
+      // Reset done status after delay
+      setTimeout(() => setScribeStatus("idle"), 4000);
+    } catch (err) {
+      setScribeStatus("error");
+      toast.error(err instanceof Error ? err.message : "AI Scribe failed");
+      setTimeout(() => setScribeStatus("idle"), 4000);
+    }
+  }, [encounterRecorder.audioBlob, encounterRecorder.clear, visit.id]);
+
+  const handleEncounterDiscard = useCallback(() => {
+    if (encounterAudioEl) {
+      encounterAudioEl.pause();
+      setIsPlayingEncounter(false);
+    }
+    encounterRecorder.clear();
+  }, [encounterAudioEl, encounterRecorder]);
 
   // Generate from block editor content
   const handleGenerate = useCallback(() => {
@@ -274,6 +441,39 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
       setPushingToRecord(false);
     }
   }, [visit.id, visit.patients?.id]);
+
+  const handlePushVitalsToChart = useCallback(async () => {
+    if (!visit.patients?.id) return;
+    setPushingVitals(true);
+    try {
+      const res = await fetch(`/api/visits/${visit.id}/push-vitals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to push vitals");
+      }
+      const { already_existed } = await res.json();
+      setVitalsPushedAt(new Date().toISOString());
+      toast.success(
+        already_existed
+          ? "Patient chart updated with latest vitals"
+          : "Vitals & health ratings pushed to patient chart"
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to push vitals");
+    } finally {
+      setPushingVitals(false);
+    }
+  }, [visit.id, visit.patients?.id]);
+
+  const handlePatientFieldSaved = useCallback((field: string, value: unknown) => {
+    setVisit((prev) => ({
+      ...prev,
+      patients: prev.patients ? { ...prev.patients, [field]: value } : prev.patients,
+    }));
+  }, []);
 
   const handlePushToPatientMatrix = useCallback(async () => {
     if (!visit.patients?.id) return;
@@ -406,13 +606,43 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
                   <Calendar className="w-3 h-3" />
                   {formatDate(visit.visit_date)}
                 </span>
-                {patientName && (
-                  <span className="inline-flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    {patientName}
-                  </span>
+                {isFreshVisit ? (
+                  <>
+                    <select
+                      value={visit.visit_type}
+                      onChange={(e) => handleVisitTypeChange(e.target.value)}
+                      disabled={updatingVisitType}
+                      className="text-xs font-medium bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50"
+                    >
+                      {Object.entries(VISIT_TYPE_LABELS).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={visit.patient_id || ""}
+                      onChange={(e) => handlePatientChange(e.target.value)}
+                      disabled={updatingPatient}
+                      className="text-xs font-medium bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50 max-w-[180px]"
+                    >
+                      <option value="">No patient</option>
+                      {patients.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {[p.last_name, p.first_name].filter(Boolean).join(", ") || "Unnamed"}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    {patientName && (
+                      <span className="inline-flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {patientName}
+                      </span>
+                    )}
+                    <span>{VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"}</span>
+                  </>
                 )}
-                <span>{VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"}</span>
                 {saving && (
                   <span className="text-[var(--color-brand-500)]">Saving...</span>
                 )}
@@ -469,6 +699,121 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
         </div>
       </div>
 
+      {/* Encounter Recorder — prominent card for recording the full encounter */}
+      {!isReadOnly && encounterRecorder.isSupported && (
+        <div className="mb-6 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-surface-secondary)] overflow-hidden">
+          {/* Recording idle — show prominent CTA or compact re-record bar */}
+          {!encounterRecorder.isRecording && !encounterRecorder.audioBlob && !isScribing && scribeStatus !== "done" && (
+            visit.subjective ? (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mic className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  <span className="text-xs text-[var(--color-text-secondary)]">
+                    Re-record encounter to regenerate note
+                  </span>
+                </div>
+                <button
+                  onClick={encounterRecorder.start}
+                  disabled={stream.isGenerating}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
+                >
+                  <span className="w-2 h-2 bg-red-400 rounded-full" />
+                  Re-record
+                </button>
+              </div>
+            ) : (
+              <div className="px-6 py-6 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Mic className="w-5 h-5 text-[var(--color-brand-600)]" />
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Record Encounter</h3>
+                </div>
+                <p className="text-xs text-[var(--color-text-muted)] mb-5 max-w-md mx-auto">
+                  Record your patient encounter and AI will generate a structured clinical note from the conversation.
+                </p>
+                <button
+                  onClick={encounterRecorder.start}
+                  disabled={stream.isGenerating}
+                  className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-500)] transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="w-3 h-3 bg-red-400 rounded-full" />
+                  Record Encounter
+                </button>
+              </div>
+            )
+          )}
+
+          {/* Recording in progress */}
+          {encounterRecorder.isRecording && (
+            <div className="px-6 py-6 text-center">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-red-600">Recording encounter</span>
+                <span className="text-sm font-[var(--font-mono)] text-[var(--color-text-secondary)]">
+                  {formatRecorderDuration(encounterRecorder.durationSeconds)}
+                </span>
+              </div>
+              <button
+                onClick={encounterRecorder.stop}
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-full hover:bg-red-100 transition-colors"
+              >
+                <Square className="w-3.5 h-3.5 fill-current" />
+                Stop Recording
+              </button>
+            </div>
+          )}
+
+          {/* Recording complete — process or discard */}
+          {encounterRecorder.audioBlob && !encounterRecorder.isRecording && !isScribing && scribeStatus !== "done" && (
+            <div className="px-6 py-5 flex items-center justify-center gap-3">
+              <span className="text-sm text-[var(--color-text-secondary)] font-[var(--font-mono)]">
+                {formatRecorderDuration(encounterRecorder.durationSeconds)}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)]">recorded</span>
+              <span className="w-px h-5 bg-[var(--color-border-light)]" />
+              <button
+                onClick={handleEncounterPlayPause}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full hover:bg-[var(--color-surface-tertiary)] transition-colors"
+              >
+                {isPlayingEncounter ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {isPlayingEncounter ? "Pause" : "Play"}
+              </button>
+              <button
+                onClick={handleEncounterScribe}
+                className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-[var(--color-brand-600)] rounded-full hover:bg-[var(--color-brand-500)] transition-all shadow-sm"
+              >
+                <Sparkles className="w-4 h-4" />
+                Process with AI Scribe
+              </button>
+              <button
+                onClick={handleEncounterDiscard}
+                className="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors"
+                title="Discard recording"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Processing — transcribing or assigning */}
+          {isScribing && (
+            <div className="px-6 py-5 flex items-center justify-center gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-[var(--color-brand-600)]" />
+              <span className="text-sm font-medium text-[var(--color-brand-600)]">
+                {scribeStatus === "transcribing" ? "Transcribing audio..." : "Assigning to note sections..."}
+              </span>
+            </div>
+          )}
+
+          {/* Done */}
+          {scribeStatus === "done" && (
+            <div className="px-6 py-4 flex items-center justify-center gap-2 text-sm font-medium text-emerald-600">
+              <Check className="w-4 h-4" />
+              Note sections populated — review below
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Notes input (collapsible) */}
       {!isReadOnly && (
         <div className="mb-6">
@@ -489,6 +834,7 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
                   disabled={stream.isGenerating}
                   onContentChange={handleEditorContentChange}
                   onCompleteNote={handleGenerate}
+                  scribedSections={scribedSections}
                 />
               ) : (
                 <RawNotesInput
@@ -568,6 +914,19 @@ export function VisitWorkspace({ visit: initialVisit }: VisitWorkspaceProps) {
             initialVitals={(visit.vitals_data as VitalsData) ?? null}
             initialRatings={(visit.health_ratings as HealthRatings) ?? null}
             readOnly={isReadOnly}
+            patientId={visit.patients?.id}
+            patient={visit.patients ? {
+              id: visit.patients.id,
+              chief_complaints: visit.patients.chief_complaints,
+              medical_history: visit.patients.medical_history,
+              current_medications: visit.patients.current_medications,
+              allergies: visit.patients.allergies,
+              notes: visit.patients.notes,
+            } : null}
+            onPatientFieldSaved={handlePatientFieldSaved}
+            onPushToChart={handlePushVitalsToChart}
+            pushingToChart={pushingVitals}
+            vitalsPushedAt={vitalsPushedAt}
           />
         )}
         {activeTab === "soap" && (

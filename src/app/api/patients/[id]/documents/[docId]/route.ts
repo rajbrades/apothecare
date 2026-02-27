@@ -63,6 +63,59 @@ export async function GET(
   }
 }
 
+// ── PATCH /api/patients/[id]/documents/[docId] — Rename document ─────────
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; docId: string }> }
+) {
+  try {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
+    const { id: patientId, docId } = await params;
+    const supabase = await createClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return jsonError("Unauthorized", 401);
+
+    const { data: practitioner } = await supabase
+      .from("practitioners")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+    if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    const body = await request.json();
+    const title = typeof body.title === "string" ? body.title.trim() : null;
+    if (!title) return jsonError("Title is required", 400);
+    if (title.length > 255) return jsonError("Title must be 255 characters or fewer", 400);
+
+    const { data: document, error } = await supabase
+      .from("patient_documents")
+      .update({ title })
+      .eq("id", docId)
+      .eq("patient_id", patientId)
+      .eq("practitioner_id", practitioner.id)
+      .select("id, title")
+      .single();
+
+    if (error || !document) return jsonError("Document not found", 404);
+
+    auditLog({
+      request,
+      practitionerId: practitioner.id,
+      action: "update",
+      resourceType: "patient_document",
+      resourceId: docId,
+      detail: { patient_id: patientId, title },
+    });
+
+    return NextResponse.json({ document });
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
+
 // ── DELETE /api/patients/[id]/documents/[docId] — Delete document ────────
 export async function DELETE(
   request: NextRequest,

@@ -66,8 +66,8 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Upload failed (${res.status})`);
       }
 
       const { document } = await res.json();

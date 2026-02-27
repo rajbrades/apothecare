@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Plus, Stethoscope } from "lucide-react";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { VisitListClient } from "@/components/visits/visit-list-client";
+import { CreateVisitButton } from "@/components/visits/create-visit-button";
 
 export default async function VisitsPage({
   searchParams,
@@ -45,13 +45,12 @@ export default async function VisitsPage({
             AI-assisted clinical documentation with SOAP notes and IFM mapping
           </p>
         </div>
-        <Link
-          href="/visits/new"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
+        <CreateVisitButton
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
         >
           <Plus className="w-4 h-4" />
           New Visit
-        </Link>
+        </CreateVisitButton>
       </div>
 
       {/* Visit list or empty state */}
@@ -69,13 +68,12 @@ export default async function VisitsPage({
             Start documenting patient visits with AI-assisted SOAP notes,
             IFM Matrix mapping, and evidence-based protocol recommendations.
           </p>
-          <Link
-            href="/visits/new"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
+          <CreateVisitButton
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             Start First Visit
-          </Link>
+          </CreateVisitButton>
         </div>
       )}
     </div>

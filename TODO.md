@@ -324,6 +324,15 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Fix:** AI prompt hardened — removed `evidence_title` field from schema, added strict DOI accuracy instructions ("omit entirely if unsure")
 - [x] **Fix:** Fake citations — DOI links no longer point to irrelevant papers (e.g., bone fracture article for thyroid supplements)
 
+## Sprint 17 — Chat Citation Relevance & Multi-Citation Badges (Feb 26) ✅ COMPLETE
+
+- [x] **Fix:** CrossRef relevance gate — all 3 matching passes now check `isClinicallyRelevant()` (domain blocker + keyword overlap). Prevents economics/finance/physics papers from appearing as evidence badges.
+- [x] **Fix:** PubMed relevance filtering — `searchPubMedForCitation()` checks result titles against clinical keywords. Prevents off-topic papers (e.g., dermatology study for gut health context).
+- [x] **Fix:** Evidence level classification — `classifyEvidenceLevel()` now accepts PubMed publication types as primary classifier. Fixes all-COHORT badge issue by using actual PubMed study type labels.
+- [x] **Fix:** PubMed search query — prioritizes systematic reviews, meta-analyses, and RCTs via publication type filter. Falls back to generic query when filtered results are sparse.
+- [x] **Feature:** Multi-citation support in chat — up to 3 evidence badges per `[Author, Year]` citation. Full stack: `resolveCitationsMulti()` → `citation_metadata_multi` SSE event → `citationsByKey` on `ChatMessage` → `EvidenceBadgeList` rendering.
+- [x] **Feature:** `CitationMetaContext` changed to `Map<string, CitationMeta[]>` for multi-citation support.
+
 ---
 
 ## Lab & Biomarker Enhancements

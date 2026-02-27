@@ -20,7 +20,9 @@ export interface CitationMeta {
  *
  * Keyed by citation text (e.g. "Sinha, 2013") so the markdown `a` component
  * can look up metadata from the anchor's child text.
+ *
+ * Each key maps to an array of up to 3 CitationMeta objects (CrossRef + PubMed).
  */
-export const CitationMetaContext = createContext<Map<string, CitationMeta>>(
+export const CitationMetaContext = createContext<Map<string, CitationMeta[]>>(
   new Map()
 );

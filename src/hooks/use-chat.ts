@@ -5,20 +5,25 @@ import type { ChatAttachment } from "@/types/database";
 
 const HISTORY_PAGE_SIZE = 50;
 
+export interface ChatMessageCitation {
+  /** The [Author, Year] key used to look up metadata during rendering */
+  citationText: string;
+  source?: string;
+  title: string;
+  authors?: string[];
+  year?: number;
+  doi?: string;
+  evidence_level?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  citations?: Array<{
-    /** The [Author, Year] key used to look up metadata during rendering */
-    citationText: string;
-    source?: string;
-    title: string;
-    authors?: string[];
-    year?: number;
-    doi?: string;
-    evidence_level?: string;
-  }>;
+  /** Flat list of all citations (for DB storage / backward compat) */
+  citations?: ChatMessageCitation[];
+  /** Multi-citation map: citation text → array of up to 3 references */
+  citationsByKey?: Record<string, ChatMessageCitation[]>;
   attachments?: ChatAttachment[];
   isStreaming?: boolean;
   created_at?: string;
@@ -168,7 +173,7 @@ export function useChat(options: UseChatOptions = {}) {
                   break;
 
                 case "citation_metadata":
-                  // Store enriched citation metadata for evidence badge rendering
+                  // Legacy single-citation metadata (backward compat)
                   setMessages((prev) => {
                     const updated = [...prev];
                     const last = updated[updated.length - 1];
@@ -197,6 +202,52 @@ export function useChat(options: UseChatOptions = {}) {
                     return updated;
                   });
                   break;
+
+                case "citation_metadata_multi": {
+                  // Multi-citation metadata: up to 3 references per citation key
+                  const raw = event.citationsByKey as Record<string, Array<{
+                    citationText: string;
+                    title?: string;
+                    source?: string;
+                    authors?: string[];
+                    year?: string;
+                    doi?: string;
+                    evidenceLevel?: string;
+                  }>>;
+
+                  const parsed: Record<string, ChatMessageCitation[]> = {};
+                  const flatList: ChatMessageCitation[] = [];
+
+                  for (const [key, arr] of Object.entries(raw)) {
+                    parsed[key] = arr.map((c) => {
+                      const mapped = {
+                        citationText: c.citationText,
+                        title: c.title || "",
+                        source: c.source,
+                        authors: c.authors,
+                        year: c.year ? parseInt(c.year) : undefined,
+                        doi: c.doi,
+                        evidence_level: c.evidenceLevel,
+                      };
+                      flatList.push(mapped);
+                      return mapped;
+                    });
+                  }
+
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        citations: flatList,
+                        citationsByKey: parsed,
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
+                }
 
                 case "message_complete":
                   setMessages((prev) => {

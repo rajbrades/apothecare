@@ -144,7 +144,7 @@ export function LabDetailSheet({ labId, patientId, patientName, onClose, onOpenT
       <div className="flex-1 bg-black/25" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="w-[500px] max-w-[90vw] bg-[var(--color-surface)] shadow-2xl flex flex-col h-full overflow-hidden border-l border-[var(--color-border-light)]">
+      <div className="w-[500px] max-w-[90vw] bg-[var(--color-surface)] flex flex-col h-full overflow-hidden border-l border-[var(--color-border-light)]">
 
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[var(--color-border-light)] shrink-0 gap-3">
@@ -162,13 +162,14 @@ export function LabDetailSheet({ labId, patientId, patientName, onClose, onOpenT
               </p>
             )}
           </div>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <Link
               href={fullReportHref}
-              title="Open full report"
-              className="p-1.5 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)] rounded-[var(--radius-md)] transition-colors"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3 h-3" />
+              Full report
             </Link>
             <button
               onClick={onClose}
@@ -328,6 +329,7 @@ export function LabDetailSheet({ labId, patientId, patientName, onClose, onOpenT
         <div className="px-5 py-3 border-t border-[var(--color-border-light)] shrink-0">
           <Link
             href={fullReportHref}
+            target="_blank"
             className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors inline-flex items-center gap-1"
           >
             <ExternalLink className="w-3 h-3" />
