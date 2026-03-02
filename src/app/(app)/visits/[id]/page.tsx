@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { VisitWorkspace } from "@/components/visits/visit-workspace";
+import type { VitalsData, HealthRatings } from "@/types/database";
 
 export default async function VisitDetailPage({
   params,
@@ -34,5 +35,39 @@ export default async function VisitDetailPage({
 
   if (error || !visit) notFound();
 
-  return <VisitWorkspace visit={visit} patients={patients || []} />;
+  // Fetch most recent prior visit with vitals for carry-forward
+  let previousVitalsContext: {
+    vitals: VitalsData | null;
+    ratings: HealthRatings | null;
+    date: string;
+  } | null = null;
+
+  if (visit.patient_id) {
+    const { data: priorVisits } = await supabase
+      .from("visits")
+      .select("visit_date, vitals_data, health_ratings")
+      .eq("patient_id", visit.patient_id)
+      .eq("practitioner_id", practitioner.id)
+      .neq("id", id)
+      .or("vitals_data.not.is.null,health_ratings.not.is.null")
+      .order("visit_date", { ascending: false })
+      .limit(1);
+
+    if (priorVisits && priorVisits.length > 0) {
+      const row = priorVisits[0];
+      previousVitalsContext = {
+        vitals: (row.vitals_data as VitalsData) ?? null,
+        ratings: (row.health_ratings as HealthRatings) ?? null,
+        date: row.visit_date,
+      };
+    }
+  }
+
+  return (
+    <VisitWorkspace
+      visit={visit}
+      patients={patients || []}
+      previousVitalsContext={previousVitalsContext}
+    />
+  );
 }

@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** February 26, 2026
+**Last updated:** March 2, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -53,12 +53,18 @@ src/
 │   │   │   ├── [id]/page.tsx       # Patient detail (8 tabs: overview, documents, trends, prechart, ifm_matrix, visits, timeline, fm_timeline)
 │   │   │   ├── new/page.tsx        # New patient form
 │   │   │   └── page.tsx            # Patient list
+│   │   ├── conversations/
+│   │   │   └── page.tsx            # Conversation history (search, filter, pagination)
+│   │   ├── settings/
+│   │   │   └── page.tsx            # Settings page (5 sections: profile, credentials, preferences, subscription, account)
 │   │   ├── visits/
 │   │   │   ├── [id]/page.tsx       # Visit workspace (editor + AI generation)
 │   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
 │   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/
+│   │   ├── conversations/
+│   │   │   └── route.ts            # GET list conversations (search, filter, cursor pagination)
 │   │   ├── chat/
 │   │   │   ├── history/route.ts    # GET conversation messages + pagination
 │   │   │   ├── route.ts            # DEPRECATED (410)
@@ -73,8 +79,12 @@ src/
 │   │   │   │   ├── documents/
 │   │   │   │   │   ├── [docId]/
 │   │   │   │   │   │   ├── extract/route.ts  # POST re-trigger extraction
-│   │   │   │   │   │   └── route.ts          # GET/DELETE document
+│   │   │   │   │   │   ├── parse-as-lab/route.ts # POST create lab report from document
+│   │   │   │   │   │   ├── retry/route.ts   # POST retry failed document extraction
+│   │   │   │   │   │   └── route.ts          # GET/PATCH/DELETE document (rename, delete, type change)
 │   │   │   │   │   └── route.ts              # GET list / POST upload
+│   │   │   │   ├── populate-from-docs/
+│   │   │   │   │   └── route.ts              # POST AI populate patient fields from extracted docs
 │   │   │   │   ├── fm-timeline/
 │   │   │   │   │   ├── analyze/route.ts      # POST AI root cause analysis
 │   │   │   │   │   └── events/route.ts       # POST push event to FM Timeline
@@ -102,14 +112,21 @@ src/
 │   │       ├── [id]/
 │   │       │   ├── export/route.ts     # POST export visit
 │   │       │   ├── generate/route.ts   # POST SSE SOAP/IFM/Protocol generation
+│   │       │   ├── push-vitals/route.ts # POST push vitals to patient chart
 │   │       │   ├── scribe/route.ts     # POST AI Scribe (transcript → sections)
 │   │       │   ├── transcribe/route.ts # POST audio → Whisper transcription
 │   │       │   └── route.ts            # GET/PATCH visit
 │   │       └── route.ts                # GET list / POST create
+│   │   ├── auth/
+│   │   │   ├── change-password/route.ts  # POST change password (email auth only)
+│   │   │   └── delete-account/route.ts   # POST cascade delete + auth delete
+│   │   ├── practitioners/
+│   │   │   ├── evidence-sources/route.ts # PUT save default evidence sources
+│   │   │   └── profile/route.ts          # PATCH update practitioner profile
 │   ├── auth/
 │   │   ├── callback/route.ts       # OAuth/email callback
 │   │   ├── login/page.tsx          # Login with forgot password
-│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
+│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding (imports from shared constants)
 │   │   └── register/page.tsx       # Registration
 │   ├── globals.css                 # Design system + CSS variables
 │   ├── layout.tsx                  # Root layout (fonts via <link>)
@@ -133,16 +150,27 @@ src/
 │   │   ├── lab-report-detail.tsx   # Lab detail with biomarkers + PDF viewer
 │   │   ├── lab-status-badge.tsx    # Lab status indicator
 │   │   └── lab-upload.tsx          # Lab upload form with drag-and-drop
+│   ├── conversations/
+│   │   └── conversation-list-client.tsx # Searchable conversation list (filter tabs, inline actions, pagination)
 │   ├── layout/
-│   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner
+│   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner + "View all →" links
 │   │   └── sidebar-conversation.tsx # Conversation list management
+│   ├── settings/
+│   │   ├── settings-page.tsx       # Client layout — left nav + section cards
+│   │   ├── profile-section.tsx     # Name + avatar display
+│   │   ├── preferences-section.tsx # Evidence sources, brands, note template
+│   │   ├── subscription-section.tsx # Plan badge, usage stats, upgrade CTA
+│   │   └── account-section.tsx     # Password change, delete account
 │   ├── patients/
-│   │   ├── document-list.tsx       # Unified document + lab report list
-│   │   ├── document-upload.tsx     # Document upload form
+│   │   ├── document-detail-sheet.tsx # Document detail drawer (500px, extraction summary, structured data, retry)
+│   │   ├── document-list.tsx       # Unified document + lab report list (rename, delete, parse-as-lab, clickable rows, processing banner)
+│   │   ├── document-upload.tsx     # Document upload form (pending file UX, auto-upload on type select)
 │   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
+│   │   ├── populate-from-docs.tsx  # AI populate banner + dialog (checkbox per section)
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
-│   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: overview, documents, trends, prechart, ifm_matrix, visits, timeline, fm_timeline)
+│   │   ├── patient-profile.tsx     # Patient detail view (8 tabs) + document detail drawer + document type change
+│   │   ├── vitals-snapshot.tsx    # Vitals + health ratings compact card with sparklines (Recharts)
 │   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM, Add Event, Resolve
 │   │   ├── add-symptom-log-form.tsx  # Inline form for logging symptom events
 │   │   ├── add-milestone-form.tsx    # Inline form for adding protocol milestones
@@ -154,7 +182,9 @@ src/
 │   │   └── pre-chart-view.tsx      # Pre-encounter patient summary
 │   ├── ui/
 │   │   ├── button.tsx              # Reusable button component (variants)
+│   │   ├── confirm-dialog.tsx      # Confirmation dialog (z-60 layering)
 │   │   ├── dropdown-menu.tsx       # Radix UI dropdown menu
+│   │   ├── editable-sections.tsx   # Reusable editable section components
 │   │   ├── input.tsx               # Reusable input component
 │   │   ├── label.tsx               # Reusable label component
 │   │   ├── logomark.tsx            # SVG logomark
@@ -162,13 +192,15 @@ src/
 │   │   └── sonner.tsx              # Toast notifications
 │   └── visits/
 │       ├── audio-recorder.tsx      # Audio recording component
+│       ├── create-visit-button.tsx # Reusable create visit button
 │       ├── editor/
 │       │   ├── dictation-bar.tsx       # Dictation + AI Scribe controls
 │       │   ├── editor-toolbar.tsx      # Bold, italic, lists toolbar
 │       │   ├── template-section-node.tsx # Collapsible section NodeView
 │       │   └── visit-editor.tsx        # Main Tiptap editor wrapper
 │       ├── ifm-node-modal.tsx      # IFM Matrix node editing modal
-│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs
+│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs + compact recorder when SOAP exists
+│       ├── vitals-panel.tsx        # Vitals input/display with chart support
 │       ├── new-visit-form.tsx      # Patient + encounter type selector
 │       ├── voice-input.tsx         # Voice input component
 │       ├── soap-sections.tsx       # SOAP note display tabs
@@ -188,6 +220,7 @@ src/
 ├── lib/
 │   ├── ai/
 │   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
+│   │   ├── populate-prompts.ts     # AI prompts for populate-from-docs (medical history, notes, IFM matrix)
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
 │   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
 │   │   ├── scribe-prompts.ts       # AI Scribe section assignment prompt
@@ -228,6 +261,8 @@ src/
 │   │   ├── client.ts               # Browser client
 │   │   ├── middleware.ts           # Auth middleware + route protection
 │   │   └── server.ts              # Server client + standalone service client
+│   ├── constants/
+│   │   └── practitioner.ts        # Shared LICENSE_OPTIONS, US_STATES, SPECIALTY_OPTIONS, validateNpi (extracted from onboarding)
 │   ├── utils.ts                    # cn() — Tailwind class merging utility
 │   └── validations/
 │       ├── chat.ts                 # Chat API schemas
@@ -240,6 +275,8 @@ src/
 │       ├── protocol-milestone.ts   # Protocol milestone create/update schemas
 │       ├── patient-report.ts       # Patient report create/update schemas (report_type enum)
 │       ├── ai-insight.ts           # AI insight create/update schemas (insight_type, confidence enums)
+│       ├── conversation.ts         # Conversation list query schema (search, filter, cursor, limit)
+│       ├── settings.ts             # Settings page schemas (profile update, password change, delete account)
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -261,7 +298,7 @@ src/
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migrations:** 20 applied (see "Database Migrations" section below).
+**Migrations:** 23 applied (see "Database Migrations" section below).
 
 ---
 
@@ -539,6 +576,61 @@ src/
 6. ✅ Multi-citation chat badges: up to 3 evidence badges per `[Author, Year]` citation via `resolveCitationsMulti()` → `citation_metadata_multi` SSE event → `citationsByKey` on `ChatMessage` → `EvidenceBadgeList` rendering
 7. ✅ `CitationMetaContext` changed from `Map<string, CitationMeta>` to `Map<string, CitationMeta[]>` for multi-citation support
 
+### Sprint 18 — Document Management, AI Populate, Visit UX (Feb 27, 2026)
+
+1. ✅ Document rename/delete — PATCH/DELETE on `/api/patients/[id]/documents/[docId]`
+2. ✅ Parse as Lab — create lab report from uploaded document, reusing storage file (`source_document_id` FK)
+3. ✅ AI Populate from Documents — hybrid aggregation + AI synthesis for patient overview fields from extracted docs
+4. ✅ Populate-from-docs dialog — per-section checkboxes, empty fields pre-checked, "has content" warnings
+5. ✅ 3 AI prompts for populate: medical history narrative, clinical notes synthesis, IFM matrix mapping
+6. ✅ Compact recorder card — when SOAP exists, shows slim "Re-record encounter" bar instead of full CTA
+7. ✅ Expandable SOAP summaries on Visits tab — `subjective` + `assessment` fields fetched, expandable cards with truncated previews
+8. ✅ Lab detail sheet UX — removed drawer shadow, prominent "Full report" pill button (opens in new tab)
+9. ✅ Vitals push endpoint — `POST /api/visits/[id]/push-vitals` with enhanced vitals panel
+10. ✅ Create visit button component — reusable across patient profile and visit list
+11. ✅ Editable sections component — `src/components/ui/editable-sections.tsx`
+12. ✅ Confirm dialog z-index fix — proper layering with z-50 sidebar
+13. ✅ Migrations 021 (vitals_pushed_at) + 022 (lab_source_document_id) applied
+
+### Sprint 20 — Document UX, Settings Page, Sidebar Polish (Mar 2, 2026)
+
+**Document Management UX:**
+1. ✅ Document detail drawer — 500px right-side `DocumentDetailSheet` with extraction summary, structured data, full text, and retry button for failed extractions
+2. ✅ Document retry extraction API — `POST /api/patients/[id]/documents/[docId]/retry` with CSRF + auth + audit logging
+3. ✅ Pending file upload UX — file stored as `pendingFile`, auto-uploads when type is selected. Amber banner + pulsing type selector.
+4. ✅ Document type change — PATCH endpoint expanded for `document_type` with validation. ChevronDown icon makes type look clickable.
+5. ✅ Processing feedback banner — shown when items are in uploading/extracting/queued/parsing states
+6. ✅ Clickable document rows with `stopPropagation` on nested interactive elements
+7. ✅ Parse-as-lab now removes source document from list to prevent duplicates
+
+**Settings Page (5 Sections):**
+8. ✅ Profile — name editing, avatar display, email read-only
+9. ✅ Practice & Credentials — license type, NPI (Luhn), specialties, practice name
+10. ✅ Clinical Preferences — evidence sources, brand formulary, strict mode, note template
+11. ✅ Subscription & Usage — plan badge, query/lab counts, upgrade/manage CTA
+12. ✅ Account & Security — change password (email auth only), delete account with type-to-confirm
+13. ✅ 3 new API routes: `PATCH /api/practitioners/profile`, `POST /api/auth/change-password`, `POST /api/auth/delete-account`
+14. ✅ Shared constants extracted from onboarding into `src/lib/constants/practitioner.ts`
+15. ✅ `getFullPractitioner()` cached query for settings page
+
+**Sidebar Polish:**
+16. ✅ Settings gear icon → `<Link href="/settings">`
+17. ✅ "View all →" links for Conversations, Favorites, and Visits sections
+18. ✅ Visits bumped from 3 to 5 displayed items
+19. ✅ Sidebar refreshes after visit deletion via `revalidatePath("/(app)", "layout")`
+
+### Sprint 21 — Conversation History Page (Mar 2, 2026)
+
+1. ✅ Conversation history page (`/conversations`) — searchable list of all past conversations
+2. ✅ Active/Archived/Favorites filter tabs with pill-style toggle
+3. ✅ Debounced title search (300ms) via `ilike`
+4. ✅ Conversation cards with title, relative time, linked patient name, favorite star
+5. ✅ Inline actions — rename, favorite/unfavorite, archive/unarchive, delete with confirmation
+6. ✅ Cursor-based "Load More" pagination (20 per page)
+7. ✅ `GET /api/conversations` API with search, filter, cursor pagination, audit logging
+8. ✅ `conversationListQuerySchema` Zod validation
+9. ✅ Sidebar "View all →" link updated from `/chat` to `/conversations`
+
 ### Landing → App Transition (Feb 24, 2026)
 
 1. ✅ Functional hero input — landing page search input is now typeable (was readOnly); on submit, redirects to `/auth/register?next=/chat?q=<encoded_query>`
@@ -558,10 +650,10 @@ src/
 - [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table
+- [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
 
 ### Homepage Design Fixes (from Playwright audit Feb 18)
 - [ ] Move chat product mockup into hero viewport — no visual anchor above fold
-- [ ] Reduce section vertical padding by ~35%
 - [ ] Add dark/teal CTA break section before pricing
 - [ ] Show rich AI response (with citations + badges) in demo chat mockup
 
@@ -571,6 +663,8 @@ src/
 - Analytics (PostHog or Mixpanel)
 - Accessibility audit (WCAG 2.1 AA)
 - Evidence ingestion pipeline (PubMed, IFM, A4M for RAG knowledge base)
+- Patient Education Studio (NotebookLM-style audio + slides)
+- Practice Analytics Dashboard
 
 ---
 
@@ -616,7 +710,7 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 
 ## Database Migrations
 
-20 migrations must be applied in order in Supabase SQL Editor:
+23 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
@@ -638,6 +732,9 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 18. `018_fm_timeline.sql` — patients.fm_timeline_data JSONB column for FM Health Timeline (ATM framework)
 19. `019_timeline_event_producers.sql` — 4 producer tables (symptom_logs, protocol_milestones, patient_reports, ai_insights) + auto-insert triggers
 20. `020_supplement_evidence.sql` — Curated supplement evidence table with pg_trgm fuzzy search, 17 seed citations, RLS read-only for authenticated users
+21. `021_vitals_pushed_at.sql` — `visits.vitals_pushed_at TIMESTAMPTZ` for tracking when vitals were pushed to patient chart
+22. `022_lab_source_document.sql` — `lab_reports.source_document_id UUID` FK to `patient_documents(id)` for parse-as-lab linking
+23. `023_patient_recommendations.sql` — `dietary_recommendations`, `lifestyle_recommendations`, `follow_up_labs` JSONB columns on patients
 
 ## Known Issues / Gotchas
 

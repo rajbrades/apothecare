@@ -9,6 +9,7 @@ import {
   Stethoscope, Loader2, Clock, TrendingUp,
   Archive, ArchiveRestore, ChevronDown, ExternalLink,
   Trash2, AlertTriangle, MoreVertical, GitBranch,
+  Salad, HeartPulse, FlaskConical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
@@ -16,10 +17,11 @@ import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PopulateFromDocsBanner } from "./populate-from-docs";
 import { LabDetailSheet } from "@/components/labs/lab-detail-sheet";
+import { DocumentDetailSheet } from "./document-detail-sheet";
 import { PreChartView } from "./pre-chart-view";
 import { SupplementList } from "./supplement-list";
-import { EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
-import type { Patient, PatientDocument, PatientSupplement, FMTimelineData, FMCategory, FMLifeStage } from "@/types/database";
+import { SectionShell, EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
+import type { Patient, PatientDocument, PatientSupplement, ProtocolItem, FMTimelineData, FMCategory, FMLifeStage, DocumentType } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 import type { TimelineEvent } from "@/hooks/use-timeline";
 
@@ -83,6 +85,11 @@ const IFMMatrixView = dynamic(
   }
 );
 
+const VitalsSnapshot = dynamic(
+  () => import("@/components/patients/vitals-snapshot").then((m) => m.VitalsSnapshot),
+  { ssr: false }
+);
+
 type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline";
 
 interface VisitItem {
@@ -123,6 +130,76 @@ function getAge(dob: string | null): number | null {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 }
 
+const EVIDENCE_COLORS: Record<string, string> = {
+  meta_analysis: "bg-[var(--color-evidence-meta-bg)] text-[var(--color-evidence-meta-text)]",
+  rct: "bg-blue-50 text-blue-700",
+  clinical_guideline: "bg-emerald-50 text-emerald-700",
+  cohort_study: "bg-purple-50 text-purple-700",
+  case_study: "bg-gray-50 text-gray-600",
+  expert_consensus: "bg-gray-50 text-gray-600",
+};
+
+const EVIDENCE_LABELS: Record<string, string> = {
+  meta_analysis: "Meta-Analysis",
+  rct: "RCT",
+  clinical_guideline: "Guideline",
+  cohort_study: "Cohort",
+  case_study: "Case Study",
+  expert_consensus: "Expert Consensus",
+};
+
+function RecommendationSection({
+  title,
+  icon: Icon,
+  items,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: ProtocolItem[] | null;
+}) {
+  const list = items && items.length > 0 ? items : null;
+
+  return (
+    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-4 h-4 text-[var(--color-brand-600)]" />
+        <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+          {title}
+        </h3>
+      </div>
+      {list ? (
+        <div className="space-y-2">
+          {list.map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {item.name}
+                  </span>
+                  {item.evidence_level && (
+                    <span className={`px-1.5 py-0.5 text-[9px] font-medium rounded ${
+                      EVIDENCE_COLORS[item.evidence_level] || EVIDENCE_COLORS.expert_consensus
+                    }`}>
+                      {EVIDENCE_LABELS[item.evidence_level] || item.evidence_level}
+                    </span>
+                  )}
+                </div>
+                {item.detail && (
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{item.detail}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-[var(--color-text-muted)]">
+          No {title.toLowerCase()} yet
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements, initialTab = "overview" }: PatientProfileProps) {
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
@@ -130,6 +207,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [initialBiomarkerCode, setInitialBiomarkerCode] = useState<string | null>(null);
   const [trendsView, setTrendsView] = useState<"biomarkers" | "vitals">("biomarkers");
   const [fmTimelineData, setFmTimelineData] = useState<FMTimelineData | null>(
@@ -261,6 +339,10 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     setDocuments((prev) => prev.map((d) => d.id === docId ? { ...d, title: newTitle } : d));
   };
 
+  const handleDocumentTypeChanged = (docId: string, newType: string) => {
+    setDocuments((prev) => prev.map((d) => d.id === docId ? { ...d, document_type: newType as DocumentType } : d));
+  };
+
   const handleParseAsLab = async (docId: string) => {
     try {
       const res = await fetch(`/api/patients/${patient.id}/documents/${docId}/parse-as-lab`, {
@@ -276,6 +358,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         setSelectedLabId(labReport.id);
       } else {
         setLabReports((prev) => [labReport, ...prev]);
+        // Remove the source document from the list — the lab report replaces it
+        setDocuments((prev) => prev.filter((d) => d.id !== docId));
         toast.success("Lab parsing started");
       }
     } catch (err) {
@@ -456,6 +540,13 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               extractedDocCount={extractedDocCount}
               onPopulated={handlePopulated}
             />
+            <VitalsSnapshot
+              patientId={patient.id}
+              onViewTrends={() => {
+                setTrendsView("vitals");
+                setActiveTab("trends");
+              }}
+            />
             <EditableTagSection
               title="Chief Complaints"
               values={patient.chief_complaints}
@@ -480,6 +571,21 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
             <SupplementList
               patientId={patient.id}
               initialSupplements={initialSupplements}
+            />
+            <RecommendationSection
+              title="Dietary Recommendations"
+              icon={Salad}
+              items={patient.dietary_recommendations}
+            />
+            <RecommendationSection
+              title="Lifestyle Recommendations"
+              icon={HeartPulse}
+              items={patient.lifestyle_recommendations}
+            />
+            <RecommendationSection
+              title="Follow-up Labs"
+              icon={FlaskConical}
+              items={patient.follow_up_labs}
             />
             <EditableTagSection
               title="Allergies"
@@ -508,9 +614,11 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               labReports={labReports}
               onDeleted={handleDocumentDeleted}
               onRenamed={handleDocumentRenamed}
+              onTypeChanged={handleDocumentTypeChanged}
               onParseAsLab={handleParseAsLab}
               onLabDeleted={handleLabDeleted}
               onLabClick={setSelectedLabId}
+              onDocClick={setSelectedDocId}
               groupBy
             />
           </div>
@@ -667,6 +775,20 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
           />
         )}
       </div>
+
+      {/* Document detail slide-over */}
+      <DocumentDetailSheet
+        documentId={selectedDocId}
+        patientId={patient.id}
+        patientName={name}
+        onClose={() => setSelectedDocId(null)}
+        onRetried={() => {
+          // Update the document status optimistically
+          setDocuments((prev) => prev.map((d) =>
+            d.id === selectedDocId ? { ...d, status: "extracting" as const, error_message: null } : d
+          ));
+        }}
+      />
 
       {/* Lab detail slide-over — opens when clicking a lab in the Documents tab */}
       <LabDetailSheet

@@ -202,12 +202,12 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
 
       {/* Evidence banner */}
       <div className="flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
-        <Leaf size={12} className="text-[var(--color-brand-500)]" />
-        <p className="text-[12px] text-[var(--color-text-secondary)]">
+        <Leaf size={12} className="text-[var(--color-brand-700)]" />
+        <p className="text-[12px] text-[var(--color-brand-700)]">
           Evidence partnerships with{" "}
-          <span className="font-medium text-[var(--color-text-primary)]">A4M</span>,{" "}
-          <span className="font-medium text-[var(--color-text-primary)]">IFM</span>,{" "}
-          <span className="font-medium text-[var(--color-text-primary)]">Cleveland Clinic</span>,{" "}
+          <span className="font-semibold text-[var(--color-text-primary)]">A4M</span>,{" "}
+          <span className="font-semibold text-[var(--color-text-primary)]">IFM</span>,{" "}
+          <span className="font-semibold text-[var(--color-text-primary)]">Cleveland Clinic</span>,{" "}
           and more
         </p>
       </div>

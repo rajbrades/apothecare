@@ -251,16 +251,26 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
                     No conversations yet
                   </p>
                 ) : (
-                  conversations.slice(0, 5).map((conv) => (
-                    <ConversationEntry
-                      key={conv.id}
-                      conv={conv}
-                      isActive={activeConvId === conv.id}
-                      onRename={handleRename}
-                      onArchive={handleArchive}
-                      onDelete={handleDelete}
-                    />
-                  ))
+                  <>
+                    {conversations.slice(0, 5).map((conv) => (
+                      <ConversationEntry
+                        key={conv.id}
+                        conv={conv}
+                        isActive={activeConvId === conv.id}
+                        onRename={handleRename}
+                        onArchive={handleArchive}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                    {conversations.length > 0 && (
+                      <Link
+                        href="/conversations"
+                        className="block px-3 pl-7 py-1.5 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                      >
+                        View all →
+                      </Link>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -291,25 +301,35 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
                     Star responses to save them here
                   </p>
                 ) : (
-                  favoriteConversations.map((fav) => {
-                    const isActive = activeConvId === fav.id;
-                    return (
+                  <>
+                    {favoriteConversations.slice(0, 5).map((fav) => {
+                      const isActive = activeConvId === fav.id;
+                      return (
+                        <Link
+                          key={fav.id}
+                          href={`/chat?id=${fav.id}`}
+                          className={`flex items-center gap-2 px-3 pl-7 py-1.5 rounded-md transition-colors ${
+                            isActive
+                              ? "bg-white text-[var(--color-brand-600)] font-medium"
+                              : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+                          }`}
+                        >
+                          <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />
+                          <span className="text-sm truncate">
+                            {fav.title || "Untitled conversation"}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                    {favoriteConversations.length > 5 && (
                       <Link
-                        key={fav.id}
-                        href={`/chat?id=${fav.id}`}
-                        className={`flex items-center gap-2 px-3 pl-7 py-1.5 rounded-md transition-colors ${
-                          isActive
-                            ? "bg-white text-[var(--color-brand-600)] font-medium"
-                            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
-                        }`}
+                        href="/chat?filter=favorites"
+                        className="block px-3 pl-7 py-1.5 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
                       >
-                        <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />
-                        <span className="text-sm truncate">
-                          {fav.title || "Untitled conversation"}
-                        </span>
+                        View all →
                       </Link>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -335,41 +355,51 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
                     No visits yet
                   </p>
                 ) : (
-                  recentVisits.slice(0, 3).map((visit) => {
-                    const isVisitActive = pathname === `/visits/${visit.id}`;
-                    const patientName = visit.patients
-                      ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
-                      : null;
-                    const visitTypeLabel: Record<string, string> = {
-                      soap: "SOAP",
-                      follow_up: "Follow-up",
-                      history_physical: "H&P",
-                      consult: "Consult",
-                    };
-                    const typeLabel = visitTypeLabel[visit.visit_type] || "Visit";
-                    const title = patientName
-                      ? visit.chief_complaint
-                        ? `${patientName} — ${visit.chief_complaint}`
-                        : patientName
-                      : visit.chief_complaint || "Visit";
-                    const subtitle = `${typeLabel} · ${new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+                  <>
+                    {recentVisits.slice(0, 5).map((visit) => {
+                      const isVisitActive = pathname === `/visits/${visit.id}`;
+                      const patientName = visit.patients
+                        ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
+                        : null;
+                      const visitTypeLabel: Record<string, string> = {
+                        soap: "SOAP",
+                        follow_up: "Follow-up",
+                        history_physical: "H&P",
+                        consult: "Consult",
+                      };
+                      const typeLabel = visitTypeLabel[visit.visit_type] || "Visit";
+                      const title = patientName
+                        ? visit.chief_complaint
+                          ? `${patientName} — ${visit.chief_complaint}`
+                          : patientName
+                        : visit.chief_complaint || "Visit";
+                      const subtitle = `${typeLabel} · ${new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
-                    return (
+                      return (
+                        <Link
+                          key={visit.id}
+                          href={`/visits/${visit.id}`}
+                          className={`block px-3 pl-7 py-1.5 rounded-md transition-colors ${isVisitActive
+                            ? "bg-white text-[var(--color-brand-600)] font-medium"
+                            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+                            }`}
+                        >
+                          <span className="block text-sm truncate">{title}</span>
+                          <span className="block text-[11px] text-[var(--color-text-muted)]">
+                            {subtitle}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                    {recentVisits.length > 0 && (
                       <Link
-                        key={visit.id}
-                        href={`/visits/${visit.id}`}
-                        className={`block px-3 pl-7 py-1.5 rounded-md transition-colors ${isVisitActive
-                          ? "bg-white text-[var(--color-brand-600)] font-medium"
-                          : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
-                          }`}
+                        href="/visits"
+                        className="block px-3 pl-7 py-1.5 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
                       >
-                        <span className="block text-sm truncate">{title}</span>
-                        <span className="block text-[11px] text-[var(--color-text-muted)]">
-                          {subtitle}
-                        </span>
+                        View all →
                       </Link>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -410,13 +440,13 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
                 {practitioner.email}
               </p>
             </div>
-            <button
-              onClick={() => toast.info("Settings coming soon")}
+            <Link
+              href="/settings"
               className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
               aria-label="Settings"
             >
               <Settings className="icon-inline" />
-            </button>
+            </Link>
             <button
               onClick={async () => {
                 const supabase = createClient();

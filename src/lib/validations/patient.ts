@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { fmTimelineDataSchema } from "./fm-timeline";
 
+// ── Protocol Recommendation Item ──────────────────────────────────────
+export const protocolItemSchema = z.object({
+  name: z.string(),
+  detail: z.string(),
+  rationale: z.string(),
+  evidence_level: z.string().optional(),
+  dosage: z.string().optional(),
+  form: z.string().optional(),
+  timing: z.string().optional(),
+  duration: z.string().optional(),
+  interactions: z.array(z.string()).optional(),
+});
+
 // ── Create Patient ─────────────────────────────────────────────────────
 export const createPatientSchema = z.object({
   first_name: z.string().max(100).nullable().optional(),
@@ -15,6 +28,9 @@ export const createPatientSchema = z.object({
   notes: z.string().max(10000).nullable().optional(),
   ifm_matrix: z.record(z.unknown()).optional(),
   fm_timeline_data: fmTimelineDataSchema.nullable().optional(),
+  dietary_recommendations: z.array(protocolItemSchema).nullable().optional(),
+  lifestyle_recommendations: z.array(protocolItemSchema).nullable().optional(),
+  follow_up_labs: z.array(protocolItemSchema).nullable().optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;

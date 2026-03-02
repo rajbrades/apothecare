@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, Trash2, ExternalLink, Eye, Loader2, FlaskConical, Pencil, Check, X } from "lucide-react";
+import { FileText, Trash2, ExternalLink, Eye, Loader2, FlaskConical, Pencil, Check, X, ChevronDown, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { ExtractionStatusBadge } from "./extraction-status-badge";
 import type { LabReportItem } from "./patient-profile";
@@ -25,11 +25,24 @@ interface DocumentListProps {
   labReports?: LabReportItem[];
   onDeleted: (docId: string) => void;
   onRenamed?: (docId: string, newTitle: string) => void;
+  onTypeChanged?: (docId: string, newType: string) => void;
   onParseAsLab?: (docId: string) => void;
   onLabDeleted?: (labId: string) => void;
   onLabClick?: (labId: string) => void;
+  onDocClick?: (docId: string) => void;
   groupBy?: boolean;
 }
+
+const DOCUMENT_TYPES = [
+  { value: "intake_form", label: "Intake Form" },
+  { value: "health_history", label: "Health History" },
+  { value: "lab_report", label: "Lab Report" },
+  { value: "imaging", label: "Imaging" },
+  { value: "referral", label: "Referral" },
+  { value: "consent", label: "Consent" },
+  { value: "insurance", label: "Insurance" },
+  { value: "other", label: "Other" },
+];
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -101,11 +114,13 @@ function buildUnified(documents: DocumentItem[], labReports: LabReportItem[]): U
   });
 }
 
-export function DocumentList({ patientId, documents, labReports = [], onDeleted, onRenamed, onParseAsLab, onLabDeleted, onLabClick, groupBy = false }: DocumentListProps) {
+export function DocumentList({ patientId, documents, labReports = [], onDeleted, onRenamed, onTypeChanged, onParseAsLab, onLabDeleted, onLabClick, onDocClick, groupBy = false }: DocumentListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
+  const [changingTypeId, setChangingTypeId] = useState<string | null>(null);
+  const [typeSaving, setTypeSaving] = useState(false);
 
   const handleDelete = async (docId: string) => {
     if (!confirm("Delete this document? This cannot be undone.")) return;
@@ -153,6 +168,28 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
     }
   };
 
+  const saveType = async (docId: string, newType: string) => {
+    setTypeSaving(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}/documents/${docId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document_type: newType }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Type change failed");
+      }
+      onTypeChanged?.(docId, newType);
+      toast.success("Document type updated");
+      setChangingTypeId(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Type change failed");
+    } finally {
+      setTypeSaving(false);
+    }
+  };
+
   const handleDeleteLab = async (labId: string) => {
     if (!confirm("Delete this lab report and all its biomarker results? This cannot be undone.")) return;
     setDeleting(labId);
@@ -183,6 +220,21 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
   }
 
   const unified = buildUnified(documents, labReports);
+
+  const PROCESSING_STATUSES = new Set(["uploading", "uploaded", "extracting", "queued", "parsing"]);
+  const processingCount =
+    documents.filter((d) => PROCESSING_STATUSES.has(d.status)).length +
+    labReports.filter((l) => PROCESSING_STATUSES.has(l.status)).length;
+
+  const processingBanner = processingCount > 0 ? (
+    <div className="flex items-center gap-2.5 px-4 py-3 text-sm bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] text-[var(--color-brand-700)]">
+      <Clock className="w-4 h-4 shrink-0 animate-pulse" />
+      <span>
+        {processingCount === 1 ? "1 document is" : `${processingCount} documents are`} being processed.
+        You can leave this page and check back in a few minutes.
+      </span>
+    </div>
+  ) : null;
 
   const renderItem = (item: UnifiedItem) => {
         if (item.kind === "lab") {
@@ -256,7 +308,8 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
         return (
           <div
             key={doc.id}
-            className="flex items-center justify-between p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)]"
+            className={`flex items-center justify-between p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)] transition-colors ${onDocClick ? "cursor-pointer hover:bg-[var(--color-surface-secondary)] hover:border-[var(--color-brand-200)]" : ""}`}
+            onClick={() => onDocClick?.(doc.id)}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-[var(--color-surface-secondary)] flex items-center justify-center shrink-0">
@@ -266,6 +319,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                 {renamingId === doc.id ? (
                   <form
                     onSubmit={(e) => { e.preventDefault(); saveRename(doc.id); }}
+                    onClick={(e) => e.stopPropagation()}
                     className="flex items-center gap-1.5"
                   >
                     <input
@@ -299,8 +353,30 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                     {doc.title || doc.file_name}
                   </p>
                 )}
-                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
-                  <span className="capitalize">{formatDocType(doc.document_type)}</span>
+                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5" onClick={(e) => e.stopPropagation()}>
+                  {changingTypeId === doc.id ? (
+                    <select
+                      autoFocus
+                      value={doc.document_type}
+                      onChange={(e) => saveType(doc.id, e.target.value)}
+                      onBlur={() => { if (!typeSaving) setChangingTypeId(null); }}
+                      disabled={typeSaving}
+                      className="px-1.5 py-0.5 text-xs rounded border border-[var(--color-brand-300)] bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:ring-1 focus:ring-[var(--color-brand-400)]"
+                    >
+                      {DOCUMENT_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button
+                      onClick={() => setChangingTypeId(doc.id)}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded border border-dashed border-transparent hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)] transition-all cursor-pointer group"
+                      title="Click to change document type"
+                    >
+                      <span className="capitalize">{formatDocType(doc.document_type)}</span>
+                      <ChevronDown className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )}
                   <span>&middot;</span>
                   <span>{formatFileSize(doc.file_size)}</span>
                   <span>&middot;</span>
@@ -313,14 +389,24 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
               </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0 ml-3">
-              <button
-                onClick={() => handleViewPdf(doc.id)}
-                className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-                title="View PDF"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </button>
+            <div className="flex items-center gap-1 shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
+              {onDocClick ? (
+                <button
+                  onClick={() => onDocClick(doc.id)}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                  title="Preview document"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleViewPdf(doc.id)}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                  title="View PDF"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={() => startRename(doc)}
                 className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
@@ -360,6 +446,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
 
     return (
       <div className="space-y-6">
+        {processingBanner}
         {CATEGORY_ORDER.filter((cat) => groups.has(cat)).map((cat) => {
           const items = groups.get(cat)!;
           return (
@@ -384,6 +471,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
 
   return (
     <div className="space-y-2">
+      {processingBanner}
       {unified.map(renderItem)}
     </div>
   );

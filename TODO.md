@@ -210,7 +210,7 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
 
 ## Design & Interaction Refinements (Feb 16 Audit)
 
-- [ ] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
+- [x] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
 - [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
 - [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
 - [x] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
@@ -227,11 +227,11 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Design:** Show a rich AI response in the demo chat mockup — currently just one question + typing indicator in a large empty white box; add actual response with citations and evidence badges
 
 ### Medium Impact
-- [ ] **Design:** Fix "Built for clinical practice" feature card grid — 4 cards are stacked with huge spacing, never visible as a 2×2 grid; tighten to show full grid in one viewport
-- [ ] **Design:** Add shadow/border to testimonial cards — three cards on near-white background have no visual separation from the section
+- [x] **Design:** Fix "Built for clinical practice" feature card grid — responsive `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` with `gap-6`
+- [x] **Design:** Add shadow/border to testimonial cards — cards now have `border` + surface background for visual separation
 
 ### Low Impact
-- [ ] **Design:** Enlarge and bold the feature section icons — "Multi-modal lab interpretation" and "Evidence-backed protocol generation" icons are ~18px and hard to read at a glance
+- [x] ~~**Design:** Enlarge and bold the feature section icons~~ — Won't fix. Icons are accent elements above large headings, not visual anchors. Current 20px/44px ratio is consistent across all cards and fits the professional clinical brand.
 - [ ] **Design:** Balance hero input microcopy — "2 free queries/day · No credit card required" is left-aligned while CTA floats right; center microcopy below the input or restructure the row
 
 ---
@@ -332,6 +332,70 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Fix:** PubMed search query — prioritizes systematic reviews, meta-analyses, and RCTs via publication type filter. Falls back to generic query when filtered results are sparse.
 - [x] **Feature:** Multi-citation support in chat — up to 3 evidence badges per `[Author, Year]` citation. Full stack: `resolveCitationsMulti()` → `citation_metadata_multi` SSE event → `citationsByKey` on `ChatMessage` → `EvidenceBadgeList` rendering.
 - [x] **Feature:** `CitationMetaContext` changed to `Map<string, CitationMeta[]>` for multi-citation support.
+
+## Sprint 18 — Document Management, AI Populate, Visit UX (Feb 27) ✅ COMPLETE
+
+- [x] **Feature:** Document rename — PATCH `/api/patients/[id]/documents/[docId]` with `title` field
+- [x] **Feature:** Document delete — DELETE endpoint removes record and storage file
+- [x] **Feature:** Parse as Lab — create `lab_report` from uploaded document, reusing storage file via `source_document_id` FK
+- [x] **Feature:** AI Populate from Documents — hybrid aggregation (chief complaints, allergies, medications) + AI synthesis (medical history, notes, IFM matrix) from extracted docs
+- [x] **Feature:** Populate-from-docs dialog — per-section checkboxes, empty fields pre-checked, "has content" warnings, rate-limited
+- [x] **Feature:** Compact recorder card — when SOAP exists, shows slim "Re-record encounter" bar instead of full CTA
+- [x] **Feature:** Expandable SOAP summaries on Visits tab — fetches `subjective` + `assessment`, expandable cards with truncated previews + "Open full note" link
+- [x] **UI:** Lab detail sheet — removed drawer shadow, prominent "Full report" pill button opens in new tab
+- [x] **Feature:** Vitals push endpoint — `POST /api/visits/[id]/push-vitals` with enhanced vitals panel
+- [x] **UI:** Create visit button component, editable sections component, confirm dialog z-index fix
+- [x] **DB:** Migration 021 (vitals_pushed_at) + Migration 022 (lab_source_document_id)
+
+## Sprint 19 — Protocol Push, Vitals Snapshot, Carry-Forward (Feb 27) ✅ COMPLETE
+
+- [x] **Feature:** Full protocol push — dietary, lifestyle, and follow-up lab recommendations push from visit protocol to patient profile Overview tab (not just supplements)
+- [x] **Feature:** RecommendationSection component on patient Overview — displays dietary, lifestyle, follow-up lab items with evidence badges
+- [x] **DB:** Migration 023 — `dietary_recommendations`, `lifestyle_recommendations`, `follow_up_labs` JSONB columns on patients
+- [x] **Feature:** Vitals snapshot on patient Overview — compact card with latest biometrics + sparklines (last 5 readings) + Pillars of Health mini-bars, powered by Recharts
+- [x] **Feature:** Styled pillar sliders — custom CSS range inputs with color-coded tracks (red→amber→emerald), styled thumbs, dynamic `--slider-color` / `--slider-pct` custom properties
+- [x] **UI:** Renamed visit "Intake" tab → "Vitals & Ratings" to accurately describe its content
+- [x] **Feature:** Carry-forward vitals — follow-up visits pre-fill previous biometrics and pillar ratings as amber ghost placeholders with "Confirm All" button. Server-side fetch of most recent prior visit vitals.
+- [x] **Feature:** Verify vitals banner — visits with existing vitals show a blue reminder to verify changes since last visit date
+- [x] **Feature:** Imperial units — weight input changed from kg to lbs, height input changed from cm to ft/in (database stores metric internally, UI converts for display)
+- [x] **UI:** Confirm dialog overlay removed — popup-only without dark backdrop
+
+## Sprint 20 — Document UX, Settings Page, Sidebar Polish (Mar 2) ✅ COMPLETE
+
+- [x] **Feature:** Document detail drawer — `DocumentDetailSheet` (500px right panel) for viewing extracted content, summary, structured data, and full text. Matches `LabDetailSheet` pattern (backdrop click, Escape close, body scroll lock).
+- [x] **Feature:** Document retry extraction — `POST /api/patients/[id]/documents/[docId]/retry` re-fires document extraction for failed documents. Added `retry_extraction` to `AuditAction` type.
+- [x] **Feature:** Document type change after upload — PATCH endpoint expanded to accept `document_type` field with validation against `VALID_DOC_TYPES`
+- [x] **Feature:** Pending file upload UX — when no doc type is selected, file is stored as `pendingFile` and auto-uploads once a type is chosen. Amber banner shows filename + "ready — select a type above". Type selector pulses red when file is pending.
+- [x] **Feature:** Document type clickability — ChevronDown icon + dashed border hover effect makes doc type look like an interactive dropdown
+- [x] **Feature:** Processing feedback banner — shows at top of document list when any items are in uploading/extracting/queued/parsing states with count and "leave and return" message
+- [x] **Feature:** Clickable document rows — click any document row to open detail drawer; Eye icon button for preview; `stopPropagation` on nested interactive elements
+- [x] **Fix:** Parse-as-lab removes source document from list to prevent duplicate entries
+- [x] **Feature:** Settings page — full 5-section implementation:
+  - Profile: name editing, avatar display, email read-only
+  - Practice & Credentials: license type, NPI (Luhn), specialties, practice name (reuses onboarding constants)
+  - Clinical Preferences: evidence sources, brand formulary, strict mode toggle, note template
+  - Subscription & Usage: plan badge, query count, lab count, member since, upgrade/manage CTA
+  - Account & Security: change password (email auth only), delete account with type-to-confirm
+- [x] **API:** `PATCH /api/practitioners/profile` — update practitioner fields (name, license, NPI, specialties, etc.)
+- [x] **API:** `POST /api/auth/change-password` — Supabase password update (email auth only)
+- [x] **API:** `POST /api/auth/delete-account` — cascade delete + Supabase auth delete with "DELETE MY ACCOUNT" confirmation
+- [x] **Refactor:** Extracted shared constants from onboarding into `src/lib/constants/practitioner.ts` (LICENSE_OPTIONS, US_STATES, SPECIALTY_OPTIONS, validateNpi)
+- [x] **Feature:** `getFullPractitioner()` cached query in `cached-queries.ts` — `select("*")` for settings page
+- [x] **UI:** Sidebar settings gear → `<Link href="/settings">` (was showing "coming soon" toast)
+- [x] **UI:** Sidebar "View all →" links for Conversations (→ `/conversations`), Favorites (→ `/chat?filter=favorites`), Visits (→ `/visits`)
+- [x] **UI:** Sidebar visits bumped from 3 to 5 displayed items
+- [x] **Fix:** Sidebar refreshes after visit deletion — `revalidatePath("/(app)", "layout")` in DELETE handler + `router.refresh()` before `router.push()`
+
+## Sprint 21 — Conversation History Page (Mar 2) ✅ COMPLETE
+
+- [x] **Feature:** Conversation history page (`/conversations`) — searchable, filterable list of all past conversations with Active/Archived/Favorites tabs
+- [x] **Feature:** Debounced search (300ms) filtering conversations by title via `ilike`
+- [x] **Feature:** Conversation cards with title, relative time, linked patient name badge, favorite star indicator
+- [x] **Feature:** Inline actions per conversation — rename, favorite/unfavorite, archive/unarchive, delete with confirmation
+- [x] **Feature:** Cursor-based "Load More" pagination (20 per page)
+- [x] **API:** `GET /api/conversations` — list conversations with search, filter (active/archived/favorites), cursor pagination, audit logging
+- [x] **Validation:** `conversationListQuerySchema` in `src/lib/validations/conversation.ts`
+- [x] **UI:** Sidebar "View all →" link updated from `/chat` to `/conversations`
 
 ---
 

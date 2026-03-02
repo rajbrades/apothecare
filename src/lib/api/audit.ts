@@ -18,7 +18,8 @@ type AuditAction =
   | "prompt_injection_blocked"
   | "prompt_injection_warning"
   | "archive"
-  | "unarchive";
+  | "unarchive"
+  | "retry_extraction";
 
 interface AuditLogParams {
   request: NextRequest;

@@ -63,7 +63,7 @@ export async function GET(
   }
 }
 
-// ── PATCH /api/patients/[id]/documents/[docId] — Rename document ─────────
+// ── PATCH /api/patients/[id]/documents/[docId] — Update document ──────────
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; docId: string }> }
@@ -86,17 +86,35 @@ export async function PATCH(
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
     const body = await request.json();
-    const title = typeof body.title === "string" ? body.title.trim() : null;
-    if (!title) return jsonError("Title is required", 400);
-    if (title.length > 255) return jsonError("Title must be 255 characters or fewer", 400);
+
+    const VALID_DOC_TYPES = ["intake_form", "health_history", "lab_report", "imaging", "referral", "consent", "insurance", "other"];
+    const updates: Record<string, unknown> = {};
+
+    if (typeof body.title === "string") {
+      const title = body.title.trim();
+      if (!title) return jsonError("Title cannot be empty", 400);
+      if (title.length > 255) return jsonError("Title must be 255 characters or fewer", 400);
+      updates.title = title;
+    }
+
+    if (typeof body.document_type === "string") {
+      if (!VALID_DOC_TYPES.includes(body.document_type)) {
+        return jsonError("Invalid document type", 400);
+      }
+      updates.document_type = body.document_type;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return jsonError("No valid fields to update", 400);
+    }
 
     const { data: document, error } = await supabase
       .from("patient_documents")
-      .update({ title })
+      .update(updates)
       .eq("id", docId)
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
-      .select("id, title")
+      .select("id, title, document_type")
       .single();
 
     if (error || !document) return jsonError("Document not found", 404);
@@ -107,7 +125,7 @@ export async function PATCH(
       action: "update",
       resourceType: "patient_document",
       resourceId: docId,
-      detail: { patient_id: patientId, title },
+      detail: { patient_id: patientId, ...updates },
     });
 
     return NextResponse.json({ document });

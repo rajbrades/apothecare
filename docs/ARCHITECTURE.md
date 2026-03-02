@@ -391,6 +391,10 @@ src/
 │   │   │   ├── [id]/page.tsx       # Patient detail + documents + lab reports
 │   │   │   ├── new/page.tsx        # New patient form
 │   │   │   └── page.tsx            # Patient list
+│   │   ├── conversations/
+│   │   │   └── page.tsx            # Conversation history (search, filter, pagination)
+│   │   ├── settings/
+│   │   │   └── page.tsx            # Settings (profile, credentials, preferences, subscription, account)
 │   │   ├── visits/
 │   │   │   ├── [id]/page.tsx       # Visit workspace (editor + AI generation)
 │   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
@@ -406,6 +410,14 @@ src/
 │   │   │   ├── reviews/route.ts     # GET list reviews (cursor paginated)
 │   │   │   ├── interactions/route.ts # POST SSE interaction check
 │   │   │   └── brands/route.ts      # GET/PUT brand preferences
+│   │   ├── auth/
+│   │   │   ├── change-password/route.ts  # POST change password (email auth only)
+│   │   │   └── delete-account/route.ts   # POST cascade delete + auth delete
+│   │   ├── practitioners/
+│   │   │   ├── evidence-sources/route.ts # PUT save default evidence sources
+│   │   │   └── profile/route.ts          # PATCH update practitioner profile
+│   │   ├── conversations/
+│   │   │   └── route.ts            # GET list conversations (search, filter, cursor pagination)
 │   │   ├── chat/
 │   │   │   ├── attachments/route.ts # POST file upload for chat attachments
 │   │   │   ├── history/route.ts    # GET conversation messages + pagination
@@ -422,8 +434,12 @@ src/
 │   │   │   │   ├── documents/
 │   │   │   │   │   ├── [docId]/
 │   │   │   │   │   │   ├── extract/route.ts  # POST re-trigger extraction
-│   │   │   │   │   │   └── route.ts          # GET/DELETE document
+│   │   │   │   │   │   ├── parse-as-lab/route.ts # POST create lab from document
+│   │   │   │   │   │   ├── retry/route.ts   # POST retry failed extraction
+│   │   │   │   │   │   └── route.ts          # GET/PATCH/DELETE document (rename, type change, delete)
 │   │   │   │   │   └── route.ts              # GET list / POST upload
+│   │   │   │   ├── populate-from-docs/
+│   │   │   │   │   └── route.ts              # POST AI populate from extracted docs
 │   │   │   │   ├── ifm-matrix/
 │   │   │   │   │   └── merge/route.ts        # POST merge visit IFM into patient matrix
 │   │   │   │   ├── fm-timeline/
@@ -453,6 +469,7 @@ src/
 │   │       ├── [id]/
 │   │       │   ├── export/route.ts     # POST export visit
 │   │       │   ├── generate/route.ts   # POST SSE SOAP/IFM/Protocol generation
+│   │       │   ├── push-vitals/route.ts # POST push vitals to patient chart
 │   │       │   ├── scribe/route.ts     # POST AI Scribe (transcript → sections)
 │   │       │   ├── transcribe/route.ts # POST audio → Whisper transcription
 │   │       │   └── route.ts            # GET/PATCH visit
@@ -460,7 +477,7 @@ src/
 │   ├── auth/
 │   │   ├── callback/route.ts       # OAuth/email callback
 │   │   ├── login/page.tsx          # Login with forgot password
-│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding
+│   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding (imports from shared constants)
 │   │   └── register/page.tsx       # Registration
 │   ├── globals.css                 # Design system + CSS variables
 │   ├── layout.tsx                  # Root layout (fonts via <link>)
@@ -494,16 +511,27 @@ src/
 │   │   ├── brand-formulary.tsx          # Brand preference toggles + custom brands
 │   │   └── fullscript-stub-button.tsx   # Fullscript integration placeholder
 │   ├── landing/                    # 12 landing page components
+│   ├── conversations/
+│   │   └── conversation-list-client.tsx # Searchable conversation list (filter tabs, inline actions, pagination)
 │   ├── layout/
-│   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner
+│   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner + "View all →" links + settings link
 │   │   └── sidebar-conversation.tsx # Conversation list management
+│   ├── settings/
+│   │   ├── settings-page.tsx       # Client layout — left nav + section cards
+│   │   ├── profile-section.tsx     # Name + avatar display
+│   │   ├── preferences-section.tsx # Evidence sources, brands, note template
+│   │   ├── subscription-section.tsx # Plan badge, usage stats, upgrade CTA
+│   │   └── account-section.tsx     # Password change, delete account
 │   ├── patients/
-│   │   ├── document-list.tsx       # Unified document + lab report list (groupBy mode for category sections)
-│   │   ├── document-upload.tsx     # Document upload form
+│   │   ├── document-detail-sheet.tsx # Document detail drawer (extraction summary, structured data, retry)
+│   │   ├── document-list.tsx       # Unified document + lab report list (rename, delete, parse-as-lab, clickable rows, processing banner)
+│   │   ├── document-upload.tsx     # Document upload form (pending file UX, auto-upload on type select)
 │   │   ├── extraction-status-badge.tsx  # AI extraction status indicator
+│   │   ├── populate-from-docs.tsx  # AI populate banner + dialog (per-section checkboxes)
 │   │   ├── patient-form.tsx        # Full patient create/edit form
 │   │   ├── patient-list-client.tsx # Searchable patient list
-│   │   ├── patient-profile.tsx     # Patient detail view (8 tabs: Overview, Documents, Trends, Pre-Chart, IFM Matrix, Visits, Timeline, FM Timeline)
+│   │   ├── patient-profile.tsx     # Patient detail (8 tabs) + document detail drawer + expandable SOAP summaries
+│   │   ├── vitals-snapshot.tsx    # Vitals + health ratings compact card with sparklines (Recharts)
 │   │   ├── patient-timeline.tsx   # Chronological timeline with type filtering, AI synthesis, push to FM, Add Event, Resolve
 │   │   ├── add-symptom-log-form.tsx  # Inline form for logging symptom events
 │   │   ├── add-milestone-form.tsx    # Inline form for adding protocol milestones
@@ -515,7 +543,9 @@ src/
 │   │   └── pre-chart-view.tsx      # Pre-encounter patient summary
 │   ├── ui/
 │   │   ├── button.tsx              # Reusable button component (variants)
+│   │   ├── confirm-dialog.tsx      # Confirmation dialog (z-60 layering)
 │   │   ├── dropdown-menu.tsx       # Radix UI dropdown menu
+│   │   ├── editable-sections.tsx   # Reusable editable section components
 │   │   ├── input.tsx               # Reusable input component
 │   │   ├── label.tsx               # Reusable label component
 │   │   ├── logomark.tsx            # SVG logomark
@@ -523,13 +553,15 @@ src/
 │   │   └── sonner.tsx              # Toast notifications
 │   └── visits/
 │       ├── audio-recorder.tsx      # Audio recording component
+│       ├── create-visit-button.tsx # Reusable create visit button
 │       ├── editor/
 │       │   ├── dictation-bar.tsx       # Dictation + AI Scribe controls
 │       │   ├── editor-toolbar.tsx      # Bold, italic, lists toolbar
 │       │   ├── template-section-node.tsx # Collapsible section NodeView
 │       │   └── visit-editor.tsx        # Main Tiptap editor wrapper
 │       ├── ifm-node-modal.tsx      # IFM Matrix node editing modal
-│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs + Push to Patient Matrix
+│       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs + compact recorder when SOAP exists
+│       ├── vitals-panel.tsx        # Vitals input/display with chart support
 │       ├── new-visit-form.tsx      # Patient + encounter type selector
 │       ├── voice-input.tsx         # Voice input component
 │       ├── soap-sections.tsx       # SOAP note display tabs
@@ -548,6 +580,7 @@ src/
 ├── lib/
 │   ├── ai/
 │   │   ├── anthropic.ts            # Claude client + ANTHROPIC_MODELS + lens addendums
+│   │   ├── populate-prompts.ts     # AI prompts for populate-from-docs (medical history, notes, IFM matrix)
 │   │   ├── provider.ts             # Multi-provider abstraction (OpenAI/Anthropic/MiniMax)
 │   │   ├── source-filter.ts        # Evidence source definitions, presets, prompt addendums
 │   ├── chat/
@@ -590,7 +623,9 @@ src/
 │   │   ├── client.ts               # Browser client
 │   │   ├── middleware.ts           # Auth middleware + route protection
 │   │   └── server.ts              # Server client + standalone service client
-│   ├── utils.ts                    # cn() — Tailwind class merging utility
+│   ├── constants/
+│   │   └── practitioner.ts        # Shared LICENSE_OPTIONS, US_STATES, SPECIALTY_OPTIONS, validateNpi
+│   ├── utils.ts                    # cn() — Tailwind class merging, formatRelativeTime() — shared date utility
 │   └── validations/
 │       ├── chat.ts                 # Chat API schemas
 │       ├── visit.ts                # Visit create/update/generate schemas
@@ -601,6 +636,8 @@ src/
 │       ├── protocol-milestone.ts   # Protocol milestone create/update schemas
 │       ├── patient-report.ts       # Patient report create/update schemas (report_type enum)
 │       ├── ai-insight.ts           # AI insight create/update schemas (insight_type, confidence enums)
+│       ├── conversation.ts         # Conversation list query schema (search, filter, cursor, limit)
+│       ├── settings.ts             # Settings schemas (profile update, password change, delete account)
 │       ├── document.ts             # Document upload/extraction schemas
 │       ├── lab.ts                  # Lab upload/list schemas
 │       └── supplement.ts           # Supplement review/interaction/brand schemas
@@ -642,7 +679,10 @@ supabase/migrations/
 ├── 017_vitals_health_ratings.sql        # patient_vitals table for vitals + pillars of health tracking
 ├── 018_fm_timeline.sql                  # patients.fm_timeline_data JSONB column (FM Health Timeline)
 ├── 019_timeline_event_producers.sql     # 4 producer tables (symptom_logs, protocol_milestones, patient_reports, ai_insights) + auto-insert triggers
-└── 020_supplement_evidence.sql          # Curated supplement evidence table with pg_trgm, 17 seed citations, RLS read-only
+├── 020_supplement_evidence.sql          # Curated supplement evidence table with pg_trgm, 17 seed citations, RLS read-only
+├── 021_vitals_pushed_at.sql             # visits.vitals_pushed_at TIMESTAMPTZ
+├── 022_lab_source_document.sql          # lab_reports.source_document_id UUID FK to patient_documents
+└── 023_patient_recommendations.sql      # dietary_recommendations, lifestyle_recommendations, follow_up_labs JSONB on patients
 ```
 
 ## Test Infrastructure

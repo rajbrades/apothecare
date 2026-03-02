@@ -46,6 +46,12 @@ interface PatientOption {
   last_name: string | null;
 }
 
+interface PreviousVitalsContext {
+  vitals: VitalsData | null;
+  ratings: HealthRatings | null;
+  date: string;
+}
+
 interface VisitWorkspaceProps {
   visit: Visit & {
     patients?: {
@@ -63,6 +69,7 @@ interface VisitWorkspaceProps {
     } | null;
   };
   patients?: PatientOption[];
+  previousVitalsContext?: PreviousVitalsContext | null;
 }
 
 const VISIT_TYPE_LABELS: Record<string, string> = {
@@ -94,7 +101,7 @@ function formatRecorderDuration(seconds: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWorkspaceProps) {
+export function VisitWorkspace({ visit: initialVisit, patients = [], previousVitalsContext = null }: VisitWorkspaceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoGenerate = searchParams.get("generate") === "true";
@@ -545,15 +552,15 @@ export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWork
     const res = await fetch(`/api/visits/${visit.id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Visit deleted");
-      router.push("/visits");
       router.refresh();
+      router.push("/visits");
     } else {
       toast.error("Failed to delete visit");
     }
   }, [visit.id, router]);
 
   const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
-    { key: "intake", label: "Intake", icon: Activity },
+    { key: "intake", label: "Vitals & Ratings", icon: Activity },
     { key: "soap", label: "SOAP Note", icon: ClipboardList },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
     { key: "protocol", label: "Protocol", icon: Pill },
@@ -924,6 +931,9 @@ export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWork
               notes: visit.patients.notes,
             } : null}
             onPatientFieldSaved={handlePatientFieldSaved}
+            previousVitals={previousVitalsContext?.vitals ?? null}
+            previousRatings={previousVitalsContext?.ratings ?? null}
+            previousDate={previousVitalsContext?.date ?? null}
             onPushToChart={handlePushVitalsToChart}
             pushingToChart={pushingVitals}
             vitalsPushedAt={vitalsPushedAt}
@@ -987,7 +997,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWork
                   ) : (
                     <Pill className="w-3.5 h-3.5" />
                   )}
-                  {protocolPushedAt ? "Re-push Supplements" : "Push Supplements to Patient File"}
+                  {protocolPushedAt ? "Re-push Protocol" : "Push Protocol to Patient File"}
                 </button>
               </div>
             )}
@@ -1025,13 +1035,13 @@ export function VisitWorkspace({ visit: initialVisit, patients = [] }: VisitWork
         open={showPushProtocolConfirm}
         onConfirm={handlePushProtocolSupplements}
         onCancel={() => setShowPushProtocolConfirm(false)}
-        title={protocolPushedAt ? "Re-push protocol supplements?" : "Push protocol supplements?"}
+        title={protocolPushedAt ? "Re-push protocol to patient file?" : "Push protocol to patient file?"}
         description={
           protocolPushedAt
-            ? "This will update the patient's supplement list with the latest protocol recommendations. Changed dosages, forms, or timing will be updated and logged in the timeline."
-            : "This will add the protocol's supplement recommendations to the patient's supplement list and create timeline events for each change."
+            ? "This will update the patient's supplement list, dietary recommendations, lifestyle recommendations, and follow-up labs with the latest protocol."
+            : "This will add the protocol's supplement, dietary, lifestyle, and follow-up lab recommendations to the patient's file and create timeline events for each change."
         }
-        confirmLabel={protocolPushedAt ? "Re-push Supplements" : "Push Supplements"}
+        confirmLabel={protocolPushedAt ? "Re-push Protocol" : "Push Protocol"}
         variant="warning"
         loading={pushingProtocol}
       />

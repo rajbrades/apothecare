@@ -7,7 +7,8 @@ import { getAuthUser, getPractitioner, getSidebarData } from "@/lib/supabase/cac
 import { createClient } from "@/lib/supabase/server";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
-import { formatRelativeTime, type ConversationItem } from "@/components/layout/sidebar-conversation";
+import { formatRelativeTime } from "@/lib/utils";
+import { type ConversationItem } from "@/components/layout/sidebar-conversation";
 
 export default async function DashboardPage() {
   // These calls are deduplicated by React cache() — the parent (app) layout

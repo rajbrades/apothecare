@@ -52,7 +52,7 @@ export const getSidebarData = cache(async (practitionerId: string) => {
         .eq("practitioner_id", practitionerId)
         .eq("is_archived", false)
         .order("visit_date", { ascending: false })
-        .limit(3),
+        .limit(5),
     ]);
 
   return {
@@ -60,6 +60,16 @@ export const getSidebarData = cache(async (practitionerId: string) => {
     favoriteConversations: favoriteConversations || [],
     recentVisits: recentVisits || [],
   };
+});
+
+export const getFullPractitioner = cache(async (authUserId: string) => {
+  const supabase = await createClient();
+  const { data: practitioner } = await supabase
+    .from("practitioners")
+    .select("*")
+    .eq("auth_user_id", authUserId)
+    .single();
+  return practitioner;
 });
 
 export const getPatientWithDocuments = cache(async (practitionerId: string, patientId: string) => {

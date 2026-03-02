@@ -105,6 +105,9 @@ export interface Patient {
   clinical_summary: PatientClinicalSummary;
   ifm_matrix: IFMMatrix | Record<string, unknown>;
   fm_timeline_data: FMTimelineData | null;
+  dietary_recommendations: ProtocolItem[] | null;
+  lifestyle_recommendations: ProtocolItem[] | null;
+  follow_up_labs: ProtocolItem[] | null;
   is_archived: boolean;
   created_at: string;
   updated_at: string;

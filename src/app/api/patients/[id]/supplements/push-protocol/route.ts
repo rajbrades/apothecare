@@ -84,10 +84,19 @@ export async function POST(
     if (visit.practitioner_id !== practitioner.id) return jsonError("Forbidden", 403);
     if (visit.patient_id !== patientId) return jsonError("Visit does not belong to this patient", 400);
 
-    const protocol = visit.ai_protocol as { supplements?: ProtocolItem[] } | null;
-    const supplements = protocol?.supplements;
-    if (!supplements?.length) {
-      return jsonError("Visit protocol has no supplement recommendations", 400);
+    const protocol = visit.ai_protocol as {
+      supplements?: ProtocolItem[];
+      dietary?: ProtocolItem[];
+      lifestyle?: ProtocolItem[];
+      follow_up_labs?: ProtocolItem[];
+    } | null;
+    const supplements = protocol?.supplements || [];
+    const dietary = protocol?.dietary || [];
+    const lifestyle = protocol?.lifestyle || [];
+    const followUpLabs = protocol?.follow_up_labs || [];
+
+    if (!supplements.length && !dietary.length && !lifestyle.length && !followUpLabs.length) {
+      return jsonError("Visit protocol has no recommendations", 400);
     }
 
     // Fetch ALL existing patient supplements (including discontinued) for matching
@@ -175,6 +184,24 @@ export async function POST(
 
     results.total = supplements.length;
 
+    // Push dietary, lifestyle, and follow-up labs to patient record
+    const patientUpdate: Record<string, unknown> = {};
+    if (dietary.length) patientUpdate.dietary_recommendations = dietary;
+    if (lifestyle.length) patientUpdate.lifestyle_recommendations = lifestyle;
+    if (followUpLabs.length) patientUpdate.follow_up_labs = followUpLabs;
+
+    if (Object.keys(patientUpdate).length > 0) {
+      const { error: patientError } = await supabase
+        .from("patients")
+        .update(patientUpdate)
+        .eq("id", patientId)
+        .eq("practitioner_id", practitioner.id);
+
+      if (patientError) {
+        return jsonError(`Failed to update patient recommendations: ${patientError.message}`, 500);
+      }
+    }
+
     // Mark visit as protocol-pushed
     await supabase
       .from("visits")
@@ -187,11 +214,24 @@ export async function POST(
       action: "create",
       resourceType: "protocol_push",
       resourceId: visit_id,
-      detail: { patient_id: patientId, results },
+      detail: {
+        patient_id: patientId,
+        results,
+        dietary: dietary.length,
+        lifestyle: lifestyle.length,
+        follow_up_labs: followUpLabs.length,
+      },
       request,
     });
 
-    return NextResponse.json({ results });
+    return NextResponse.json({
+      results: {
+        ...results,
+        dietary: dietary.length,
+        lifestyle: lifestyle.length,
+        follow_up_labs: followUpLabs.length,
+      },
+    });
   } catch {
     return jsonError("Internal server error", 500);
   }

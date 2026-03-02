@@ -2,6 +2,103 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.22.0] - 2026-03-02
+
+### Added — Conversation History Page
+- **Conversations page** (`src/app/(app)/conversations/page.tsx`): Dedicated page to browse and search all past conversations. Server-side initial fetch of 20 most recent conversations with patient name joins.
+- **Conversation list client** (`src/components/conversations/conversation-list-client.tsx`): Client component with debounced search (300ms), Active/Archived/Favorites filter tabs, conversation cards (title, relative time, linked patient name, favorite star), inline actions (rename, favorite, archive/unarchive, delete with confirmation), and cursor-based "Load More" pagination.
+- **Conversations API** (`GET /api/conversations`): List conversations with search (title ilike), filter (active/archived/favorites), cursor-based pagination (keyset on `updated_at`), and audit logging. Includes patient name join via Supabase foreign key.
+- **Conversation validation schema** (`src/lib/validations/conversation.ts`): `conversationListQuerySchema` — Zod schema for query params (search, filter, cursor, limit).
+
+### Changed
+- **Sidebar "View all →"**: Conversations link updated from `/chat` to `/conversations` so practitioners can browse past conversations instead of landing on a new chat.
+
+## [0.21.0] - 2026-03-02
+
+### Added — Document Management UX
+- **Document detail drawer** (`src/components/patients/document-detail-sheet.tsx`): 500px right-side drawer showing extraction summary, structured data (key-value pairs), full extracted text (scrollable monospace), and metadata. Matches `LabDetailSheet` pattern — backdrop click, Escape key, body scroll lock.
+- **Document retry extraction**: `POST /api/patients/[id]/documents/[docId]/retry` — re-fires `extractDocumentContent()` for failed documents. CSRF + auth + audit logged (`retry_extraction` action). Guards against missing `storage_path` (400) and concurrent extraction (409).
+- **Pending file upload UX**: When no document type is selected, file is stored in state as `pendingFile` and auto-uploads via `useEffect` once a type is chosen. Amber banner shows "ready — select a type above to upload". Type selector border pulses red when file is pending.
+- **Document type change after upload**: `PATCH /api/patients/[id]/documents/[docId]` now accepts `document_type` field with validation against `VALID_DOC_TYPES` array.
+- **Document type clickability**: ChevronDown icon + dashed border on hover makes document type look like an interactive dropdown.
+- **Processing feedback banner**: Shown at top of document list when any items are in uploading/extracting/queued/parsing states. Displays count and "You can leave this page and check back in a few minutes".
+- **Clickable document rows**: Click any document row to open detail drawer. Eye icon button for preview. `stopPropagation` on nested interactive elements (rename form, type selector, action buttons).
+
+### Added — Sidebar Improvements
+- **"View all →" links**: Conversations section links to `/chat`, Favorites links to `/chat?filter=favorites` (shown when >5 favorites), Visits links to `/visits`.
+- **Sidebar visits bumped from 3 to 5** displayed items (updated `getSidebarData()` query limit).
+
+### Fixed — Sidebar & Visit Deletion
+- **Sidebar refreshes after visit deletion**: Added `revalidatePath("/(app)", "layout")` in `DELETE /api/visits/[id]` handler. Client-side: `router.refresh()` now fires before `router.push("/visits")` to avoid stale layout cache.
+- **Parse-as-lab duplicate prevention**: Source document is now removed from the document list after successfully creating a lab report, preventing duplicate entries.
+
+### Changed
+- **`src/lib/api/audit.ts`**: Added `"retry_extraction"` to `AuditAction` union type.
+- **`src/lib/supabase/cached-queries.ts`**: Sidebar visits query limit changed from 3 to 5.
+
+## [0.20.0] - 2026-03-02
+
+### Added — Settings Page (5 Sections)
+- **Settings page** (`src/app/(app)/settings/page.tsx`): Server component fetching full practitioner data + brand preferences for the settings interface.
+- **Settings layout** (`src/components/settings/settings-page.tsx`): Client component with left nav (desktop) / horizontal scroll tabs (mobile) for 5 sections.
+- **Profile section** (`profile-section.tsx`): Avatar (initial circle, read-only), full name (editable), email (read-only). Save → `PATCH /api/practitioners/profile`.
+- **Credentials section** (within settings-page): License type button grid, license number/state inputs, NPI with Luhn validation, practice name, specialty tags, years in practice. Reuses shared constants from onboarding.
+- **Preferences section** (`preferences-section.tsx`): Evidence source checkboxes with category grouping + preset pills (via existing `PUT /api/practitioners/evidence-sources`). Brand preferences with add/remove + strict mode toggle (via existing `PUT /api/supplements/brands`). Default note template dropdown.
+- **Subscription section** (`subscription-section.tsx`): Plan badge (Free outline / Pro gold), daily query count, monthly lab count, member since date. Free users see "Upgrade to Pro" gold button (toast). Pro users see "Manage Billing" outline button (toast).
+- **Account section** (`account-section.tsx`): Change password form (hidden for OAuth users). Danger zone: red-bordered card with delete account button → type "DELETE MY ACCOUNT" confirmation dialog.
+
+### Added — Settings API Routes
+- **`PATCH /api/practitioners/profile`**: Update practitioner fields (full_name, license_type, license_number, license_state, npi_number, practice_name, specialty_focus, years_in_practice). CSRF + Zod validation + audit logging.
+- **`POST /api/auth/change-password`**: Supabase password update for email auth users. Validates new password (min 8 chars, match confirmation). CSRF + audit logging.
+- **`POST /api/auth/delete-account`**: Cascade delete of all practitioner data (brand_preferences → supplements → timeline tables → documents → visits → patients → conversations → messages → audit_logs → practitioner row) + `auth.admin.deleteUser()`. Requires "DELETE MY ACCOUNT" confirmation string. CSRF + audit logging.
+
+### Added — Shared Constants & Validation
+- **`src/lib/constants/practitioner.ts`** (NEW): Extracted `LICENSE_OPTIONS` (8 types with NPI requirements), `LICENSE_TYPES`, `validateNpi()` (Luhn mod 10), `US_STATES` (51 options), `SPECIALTY_OPTIONS` (12 types), `NOTE_TEMPLATE_OPTIONS` (4 types) from onboarding into shared module.
+- **`src/lib/validations/settings.ts`** (NEW): Zod schemas — `updateProfileSchema`, `changePasswordSchema`, `deleteAccountSchema`.
+- **`getFullPractitioner()`** added to `src/lib/supabase/cached-queries.ts` — `select("*")` with React `cache()` for settings page.
+
+### Changed — Sidebar
+- **Settings gear icon** now links to `/settings` via `<Link>` (was showing "Settings coming soon" toast).
+- **Onboarding page** updated to import constants from shared `src/lib/constants/practitioner.ts`.
+
+## [0.19.0] - 2026-02-27
+
+### Added — Document Management Enhancements
+- **Document rename**: `PATCH /api/patients/[id]/documents/[docId]` supports renaming documents via `title` field update.
+- **Document delete**: `DELETE /api/patients/[id]/documents/[docId]` removes document record and storage file.
+- **Parse as Lab**: `POST /api/patients/[id]/documents/[docId]/parse-as-lab` — creates a `lab_report` from an uploaded document, reusing the existing storage file instead of re-uploading. Links via `source_document_id` FK.
+- **Migration 022** (`022_lab_source_document.sql`): Adds `source_document_id UUID` FK on `lab_reports` pointing to `patient_documents(id)` with `ON DELETE SET NULL`.
+
+### Added — AI Populate from Documents
+- **`POST /api/patients/[id]/populate-from-docs`** — Hybrid endpoint that populates patient overview fields from extracted documents. Direct aggregation for structured fields (chief complaints, allergies, medications); AI synthesis via `createCompletion()` for narrative fields (medical history, clinical notes, IFM matrix).
+- **`src/lib/ai/populate-prompts.ts`** (NEW): 3 AI system prompts — `MEDICAL_HISTORY_PROMPT` (narrative synthesis), `CLINICAL_NOTES_PROMPT` (symptoms/lifestyle/goals), `IFM_MATRIX_FROM_DOCS_PROMPT` (map findings to 7 IFM nodes as JSON).
+- **`src/components/patients/populate-from-docs.tsx`** (NEW): `PopulateFromDocsBanner` CTA shown when extracted docs exist and fields are empty. `PopulateFromDocsDialog` modal with per-section checkboxes, empty fields pre-checked, "has content" warnings on populated fields.
+- **Rate limit**: Added `doc_populate` action to `RateLimitAction` (10/day free, 100/day pro).
+
+### Added — Visit Workspace UX Improvements
+- **Compact recorder card**: When SOAP note already exists (`visit.subjective` truthy), recorder shows slim "Re-record encounter to regenerate note" bar instead of full "Record Encounter" CTA. Fresh visits unchanged.
+- **Expandable SOAP summaries on Visits tab**: Patient profile Visits tab now fetches `subjective` and `assessment` fields. Visits with SOAP content show expand chevron revealing truncated Subjective + Assessment summaries and "Open full note" link. Visits without SOAP remain simple links.
+- **Create visit button**: `src/components/visits/create-visit-button.tsx` — reusable visit creation button component.
+
+### Added — Vitals & Health Ratings
+- **Vitals push endpoint**: `POST /api/visits/[id]/push-vitals` — pushes visit vitals and health ratings to the patient vitals timeline.
+- **Migration 021** (`021_vitals_pushed_at.sql`): Adds `vitals_pushed_at TIMESTAMPTZ` on `visits` table.
+- **Enhanced vitals panel**: `src/components/visits/vitals-panel.tsx` with chart support for tracking vitals over time.
+
+### Changed — Lab Detail Sheet UX
+- **Removed shadow** from lab detail drawer panel (`shadow-2xl` removed from `lab-detail-sheet.tsx`).
+- **Prominent "Full report" link**: Replaced tiny ExternalLink icon with visible pill button (`target="_blank"`) in header and footer for opening full lab page in new tab.
+
+### Changed — UI Components
+- **`src/components/ui/editable-sections.tsx`** (NEW): Reusable editable section components for patient overview.
+- **`src/components/ui/confirm-dialog.tsx`**: z-index fix for proper layering with sidebar.
+- **`src/components/patients/patient-profile.tsx`**: Major refactor — integrated PopulateFromDocsBanner, expandable visit cards with SOAP summaries, updated VisitItem interface.
+
+### Changed — Dashboard & Layout
+- **Dashboard page**: Enhanced layout with improved card grid and navigation.
+- **Sidebar**: Fixed conversation list edge cases.
+- **FM Timeline**: Improved event rendering and interaction.
+
 ## [0.18.0] - 2026-02-26
 
 ### Fixed — Chat Citation Relevance & Evidence Level Accuracy

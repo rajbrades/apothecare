@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { updateVisitSchema } from "@/lib/validations/visit";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -149,6 +150,9 @@ export async function DELETE(
       resourceType: "visit",
       resourceId: id,
     });
+
+    // Invalidate the layout so the sidebar re-fetches visits
+    revalidatePath("/(app)", "layout");
 
     return NextResponse.json({ success: true });
   } catch {

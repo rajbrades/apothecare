@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Upload, FileText, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { DocumentType, DocumentStatus } from "@/types/database";
@@ -37,13 +37,13 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [docType, setDocType] = useState("intake_form");
+  const [docType, setDocType] = useState("");
   const [title, setTitle] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typeSelectRef = useRef<HTMLSelectElement>(null);
 
-  const handleFile = async (file: File) => {
-    setError(null);
-
+  const doUpload = useCallback(async (file: File, type: string) => {
     if (file.type !== "application/pdf") {
       setError("Only PDF files are accepted");
       return;
@@ -54,10 +54,11 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
     }
 
     setUploading(true);
+    setError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("document_type", docType);
+      formData.append("document_type", type);
       if (title.trim()) formData.append("title", title.trim());
 
       const res = await fetch(`/api/patients/${patientId}/documents`, {
@@ -75,7 +76,6 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
       toast.success("Document uploaded — extraction starting");
       setTitle("");
 
-      // Reset file input
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed";
@@ -84,6 +84,28 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
     } finally {
       setUploading(false);
     }
+  }, [patientId, title, onUploaded]);
+
+  // Auto-upload when pending file exists and type gets selected
+  useEffect(() => {
+    if (pendingFile && docType) {
+      const file = pendingFile;
+      setPendingFile(null);
+      doUpload(file, docType);
+    }
+  }, [pendingFile, docType, doUpload]);
+
+  const handleFile = (file: File) => {
+    setError(null);
+
+    if (!docType) {
+      setPendingFile(file);
+      setError("Select a document type first — your file will upload automatically");
+      typeSelectRef.current?.focus();
+      return;
+    }
+
+    doUpload(file, docType);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -102,9 +124,20 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
           <select
             id="du-doc-type"
             value={docType}
-            onChange={(e) => setDocType(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] text-[var(--color-text-primary)]"
+            ref={typeSelectRef}
+            onChange={(e) => {
+              setDocType(e.target.value);
+              setError(null);
+            }}
+            className={`w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border bg-[var(--color-surface)] ${
+              !docType
+                ? pendingFile
+                  ? "border-red-400 text-[var(--color-text-muted)] animate-pulse"
+                  : "border-amber-300 text-[var(--color-text-muted)]"
+                : "border-[var(--color-border-light)] text-[var(--color-text-primary)]"
+            }`}
           >
+            <option value="" disabled>Select type...</option>
             {DOCUMENT_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
@@ -122,6 +155,15 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
           />
         </div>
       </div>
+
+      {/* Pending file indicator */}
+      {pendingFile && (
+        <div className="flex items-center gap-2 px-3 py-2 text-sm bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] text-amber-700">
+          <FileText className="w-4 h-4 shrink-0" />
+          <span className="truncate font-medium">{pendingFile.name}</span>
+          <span className="shrink-0">ready — select a type above to upload</span>
+        </div>
+      )}
 
       {/* Drop zone */}
       <div
@@ -168,7 +210,7 @@ export function DocumentUpload({ patientId, onUploaded }: DocumentUploadProps) {
         )}
       </div>
 
-      {error && (
+      {error && !pendingFile && (
         <div role="alert" className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
