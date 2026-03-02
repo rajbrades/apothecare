@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   const publicPaths = ["/", "/auth/login", "/auth/register", "/auth/callback"];
   const isPublicPath = publicPaths.some(
     (path) => request.nextUrl.pathname === path
-  );
+  ) || request.nextUrl.pathname.startsWith("/prototype");
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();

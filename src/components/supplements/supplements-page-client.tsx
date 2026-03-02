@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Shield, Package } from "lucide-react";
+import { ClipboardList, Shield } from "lucide-react";
 import { ReviewTab } from "./review-tab";
 import { InteractionChecker } from "./interaction-checker";
-import { BrandFormulary } from "./brand-formulary";
 
 interface PatientOption {
   id: string;
@@ -29,12 +28,11 @@ interface SupplementsPageClientProps {
   initialPatientId?: string;
 }
 
-type Tab = "reviews" | "interactions" | "brands";
+type Tab = "reviews" | "interactions";
 
 const tabs: { id: Tab; label: string; icon: typeof ClipboardList }[] = [
   { id: "reviews", label: "Reviews", icon: ClipboardList },
   { id: "interactions", label: "Interaction Checker", icon: Shield },
-  { id: "brands", label: "Brand Formulary", icon: Package },
 ];
 
 export function SupplementsPageClient({
@@ -94,7 +92,6 @@ export function SupplementsPageClient({
             onPatientChange={setSelectedPatientId}
           />
         )}
-        {activeTab === "brands" && <BrandFormulary />}
       </div>
     </div>
   );

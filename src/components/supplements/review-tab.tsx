@@ -8,6 +8,7 @@ import { useSupplementReview } from "@/hooks/use-supplement-review";
 import { SupplementReviewStream } from "./supplement-review-stream";
 import { SupplementReviewDetail } from "./supplement-review-detail";
 import { ReviewStatusBadge } from "./review-status-badge";
+import { BrandFormularyInline } from "./brand-formulary-inline";
 
 interface PatientOption {
   id: string;
@@ -134,6 +135,9 @@ export function ReviewTab({ patients, initialReviews, selectedPatientId, onPatie
 
   return (
     <div className="space-y-6">
+      {/* Brand Formulary — inline at top of reviews */}
+      <BrandFormularyInline />
+
       {/* Generate new review form */}
       {!isGenerating && !isComplete && (
         <div className="space-y-4">
