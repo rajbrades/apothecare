@@ -39,3 +39,9 @@ supabase/.temp/
 
 # misc output
 /output/
+
+# screenshots / design review artifacts
+/*.png
+/*.jpeg
+/*.jpg
+.playwright-mcp/
