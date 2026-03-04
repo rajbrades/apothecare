@@ -11,7 +11,8 @@ export type RateLimitAction =
   | "doc_extract"
   | "doc_populate"
   | "supplement_review"
-  | "interaction_check";
+  | "interaction_check"
+  | "data_export";
 
 // ── Configuration ───────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ const RATE_LIMITS: Record<RateLimitAction, RateLimitConfig> = {
   doc_populate:     { free: 10,  pro: 100, window: "1 day" },
   supplement_review:{ free: 5,   pro: 50,  window: "1 day" },
   interaction_check:{ free: 10,  pro: 100, window: "1 day" },
+  data_export:      { free: 1,   pro: 3,   window: "1 day" },
 };
 
 // ── Public API ──────────────────────────────────────────────────────────

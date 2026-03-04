@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -63,6 +63,43 @@ export function AccountSection({ practitioner, userEmail, authProvider }: Accoun
     }
   };
 
+  // ── Data Export ──────────────────────────────────────────────────
+  const [exporting, setExporting] = useState(false);
+  const [includePdfs, setIncludePdfs] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/account/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ includePdfs }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Export failed");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const today = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `apothecare-export-${today}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Data exported successfully");
+    } catch {
+      toast.error("Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // ── Delete Account ────────────────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -98,6 +135,46 @@ export function AccountSection({ practitioner, userEmail, authProvider }: Accoun
 
   return (
     <div className="space-y-6">
+      {/* Data Export */}
+      <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-6">
+        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">
+          Export Your Data
+        </h2>
+        <p className="text-sm text-[var(--color-text-muted)] mb-4">
+          Download all your patients, visits, lab reports, conversations, and supplements as a ZIP file.
+        </p>
+
+        <label className="flex items-center gap-2 mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includePdfs}
+            onChange={(e) => setIncludePdfs(e.target.checked)}
+            disabled={exporting}
+            className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-brand-600)] focus:ring-[var(--color-brand-400)]"
+          />
+          <span className="text-sm text-[var(--color-text-secondary)]">
+            Include original lab PDFs
+          </span>
+          <span className="text-xs text-[var(--color-text-muted)]">(larger download)</span>
+        </label>
+
+        <Button
+          onClick={handleExport}
+          disabled={exporting}
+          size="sm"
+        >
+          {exporting ? (
+            <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4 mr-1.5" />
+          )}
+          {exporting
+            ? includePdfs ? "Preparing export with PDFs..." : "Preparing export..."
+            : "Export All Data"
+          }
+        </Button>
+      </div>
+
       {/* Change Password */}
       <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-6">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-4">
