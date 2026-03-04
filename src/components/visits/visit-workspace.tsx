@@ -33,6 +33,7 @@ import { IFMMatrixView } from "./ifm-matrix-view";
 import { ProtocolPanel } from "./protocol-panel";
 import { VitalsPanel } from "./vitals-panel";
 import { ExportMenu } from "./export-menu";
+import { VisitAssistant } from "./visit-assistant";
 import { useVisitStream } from "@/hooks/use-visit-stream";
 import { useAudioRecorder } from "@/hooks/use-audio-recorder";
 import type { Visit, VisitType, IFMMatrix, VitalsData, HealthRatings } from "@/types/database";
@@ -1045,6 +1046,8 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
         variant="warning"
         loading={pushingProtocol}
       />
+
+      <VisitAssistant visitId={visit.id} patientName={patientName} />
     </div>
   );
 }
