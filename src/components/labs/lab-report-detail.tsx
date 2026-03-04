@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -477,6 +477,126 @@ function AddToVisitModal({
   );
 }
 
+function OverflowMenu({
+  pdfUrl,
+  showReparse,
+  retrying,
+  onReparse,
+  archiving,
+  isArchived,
+  onArchive,
+  showDownload,
+  onDownload,
+  showAddToVisit,
+  onAddToVisit,
+}: {
+  pdfUrl: string | null;
+  showReparse: boolean;
+  retrying: boolean;
+  onReparse: () => void;
+  archiving: boolean;
+  isArchived: boolean;
+  onArchive: () => void;
+  showDownload: boolean;
+  onDownload: () => void;
+  showAddToVisit: boolean;
+  onAddToVisit: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const itemClass =
+    "flex items-center gap-2.5 w-full px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-50 text-left";
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center justify-center w-9 h-9 rounded-[var(--radius-md)] border transition-colors ${
+          open
+            ? "bg-[var(--color-surface-tertiary)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+            : "bg-[var(--color-surface-secondary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)]"
+        }`}
+        title="More actions"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-20 w-52 py-1 rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] shadow-lg">
+          {pdfUrl && (
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className={itemClass}
+            >
+              <FileText className="w-4 h-4" />
+              View Original PDF
+            </a>
+          )}
+
+          {showDownload && (
+            <button
+              onClick={() => { onDownload(); setOpen(false); }}
+              className={itemClass}
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </button>
+          )}
+
+          {showAddToVisit && (
+            <button
+              onClick={() => { onAddToVisit(); setOpen(false); }}
+              className={itemClass}
+            >
+              <CalendarPlus className="w-4 h-4" />
+              Add to Visit
+            </button>
+          )}
+
+          {(pdfUrl || showDownload || showAddToVisit) && (showReparse || true) && (
+            <div className="my-1 h-px bg-[var(--color-border-light)]" />
+          )}
+
+          {showReparse && (
+            <button
+              onClick={() => { onReparse(); setOpen(false); }}
+              disabled={retrying}
+              className={itemClass}
+            >
+              <RefreshCcw className={`w-4 h-4 ${retrying ? "animate-spin" : ""}`} />
+              {retrying ? "Re-parsing..." : "Re-parse Report"}
+            </button>
+          )}
+
+          <button
+            onClick={() => { onArchive(); setOpen(false); }}
+            disabled={archiving}
+            className={itemClass}
+          >
+            {isArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+            {isArchived ? "Unarchive" : "Archive"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl, previousValues, fromPatient }: LabReportDetailProps) {
   const [report, setReport] = useState(initialReport);
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
@@ -704,37 +824,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
         </div>
 
         {/* Action row */}
-        <div className="flex items-center gap-3 mt-4">
-          {pdfUrl && (
-            <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-brand-600)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-100)] transition-colors"
-            >
-              <FileText className="w-4 h-4" />
-              View Original PDF
-            </a>
-          )}
-          {report.status === "complete" && (
-            <button
-              onClick={handleRetry}
-              disabled={retrying}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
-            >
-              <RefreshCcw className={`w-4 h-4 ${retrying ? "animate-spin" : ""}`} />
-              {retrying ? "Re-parsing..." : "Re-parse Report"}
-            </button>
-          )}
-          <button
-            onClick={handleArchive}
-            disabled={archiving}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
-          >
-            {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : isArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-            {isArchived ? "Unarchive" : "Archive"}
-          </button>
-
+        <div className="flex items-center gap-2 mt-4">
+          {/* Primary actions — always visible */}
           <AssignPatientButton
             labId={report.id}
             currentPatient={report.patients?.id ? { id: report.patients.id, first_name: report.patients.first_name, last_name: report.patients.last_name } : null}
@@ -753,12 +844,6 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             </button>
           )}
 
-          {/* Divider */}
-          {report.status === "complete" && totalBiomarkers > 0 && (
-            <span className="w-px h-5 bg-[var(--color-border)]" />
-          )}
-
-          {/* Copy to clipboard */}
           {report.status === "complete" && totalBiomarkers > 0 && (
             <button
               onClick={handleCopyToClipboard}
@@ -769,27 +854,20 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             </button>
           )}
 
-          {/* Download PDF */}
-          {report.status === "complete" && totalBiomarkers > 0 && (
-            <button
-              onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors print:hidden"
-            >
-              <Download className="w-4 h-4" />
-              Download PDF
-            </button>
-          )}
-
-          {/* Add to Visit */}
-          {report.status === "complete" && report.patient_id && totalBiomarkers > 0 && (
-            <button
-              onClick={() => setShowAddToVisit(true)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors print:hidden"
-            >
-              <CalendarPlus className="w-4 h-4" />
-              Add to Visit
-            </button>
-          )}
+          {/* Overflow menu */}
+          <OverflowMenu
+            pdfUrl={pdfUrl}
+            showReparse={report.status === "complete"}
+            retrying={retrying}
+            onReparse={handleRetry}
+            archiving={archiving}
+            isArchived={isArchived}
+            onArchive={handleArchive}
+            showDownload={report.status === "complete" && totalBiomarkers > 0}
+            onDownload={handleDownloadPdf}
+            showAddToVisit={report.status === "complete" && !!report.patient_id && totalBiomarkers > 0}
+            onAddToVisit={() => setShowAddToVisit(true)}
+          />
         </div>
       </div>
 
