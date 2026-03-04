@@ -7,7 +7,7 @@ import {
   Calendar, User, Sparkles, Check, RotateCcw,
   Stethoscope, RefreshCcw, Loader2, StopCircle, ClipboardList,
   Grid3x3, Pill, HeartPulse, UserCheck, Trash2, Activity,
-  Mic, Square, Play, Pause, MessageSquarePlus,
+  Mic, Square, Play, Pause,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -239,9 +239,6 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   const [protocolPushedAt, setProtocolPushedAt] = useState<string | null>(
     visit.protocol_pushed_at || null
   );
-
-  // Visit assistant panel
-  const [assistantOpen, setAssistantOpen] = useState(false);
 
   // Push visit to patient timeline state
   const [pushingToRecord, setPushingToRecord] = useState(false);
@@ -571,9 +568,6 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   ];
 
   return (
-    <div className={`flex min-h-screen items-stretch transition-all duration-300`}>
-    {/* Main content */}
-    <div className={`flex-1 min-w-0 transition-all duration-300 ${assistantOpen ? "max-w-[calc(100%-320px)]" : ""}`}>
     <div className="max-w-5xl mx-auto px-6 py-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
@@ -666,18 +660,6 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setAssistantOpen((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${
-              assistantOpen
-                ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]"
-                : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)]"
-            }`}
-            title="Toggle AI synthesis assistant"
-          >
-            <MessageSquarePlus className="w-3.5 h-3.5" />
-            Ask AI
-          </button>
           {!isReadOnly && (
             <button
               onClick={handleDelete}
@@ -1065,19 +1047,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
         loading={pushingProtocol}
       />
 
-    </div>
-    </div>
-
-    {/* Right assistant panel */}
-    {assistantOpen && (
-      <div className="w-80 flex-shrink-0 sticky top-0 h-screen">
-        <VisitAssistant
-          visitId={visit.id}
-          patientName={patientName}
-          onClose={() => setAssistantOpen(false)}
-        />
-      </div>
-    )}
+      <VisitAssistant visitId={visit.id} patientName={patientName} />
     </div>
   );
 }
