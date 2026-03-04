@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -301,6 +301,182 @@ function buildPanels(
   });
 }
 
+// ── Clipboard helper ────────────────────────────────────────────────────
+function buildClipboardText(
+  reportName: string,
+  vendorLabel: string,
+  collectionDate: string | null,
+  patientName: string | null,
+  biomarkers: BiomarkerRow[],
+  qualitativeResults: ParsedQualitativeResult[],
+): string {
+  const lines: string[] = [];
+  lines.push(`LAB REPORT: ${reportName}`);
+  lines.push(`Lab: ${vendorLabel}`);
+  if (collectionDate) lines.push(`Collected: ${formatDate(collectionDate)}`);
+  if (patientName) lines.push(`Patient: ${patientName}`);
+  lines.push("");
+
+  const flagged = biomarkers.filter((b) => {
+    const f = b.functional_flag || b.conventional_flag;
+    return f && f !== "optimal" && f !== "normal";
+  });
+
+  if (flagged.length > 0) {
+    lines.push("── FLAGGED BIOMARKERS ──");
+    for (const b of flagged) {
+      const flag = b.functional_flag || b.conventional_flag;
+      const range = b.functional_low != null && b.functional_high != null
+        ? `functional range: ${b.functional_low}–${b.functional_high} ${b.unit}`
+        : b.conventional_low != null && b.conventional_high != null
+          ? `range: ${b.conventional_low}–${b.conventional_high} ${b.unit}`
+          : "";
+      lines.push(`• ${b.biomarker_name}: ${b.value} ${b.unit} [${flag?.toUpperCase()}]${range ? ` (${range})` : ""}`);
+      if (b.interpretation) lines.push(`  → ${b.interpretation}`);
+    }
+    lines.push("");
+  }
+
+  const flaggedQual = qualitativeResults.filter((q) => isQualitativeFlagged(q.result, q.reference));
+  if (flaggedQual.length > 0) {
+    lines.push("── FLAGGED QUALITATIVE ──");
+    for (const q of flaggedQual) {
+      lines.push(`• ${q.name}: ${q.result} (ref: ${q.reference})`);
+    }
+    lines.push("");
+  }
+
+  const normal = biomarkers.filter((b) => {
+    const f = b.functional_flag || b.conventional_flag;
+    return !f || f === "optimal" || f === "normal";
+  });
+  if (normal.length > 0) {
+    lines.push("── WITHIN RANGE ──");
+    for (const b of normal) {
+      lines.push(`• ${b.biomarker_name}: ${b.value} ${b.unit}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+// ── Add to Visit Modal ───────────────────────────────────────────────────
+interface VisitOption {
+  id: string;
+  visit_date: string;
+  visit_type: string;
+  chief_complaint: string | null;
+  objective: string | null;
+}
+
+function AddToVisitModal({
+  patientId,
+  labSummary,
+  onClose,
+}: {
+  patientId: string;
+  labSummary: string;
+  onClose: () => void;
+}) {
+  const [visits, setVisits] = useState<VisitOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch(`/api/visits?patient_id=${patientId}&status=draft&limit=10`)
+      .then((r) => r.json())
+      .then((d) => setVisits(d.visits || []))
+      .catch(() => setVisits([]))
+      .finally(() => setLoading(false));
+  }, [patientId]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const handleAdd = async (visit: VisitOption) => {
+    setSaving(visit.id);
+    const newObjective = visit.objective
+      ? `${visit.objective}\n\n---\n${labSummary}`
+      : labSummary;
+    try {
+      const res = await fetch(`/api/visits/${visit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objective: newObjective }),
+      });
+      if (!res.ok) throw new Error("Failed to update visit");
+      setSaved(visit.id);
+      toast.success("Lab summary added to visit");
+    } catch {
+      toast.error("Failed to add to visit");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={ref} className="w-full max-w-md bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border)]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-light)]">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Add to Visit</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Select an open visit to append this lab summary</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-tertiary)] transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-3 max-h-72 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" />
+            </div>
+          ) : visits.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-8">No open visits for this patient</p>
+          ) : (
+            <div className="space-y-1">
+              {visits.map((visit) => (
+                <button
+                  key={visit.id}
+                  onClick={() => handleAdd(visit)}
+                  disabled={!!saving || saved === visit.id}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)] transition-all text-left disabled:opacity-60 group"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      <span className="ml-2 text-xs font-normal text-[var(--color-text-muted)] capitalize">{visit.visit_type.replace("_", " ")}</span>
+                    </p>
+                    {visit.chief_complaint && (
+                      <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate max-w-xs">{visit.chief_complaint}</p>
+                    )}
+                  </div>
+                  {saving === visit.id ? (
+                    <Loader2 size={16} className="animate-spin text-[var(--color-brand-600)] flex-shrink-0" />
+                  ) : saved === visit.id ? (
+                    <Check size={16} className="text-emerald-600 flex-shrink-0" />
+                  ) : (
+                    <CalendarPlus size={16} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] flex-shrink-0 transition-colors" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LabReportDetail({ report: initialReport, biomarkers: initialBiomarkers, pdfUrl: initialPdfUrl, previousValues, fromPatient }: LabReportDetailProps) {
   const [report, setReport] = useState(initialReport);
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
@@ -309,6 +485,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   const [archiving, setArchiving] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [pushed, setPushed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showAddToVisit, setShowAddToVisit] = useState(false);
   const isArchived = report.is_archived ?? false;
 
   const isProcessing = PROCESSING_STATUSES.includes(report.status);
@@ -403,6 +581,30 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
       setPushing(false);
     }
   }, [report.id]);
+
+  const handleCopyToClipboard = useCallback(async () => {
+    const qual = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
+    const text = buildClipboardText(
+      report.test_name || "Lab Report",
+      VENDOR_LABELS[report.lab_vendor] || report.lab_vendor,
+      report.collection_date,
+      report.patients ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ") : null,
+      biomarkers,
+      qual,
+    );
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy to clipboard");
+    }
+  }, [report, biomarkers]);
+
+  const handleDownloadPdf = useCallback(() => {
+    window.print();
+  }, []);
 
   const patientName = report.patients
     ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ")
@@ -550,6 +752,44 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               {pushed ? "Update Record" : "Push to Record"}
             </button>
           )}
+
+          {/* Divider */}
+          {report.status === "complete" && totalBiomarkers > 0 && (
+            <span className="w-px h-5 bg-[var(--color-border)]" />
+          )}
+
+          {/* Copy to clipboard */}
+          {report.status === "complete" && totalBiomarkers > 0 && (
+            <button
+              onClick={handleCopyToClipboard}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          )}
+
+          {/* Download PDF */}
+          {report.status === "complete" && totalBiomarkers > 0 && (
+            <button
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors print:hidden"
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </button>
+          )}
+
+          {/* Add to Visit */}
+          {report.status === "complete" && report.patient_id && totalBiomarkers > 0 && (
+            <button
+              onClick={() => setShowAddToVisit(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors print:hidden"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              Add to Visit
+            </button>
+          )}
         </div>
       </div>
 
@@ -629,6 +869,31 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
           </p>
         </div>
       )}
+
+      {/* Add to Visit modal */}
+      {showAddToVisit && report.patient_id && (
+        <AddToVisitModal
+          patientId={report.patient_id}
+          labSummary={buildClipboardText(
+            report.test_name || "Lab Report",
+            VENDOR_LABELS[report.lab_vendor] || report.lab_vendor,
+            report.collection_date,
+            patientName,
+            biomarkers,
+            (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [],
+          )}
+          onClose={() => setShowAddToVisit(false)}
+        />
+      )}
+
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body > *:not([data-print-target]) { display: none !important; }
+          nav, aside, header, footer, button, a { display: none !important; }
+          .print\\:hidden { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
