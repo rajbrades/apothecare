@@ -1,17 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Star, MessageSquare } from "lucide-react";
+import { Search, Star, MessageSquare, Plus } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { MOCK_CONVERSATIONS } from "./mock-data";
 
 export function PanelConversations() {
   const [search, setSearch] = useState("");
-
-  const favorites = useMemo(
-    () => MOCK_CONVERSATIONS.filter((c) => c.is_favorited),
-    []
-  );
 
   const filtered = useMemo(() => {
     if (!search.trim()) return MOCK_CONVERSATIONS;
@@ -21,18 +16,26 @@ export function PanelConversations() {
     );
   }, [search]);
 
-  const recent = useMemo(
-    () => filtered.filter((c) => !c.is_favorited),
-    [filtered]
-  );
-
   const filteredFavorites = useMemo(
     () => filtered.filter((c) => c.is_favorited),
     [filtered]
   );
 
+  const recent = useMemo(
+    () => filtered.filter((c) => !c.is_favorited),
+    [filtered]
+  );
+
   return (
     <div className="flex flex-col h-full">
+      {/* New conversation button */}
+      <div className="px-3 pb-2">
+        <button className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-[var(--color-brand-600)] bg-[var(--color-brand-50)] rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-100)] transition-colors">
+          <Plus size={15} strokeWidth={2.5} />
+          New Conversation
+        </button>
+      </div>
+
       {/* Search */}
       <div className="px-3 pb-3">
         <div className="relative">
@@ -96,7 +99,7 @@ function ConversationRow({ conv }: { conv: (typeof MOCK_CONVERSATIONS)[0] }) {
       className="w-full text-left px-2 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-tertiary)] transition-colors group"
       title={conv.title}
     >
-      <p className="text-sm text-[var(--color-text-primary)] truncate leading-snug">
+      <p className="text-sm text-[var(--color-text-primary)] leading-snug line-clamp-2">
         {conv.title}
       </p>
       <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">

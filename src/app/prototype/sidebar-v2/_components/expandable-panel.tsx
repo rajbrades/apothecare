@@ -3,9 +3,13 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { PanelConversations } from "./panel-conversations";
+import { PanelVisits } from "./panel-visits";
+import { PanelPatients } from "./panel-patients";
 
 const SECTION_TITLES: Record<string, string> = {
   conversations: "Conversations",
+  visits: "Recent Visits",
+  patients: "Patients",
 };
 
 interface ExpandablePanelProps {
@@ -61,6 +65,8 @@ export function ExpandablePanel({
       {/* Panel content */}
       <div className="flex-1 min-h-0 pt-3">
         {activeSection === "conversations" && <PanelConversations />}
+        {activeSection === "visits" && <PanelVisits />}
+        {activeSection === "patients" && <PanelPatients />}
       </div>
     </div>
   );
@@ -126,6 +132,8 @@ export function MobilePanel({
         {/* Content */}
         <div className="pt-3 overflow-y-auto" style={{ maxHeight: "calc(70vh - 80px)" }}>
           {activeSection === "conversations" && <PanelConversations />}
+          {activeSection === "visits" && <PanelVisits />}
+          {activeSection === "patients" && <PanelPatients />}
         </div>
       </div>
     </>

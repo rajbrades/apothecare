@@ -24,10 +24,10 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, hasPanel: false },
   { id: "conversations", label: "Conversations", icon: MessageSquare, hasPanel: true },
-  { id: "visits", label: "Visits", icon: Stethoscope, hasPanel: false },
+  { id: "visits", label: "Visits", icon: Stethoscope, hasPanel: true },
   { id: "labs", label: "Labs", icon: FlaskConical, hasPanel: false },
   { id: "supplements", label: "Supplements", icon: Pill, hasPanel: false },
-  { id: "patients", label: "Patients", icon: Users, hasPanel: false },
+  { id: "patients", label: "Patients", icon: Users, hasPanel: true },
 ];
 
 interface IconRailProps {
@@ -163,9 +163,9 @@ export function MobileTabBar({
   const MOBILE_TABS: NavItem[] = [
     { id: "dashboard", label: "Home", icon: LayoutDashboard, hasPanel: false },
     { id: "conversations", label: "Chat", icon: MessageSquare, hasPanel: true },
-    { id: "visits", label: "Visits", icon: Stethoscope, hasPanel: false },
+    { id: "visits", label: "Visits", icon: Stethoscope, hasPanel: true },
     { id: "labs", label: "Labs", icon: FlaskConical, hasPanel: false },
-    { id: "patients", label: "Patients", icon: Users, hasPanel: false },
+    { id: "patients", label: "Patients", icon: Users, hasPanel: true },
   ];
 
   return (

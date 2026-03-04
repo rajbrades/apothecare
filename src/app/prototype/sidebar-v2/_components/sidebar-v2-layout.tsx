@@ -11,8 +11,8 @@ import {
   MockSupplementsPage,
 } from "./mock-pages";
 
-/** Only Conversations opens the expandable panel flyout */
-const PANEL_SECTIONS = new Set(["conversations"]);
+/** These nav items open the expandable panel flyout */
+const PANEL_SECTIONS = new Set(["conversations", "visits", "patients"]);
 
 export function SidebarV2Layout() {
   const [activePage, setActivePage] = useState("dashboard");
