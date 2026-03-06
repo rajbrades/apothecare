@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles, X, Send, Loader2, RotateCcw } from "lucide-react";
 
 interface Message {
@@ -18,9 +19,10 @@ const SUGGESTED_PROMPTS = [
 interface VisitAssistantProps {
   visitId: string;
   patientName: string | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
+export function VisitAssistant({ visitId, patientName, onOpenChange }: VisitAssistantProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -29,6 +31,17 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const [mounted, setMounted] = useState(false);
+
+  const toggleOpen = useCallback((value: boolean) => {
+    setOpen(value);
+    onOpenChange?.(value);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
@@ -36,6 +49,16 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") toggleOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, toggleOpen]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || streaming) return;
@@ -119,47 +142,57 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
     setInput("");
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       {/* Edge tab — fixed to right edge, vertically centered */}
-      <button
-        onClick={() => setOpen(true)}
-        className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1.5 pl-2.5 pr-2 py-3 rounded-l-lg shadow-md transition-all duration-200 print:hidden ${
-          open
-            ? "opacity-0 pointer-events-none translate-x-full"
-            : "opacity-100 translate-x-0"
-        } bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-500)] hover:pr-3 hover:shadow-lg`}
-        aria-label="Open AI synthesis assistant"
-        style={{ writingMode: "vertical-lr" }}
-      >
-        <Sparkles className="w-3.5 h-3.5 rotate-90" />
-        <span className="text-[11px] font-semibold tracking-wide">AI</span>
-      </button>
+      {!open && (
+        <button
+          onClick={() => toggleOpen(true)}
+          className="fixed right-3 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1.5 px-2 py-3 rounded-lg shadow-md transition-all duration-200 print:hidden bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-500)] hover:shadow-lg"
+          style={{ writingMode: "vertical-lr" }}
+          aria-label="Open AI synthesis assistant"
+        >
+          <Sparkles className="w-3.5 h-3.5 rotate-90" />
+          <span className="text-[11px] font-semibold tracking-wide">AI</span>
+        </button>
+      )}
+
+      {/* Backdrop — click to close (rendered before drawer so drawer is on top) */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/10 print:hidden"
+          onClick={() => toggleOpen(false)}
+        />
+      )}
 
       {/* Drawer — slides in from right edge */}
       <div
-        className={`fixed top-0 right-0 z-50 flex flex-col h-screen w-[340px] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl transition-transform duration-300 ease-in-out print:hidden ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-[min(340px,100vw)] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
+        style={{
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-light)] flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] flex items-center justify-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-3 h-3 text-[var(--color-brand-600)]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-tight">
                 Visit Assistant
               </p>
               {patientName && (
-                <p className="text-[10px] text-[var(--color-text-muted)] leading-tight">
+                <p className="text-[10px] text-[var(--color-text-muted)] leading-tight truncate">
                   {patientName}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
@@ -170,7 +203,7 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
               </button>
             )}
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => toggleOpen(false)}
               className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] rounded transition-colors"
               title="Close"
             >
@@ -205,7 +238,7 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[88%] rounded-[var(--radius-md)] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[88%] rounded-[var(--radius-md)] px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words ${
                     msg.role === "user"
                       ? "bg-[var(--color-brand-600)] text-white"
                       : "bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] border border-[var(--color-border-light)]"
@@ -256,14 +289,7 @@ export function VisitAssistant({ visitId, patientName }: VisitAssistantProps) {
           </form>
         </div>
       </div>
-
-      {/* Backdrop — click to close */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/10 print:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-    </>
+    </>,
+    document.body
   );
 }

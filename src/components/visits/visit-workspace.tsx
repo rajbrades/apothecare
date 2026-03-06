@@ -240,6 +240,9 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
     visit.protocol_pushed_at || null
   );
 
+  // Assistant drawer state
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
   // Push visit to patient timeline state
   const [pushingToRecord, setPushingToRecord] = useState(false);
   const [pushedToRecord, setPushedToRecord] = useState<"idle" | "pushed" | "already">( "idle");
@@ -568,10 +571,13 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-6">
+    <div
+      className="max-w-5xl mx-auto px-6 py-6 transition-[margin-right] duration-300 ease-in-out"
+      style={{ marginRight: assistantOpen ? "min(360px, 35vw)" : undefined }}
+    >
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="min-w-0">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-3">
             <Link
               href="/visits"
@@ -659,7 +665,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
           {!isReadOnly && (
             <button
               onClick={handleDelete}
@@ -1047,7 +1053,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
         loading={pushingProtocol}
       />
 
-      <VisitAssistant visitId={visit.id} patientName={patientName} />
+      <VisitAssistant visitId={visit.id} patientName={patientName} onOpenChange={setAssistantOpen} />
     </div>
   );
 }
