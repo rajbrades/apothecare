@@ -29,8 +29,11 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().trim().optional(),
   MINIMAX_API_KEY: z.string().trim().optional(),
 
-  // ── OpenAI (Whisper transcription) ───────────────────────────────────
+  // ── OpenAI (Whisper transcription, embeddings) ─────────────────────
   OPENAI_API_KEY: z.string().trim().optional(),
+
+  // ── NCBI / PubMed (evidence ingestion) ────────────────────────────
+  NCBI_API_KEY: z.string().trim().optional(),
 
   // ── Stripe ────────────────────────────────────────────────────────────
   STRIPE_SECRET_KEY: z.string().optional(),

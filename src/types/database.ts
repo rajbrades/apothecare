@@ -611,6 +611,7 @@ export interface Database {
           match_threshold?: number;
           match_count?: number;
           filter_source?: string | null;
+          filter_sources?: string[] | null;
         };
         Returns: Array<{
           id: string;

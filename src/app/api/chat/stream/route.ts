@@ -8,6 +8,8 @@ import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 import { extractCitations, resolveCitations, resolveCitationsMulti, applyCitationLinks } from "@/lib/citations/resolve";
+import { retrieveEvidence } from "@/lib/evidence/retrieve";
+import { formatEvidenceContext } from "@/lib/evidence/format-context";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -167,6 +169,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
+    let evidenceContext = "";
+    let ragChunkCount = 0;
+    try {
+      const evidence = await retrieveEvidence(message, {
+        sources: (source_filter ?? []) as string[],
+        matchCount: is_deep_consult ? 12 : 8,
+      });
+      evidenceContext = formatEvidenceContext(evidence);
+      ragChunkCount = evidence.chunks.length;
+    } catch (err) {
+      console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
+    }
+
     // Stream response
     const encoder = new TextEncoder();
     let fullContent = "";
@@ -185,7 +201,7 @@ export async function POST(request: NextRequest) {
             {
               model,
               maxTokens: is_deep_consult ? 4096 : 2048,
-              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum((source_filter ?? []) as SourceId[]),
+              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum((source_filter ?? []) as SourceId[]) + evidenceContext,
               messages,
             },
             {
@@ -293,6 +309,8 @@ export async function POST(request: NextRequest) {
               clinical_lens,
               source_filter: source_filter ?? [],
               has_patient_context: !!patient_id,
+              has_rag_context: ragChunkCount > 0,
+              rag_chunk_count: ragChunkCount,
               attachment_count: attachments?.length ?? 0,
             },
           });
