@@ -12,6 +12,7 @@ import type { Practitioner } from "@/types/database";
 import { ProfileSection } from "./profile-section";
 import { CredentialsSection } from "./credentials-section";
 import { PreferencesSection } from "./preferences-section";
+import { BiomarkerOverridesSection } from "./biomarker-overrides-section";
 import { SubscriptionSection } from "./subscription-section";
 import { AccountSection } from "./account-section";
 
@@ -137,6 +138,7 @@ export function SettingsPage({
               initialBrands={initialBrands}
               initialStrictMode={initialStrictMode}
             />
+            <BiomarkerOverridesSection />
           </div>
           <div ref={(el) => { sectionRefs.current.subscription = el; }}>
             <SubscriptionSection practitioner={practitioner} />
