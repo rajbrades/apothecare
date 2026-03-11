@@ -130,7 +130,8 @@ export async function parseLabReport(
       reportId,
       patientId,
       collectionDate,
-      serviceClient
+      serviceClient,
+      practitionerId
     );
 
     // Mark complete with summary in parsed_data

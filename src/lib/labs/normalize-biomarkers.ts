@@ -231,14 +231,60 @@ export async function normalizeBiomarkers(
   labReportId: string,
   patientId: string | null,
   collectionDate: string | null,
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient,
+  practitionerId?: string
 ): Promise<NormalizationResult> {
   // Fetch all reference ranges
   const { data: references } = await supabaseClient
     .from("biomarker_references")
     .select("biomarker_code, biomarker_name, category, conventional_low, conventional_high, conventional_unit, functional_low, functional_high");
 
-  const refList: BiomarkerReferenceSlim[] = references || [];
+  let refList: BiomarkerReferenceSlim[] = references || [];
+
+  // If a practitioner ID is provided, fetch overrides
+  if (practitionerId) {
+    const { data: overrides } = await supabaseClient
+      .from("practitioner_biomarker_ranges")
+      .select("biomarker_code, biomarker_name, functional_low, functional_high")
+      .eq("practitioner_id", practitionerId);
+
+    if (overrides && overrides.length > 0) {
+      // Create a map for fast lookup
+      const overridemap = new Map(
+        overrides.map((o) => [o.biomarker_code, o])
+      );
+
+      // Apply overrides to refList
+      refList = refList.map((ref) => {
+        const override = overridemap.get(ref.biomarker_code);
+        if (override) {
+          return {
+            ...ref,
+            functional_low: override.functional_low,
+            functional_high: override.functional_high,
+          };
+        }
+        return ref;
+      });
+      
+      // We might want to add totally custom biomarker references if they don't exist
+      // in the base list. Since they lack conventional ranges/units, they will just use functional.
+      for (const override of overrides) {
+        if (!refList.find(r => r.biomarker_code === override.biomarker_code)) {
+            refList.push({
+                biomarker_code: override.biomarker_code,
+                biomarker_name: override.biomarker_name,
+                category: "Custom",
+                conventional_low: null,
+                conventional_high: null,
+                conventional_unit: "",
+                functional_low: override.functional_low,
+                functional_high: override.functional_high
+            });
+        }
+      }
+    }
+  }
 
   const inserts = [];
   let matchedCount = 0;
