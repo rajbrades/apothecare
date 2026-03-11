@@ -508,6 +508,17 @@ export interface PractitionerBrandPreference {
   updated_at: string;
 }
 
+export interface PractitionerBiomarkerRange {
+  id: string;
+  practitioner_id: string;
+  biomarker_code: string;
+  biomarker_name: string;
+  functional_low: number | null;
+  functional_high: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ===========================================
 // Supabase Database type (for client typing)
 // ===========================================
@@ -578,6 +589,11 @@ export interface Database {
         Row: PractitionerBrandPreference;
         Insert: Omit<PractitionerBrandPreference, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<PractitionerBrandPreference, "id" | "created_at">>;
+      };
+      practitioner_biomarker_ranges: {
+        Row: PractitionerBiomarkerRange;
+        Insert: Omit<PractitionerBiomarkerRange, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<PractitionerBiomarkerRange, "id" | "created_at">>;
       };
       symptom_logs: {
         Row: SymptomLog;
