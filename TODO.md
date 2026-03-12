@@ -1,6 +1,169 @@
 # Apothecare — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
+**Engineering North Star:** Every task here serves the end goal — becoming the Bloomberg Terminal for functional medicine: the infrastructure layer practitioners, labs, supplement brands, and payors cannot operate without.
+
+See `CLAUDE.md` for the full platform vision. See `PLATFORM_STRATEGY.md` for execution detail.
+
+---
+
+## PHASE 0 — Foundation Hardening 🔴 DO FIRST
+*Non-negotiables before scale. Nothing compounds without this layer.*
+
+### 0.1 — Clinical Provenance Layer
+- [ ] **DB:** Migration 025 — `ai_outputs` table: `id`, `created_at`, `practitioner_id`, `patient_id` (nullable), `tool_name`, `tool_version`, `inputs JSONB`, `patterns_matched JSONB`, `safety_checks JSONB`, `evidence_sources JSONB`, `protocol_version TEXT`, `output JSONB`, `provider_reviewed_at`, `provider_action TEXT`. Append-only RLS.
+- [ ] **Lib:** `src/lib/provenance/record.ts` — `recordAIOutput()` wrapper that writes to `ai_outputs` on every AI call, regardless of success or failure
+- [ ] **Lib:** `src/lib/provenance/types.ts` — TypeScript interfaces for `ProvenanceRecord`, `PatternMatch`, `SafetyCheckResult`, `EvidenceSource`
+- [ ] **UI:** "Reasoning Trail" expandable panel on every AI-generated output — shows data inputs used, patterns fired, safety checks passed/failed with reasons, citations with evidence grades
+- [ ] **API:** Every AI route wrapped to call `recordAIOutput()` before returning response
+
+### 0.2 — Protocol Versioning
+- [ ] **DB:** Migration 026 — `protocol_versions` table: `id`, `protocol_name`, `version_hash`, `definition JSONB`, `created_at`, `deprecated_at`, `authored_by` (system / practitioner_id / institute)
+- [ ] **Lib:** `src/lib/protocols/version.ts` — `hashProtocol()` generates deterministic version hash from protocol definition; `getActiveVersion()` retrieves current version for a given protocol name
+- [ ] **Refactor:** All AI protocol recommendations reference a `protocol_version_id` — visit generation, supplement review, pattern matching
+
+### 0.3 — Immutable Audit Log Hardening
+- [ ] **DB:** Verify existing `audit_log` table has append-only RLS (no UPDATE/DELETE via API). Add `before_state JSONB` and `after_state JSONB` columns if missing.
+- [ ] **Lib:** Ensure every mutating API route calls audit log — verify coverage across all PATCH/POST/DELETE endpoints
+- [ ] **Compliance:** Add `session_id` to audit log entries for session-level traceability
+
+### 0.4 — AI Model Standardization
+- [ ] **Refactor:** Migrate primary AI calls from OpenAI to Claude (`claude-opus-4-6` for reasoning, `claude-haiku-4-5` for fast/simple tasks)
+- [ ] **Config:** Update `src/lib/ai/provider.ts` — Claude as primary for all reasoning, Whisper remains for transcription (no replacement), remove MiniMax fallback
+- [ ] **Prompts:** Audit and update all system prompts to leverage Claude's extended thinking for pattern matching and protocol generation
+- [ ] **Test:** Verify lab parsing, visit generation, supplement review, and chat all work correctly on Claude-primary stack
+
+---
+
+## PHASE 1 — MCP Layer + MVP 10 Tools 🟡 NEXT
+*Formalize five MCP servers on top of existing APIs. Ship the highest-value clinical workflow.*
+
+### MCP Infrastructure
+- [ ] **Lib:** `src/lib/mcp/orchestrator.ts` — session-scoped context object that accumulates state across tool calls; passes context explicitly between servers
+- [ ] **Lib:** `src/lib/mcp/session.ts` — session context type: accumulated patient context, patterns matched so far, safety checks run, evidence retrieved
+- [ ] **Arch:** Each MCP server is a service module in `src/lib/mcp/servers/` — not new API routes, but composable service functions that existing routes can also call
+
+### Server 1: Patient Context
+*Maps to existing routes under `/api/patients/[id]/`*
+- [ ] `get_patient_summary(patient_id)` — concise chart summary: diagnoses, meds, allergies, active plans
+- [ ] `get_lab_trends(patient_id, markers, date_range)` — longitudinal biomarker trends
+- [ ] `get_medications_and_supplements(patient_id)` — active meds, supplements, peptides
+- [ ] `get_patient_timeline(patient_id)` — clinical timeline with visits, interventions, retests
+- [ ] `get_symptom_scores(patient_id, score_types)` — symptom pillars, intake scores, follow-up changes
+
+### Server 2: Clinical Logic
+*Builds on existing AI generation logic in visit routes*
+- [ ] `match_clinical_patterns(patient_context)` — maps labs/symptoms/history to dominant functional patterns; outputs to `ai_outputs` with full provenance
+- [ ] `rank_problem_list(patterns, severity_rules)` — prioritizes issues by urgency and clinical relevance
+- [ ] `recommend_foundational_protocols(patterns, preferences)` — core non-Rx and lifestyle foundations; references `protocol_versions`
+- [ ] `recommend_targeted_protocols(patterns, constraints)` — targeted therapies and next-step options; references `protocol_versions`
+- [ ] `generate_retesting_cadence(patterns, interventions)` — suggested follow-up interval and biomarker recheck plan
+
+### Server 3: Safety Engine
+*Extends existing supplement interaction logic — this server cannot fail gracefully*
+- [ ] `check_interactions(medications, supplements, peptides)` — drug-supplement-peptide interaction risks; logs every check to `ai_outputs.safety_checks`
+- [ ] `screen_contraindications(patient_context, proposed_plan)` — pregnancy, organ disease, allergies, diagnoses, exclusions
+- [ ] `detect_red_flags(labs, symptoms, history)` — urgent abnormalities or non-routine findings requiring escalation
+- [ ] `validate_plan_safety(patient_context, proposed_plan)` — consolidated final safety pass before draft generation; BLOCKS output if critical issues found
+
+### Server 4: Documentation & Workflow
+*Maps to existing visit generation and export routes*
+- [ ] `draft_soap_note(encounter_data, clinical_summary)` — structured SOAP draft from session context
+- [ ] `generate_after_visit_summary(patient_context, plan)` — patient-friendly AVS language
+- [ ] `create_followup_tasks(patient_id, cadence, tasks)` — workflow tasks for staff
+- [ ] `generate_lab_reorder_plan(patient_id, biomarkers, interval)` — reorder recommendations with rationale
+
+### Server 5: Evidence & Research
+*Maps to existing `src/lib/rag/` module — run async, not in critical path*
+- [ ] `search_pubmed_and_summarize(query, filters)` — PubMed search + concise clinical evidence summary
+- [ ] **Arch:** Pre-fetch evidence on visit open rather than on-demand at draft time (avoid 2–5s latency in critical path)
+- [ ] **Feature:** Wire RAG retrieval into chat stream endpoint (`/api/chat/stream`)
+- [ ] **Feature:** Wire RAG retrieval into supplement review endpoint
+- [ ] **Feature:** Wire RAG retrieval into visit generation prompts
+
+---
+
+## PHASE 2 — Outcomes Graph Infrastructure 🟡 AFTER PHASE 1
+*The data asset that makes Apothecare defensible. Start building it now.*
+
+- [ ] **DB:** Migration 027 — `protocol_outcomes` table: `protocol_version_id`, `patient_id` (hashed), `practitioner_id`, `recommended_at`, `followup_lab_report_id`, `followup_at`, `biomarker_deltas JSONB`, `symptom_score_delta JSONB`, `provider_rating INT`, `outcome_status TEXT`
+- [ ] **DB:** Migration 028 — `pattern_effectiveness` table: `pattern_name`, `protocol_version_id`, `sample_count`, `improvement_rate`, `avg_biomarker_delta JSONB`, `last_computed_at`
+- [ ] **Lib:** `src/lib/outcomes/compute.ts` — when a followup lab uploads and links to a patient, query `ai_outputs` from prior 90 days, compute biomarker deltas, write to `protocol_outcomes`
+- [ ] **Job:** Supabase Edge Function or cron — re-aggregates `pattern_effectiveness` weekly from `protocol_outcomes`
+- [ ] **Lib:** `src/lib/outcomes/deidentify.ts` — hash patient IDs with practice-level salt, strip free-text fields, enforce minimum k-anonymity threshold before any aggregate is surfaced
+- [ ] **Wire:** Connect existing `protocol-milestones` and `symptom-logs` tables to outcomes pipeline via foreign keys into `protocol_outcomes`
+
+---
+
+## PHASE 3 — Protocol Marketplace 🔵 ROADMAP (Months 6–9)
+*Turn Apothecare from a tool into a platform.*
+
+- [ ] **DB:** Migration — `published_protocols` table: protocol definition, author practitioner_id, indication, biomarker targets, outcome signals (from graph), institute affiliation, version history
+- [ ] **Feature:** Protocol publishing UI — practitioners publish versioned protocols with indication, pattern targets, evidence citations
+- [ ] **Feature:** Marketplace browse — filter by clinical pattern, biomarker, specialty, institute affiliation; community ratings; outcome signals
+- [ ] **Feature:** Adopt protocol — creates local fork in practitioner's account, versioned separately from original
+- [ ] **Feature:** Institute Mode — IFM/A4M branded protocol collections; AI strictly follows selected institute's guidelines; toggle in Settings
+- [ ] **Feature:** Institute revenue share — subscription attribution tracking for alumni onboarded via institute partnership
+- [ ] **Feature:** Supplement brand sponsored pathways — brands surface products when their ingredients are clinically appropriate; clearly labeled "Sponsored"; never overrides base recommendation
+
+---
+
+## PHASE 4 — Patient Network 🔵 ROADMAP (Months 9–12)
+*Direct-to-patient acquisition channel. Accelerates the outcomes graph.*
+
+- [ ] **Arch:** Patient auth role — separate from practitioner; `patient_profiles` table linked to `patients` record
+- [ ] **Feature:** Patient portal — route group `/patient/`; view protocol, lab trends, timeline, supplement schedule
+- [ ] **Feature:** Practitioner referral link — practitioner sends link → patient self-enrolls → auto-linked to chart
+- [ ] **Feature:** Patient-contributed data — Apple Health / Oura / Garmin integration; HRV, sleep, steps, CGM glucose; feeds outcomes graph with explicit patient consent
+- [ ] **Feature:** Patient symptom check-in — weekly check-in UI linked to `symptom_logs`
+- [ ] **Feature:** AVS branding — every after-visit summary includes Apothecare branding for growth loop
+
+---
+
+## PHASE 5 — API Economy + Regulatory 🔵 YEAR 2
+*Become infrastructure. Open the platform. Pursue regulatory clearance.*
+
+- [ ] **API:** Public REST API — versioned endpoints for lab vendors, supplement brands, EHR connectors; API key management; developer docs
+- [ ] **API:** Webhooks — labs push results directly to Apothecare vs. PDF upload
+- [ ] **Regulatory:** FDA pre-submission meeting — scope 510(k) or De Novo pathway for Safety Engine (interaction checker + contraindication screening + red flag detection)
+- [ ] **Compliance:** SOC 2 Type II audit preparation — begin Year 1, complete Year 2
+- [ ] **Integration:** FHIR R4 integration pilot — one EHR (target: Cerbo or Practice Better); bidirectional pull/push
+- [ ] **Data:** De-identified outcomes data licensing — supplement brand and pharma partner conversations; requires deidentify.ts at production scale
+
+---
+
+## ONGOING — Remaining Feature Work
+
+### Partnership RAG System (In Progress)
+- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
+- [ ] **Test:** Verify retrieval with a thyroid-related query
+- [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
+- [ ] **Feature:** Partnership citation origin type in citation pipeline
+- [ ] **Feature:** Partnership evidence badge variant on client
+- [ ] **Feature:** Wire retrieval into supplement review and visit generation
+
+### Supplement Intelligence
+- [ ] **Feature:** Practitioner citation verify button — after supplement review, allow practitioners to verify individual citations. Verified citations saved to curated `supplement_evidence` table.
+- [ ] **Integration:** Fullscript.com integration — direct ordering, patient auto-ship, protocol-to-cart workflow
+
+### Evidence Source Filtering
+- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources` column
+- [ ] **Feature:** Per-patient source profiles — save source preferences per patient for recurring consults
+
+### Lab & Biomarker
+- [ ] **Feature:** Custom functional ranges (practitioner-level overrides) — already built in backend, complete Settings UI
+
+### Design & UX
+- [ ] **Design:** Move chat product mockup into hero viewport on landing page
+- [ ] **Design:** Add dark/teal full-width CTA break section before pricing
+- [ ] **Design:** Show rich AI response in demo chat mockup (citations, evidence badges)
+- [ ] **Design:** Balance hero input microcopy alignment
+- [ ] **UX:** Clarify "Start Free" button action on landing page
+
+### Analytics & Growth
+- [ ] **Analytics:** PostHog integration
+- [ ] **Mobile:** Responsive pass on all pages
+- [ ] **Mobile:** PWA support
 
 ---
 
