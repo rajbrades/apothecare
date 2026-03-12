@@ -55,7 +55,7 @@ export async function POST(
       return jsonError(parsed.error.errors[0]?.message || "Invalid input", 400);
     }
 
-    const { review_id, action_overrides } = parsed.data;
+    const { review_id, action_overrides, field_overrides } = parsed.data;
 
     // Fetch review — verify ownership + patient match + status
     const { data: review, error: reviewError } = await supabase
@@ -103,17 +103,30 @@ export async function POST(
       const key = item.name.trim().toLowerCase();
       const match = lookup.get(key);
       const notes = buildNotes(item);
+      const fieldEdits = field_overrides?.[key];
 
       const updateFields: Record<string, unknown> = {
         review_id,
         source: "review",
       };
 
-      // Only set recommended fields that are present
-      if (item.recommended_dosage) updateFields.dosage = item.recommended_dosage;
-      if (item.recommended_form) updateFields.form = item.recommended_form;
-      if (item.recommended_timing) updateFields.timing = item.recommended_timing;
-      if (item.recommended_brand) updateFields.brand = item.recommended_brand;
+      // For "modify" items: use practitioner-edited fields if provided, else AI recommendations
+      if (item.action === "modify" && fieldEdits) {
+        if (fieldEdits.dosage !== undefined) updateFields.dosage = fieldEdits.dosage || null;
+        else if (item.recommended_dosage) updateFields.dosage = item.recommended_dosage;
+        if (fieldEdits.form !== undefined) updateFields.form = fieldEdits.form || null;
+        else if (item.recommended_form) updateFields.form = item.recommended_form;
+        if (fieldEdits.timing !== undefined) updateFields.timing = fieldEdits.timing || null;
+        else if (item.recommended_timing) updateFields.timing = item.recommended_timing;
+        if (fieldEdits.brand !== undefined) updateFields.brand = fieldEdits.brand || null;
+        else if (item.recommended_brand) updateFields.brand = item.recommended_brand;
+      } else {
+        // Non-modify actions or no field edits: use AI recommendations directly
+        if (item.recommended_dosage) updateFields.dosage = item.recommended_dosage;
+        if (item.recommended_form) updateFields.form = item.recommended_form;
+        if (item.recommended_timing) updateFields.timing = item.recommended_timing;
+        if (item.recommended_brand) updateFields.brand = item.recommended_brand;
+      }
       if (notes) updateFields.notes = notes;
 
       switch (item.action) {

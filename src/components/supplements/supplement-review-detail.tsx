@@ -1,12 +1,27 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCircle2, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCircle2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { FullscriptStubButton } from "./fullscript-stub-button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EvidenceBadge, type EvidenceLevel, type Citation } from "@/components/chat/evidence-badge";
-import type { SupplementReviewItem, SupplementAction, InteractionSeverity } from "@/types/database";
+import type { SupplementReviewItem, SupplementAction, InteractionSeverity, PatientSupplement } from "@/types/database";
+
+/** Editable fields for a "modify" supplement */
+export interface FieldEdits {
+  dosage?: string;
+  form?: string;
+  timing?: string;
+  brand?: string;
+}
+
+/** Conflict between review recommendation and existing patient record */
+interface FieldConflict {
+  supplementName: string;
+  field: string;
+  existing: string;
+  recommended: string;
+}
 
 interface SupplementReviewDetailProps {
   review: {
@@ -164,14 +179,26 @@ function SupplementItemCard({
   item,
   actionOverride,
   onActionChange,
+  fieldEdits,
+  onFieldEditsChange,
+  existingSupplement,
 }: {
   item: SupplementReviewItem;
   actionOverride?: SupplementAction;
   onActionChange?: (name: string, action: SupplementAction) => void;
+  fieldEdits?: FieldEdits;
+  onFieldEditsChange?: (name: string, edits: FieldEdits) => void;
+  existingSupplement?: PatientSupplement | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [badgeHovered, setBadgeHovered] = useState(false);
   const currentAction = actionOverride || item.action;
+  const isModify = currentAction === "modify";
+
+  // Auto-expand when switching to modify
+  useEffect(() => {
+    if (isModify) setExpanded(true);
+  }, [isModify]);
 
   const hasDetails =
     item.recommended_dosage ||
@@ -280,42 +307,111 @@ function SupplementItemCard({
       {/* Expanded details */}
       {expanded && hasDetails && (
         <div className="px-4 pb-4 pt-0 space-y-3 border-t border-[var(--color-border-light)]">
-          {/* Recommended dosage/form/timing/duration */}
-          {(item.recommended_dosage ||
-            item.recommended_form ||
-            item.recommended_timing ||
-            item.recommended_duration) && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {item.recommended_dosage && (
+          {/* Modify mode: editable fields with existing-value comparison */}
+          {isModify && onFieldEditsChange ? (
+            <div className="mt-3 space-y-3">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700">
+                <Pencil className="w-3 h-3" />
+                Edit fields before pushing
+              </div>
+
+              {/* Show existing patient values if they differ */}
+              {existingSupplement && (
+                <div className="p-2.5 bg-amber-50/50 border border-amber-200/60 rounded-[var(--radius-sm)]">
+                  <p className="text-[10px] font-medium text-amber-700 uppercase tracking-wide mb-1.5">
+                    Current Patient Record
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] text-amber-800">
+                    {existingSupplement.dosage && (
+                      <span>Dosage: {existingSupplement.dosage}</span>
+                    )}
+                    {existingSupplement.form && (
+                      <span>Form: {existingSupplement.form}</span>
+                    )}
+                    {existingSupplement.timing && (
+                      <span>Timing: {existingSupplement.timing}</span>
+                    )}
+                    {existingSupplement.brand && (
+                      <span>Brand: {existingSupplement.brand}</span>
+                    )}
+                    {!existingSupplement.dosage && !existingSupplement.form && !existingSupplement.timing && !existingSupplement.brand && (
+                      <span className="col-span-2 text-amber-600 italic">No details on file</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                  <label className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
                     Dosage
-                  </p>
-                  <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-                    {item.recommended_dosage}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    value={fieldEdits?.dosage ?? item.recommended_dosage ?? ""}
+                    onChange={(e) =>
+                      onFieldEditsChange(item.name, {
+                        ...fieldEdits,
+                        dosage: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 400mg"
+                    className="mt-0.5 w-full px-2 py-1.5 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-400)] transition-colors"
+                  />
                 </div>
-              )}
-              {item.recommended_form && (
                 <div>
-                  <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                  <label className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
                     Form
-                  </p>
-                  <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-                    {item.recommended_form}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    value={fieldEdits?.form ?? item.recommended_form ?? ""}
+                    onChange={(e) =>
+                      onFieldEditsChange(item.name, {
+                        ...fieldEdits,
+                        form: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., capsule"
+                    className="mt-0.5 w-full px-2 py-1.5 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-400)] transition-colors"
+                  />
                 </div>
-              )}
-              {item.recommended_timing && (
                 <div>
-                  <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                  <label className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
                     Timing
-                  </p>
-                  <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-                    {item.recommended_timing}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    value={fieldEdits?.timing ?? item.recommended_timing ?? ""}
+                    onChange={(e) =>
+                      onFieldEditsChange(item.name, {
+                        ...fieldEdits,
+                        timing: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., with meals"
+                    className="mt-0.5 w-full px-2 py-1.5 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-400)] transition-colors"
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                    Brand
+                  </label>
+                  <input
+                    type="text"
+                    value={fieldEdits?.brand ?? item.recommended_brand ?? ""}
+                    onChange={(e) =>
+                      onFieldEditsChange(item.name, {
+                        ...fieldEdits,
+                        brand: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., Pure Encapsulations"
+                    className="mt-0.5 w-full px-2 py-1.5 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-400)] transition-colors"
+                  />
+                </div>
+              </div>
+
               {item.recommended_duration && (
                 <div>
                   <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
@@ -327,18 +423,68 @@ function SupplementItemCard({
                 </div>
               )}
             </div>
-          )}
+          ) : (
+            /* Read-only mode for keep/add/discontinue */
+            <>
+              {(item.recommended_dosage ||
+                item.recommended_form ||
+                item.recommended_timing ||
+                item.recommended_duration) && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {item.recommended_dosage && (
+                    <div>
+                      <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                        Dosage
+                      </p>
+                      <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+                        {item.recommended_dosage}
+                      </p>
+                    </div>
+                  )}
+                  {item.recommended_form && (
+                    <div>
+                      <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                        Form
+                      </p>
+                      <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+                        {item.recommended_form}
+                      </p>
+                    </div>
+                  )}
+                  {item.recommended_timing && (
+                    <div>
+                      <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                        Timing
+                      </p>
+                      <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+                        {item.recommended_timing}
+                      </p>
+                    </div>
+                  )}
+                  {item.recommended_duration && (
+                    <div>
+                      <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                        Duration
+                      </p>
+                      <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+                        {item.recommended_duration}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-          {/* Recommended brand */}
-          {item.recommended_brand && (
-            <div className="mt-2">
-              <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
-                Recommended Brand
-              </p>
-              <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-                {item.recommended_brand}
-              </p>
-            </div>
+              {item.recommended_brand && (
+                <div className="mt-2">
+                  <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                    Recommended Brand
+                  </p>
+                  <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+                    {item.recommended_brand}
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Interaction warnings */}
@@ -400,6 +546,48 @@ function SupplementItemCard({
   );
 }
 
+/** Build list of field conflicts between review items and existing patient supplements */
+function detectConflicts(
+  allItems: SupplementReviewItem[],
+  actionOverrides: Record<string, SupplementAction>,
+  fieldEditsMap: Record<string, FieldEdits>,
+  existingMap: Map<string, PatientSupplement>
+): FieldConflict[] {
+  const conflicts: FieldConflict[] = [];
+
+  for (const item of allItems) {
+    const key = item.name.trim().toLowerCase();
+    const action = actionOverrides[key] || item.action;
+    if (action !== "modify" && action !== "keep") continue;
+
+    const existing = existingMap.get(key);
+    if (!existing) continue;
+
+    const edits = fieldEditsMap[key];
+
+    const pairs: { field: string; existing: string | null; recommended: string }[] = [
+      { field: "Dosage", existing: existing.dosage, recommended: edits?.dosage ?? item.recommended_dosage ?? "" },
+      { field: "Form", existing: existing.form, recommended: edits?.form ?? item.recommended_form ?? "" },
+      { field: "Timing", existing: existing.timing, recommended: edits?.timing ?? item.recommended_timing ?? "" },
+      { field: "Brand", existing: existing.brand, recommended: edits?.brand ?? item.recommended_brand ?? "" },
+    ];
+
+    for (const p of pairs) {
+      if (!p.recommended) continue; // nothing to push
+      if (!p.existing) continue; // no existing value to conflict with
+      if (p.existing.trim().toLowerCase() === p.recommended.trim().toLowerCase()) continue;
+      conflicts.push({
+        supplementName: item.name,
+        field: p.field,
+        existing: p.existing,
+        recommended: p.recommended,
+      });
+    }
+  }
+
+  return conflicts;
+}
+
 export function SupplementReviewDetail({
   review,
   patientName,
@@ -412,6 +600,26 @@ export function SupplementReviewDetail({
   const [actionOverrides, setActionOverrides] = useState<
     Record<string, SupplementAction>
   >({});
+  const [fieldEditsMap, setFieldEditsMap] = useState<Record<string, FieldEdits>>({});
+  const [existingSupplements, setExistingSupplements] = useState<Map<string, PatientSupplement>>(new Map());
+  const [loadingExisting, setLoadingExisting] = useState(false);
+
+  // Fetch existing patient supplements for conflict detection
+  useEffect(() => {
+    if (!patientId || pushed) return;
+    setLoadingExisting(true);
+    fetch(`/api/patients/${patientId}/supplements?include_discontinued=true`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json) => {
+        const map = new Map<string, PatientSupplement>();
+        for (const sup of json.supplements || []) {
+          map.set(sup.name.trim().toLowerCase(), sup);
+        }
+        setExistingSupplements(map);
+      })
+      .catch(() => {/* non-critical — conflict warnings just won't show */})
+      .finally(() => setLoadingExisting(false));
+  }, [patientId, pushed]);
 
   const handleActionChange = useCallback(
     (name: string, action: SupplementAction) => {
@@ -421,7 +629,20 @@ export function SupplementReviewDetail({
     []
   );
 
+  const handleFieldEditsChange = useCallback(
+    (name: string, edits: FieldEdits) => {
+      const key = name.trim().toLowerCase();
+      setFieldEditsMap((prev) => ({ ...prev, [key]: edits }));
+    },
+    []
+  );
+
   const hasOverrides = Object.keys(actionOverrides).length > 0;
+  const hasFieldEdits = Object.keys(fieldEditsMap).length > 0;
+
+  // Compute conflicts for push confirmation
+  const allItems = [...(data?.items || []), ...(data?.additions || [])];
+  const conflicts = detectConflicts(allItems, actionOverrides, fieldEditsMap, existingSupplements);
 
   const handlePushToPatientFile = async () => {
     if (!patientId || !review.id) return;
@@ -429,6 +650,7 @@ export function SupplementReviewDetail({
     try {
       const body: Record<string, unknown> = { review_id: review.id };
       if (hasOverrides) body.action_overrides = actionOverrides;
+      if (hasFieldEdits) body.field_overrides = fieldEditsMap;
 
       const res = await fetch(`/api/patients/${patientId}/supplements/push-review`, {
         method: "POST",
@@ -508,14 +730,20 @@ export function SupplementReviewDetail({
             Current Supplements ({data.items.length})
           </h3>
           <div className="space-y-2">
-            {data.items.map((item, idx) => (
-              <SupplementItemCard
-                key={`item-${idx}`}
-                item={item}
-                actionOverride={actionOverrides[item.name.trim().toLowerCase()]}
-                onActionChange={!pushed ? handleActionChange : undefined}
-              />
-            ))}
+            {data.items.map((item, idx) => {
+              const key = item.name.trim().toLowerCase();
+              return (
+                <SupplementItemCard
+                  key={`item-${idx}`}
+                  item={item}
+                  actionOverride={actionOverrides[key]}
+                  onActionChange={!pushed ? handleActionChange : undefined}
+                  fieldEdits={fieldEditsMap[key]}
+                  onFieldEditsChange={!pushed ? handleFieldEditsChange : undefined}
+                  existingSupplement={existingSupplements.get(key)}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -527,29 +755,89 @@ export function SupplementReviewDetail({
             Recommended Additions ({data.additions.length})
           </h3>
           <div className="space-y-2">
-            {data.additions.map((item, idx) => (
-              <SupplementItemCard
-                key={`addition-${idx}`}
-                item={item}
-                actionOverride={actionOverrides[item.name.trim().toLowerCase()]}
-                onActionChange={!pushed ? handleActionChange : undefined}
-              />
-            ))}
+            {data.additions.map((item, idx) => {
+              const key = item.name.trim().toLowerCase();
+              return (
+                <SupplementItemCard
+                  key={`addition-${idx}`}
+                  item={item}
+                  actionOverride={actionOverrides[key]}
+                  onActionChange={!pushed ? handleActionChange : undefined}
+                  fieldEdits={fieldEditsMap[key]}
+                  onFieldEditsChange={!pushed ? handleFieldEditsChange : undefined}
+                  existingSupplement={existingSupplements.get(key)}
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Push confirm dialog */}
-      <ConfirmDialog
-        open={showPushConfirm}
-        onConfirm={handlePushToPatientFile}
-        onCancel={() => setShowPushConfirm(false)}
-        title="Push to Patient File?"
-        description="This will update the patient's supplement list based on this review. Existing supplements will be matched by name — kept and modified items will be updated, discontinued items marked inactive, and new additions created."
-        confirmLabel="Push to Patient File"
-        variant="warning"
-        loading={pushing}
-      />
+      {/* Push confirm dialog — with conflict warnings */}
+      {showPushConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center animate-[fadeIn_150ms_ease-out]"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPushConfirm(false);
+          }}
+        >
+          <div className="w-full max-w-md mx-4 bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border-light)] animate-[scaleIn_200ms_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="p-6">
+              <div className="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
+              </div>
+              <h2 className="text-base font-semibold text-[var(--color-text-primary)] text-center font-[var(--font-display)] mb-1.5">
+                Push to Patient File?
+              </h2>
+              <p className="text-sm text-[var(--color-text-secondary)] text-center leading-relaxed">
+                This will update the patient&apos;s supplement list based on this review.
+              </p>
+
+              {/* Conflict warnings */}
+              {conflicts.length > 0 && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)]">
+                  <p className="text-xs font-semibold text-amber-800 mb-2">
+                    The following fields will be overwritten:
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {conflicts.map((c, i) => (
+                      <div key={i} className="text-[11px] text-amber-900 leading-relaxed">
+                        <span className="font-medium">{c.supplementName}</span>
+                        {" — "}
+                        <span className="text-amber-700">{c.field}</span>
+                        {": "}
+                        <span className="line-through opacity-60">{c.existing}</span>
+                        {" → "}
+                        <span className="font-medium">{c.recommended}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 px-6 pb-6">
+              <button
+                onClick={() => setShowPushConfirm(false)}
+                disabled={pushing}
+                className="flex-1 px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePushToPatientFile}
+                disabled={pushing}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors disabled:opacity-50"
+              >
+                {pushing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {conflicts.length > 0 ? "Push Anyway" : "Push to Patient File"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

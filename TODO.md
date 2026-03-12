@@ -255,9 +255,41 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Feature:** Source filter UI — "Sources" chip in chat input and dashboard search with popover showing presets (Full Spectrum, Functional Core, Conventional Core) and individual source toggles
 - [x] **Feature:** Prompt-based source filtering — System prompt addendum restricts/prioritizes selected evidence sources
 - [ ] **Feature:** "Save as Default" — Persist practitioner's preferred source preset to `preferred_evidence_sources` column
-- [ ] **Feature:** RAG retrieval integration — Wire source filter into `search_evidence()` RPC for vector-based retrieval from `evidence_documents` / `evidence_chunks` tables
-- [ ] **Feature:** Evidence ingestion pipeline — Build document ingestion (PubMed, IFM, A4M source material) with embedding generation for RAG knowledge base
+- [x] **Feature:** RAG retrieval integration — `search_evidence_v2()` RPC with partnership + document type filtering, `src/lib/rag/retrieve.ts` retrieval layer, `src/lib/rag/format-context.ts` for system prompt injection
+- [x] **Feature:** Evidence ingestion pipeline — `src/lib/rag/ingest.ts` (PDF extract → chunk → embed → store), admin API at `/api/admin/rag/ingest`
+- [ ] **Feature:** Wire RAG context into chat stream endpoint (`/api/chat/stream`)
+- [ ] **Feature:** Wire RAG context into supplement review endpoint
+- [ ] **Feature:** Wire RAG context into visit generation prompts
 - [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
+
+---
+
+## Partnership RAG System — IN PROGRESS 🔧
+
+### Phase 1: Foundation ✅ COMPLETE
+- [x] **DB:** Migration 024 — `partnerships` table, `practitioner_partnerships` join table, extended `evidence_documents` (partnership_id, document_type, version, file_hash, status), `search_evidence_v2()` RPC with partnership filtering, Apex Energetics seed
+- [x] **Lib:** `src/lib/rag/` module — `types.ts`, `chunk.ts` (800-token sections with 200-token overlap), `embed.ts` (OpenAI text-embedding-3-small batched), `retrieve.ts` (semantic search via pgvector), `format-context.ts` (system prompt addendum), `ingest.ts` (PDF → text → chunk → embed → store)
+- [x] **API:** `POST/GET /api/admin/rag/ingest` — admin-only endpoint to ingest all PDFs from a partnership's local docs directory
+- [x] **Dep:** Added `pdf-parse` for text extraction
+
+### Phase 1 — PENDING (where we left off)
+- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass (3 PDFs in `docs/partnerships/apex-energetics/`)
+- [ ] **Test:** Verify retrieval with a thyroid-related query
+
+### Phase 2: Chat Integration
+- [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
+- [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
+- [ ] **Feature:** Partnership evidence badge variant on client
+
+### Phase 3: Supplement + Visit Integration
+- [ ] **Feature:** Wire retrieval into supplement review endpoint
+- [ ] **Feature:** Wire retrieval into visit generation prompts
+
+### Phase 4: Access Control + Admin UI
+- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
+- [ ] **Feature:** Practitioner settings to view/manage partnership access
+- [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
 
 ---
 
@@ -398,6 +430,16 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **UI:** Sidebar "View all →" link updated from `/chat` to `/conversations`
 
 ---
+
+## Sprint 22 — Visit AI Assistant, Data Export, Lab UX (Mar 4) ✅ COMPLETE
+
+- [x] **Feature:** Visit AI synthesis assistant — right-edge vertical tab + sliding 340px drawer, streaming chat with visit context (SOAP, IFM, protocol, vitals, patient demographics)
+- [x] **API:** `POST /api/visits/[id]/assistant` — streaming endpoint with full security stack (CSRF, auth, rate limit, prompt injection validation), builds rich visit context via `buildVisitContext()`
+- [x] **Feature:** Data export — `POST /api/account/export` generates ZIP file with JSON exports of all practitioner data (patients, visits, labs, conversations, supplements, timeline events, practitioner profile) + optional PDF inclusion from Supabase Storage
+- [x] **Feature:** Export UI in Settings > Account & Security — "Export Your Data" card with PDF checkbox, loading spinner, blob URL download
+- [x] **Rate limit:** Added `data_export` action (1/day free, 3/day pro)
+- [x] **Dependency:** Added `jszip` for in-memory ZIP generation
+- [x] **Refactor:** Lab report action bar overflow menu — reduced from 8 visible buttons to 3 primary (Assign Patient, Push to Record, Copy) + overflow dropdown for secondary actions (View PDF, Download, Add to Visit, Re-parse, Archive)
 
 ## Lab & Biomarker Enhancements
 

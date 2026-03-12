@@ -62,10 +62,20 @@ export const patientSupplementListSchema = z.object({
 
 const supplementActionEnum = z.enum(["keep", "modify", "discontinue", "add"]);
 
+const fieldEditsSchema = z.object({
+  dosage: z.string().max(200).optional(),
+  form: z.string().max(100).optional(),
+  timing: z.string().max(200).optional(),
+  brand: z.string().max(200).optional(),
+});
+
 export const pushReviewSchema = z.object({
   review_id: z.string().uuid(),
   action_overrides: z
     .record(z.string(), supplementActionEnum)
+    .optional(),
+  field_overrides: z
+    .record(z.string(), fieldEditsSchema)
     .optional(),
 });
 

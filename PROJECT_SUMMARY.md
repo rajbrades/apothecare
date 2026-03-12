@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 2, 2026
+**Last updated:** March 11, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -110,6 +110,7 @@ src/
 │   │   │   └── route.ts            # GET list / POST create
 │   │   └── visits/
 │   │       ├── [id]/
+│   │       │   ├── assistant/route.ts  # POST streaming AI synthesis assistant
 │   │       │   ├── export/route.ts     # POST export visit
 │   │       │   ├── generate/route.ts   # POST SSE SOAP/IFM/Protocol generation
 │   │       │   ├── push-vitals/route.ts # POST push vitals to patient chart
@@ -117,6 +118,8 @@ src/
 │   │       │   ├── transcribe/route.ts # POST audio → Whisper transcription
 │   │       │   └── route.ts            # GET/PATCH visit
 │   │       └── route.ts                # GET list / POST create
+│   │   ├── account/
+│   │   │   └── export/route.ts          # POST data export (ZIP with JSON + optional PDFs)
 │   │   ├── auth/
 │   │   │   ├── change-password/route.ts  # POST change password (email auth only)
 │   │   │   └── delete-account/route.ts   # POST cascade delete + auth delete
@@ -199,6 +202,7 @@ src/
 │       │   ├── template-section-node.tsx # Collapsible section NodeView
 │       │   └── visit-editor.tsx        # Main Tiptap editor wrapper
 │       ├── ifm-node-modal.tsx      # IFM Matrix node editing modal
+│       ├── visit-assistant.tsx     # Right-edge AI synthesis drawer (streaming chat with visit context)
 │       ├── visit-workspace.tsx     # Editor + generate + SOAP/IFM/Protocol tabs + compact recorder when SOAP exists
 │       ├── vitals-panel.tsx        # Vitals input/display with chart support
 │       ├── new-visit-form.tsx      # Patient + encounter type selector
@@ -631,6 +635,23 @@ src/
 8. ✅ `conversationListQuerySchema` Zod validation
 9. ✅ Sidebar "View all →" link updated from `/chat` to `/conversations`
 
+### Sprint 22 — Visit AI Assistant, Data Export, Lab UX (Mar 4, 2026)
+
+**Visit AI Synthesis Assistant:**
+1. ✅ Right-edge vertical tab (`writingMode: vertical-lr`) + 340px sliding drawer — always accessible from any scroll position
+2. ✅ `visit-assistant.tsx` — self-contained component with streaming chat, suggested prompts (synthesize findings, suggest labs, explain patterns), abort/reset controls
+3. ✅ `POST /api/visits/[id]/assistant` — streaming endpoint builds rich visit context (patient demographics, SOAP sections, IFM Matrix, protocol, vitals) via `buildVisitContext()`. Full security stack: CSRF, auth, rate limit, prompt injection validation.
+
+**Data Export (Settings > Account & Security):**
+4. ✅ `POST /api/account/export` — generates ZIP with JSON for all practitioner data (patients, visits, lab_reports, biomarker_results, conversations, messages, patient_supplements, supplement_reviews, timeline_events, practitioner profile) + manifest.json
+5. ✅ Optional PDF inclusion — `includePdfs` flag downloads lab report files from Supabase Storage into `pdfs/` folder
+6. ✅ Export UI card in `account-section.tsx` — description, "Include original lab PDFs" checkbox, loading spinner, blob URL download
+7. ✅ Rate limit: `data_export` action (1/day free, 3/day pro)
+8. ✅ Dependency: `jszip` for in-memory ZIP generation
+
+**Lab Report Action Bar:**
+9. ✅ Overflow menu refactor — reduced from 8 visible buttons to 3 primary (Assign Patient, Push to Record, Copy) + `...` dropdown for secondary actions
+
 ### Landing → App Transition (Feb 24, 2026)
 
 1. ✅ Functional hero input — landing page search input is now typeable (was readOnly); on submit, redirects to `/auth/register?next=/chat?q=<encoded_query>`
@@ -651,6 +672,8 @@ src/
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table
 - [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
+- [x] **Data export** — ZIP export of all practitioner data from Settings > Account & Security (v0.23.0)
+- [x] **Visit AI assistant** — right-edge synthesis drawer on visit workspace pages (v0.23.0)
 
 ### Homepage Design Fixes (from Playwright audit Feb 18)
 - [ ] Move chat product mockup into hero viewport — no visual anchor above fold
@@ -735,6 +758,27 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 21. `021_vitals_pushed_at.sql` — `visits.vitals_pushed_at TIMESTAMPTZ` for tracking when vitals were pushed to patient chart
 22. `022_lab_source_document.sql` — `lab_reports.source_document_id UUID` FK to `patient_documents(id)` for parse-as-lab linking
 23. `023_patient_recommendations.sql` — `dietary_recommendations`, `lifestyle_recommendations`, `follow_up_labs` JSONB columns on patients
+24. `024_partnership_rag.sql` — `partnerships` table, `practitioner_partnerships` join table, extended `evidence_documents` for partnership content, `search_evidence_v2()` RPC with partnership filtering, Apex Energetics seed
+
+## Partnership RAG System (In Progress)
+
+The RAG infrastructure enables partnership content (e.g., Apex Energetics masterclass PDFs) to be ingested, embedded, and retrieved during AI interactions.
+
+### Architecture
+- **Ingestion**: PDF → `pdf-parse` text extraction → section-aware chunking (800 tokens, 200 overlap) → OpenAI `text-embedding-3-small` embeddings → stored in `evidence_documents` + `evidence_chunks` (pgvector 1536-dim)
+- **Retrieval**: Query embedded → `search_evidence_v2()` cosine similarity search → top-k chunks formatted as system prompt addendum → injected before LLM call
+- **Access Control**: `practitioner_partnerships` join table gates which practitioners see which partnership content (with expiration support)
+
+### Key Files
+- `src/lib/rag/` — Core RAG module (types, chunk, embed, retrieve, format-context, ingest)
+- `src/app/api/admin/rag/ingest/route.ts` — Admin ingestion endpoint
+- `supabase/migrations/024_partnership_rag.sql` — Schema migration
+- `docs/partnerships/apex-energetics/` — Test PDFs (gitignored)
+
+### Status (as of Mar 11, 2026)
+- Phase 1 code complete — migration, ingestion pipeline, retrieval layer, admin API all built
+- **PENDING**: Apply migration 024 in Supabase Dashboard SQL Editor, then run ingestion
+- **NEXT**: Wire retrieval into chat/supplement/visit endpoints (Phase 2-3)
 
 ## Known Issues / Gotchas
 

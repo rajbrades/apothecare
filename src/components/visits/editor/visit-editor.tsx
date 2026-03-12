@@ -4,6 +4,12 @@ import { useCallback, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
+import { TaskList } from "@tiptap/extension-task-list";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { TextAlign } from "@tiptap/extension-text-align";
 import type { JSONContent } from "@tiptap/react";
 import { TemplateSectionExtension } from "@/lib/editor/template-section-extension";
 import { ENCOUNTER_TEMPLATES } from "@/lib/templates/definitions";
@@ -54,9 +60,7 @@ export function VisitEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Disable heading since we use template section headers
-        heading: false,
-        // Disable code blocks — not needed for clinical notes
+        heading: { levels: [2, 3] },
         codeBlock: false,
         code: false,
       }),
@@ -68,6 +72,18 @@ export function VisitEditor({
           return "";
         },
       }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { rel: "noopener noreferrer nofollow" },
+      }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
       TemplateSectionExtension,
     ],
     content: getInitialContent(),
@@ -91,6 +107,26 @@ export function VisitEditor({
       return () => clearTimeout(timer);
     }
   }, [editor]);
+
+  // Reload template when visitType changes (only for fresh visits without saved content)
+  const prevVisitTypeRef = useRef(visitType);
+  useEffect(() => {
+    if (!editor || !isInitialized.current) return;
+    if (visitType === prevVisitTypeRef.current) return;
+    prevVisitTypeRef.current = visitType;
+
+    // Only swap template if there's no saved content
+    if (initialContent) return;
+
+    const template = ENCOUNTER_TEMPLATES[visitType] || ENCOUNTER_TEMPLATES.soap;
+    const newContent = templateToEditorContent(template);
+    editor.commands.setContent(newContent);
+
+    // Trigger content change callback so parent saves the new template
+    const json = editor.getJSON();
+    const text = editorContentToText(json);
+    onContentChange?.(json, text);
+  }, [visitType, editor, initialContent, onContentChange]);
 
   // Update editable state when disabled changes
   useEffect(() => {

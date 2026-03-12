@@ -102,7 +102,7 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
       </div>
 
       {/* Main Chat Area */}
-      <div className1="flex-1 flex flex-col h-full bg-[#f8fafb] relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full bg-[#f8fafb] relative overflow-hidden">
 
         {/* Header */}
         <div className="h-14 border-b border-[#e2e8f0] bg-white/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-10">
@@ -118,19 +118,19 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
         {/* Chat Feed */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth pb-40">
           {messages.map((msg, i) => (
-            <div key={msg.id} className={\`flex gap-4 max-w-4xl mx-auto \${msg.role === 'user' ? 'justify-end' : ''}\`}>
+            <div key={msg.id} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : ''}`}>
           {msg.role === 'assistant' && (
             <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
               <Bot size={18} className="text-white" />
             </div>
           )}
 
-          <div className={\`flex flex-col gap-2 max-w-[85%] \${msg.role === 'user' ? 'items-end' : 'items-start'}\`}>
-          <div className={\`p-4 rounded-2xl shadow-sm text-sm leading-relaxed \${
+          <div className={`flex flex-col gap-2 max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+          <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${
             msg.role === 'user'
               ? 'bg-slate-900 text-white rounded-tr-sm'
               : 'bg-white border border-[#e2e8f0] text-slate-800 rounded-tl-sm'
-          }\`}>
+          }`}>
           {msg.role === 'user' ? (
             msg.content
           ) : (
@@ -247,10 +247,10 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
     </div>
   ))
 }
-        </div >
+        </div>
 
-  {/* Input Area */ }
-  < div className = "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#f8fafb] via-[#f8fafb] to-transparent pt-10 pb-6 md:pb-8 px-4 md:px-8" >
+  {/* Input Area */}
+  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#f8fafb] via-[#f8fafb] to-transparent pt-10 pb-6 md:pb-8 px-4 md:px-8">
     <div className="max-w-4xl mx-auto relative group">
 
       <div className="absolute -top-10 left-0 right-0 flex justify-center opacity-100 transition-opacity duration-300">
@@ -303,8 +303,9 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
         </span>
       </div>
     </div>
-        </div >
-      </div >
-    </div >
+    </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -2,6 +2,42 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.24.0] - 2026-03-11
+
+### Added — Partnership RAG Infrastructure (Phase 1)
+- **Partnership tables** (Migration 024): `partnerships` registry, `practitioner_partnerships` join table with expiration support. Extended `evidence_documents` with `partnership_id`, `document_type`, `version`, `file_hash`, `storage_path`, `status`. New `search_evidence_v2()` RPC with partnership and document type filtering. Seeded Apex Energetics as first partnership.
+- **RAG library** (`src/lib/rag/`): Complete ingestion and retrieval pipeline:
+  - `types.ts` — Shared types (`RetrievedChunk`, `IngestionResult`, `DocumentChunk`)
+  - `chunk.ts` — Section-aware text chunking (800 tokens, 200 overlap)
+  - `embed.ts` — OpenAI `text-embedding-3-small` embeddings with batch support
+  - `retrieve.ts` — Semantic search via `search_evidence_v2` pgvector RPC
+  - `format-context.ts` — Formats retrieved chunks as system prompt addendum with `[Source: Org — Title]` citation format
+  - `ingest.ts` — Full pipeline: PDF read → `pdf-parse` text extraction → chunk → embed → store in `evidence_documents` + `evidence_chunks`
+- **Admin ingestion API** (`POST/GET /api/admin/rag/ingest`): Admin-only endpoint to ingest all PDFs from a partnership's local docs directory. Supports hash-based deduplication and batch embedding.
+- **Dependency**: Added `pdf-parse` for PDF text extraction.
+
+### Fixed — Visit Editor TipTap Import
+- **TipTap v3.20 compatibility**: Fixed `@tiptap/extension-table` import — changed from default import to named imports (`Table`, `TableRow`, `TableCell`, `TableHeader`). Package no longer has a default export in v3.20.1. Also updated `TaskList`, `TaskItem`, `TextAlign` to named imports.
+
+### Fixed — Visit Type Dropdown
+- **Visit type change reloads template**: Switching encounter type (SOAP ↔ Follow-up ↔ H&P ↔ Consult) on fresh visits now swaps the editor sections to match the selected template. Previously the dropdown saved to DB but didn't update the editor content.
+
+## [0.23.0] - 2026-03-04
+
+### Added — Visit AI Synthesis Assistant
+- **Visit assistant component** (`src/components/visits/visit-assistant.tsx`): Right-edge vertical tab (vertically centered, `writingMode: vertical-lr`) that opens a 340px sliding drawer from the right edge of the viewport. Self-contained component with streaming chat, suggested prompts, conversation history, abort/reset controls, and light backdrop.
+- **Visit assistant API** (`POST /api/visits/[id]/assistant`): Streaming chat endpoint that builds rich visit context (patient demographics, SOAP sections, IFM Matrix, protocol, vitals) and responds via `streamCompletion()` SSE. Full security stack: CSRF, auth, rate limit, prompt injection validation. System prompt positions AI as a clinical synthesis assistant for the current visit.
+- **Rate limit**: Added `visit_scribe` action coverage for assistant endpoint.
+
+### Added — Data Export (Settings > Account & Security)
+- **Export API** (`POST /api/account/export`): Generates a ZIP file containing JSON exports of all practitioner data — patients, visits, lab reports, biomarker results, conversations, messages, patient supplements, supplement reviews, timeline events, and practitioner profile. Optional PDF inclusion (`includePdfs` flag) downloads original lab report files from Supabase Storage into `pdfs/` folder. Includes `manifest.json` with table counts and export metadata. Uses JSZip for in-memory ZIP generation.
+- **Export UI** in `account-section.tsx`: "Export Your Data" card with description, "Include original lab PDFs" checkbox (default unchecked), "Export All Data" button with loading spinner, and blob URL download trigger.
+- **Rate limit**: Added `data_export` action (1/day free, 3/day pro).
+- **Dependency**: Added `jszip` for ZIP file generation.
+
+### Changed — Lab Report Action Bar
+- **Overflow menu** on lab report detail page: Reduced visible action buttons from 8 to 3 primary actions (Assign Patient, Push to Record, Copy). Secondary actions (View Original PDF, Download PDF, Add to Visit, Re-parse Report, Archive/Unarchive) grouped into a `...` overflow dropdown menu with click-outside dismiss.
+
 ## [0.22.0] - 2026-03-02
 
 ### Added — Conversation History Page

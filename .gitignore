@@ -45,3 +45,6 @@ supabase/.temp/
 /*.jpeg
 /*.jpg
 .playwright-mcp/
+
+# partnership documents (PDFs — do not commit)
+/docs/partnerships/
