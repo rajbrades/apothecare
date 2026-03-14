@@ -4,76 +4,84 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apothecare — Seed Pitch Deck</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/font/css/geist-sans.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --green-900: #1a2e1a;
-    --green-800: #243524;
-    --green-700: #2d4a2d;
-    --green-600: #3d6b3d;
-    --green-500: #4a7c4a;
-    --green-400: #6b9e6b;
-    --green-100: #e8f0e8;
-    --green-50: #f2f7f2;
-    --gold-600: #a67c00;
-    --gold-500: #c49b1a;
-    --gold-400: #d4aa2c;
-    --gold-300: #e0c05c;
-    --gold-200: #f0dfa0;
-    --gold-100: #faf3d8;
-    --cream: #fdfbf5;
-    --cream-dark: #f5f0e4;
-    --ink: #1a1a18;
-    --ink-light: #3a3a36;
-    --ink-muted: #6b6b64;
-    --border: #d8d4c8;
-    --border-light: #e8e4d8;
+    /* Sage green — matched to website oklch(L 0.08 164) rendered values */
+    --green-950: #1b2b22;
+    --green-900: #263b2e;
+    --green-800: #344f3c;
+    --green-700: #43664e;
+    --green-600: #527d60;
+    --green-500: #628f70;
+    --green-400: #7ea88a;
+    --green-300: #a0c2ab;
+    --green-200: #c5dccb;
+    --green-100: #e2efe6;
+    --green-50: #f2f8f4;
+    /* Gold / amber accents */
+    --gold-700: #b45309;
+    --gold-600: #d97706;
+    --gold-500: #f59e0b;
+    --gold-400: #fbbf24;
+    --gold-300: #fcd34d;
+    --gold-200: #fde68a;
+    --gold-100: #fef3c7;
+    /* Surfaces */
+    --cream: #ffffff;
+    --cream-dark: #f7faf8;
+    /* Text */
+    --ink: #111827;
+    --ink-light: #4b5563;
+    --ink-muted: #6b7280;
+    /* Borders */
+    --border: #e0e0e0;
+    --border-light: #c8c8c8;
     --red-muted: #8b3a3a;
     --blue-muted: #3a5a8b;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); line-height: 1.6; font-size: 14px; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Geist', system-ui, -apple-system, sans-serif; background: var(--cream); color: var(--ink); line-height: 1.6; font-size: 14px; -webkit-font-smoothing: antialiased; }
 
   /* ── Cover ──────────────────────────────────────────────── */
-  .cover { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--green-900); color: var(--cream); position: relative; overflow: hidden; padding: 60px 40px; }
-  .cover::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, rgba(196,155,26,0.08) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(106,158,106,0.06) 0%, transparent 50%); pointer-events: none; }
-  .cover-badge { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-400); border: 1px solid rgba(212,170,44,0.3); padding: 6px 20px; border-radius: 100px; margin-bottom: 48px; }
-  .cover-logo { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--green-600), var(--green-700)); border: 2px solid var(--gold-500); display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', serif; font-size: 36px; font-weight: 600; color: var(--cream); margin-bottom: 32px; box-shadow: 0 0 40px rgba(196,155,26,0.15); }
-  .cover h1 { font-family: 'Newsreader', serif; font-size: 64px; font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; background: linear-gradient(135deg, var(--cream) 0%, var(--gold-200) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .cover-subtitle { font-family: 'Newsreader', serif; font-size: 22px; font-weight: 400; font-style: italic; color: var(--green-400); max-width: 560px; margin-bottom: 20px; }
-  .cover-tagline { font-size: 14px; font-weight: 500; color: var(--gold-300); margin-bottom: 48px; letter-spacing: 0.3px; }
-  .cover-message { font-size: 15px; color: rgba(253,251,245,0.6); max-width: 480px; line-height: 1.7; }
-  .cover-footer { position: absolute; bottom: 40px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(253,251,245,0.25); }
+  .cover { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: linear-gradient(160deg, #0d4a30 0%, #083824 40%, #062e1c 100%); color: #ffffff; position: relative; overflow: hidden; padding: 60px 40px; }
+  .cover::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 25% 15%, rgba(98,143,112,0.12) 0%, transparent 55%), radial-gradient(ellipse at 75% 85%, rgba(0,0,0,0.15) 0%, transparent 50%); pointer-events: none; }
+  .cover-badge { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #e8e0d0; border: 1px solid rgba(232,224,208,0.25); padding: 6px 20px; border-radius: 100px; margin-bottom: 48px; }
+  .cover-logo { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 36px; font-weight: 600; color: #ffffff; margin-bottom: 32px; }
+  .cover h1 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 64px; font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; color: #ffffff; }
+  .cover-subtitle { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: 400; font-style: italic; color: rgba(232,224,208,0.75); max-width: 560px; margin-bottom: 20px; }
+  .cover-tagline { font-size: 15px; font-weight: 600; color: #c5b89a; margin-bottom: 48px; letter-spacing: 0.3px; }
+  .cover-message { font-size: 15px; color: rgba(255,255,255,0.55); max-width: 480px; line-height: 1.7; }
+  .cover-footer { position: absolute; bottom: 40px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(232,224,208,0.35); }
 
   /* ── Slide cards ────────────────────────────────────────── */
   .slide { max-width: 900px; margin: 0 auto; padding: 72px 64px; background: var(--cream); position: relative; }
   .slide + .slide { border-top: 1px solid var(--border-light); }
-  .slide-number { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--gold-500); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-  .slide h2 { font-family: 'Newsreader', serif; font-size: 38px; font-weight: 600; color: var(--green-800); letter-spacing: -0.5px; margin-bottom: 8px; line-height: 1.2; }
-  .slide-headline { font-family: 'Newsreader', serif; font-size: 20px; font-weight: 400; font-style: italic; color: var(--green-600); margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border-light); }
+  .slide-number { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--red-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .slide h2 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 38px; font-weight: 600; color: var(--green-800); letter-spacing: -0.5px; margin-bottom: 8px; line-height: 1.2; }
+  .slide-headline { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 20px; font-weight: 400; font-style: italic; color: var(--green-600); margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border-light); }
   .slide p { margin-bottom: 16px; color: var(--ink-light); line-height: 1.7; }
   .slide strong { color: var(--ink); font-weight: 600; }
-  .slide h3 { font-family: 'Newsreader', serif; font-size: 20px; font-weight: 600; color: var(--green-700); margin-top: 32px; margin-bottom: 16px; }
-  .slide h4 { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--green-800); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 28px; margin-bottom: 12px; }
+  .slide h3 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 20px; font-weight: 600; color: var(--green-700); margin-top: 32px; margin-bottom: 16px; }
+  .slide h4 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 14px; font-weight: 700; color: var(--green-800); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 28px; margin-bottom: 12px; }
 
   /* ── Pain points ────────────────────────────────────────── */
   .pain-points { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px; }
   .pain-points li { background: white; border: 1px solid var(--border-light); border-left: 3px solid var(--red-muted); padding: 18px 22px; border-radius: 0 8px 8px 0; line-height: 1.7; color: var(--ink-light); font-size: 14px; }
-  .pain-points li strong { display: inline; font-family: 'DM Sans', sans-serif; font-weight: 700; color: var(--ink); }
+  .pain-points li strong { display: inline; font-family: 'Geist', system-ui, -apple-system, sans-serif; font-weight: 700; color: var(--ink); }
 
   /* ── Capability cards (compact) ─────────────────────────── */
   .capabilities-compact { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
-  .cap-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 24px; }
-  .cap-card-name { font-family: 'Newsreader', serif; font-size: 17px; font-weight: 600; color: var(--green-800); margin-bottom: 8px; }
+  .cap-card { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; }
+  .cap-card-name { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 17px; font-weight: 600; color: var(--green-800); margin-bottom: 8px; }
   .cap-card-desc { font-size: 13.5px; line-height: 1.6; color: var(--ink-light); }
 
   /* ── Demo flows ─────────────────────────────────────────── */
-  .demo-flow { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 28px; margin-bottom: 20px; }
+  .demo-flow { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
   .demo-flow-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .demo-flow-number { width: 32px; height: 32px; border-radius: 50%; background: var(--green-800); color: var(--gold-300); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .demo-flow-title { font-family: 'Newsreader', serif; font-size: 18px; font-weight: 600; color: var(--green-800); }
+  .demo-flow-number { width: 32px; height: 32px; border-radius: 50%; background: var(--green-800); color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .demo-flow-title { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 18px; font-weight: 600; color: var(--green-800); }
   .demo-flow-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-600); margin-left: auto; flex-shrink: 0; }
   .demo-flow ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
   .demo-flow li { font-size: 13.5px; line-height: 1.6; color: var(--ink-light); }
@@ -89,15 +97,15 @@
 
   /* ── Traction ───────────────────────────────────────────── */
   .traction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
-  .traction-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 20px 24px; }
+  .traction-card { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 20px 24px; }
   .traction-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-muted); margin-bottom: 4px; }
-  .traction-value { font-family: 'Newsreader', serif; font-size: 20px; font-weight: 600; color: var(--green-700); margin-bottom: 4px; }
+  .traction-value { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 20px; font-weight: 600; color: var(--green-700); margin-bottom: 4px; }
   .traction-note { font-size: 12.5px; color: var(--ink-muted); }
   .traction-placeholder { border: 2px dashed var(--border); background: var(--cream-dark); }
   .traction-placeholder .traction-value { color: var(--ink-muted); font-style: italic; font-size: 16px; }
 
   /* ── Tables ─────────────────────────────────────────────── */
-  .styled-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .styled-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
   .styled-table thead { background: var(--green-800); color: var(--cream); }
   .styled-table thead th { font-weight: 600; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; padding: 14px 18px; text-align: left; border-bottom: 2px solid var(--gold-500); }
   .styled-table tbody tr { border-bottom: 1px solid var(--border-light); }
@@ -107,7 +115,7 @@
   .status-live { display: inline-block; background: var(--green-100); color: var(--green-700); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.5px; text-transform: uppercase; }
 
   /* ── Pricing table ──────────────────────────────────────── */
-  .pricing-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .pricing-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
   .pricing-table thead { background: var(--green-800); color: var(--cream); }
   .pricing-table thead th { font-weight: 600; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; padding: 14px 18px; text-align: center; border-bottom: 2px solid var(--gold-500); }
   .pricing-table thead th:first-child { text-align: left; }
@@ -120,7 +128,7 @@
   .pricing-yes { color: var(--green-600); font-weight: 600; }
 
   /* ── Comp sections ──────────────────────────────────────── */
-  .comp-section { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 24px; margin-bottom: 16px; }
+  .comp-section { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
   .comp-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--green-800); }
   .comp-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .comp-list li { font-size: 13.5px; line-height: 1.6; color: var(--ink-light); padding-left: 20px; position: relative; }
@@ -129,16 +137,16 @@
 
   /* ── GTM phases ─────────────────────────────────────────── */
   .gtm-phases { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
-  .gtm-phase { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 24px; display: grid; grid-template-columns: 140px 1fr; gap: 20px; }
-  .gtm-phase-name { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 600; color: var(--green-800); }
+  .gtm-phase { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; display: grid; grid-template-columns: 140px 1fr; gap: 20px; }
+  .gtm-phase-name { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 600; color: var(--green-800); }
   .gtm-phase-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-600); }
   .gtm-phase-desc { font-size: 13.5px; line-height: 1.7; color: var(--ink-light); }
 
   /* ── Funds + milestones ─────────────────────────────────── */
   .funds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
-  .fund-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 24px; text-align: center; }
+  .fund-card { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; text-align: center; }
   .fund-pct { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 500; color: var(--green-700); margin-bottom: 4px; }
-  .fund-label { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  .fund-label { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
   .fund-desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.5; }
   .milestones { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
   .milestone { display: grid; grid-template-columns: 100px 1fr; gap: 16px; align-items: center; padding: 12px 16px; background: white; border: 1px solid var(--border-light); border-radius: 8px; }
@@ -147,7 +155,7 @@
 
   /* ── Regulatory ─────────────────────────────────────────── */
   .reg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
-  .reg-card { background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 20px 24px; }
+  .reg-card { background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 20px 24px; }
   .reg-card h4 { margin-top: 0; margin-bottom: 8px; font-size: 13px; }
   .reg-card p { font-size: 13px; line-height: 1.6; color: var(--ink-muted); margin: 0; }
   .reg-card ul { padding-left: 16px; margin: 0; }
@@ -169,7 +177,7 @@
   .flywheel-steps { display: flex; flex-direction: column; gap: 0; margin: 24px 0; position: relative; }
   .flywheel-step { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: start; padding: 16px 0; position: relative; }
   .flywheel-step:not(:last-child)::after { content: ''; position: absolute; left: 19px; top: 48px; bottom: -8px; width: 2px; background: var(--border); }
-  .flywheel-num { width: 40px; height: 40px; border-radius: 50%; background: var(--green-800); color: var(--gold-300); font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+  .flywheel-num { width: 40px; height: 40px; border-radius: 50%; background: var(--green-800); color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
   .flywheel-text { font-size: 14px; line-height: 1.6; color: var(--ink-light); padding-top: 8px; }
 
   /* ── Visual note ────────────────────────────────────────── */
@@ -177,7 +185,7 @@
   .visual-note::before { content: '🎨 Visual: '; font-style: normal; font-weight: 600; }
 
   /* ── Closing quote ──────────────────────────────────────── */
-  .closing-quote { font-family: 'Newsreader', serif; font-size: 22px; font-style: italic; color: var(--green-700); text-align: center; padding: 40px 48px; margin: 24px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); line-height: 1.5; }
+  .closing-quote { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 22px; font-style: italic; color: var(--green-700); text-align: center; padding: 40px 48px; margin: 24px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); line-height: 1.5; }
 
   /* ── Execution list ─────────────────────────────────────── */
   .execution-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; margin: 16px 0; }
@@ -186,17 +194,17 @@
 
   /* ── Appendix divider ───────────────────────────────────── */
   .appendix-divider { max-width: 900px; margin: 0 auto; padding: 48px 64px; background: var(--green-900); color: var(--cream); text-align: center; }
-  .appendix-divider h2 { font-family: 'Newsreader', serif; font-size: 32px; color: var(--cream); margin-bottom: 8px; }
+  .appendix-divider h2 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 32px; color: var(--cream); margin-bottom: 8px; }
   .appendix-divider p { color: var(--green-400); font-style: italic; }
 
   /* ── Tips section ───────────────────────────────────────── */
-  .tips-section { background: var(--green-900); color: var(--cream); padding: 72px 64px; max-width: 900px; margin: 0 auto; }
-  .tips-section h2 { color: var(--cream); margin-bottom: 32px; }
-  .tips-section .slide-headline { color: var(--green-400); border-bottom-color: rgba(253,251,245,0.1); }
-  .tip { margin-bottom: 24px; padding: 24px; background: rgba(253,251,245,0.04); border: 1px solid rgba(253,251,245,0.08); border-radius: 10px; }
-  .tip h4 { font-family: 'Newsreader', serif; font-size: 17px; font-weight: 600; color: var(--gold-400); margin: 0 0 8px 0; text-transform: none; letter-spacing: 0; }
-  .tip p, .tip li { font-size: 13.5px; line-height: 1.7; color: rgba(253,251,245,0.7); }
-  .tip strong { color: var(--cream); }
+  .tips-section { background: #083824; color: #ffffff; padding: 72px 64px; max-width: 900px; margin: 0 auto; }
+  .tips-section h2 { color: #ffffff; margin-bottom: 32px; }
+  .tips-section .slide-headline { color: rgba(232,224,208,0.7); border-bottom-color: rgba(255,255,255,0.1); }
+  .tip { margin-bottom: 24px; padding: 24px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+  .tip h4 { font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 17px; font-weight: 600; color: #e8e0d0; margin: 0 0 8px 0; text-transform: none; letter-spacing: 0; }
+  .tip p, .tip li { font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,0.7); }
+  .tip strong { color: #ffffff; }
   .tip ul, .tip ol { padding-left: 20px; margin-top: 8px; }
   .tip li { margin-bottom: 4px; }
 
@@ -223,9 +231,9 @@
   <div class="cover-logo">A</div>
   <h1>Apothecare</h1>
   <div class="cover-subtitle">The AI Clinical Intelligence Platform for Functional &amp; Integrative Medicine</div>
-  <div class="cover-tagline">openEvidence for the $160B supplement and functional diagnostic market</div>
+  <div class="cover-tagline">OpenEvidence for the $160B supplement and functional diagnostic market</div>
   <p class="cover-message">We are building the operating system for the fastest-growing sector of healthcare.</p>
-  <div class="cover-footer">2026 &middot; Raising $1M Seed</div>
+  <div class="cover-footer">2026 &middot; Raising $1.5M Seed</div>
 </div>
 
 <!-- ═══════════════ SLIDE 2: PROBLEM ═══════════════ -->
@@ -234,11 +242,12 @@
   <h2>The Problem</h2>
   <div class="slide-headline">Integrative Practitioners Are Drowning in Complexity</div>
   <ol class="pain-points">
-    <li><strong>Documentation Overload:</strong> Practitioners spend 40%+ of their time on charting instead of patient care. Current tools require manual typing of everything.</li>
-    <li><strong>Scattered Lab Intelligence:</strong> Cross-referencing biomarker panels across 10+ vendors is tedious, error-prone, and misses critical functional range insights.</li>
-    <li><strong>Supplement &amp; Interaction Chaos:</strong> Checking drug-supplement AND supplement-supplement interactions across dozens of databases. A missed interaction can be dangerous.</li>
-    <li><strong>The Monday Morning Gap:</strong> Practitioners learn the IFM Matrix and ATM Timeline at seminars but have zero tools to operationalize them in clinical practice.</li>
-    <li><strong>Legacy EHRs Actively Hinder:</strong> Epic and Athena are built for insurance billing and standard ranges. They are anti-functional-medicine.</li>
+    <li><strong>Documentation Overload:</strong> Clinicians spend too much time charting and too little time practicing medicine. Today's workflows are built around billing requirements, not clinical reasoning.</li>
+    <li><strong>Fragmented Lab Intelligence:</strong> Clinicians must synthesize biomarker data across multiple vendors, formats, and reference ranges, making interpretation slow, inconsistent, and vulnerable to missed insights.</li>
+    <li><strong>Supplement and Interaction Complexity:</strong> Building effective protocols requires checking drug-supplement, supplement-supplement, and condition-based interactions across fragmented sources. The process is manual, time-consuming, and carries real safety risk.</li>
+    <li><strong>The Education-to-Execution Gap:</strong> Clinicians are flooded with new frameworks, therapies, and protocols, but lack the infrastructure to turn what they learn into structured, repeatable patient care.</li>
+    <li><strong>A Missing Clinical Workflow Layer:</strong> Integrative medicine lacks a dedicated workflow layer to connect insight, decision-making, safety, and execution at the point of care.</li>
+    <li><strong>The Monday Morning Gap:</strong> Clinicians leave seminars energized, but by Monday the realities of time pressure, charting, and fragmented workflows push new learning back into old habits.</li>
   </ol>
 </section>
 
@@ -246,27 +255,27 @@
 <section class="slide">
   <div class="slide-number">Slide 03</div>
   <h2>The Solution</h2>
-  <div class="slide-headline">Your Second Functional Medicine Brain</div>
-  <p>Apothecare is a purpose-built AI clinical intelligence platform that doesn't just parse data — it <strong>thinks like a functional medicine practitioner</strong>.</p>
+  <div class="slide-headline">The Clinical Intelligence Layer for Functional Medicine</div>
+  <p>Apothecare is purpose-built AI for functional and integrative medicine, designed to <strong>synthesize complex data, support clinical reasoning, and turn insight into action</strong> at the point of care.</p>
   <div class="capabilities-compact">
     <div class="cap-card">
       <div class="cap-card-name">AI Clinical Chat</div>
-      <div class="cap-card-desc">Evidence-cited decision support with verified citations, 15+ source filters, and Clinical Lens (Functional / Conventional / Both comparison view).</div>
+      <div class="cap-card-desc">Ask complex clinical questions and get evidence-cited answers through a functional, conventional, or combined clinical lens.</div>
     </div>
     <div class="cap-card">
       <div class="cap-card-name">Lab Intelligence</div>
-      <div class="cap-card-desc">Drop a PDF from any of 10+ vendors → AI extracts biomarkers with dual conventional + functional range flags, trend charts, and custom range overrides.</div>
+      <div class="cap-card-desc">Upload bloodwork and specialty functional labs, including microbiome, OAT, genetics, and hormone testing. Apothecare extracts biomarkers, flags conventional and functional ranges, visualizes trends, and applies custom interpretation logic.</div>
     </div>
     <div class="cap-card">
       <div class="cap-card-name">Visit Documentation</div>
-      <div class="cap-card-desc">AI Scribe records → Whisper transcribes → auto-assigns to SOAP sections → generates notes + IFM Matrix + protocols. Visit AI Assistant available throughout.</div>
+      <div class="cap-card-desc">Turn live visits into structured notes, matrix-based insights, and protocol drafts with far less manual charting.</div>
     </div>
     <div class="cap-card">
-      <div class="cap-card-name">Supplement Intelligence</div>
-      <div class="cap-card-desc">AI reviews regimens with keep/modify/discontinue/add, 3-tier citation validation, interaction checker, brand formulary, push-to-patient.</div>
+      <div class="cap-card-name">Supplement and Medication Intelligence</div>
+      <div class="cap-card-desc">Analyze regimens for interactions, duplications, and therapeutic gaps, then generate safer, evidence-backed recommendations and patient-ready plans.</div>
     </div>
   </div>
-  <div class="closing-quote">"We are the bridge between the weekend seminar room and the exam room."</div>
+  <div class="closing-quote">Apothecare bridges the gap between the seminar room and the exam room.</div>
 </section>
 
 <!-- ═══════════════ SLIDE 4: DEMO ═══════════════ -->
@@ -316,15 +325,15 @@
   <div class="why-now-grid">
     <div class="why-now-card">
       <h4>LLMs Crossed the Clinical Threshold</h4>
-      <p>For the first time, LLMs are accurate enough for clinical decision support when combined with RAG and citation validation. Our 3-tier pipeline (CrossRef → PubMed → curated DB) eliminates hallucinated references — the #1 blocker for AI in clinical settings.</p>
+      <p>For the first time, LLMs are accurate enough for clinical decision support when combined with RAG and citation validation. Our 3-tier pipeline (CrossRef → PubMed → curated DB) eliminates hallucinated references — the #1 blocker for AI in clinical settings. We pull directly from leaders in functional and anti-aging medical education — <strong>IFM</strong>, <strong>A4M</strong>, and <strong>FMU</strong> — ensuring recommendations are grounded in the frameworks clinicians actually train on.</p>
     </div>
     <div class="why-now-card">
       <h4>Functional Medicine at Inflection Point</h4>
       <p>IFM membership grown 340%+ in 5 years. A4M certifies 1,000+ new practitioners annually. Longevity clinic openings up 200%+ since 2022. These practitioners are tech-forward and paying out of pocket for tools.</p>
     </div>
     <div class="why-now-card">
-      <h4>openEvidence Proved the Model</h4>
-      <p>openEvidence generated $100M+ in pharma-sponsored intelligence revenue in year one using contextual AI recommendations. We apply the identical model to the $160B supplement and functional diagnostic market — with no incumbent.</p>
+      <h4>OpenEvidence Proved the Model</h4>
+      <p>OpenEvidence generated $100M+ in pharma-sponsored intelligence revenue in year one using contextual AI recommendations. We apply the identical model to the $160B supplement and functional diagnostic market — with no incumbent.</p>
     </div>
     <div class="why-now-card">
       <h4>Regulatory Tailwinds</h4>
@@ -359,7 +368,7 @@
     <div class="traction-card">
       <div class="traction-label">Partnership Pipeline</div>
       <div class="traction-value">RAG Built</div>
-      <div class="traction-note">Apex Energetics integration ready for ingestion</div>
+      <div class="traction-note">Ingestion pipeline built and validated with proof-of-concept partner content</div>
     </div>
   </div>
 
@@ -402,13 +411,13 @@
     <div class="stat-card" style="border-top: 3px solid var(--gold-500);"><div class="stat-value">100K</div><div class="stat-label">SOM — US FM Practitioners</div></div>
   </div>
 
-  <div style="background: var(--green-50); border: 1px solid var(--green-100); border-radius: 10px; padding: 20px 24px; margin: 20px 0;">
+  <div style="background: var(--green-50); border: 1px solid var(--green-100); border-radius: 12px; padding: 20px 24px; margin: 20px 0;">
     <h4 style="margin-top: 0; color: var(--green-700);">Bottom-Up Math</h4>
-    <p style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--green-800); margin: 0;">100K × $89/mo × 12 = <strong>$106M ARR</strong> at full penetration<br>At 5% capture = <strong>$5.3M ARR</strong> + sponsored pathways + dispensary affiliate</p>
+    <p style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--green-800); margin: 0;">100K × $99/mo × 12 = <strong>$118.8M ARR</strong> at full penetration<br>At 5% capture = <strong>$5.9M ARR</strong> + sponsored pathways + dispensary affiliate</p>
   </div>
 
   <h3>Pricing Justification</h3>
-  <p>Practitioners currently pay $150-400/mo for basic EHRs (Cerbo, Practice Better, Jane). $89/mo for AI clinical intelligence that saves 2+ hours/day of documentation is <strong>under-priced</strong>. Free tier creates organic discovery; rate limits drive natural upgrade.</p>
+  <p>Practitioners currently pay $150-400/mo for basic EHRs (Cerbo, Practice Better, Jane). $99/mo for AI clinical intelligence that saves 2+ hours/day of documentation is <strong>under-priced</strong>. Free tier creates organic discovery; rate limits drive natural upgrade.</p>
 </section>
 
 <!-- ═══════════════ SLIDE 8: BUSINESS MODEL ═══════════════ -->
@@ -419,7 +428,7 @@
 
   <h3>Revenue Stream 1: SaaS Subscription</h3>
   <table class="pricing-table">
-    <thead><tr><th>Feature</th><th>Free</th><th>Pro ($89/mo)</th></tr></thead>
+    <thead><tr><th>Feature</th><th>Free</th><th>Pro ($99/mo)</th></tr></thead>
     <tbody>
       <tr><td>Clinical Chat + Evidence Badges</td><td>2/day</td><td class="pricing-yes">Unlimited</td></tr>
       <tr><td>Lab Uploads (10+ vendors)</td><td>2/day</td><td class="pricing-yes">Unlimited</td></tr>
@@ -431,10 +440,15 @@
   </table>
 
   <h3>Revenue Stream 2: Sponsored Pathways (RAG-Powered)</h3>
-  <p>Our RAG infrastructure ingests partner clinical protocols and surfaces them <strong>contextually during clinical decision-making</strong> — not as banner ads, but as evidence-cited recommendations within the workflow. Infrastructure already built: ingestion pipeline, semantic search, source attribution.</p>
+  <p>Our RAG infrastructure ingests partner clinical protocols and training programs, then surfaces them <strong>contextually during clinical decision-making</strong> — not as banner ads, but as evidence-cited recommendations within the workflow. Infrastructure already built: ingestion pipeline, semantic search, source attribution.</p>
+  <p>Target partners include professional-grade supplement companies like <strong>Apex Energetics</strong>, <strong>Orthomolecular Products</strong>, <strong>Biotics Research</strong>, and <strong>Xymogen</strong> — brands that already invest heavily in practitioner education. Apothecare gives them a new channel: <strong>sponsored ingestion of their clinical training content</strong>, surfaced at the point of care when practitioners are making protocol decisions. This is sponsorship revenue tied directly to clinical relevance, not impressions.</p>
 
-  <h3>Revenue Stream 3: Dispensary Affiliate (Fullscript)</h3>
-  <p>Protocols → integrated dispensary → affiliate commission on every patient order. Recurring transactional revenue tied to clinical outcomes.</p>
+  <h3>Revenue Stream 3: Marketplace &amp; Affiliate (High Growth Potential)</h3>
+  <p>The <strong>Supplement Brand Preference</strong> feature opens a massive secondary revenue stream.</p>
+  <h4>Fullscript / Dispensary Integration</h4>
+  <p>Protocols convert directly to patient orders via integrated dispensary — we earn a <strong>5% take rate</strong> on transaction volume. Functional medicine practitioners rely on extensive supplement protocols, often <strong>$200–$500/month per patient</strong>, creating substantial recurring transactional revenue.</p>
+  <h4>Sponsored Educational Content</h4>
+  <p>Partner with professional brands to provide <strong>"suggested protocols"</strong> based on their clinical trials — clearly marked as sponsored but clinically relevant. Surfaced contextually during clinical decision-making, not as ads.</p>
 </section>
 
 <!-- ═══════════════ SLIDE 9: COMPETITIVE ADVANTAGE ═══════════════ -->
@@ -444,34 +458,44 @@
   <div class="slide-headline">Why Horizontal AI &amp; Legacy EHRs Can't Touch This</div>
 
   <div class="comp-section ours">
+    <h4>Knowledge Moat (The Core Differentiator)</h4>
+    <ul class="comp-list">
+      <li><strong>Built on functional medicine's own knowledge base</strong> — Apothecare ingests and retrieves from <strong>IFM</strong>, <strong>A4M</strong>, and <strong>FMU</strong> — the institutions that define how integrative practitioners are trained. OpenEvidence and general AI tools pull from traditional medical journals (NEJM, Lancet, JAMA). We speak the language practitioners actually learned.</li>
+      <li><strong>Domain-specific RAG pipeline</strong> — Our retrieval-augmented generation is tuned to functional medicine frameworks, protocols, and terminology. General-purpose AI treats "optimal TSH" the same as "normal TSH." We don't.</li>
+      <li><strong>3-tier citation validation</strong> — CrossRef → PubMed → curated DB. The only platform that validates every clinical citation rather than hallucinating. Every recommendation traces back to a verifiable source.</li>
+      <li><strong>Longitudinal patient intelligence</strong> — Apothecare maps a patient's full clinical narrative — from birth history and early exposures through present-day labs, symptoms, and interventions. AI surfaces root-cause connections across decades of data points, revealing patterns that no single visit or snapshot can capture. This is the functional medicine timeline brought to life.</li>
+    </ul>
+  </div>
+
+  <div class="comp-section ours">
     <h4>Technical Moat (Hard to Replicate)</h4>
     <ul class="comp-list">
-      <li><strong>3-tier citation validation</strong> — CrossRef → PubMed → curated DB. The only platform that validates every clinical citation rather than hallucinating.</li>
-      <li><strong>IFM Matrix operationalization</strong> — The only software implementing the IFM 7-node Matrix and ATM Timeline. No competitor has attempted this.</li>
-      <li><strong>Multi-LLM resilience</strong> — Automatic failover across 3 providers. No single-vendor dependency.</li>
+      <li><strong>IFM Matrix operationalization</strong> — The only software implementing the IFM 7-node Matrix and ATM Timeline as structured clinical tools, not just reference material. No competitor has attempted this.</li>
+      <li><strong>Multi-LLM resilience</strong> — Automatic failover across 3 providers (Anthropic, OpenAI, MiniMax). No single-vendor dependency.</li>
+      <li><strong>Dual-range biomarker engine</strong> — Every biomarker is interpreted against both conventional and functional ranges with practitioner-customizable overrides. No EHR or AI tool does this.</li>
     </ul>
   </div>
 
   <div class="comp-section ours">
     <h4>Compounding Moat (Gets Stronger Over Time)</h4>
     <ul class="comp-list">
-      <li><strong>Data network effects</strong> — Every lab upload, protocol, and partner ingestion makes the platform smarter.</li>
-      <li><strong>Practitioner switching costs</strong> — After 6 months of patient data, IFM matrices, and timeline events, migration is prohibitive.</li>
-      <li><strong>Partnership exclusivity</strong> — First-mover RAG deals with supplement companies create distribution lock-in.</li>
+      <li><strong>Data network effects</strong> — Every lab upload, protocol, and partner ingestion deepens the knowledge base. More practitioners = better AI = more practitioners.</li>
+      <li><strong>Practitioner switching costs</strong> — After 6 months of patient data, IFM matrices, custom biomarker ranges, and timeline events, migration is prohibitive.</li>
+      <li><strong>Partnership exclusivity</strong> — First-mover RAG deals with supplement companies (Apex Energetics, Orthomolecular, Biotics, Xymogen) create distribution lock-in and recurring sponsorship revenue.</li>
     </ul>
   </div>
 
   <div class="comp-section">
-    <h4>vs. ChatGPT / General AI</h4>
+    <h4>vs. OpenEvidence / General AI</h4>
     <ul class="comp-list">
-      <li>No biomarker parsing, no citation validation, no IFM Matrix, no HIPAA compliance, no patient records</li>
+      <li>OpenEvidence indexes traditional medical literature — useful for conventional medicine, but blind to functional ranges, IFM frameworks, and integrative protocols. ChatGPT has no biomarker parsing, no citation validation, no HIPAA compliance, no patient records.</li>
     </ul>
   </div>
 
   <div class="comp-section">
     <h4>vs. Epic / Legacy EHRs</h4>
     <ul class="comp-list">
-      <li>Built for insurance billing. No functional ranges, root-cause frameworks, or AI-generated protocols.</li>
+      <li>Built for insurance billing and conventional reference ranges. No functional ranges, no root-cause frameworks, no AI-generated protocols, no supplement intelligence. They are structurally incompatible with integrative medicine.</li>
     </ul>
   </div>
 </section>
@@ -488,7 +512,7 @@
     </div>
     <div class="gtm-phase">
       <div><div class="gtm-phase-name">Phase 2</div><div class="gtm-phase-time">Months 3–9</div></div>
-      <div class="gtm-phase-desc"><strong>Direct Sales to Clinics.</strong> Target longevity franchises (10X Health, Function Health, Next Health). Multi-seat enterprise deals. RLS-ready.</div>
+      <div class="gtm-phase-desc"><strong>Direct Sales to Clinics.</strong> Target longevity franchises (10X Health, Function Health, Next Health, <strong>Cenegenics</strong>). Multi-seat enterprise deals. RLS-ready. Key objective: establish Cenegenics as a clinical intelligence and training partner.</div>
     </div>
     <div class="gtm-phase">
       <div><div class="gtm-phase-name">Phase 3</div><div class="gtm-phase-time">Months 6–12</div></div>
@@ -507,7 +531,7 @@
   <h2>Team &amp; Execution</h2>
   <div class="slide-headline">Built by One. Ready to Scale.</div>
 
-  <div style="background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 28px; margin-bottom: 24px;">
+  <div style="background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 28px; margin-bottom: 24px;">
     <h3 style="margin-top: 0;">[Your Name] — Founder &amp; CEO</h3>
     <ul style="list-style: disc; padding-left: 20px; color: var(--ink-light); font-size: 14px; line-height: 1.8;">
       <li>[Your domain expertise in functional/integrative medicine]</li>
@@ -517,7 +541,7 @@
     </ul>
   </div>
 
-  <div style="background: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 28px; margin-bottom: 24px;">
+  <div style="background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 28px; margin-bottom: 24px;">
     <h3 style="margin-top: 0;">Clinical Advisory Board</h3>
     <p style="color: var(--ink-muted); font-style: italic;">[List 1-3 FM practitioners advising. If none yet, note "recruiting" with target profiles.]</p>
   </div>
@@ -536,26 +560,26 @@
 <section class="slide">
   <div class="slide-number">Slide 12</div>
   <h2>The Ask</h2>
-  <div class="slide-headline">Raising $1M Seed</div>
+  <div class="slide-headline">Raising $1.5M Seed</div>
 
   <h3>Use of Funds</h3>
   <div class="funds-grid">
     <div class="fund-card"><div class="fund-pct">50%</div><div class="fund-label">Engineering</div><div class="fund-desc">Hire 2 engineers. AI infrastructure, biomarker catalog, EHR integration.</div></div>
     <div class="fund-card"><div class="fund-pct">30%</div><div class="fund-label">GTM / Sales</div><div class="fund-desc">Hire 1 growth lead. Conferences, KOL onboarding, community outreach.</div></div>
-    <div class="fund-card"><div class="fund-pct">20%</div><div class="fund-label">Operations</div><div class="fund-desc">Fullscript, Stripe billing, partner onboarding, SOC 2 Type I.</div></div>
+    <div class="fund-card"><div class="fund-pct">20%</div><div class="fund-label">Operations</div><div class="fund-desc">Fullscript, Stripe billing, partner onboarding, SOC 2 Type II ($15–20K first year).</div></div>
   </div>
 
   <h3>18-Month Milestones</h3>
   <div class="milestones">
     <div class="milestone"><div class="milestone-month">Month 3</div><div class="milestone-desc">Stripe billing live, <strong>500</strong> free-tier practitioners</div></div>
-    <div class="milestone"><div class="milestone-month">Month 6</div><div class="milestone-desc">First sponsored pathway revenue, <strong>2,000</strong> practitioners, SOC 2 Type I</div></div>
+    <div class="milestone"><div class="milestone-month">Month 6</div><div class="milestone-desc">First sponsored pathway revenue, <strong>2,000</strong> practitioners, SOC 2 Type II ($15–20K first year)</div></div>
     <div class="milestone"><div class="milestone-month">Month 9</div><div class="milestone-desc">Fullscript dispensary live, <strong>5,000</strong> practitioners</div></div>
     <div class="milestone"><div class="milestone-month">Month 12</div><div class="milestone-desc"><strong>$500K ARR</strong> (SaaS + affiliate + sponsored), EHR integration planning</div></div>
     <div class="milestone"><div class="milestone-month">Month 18</div><div class="milestone-desc"><strong>$1.5M ARR</strong> run rate, Series A ready</div></div>
   </div>
 
-  <div style="background: var(--green-50); border: 1px solid var(--green-100); border-radius: 10px; padding: 20px 24px; margin-top: 24px;">
-    <p style="margin: 0; font-size: 14px; color: var(--green-800);"><strong>Burn Rate:</strong> $1M provides 18 months of runway. Next raise triggered by $500K+ ARR and 5,000+ active practitioners.</p>
+  <div style="background: var(--green-50); border: 1px solid var(--green-100); border-radius: 12px; padding: 20px 24px; margin-top: 24px;">
+    <p style="margin: 0; font-size: 14px; color: var(--green-800);"><strong>Burn Rate:</strong> $1.5M provides 18 months of runway. Next raise triggered by $500K+ ARR and 5,000+ active practitioners.</p>
   </div>
 
   <div class="closing-quote">"Join us in building the clinical intelligence layer for the future of medicine."</div>
@@ -588,7 +612,7 @@
         <li>Audit logging on every PHI access</li>
         <li>BAA-ready (Supabase Pro)</li>
         <li>Pursuing BAAs with AI providers</li>
-        <li>SOC 2 Type I at Month 6</li>
+        <li>SOC 2 Type II ($15–20K first year) at Month 6</li>
       </ul>
     </div>
     <div class="reg-card">
@@ -622,12 +646,12 @@
       <tr><td>Lab Intelligence</td><td><span class="status-live">Live</span></td><td>10+ vendors, Claude Vision, dual-range flags, trend charts, custom range overrides, lab drawer</td></tr>
       <tr><td>Visit Documentation</td><td><span class="status-live">Live</span></td><td>4 templates, AI Scribe (Whisper + Web Speech), SOAP/IFM/Protocol gen, Visit AI Assistant, full protocol push</td></tr>
       <tr><td>Patient Management</td><td><span class="status-live">Live</span></td><td>8-tab profiles, inline editing, vitals sparklines, Pillars of Health, carry-forward vitals</td></tr>
-      <tr><td>Supplement Intelligence</td><td><span class="status-live">Live</span></td><td>3-tier citation validation, evidence badges, clinician overrides, brand formulary, push-to-chart</td></tr>
+      <tr><td>Supplement Intelligence</td><td><span class="status-live">Live</span></td><td>3-tier citation validation, evidence badges, clinician overrides, brand formulary, push to Fullscript (in process)</td></tr>
       <tr><td>Patient Timeline</td><td><span class="status-live">Live</span></td><td>Auto-triggers, symptom logging with resolution, milestones, smart filtering</td></tr>
       <tr><td>Document Intelligence</td><td><span class="status-live">Live</span></td><td>Vision extraction, auto-populate, parse-as-lab, retry extraction, detail drawer</td></tr>
       <tr><td>RAG Knowledge Base</td><td><span class="status-live">Live</span></td><td>Partnership ingestion (PDF → chunk → embed → pgvector), semantic search, SHA256 dedup</td></tr>
       <tr><td>Settings + Export</td><td><span class="status-live">Live</span></td><td>5-section settings, NPI validation, full account ZIP export, conversation history</td></tr>
-      <tr><td>Landing + Auth</td><td><span class="status-live">Live</span></td><td>Marketing site, pricing, onboarding, Google OAuth, dark mode</td></tr>
+      <tr><td>Landing + Auth</td><td><span class="status-live">Live</span></td><td>Marketing site, pricing, onboarding, Google OAuth</td></tr>
     </tbody>
   </table>
 
@@ -663,8 +687,8 @@
     <div class="milestone"><div class="milestone-month">Month 12</div><div class="milestone-desc">Full clinical workflow dependency → <strong>prohibitive</strong> switching cost</div></div>
   </div>
 
-  <div style="background: var(--green-900); border-radius: 10px; padding: 24px 28px; margin-top: 24px; text-align: center;">
-    <p style="font-family: 'Newsreader', serif; font-size: 18px; font-style: italic; color: var(--gold-300); margin: 0;">After 10,000 protocols, we will have the largest dataset of functional medicine clinical decision patterns in existence. <strong style="color: var(--cream);">This is the moat.</strong></p>
+  <div style="background: var(--green-900); border-radius: 12px; padding: 24px 28px; margin-top: 24px; text-align: center;">
+    <p style="font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 18px; font-style: italic; color: var(--gold-300); margin: 0;">After 10,000 protocols, we will have the largest dataset of functional medicine clinical decision patterns in existence. <strong style="color: var(--cream);">This is the moat.</strong></p>
   </div>
 </section>
 
@@ -688,8 +712,8 @@
 
 <!-- ═══════════════ TIPS ═══════════════ -->
 <section class="tips-section">
-  <div class="slide-number" style="color: var(--gold-400);">Reference</div>
-  <h2 style="font-family: 'Newsreader', serif; font-size: 38px;">Critical Pitching Tips</h2>
+  <div class="slide-number">Reference</div>
+  <h2 style="font-family: 'Geist', system-ui, -apple-system, sans-serif; font-size: 38px;">Critical Pitching Tips</h2>
   <div class="slide-headline">Preparation notes — do not distribute to investors</div>
 
   <div class="tip">
@@ -697,8 +721,8 @@
     <p>Say it in the first 30 seconds. Most seed decks show Figma. You show <strong>production software</strong>. 300+ files, 60+ endpoints, live AI.</p>
   </div>
   <div class="tip">
-    <h4>2. Nail the openEvidence Comp</h4>
-    <p><strong>"We are openEvidence but for the $160B supplement and functional diagnostic market."</strong> This immediately communicates business model and scale.</p>
+    <h4>2. Nail the OpenEvidence Comp</h4>
+    <p><strong>"We are OpenEvidence but for the $160B supplement and functional diagnostic market."</strong> This immediately communicates business model and scale.</p>
   </div>
   <div class="tip">
     <h4>3. Get 10 Practitioners Using It Before You Pitch</h4>
@@ -718,15 +742,15 @@
   </div>
   <div class="tip">
     <h4>6. Address Solo Founder Risk</h4>
-    <p>"I built this alone in [X] weeks. That's the execution speed you're investing in. The $1M hires 2 engineers and a growth lead."</p>
+    <p>"I built this alone in [X] weeks. That's the execution speed you're investing in. The $1.5M hires 2 engineers and a growth lead."</p>
   </div>
   <div class="tip">
     <h4>7. Unit Economics</h4>
     <ul>
-      <li><strong>CAC:</strong> Free tier → organic WoM. &lt;$50 for paid conversion.</li>
-      <li><strong>LTV:</strong> $89/mo × 24 months = $2,136 + dispensary affiliate.</li>
+      <li><strong>CAC:</strong> Free tier → organic WoM. &lt;$35 for paid conversion.</li>
+      <li><strong>LTV:</strong> $99/mo × 24 months = $2,376 + dispensary affiliate.</li>
       <li><strong>Margin:</strong> SaaS 70-80%. Sponsored pathways 90%+.</li>
-      <li><strong>Comp:</strong> Cerbo charges $150-400/mo for basic EHR. $89/mo is under-priced.</li>
+      <li><strong>Comp:</strong> Cerbo charges $150-400/mo for basic EHR. $99/mo is under-priced.</li>
     </ul>
   </div>
   <div class="tip">
