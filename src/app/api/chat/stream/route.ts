@@ -9,6 +9,8 @@ import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 import { extractCitations, resolveCitations, resolveCitationsMulti, applyCitationLinks } from "@/lib/citations/resolve";
 import { retrieveEvidence } from "@/lib/evidence/retrieve";
+import { retrieveEvidenceMultiQuery } from "@/lib/evidence/multi-query";
+import { analyzeEvidence, formatAnalyzedContext } from "@/lib/evidence/analyze";
 import { formatEvidenceContext } from "@/lib/evidence/format-context";
 
 export const runtime = "nodejs";
@@ -169,16 +171,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
+    // RAG: Multi-query retrieval + analyze-then-synthesize pipeline
+    // Deep Consult uses the full pipeline; standard uses multi-query only
     let evidenceContext = "";
     let ragChunkCount = 0;
     try {
-      const evidence = await retrieveEvidence(message, {
-        sources: (source_filter ?? []) as string[],
-        matchCount: is_deep_consult ? 12 : 8,
-      });
-      evidenceContext = formatEvidenceContext(evidence);
-      ragChunkCount = evidence.chunks.length;
+      if (is_deep_consult) {
+        // Full pipeline: multi-query retrieval → per-chunk analysis → synthesize
+        const evidence = await retrieveEvidenceMultiQuery(message, {
+          sources: (source_filter ?? []) as string[],
+          matchCount: 15,
+          isDeepConsult: true,
+        });
+        ragChunkCount = evidence.chunks.length;
+
+        if (evidence.chunks.length > 0) {
+          const analysis = await analyzeEvidence(evidence.chunks, message, {
+            patientContext,
+            minRelevance: 5,
+            maxChunksToAnalyze: 15,
+            maxResults: 10,
+          });
+          evidenceContext = formatAnalyzedContext(analysis);
+          ragChunkCount = analysis.chunks.length;
+        }
+      } else {
+        // Standard: multi-query retrieval with raw chunk formatting
+        const evidence = await retrieveEvidenceMultiQuery(message, {
+          sources: (source_filter ?? []) as string[],
+          matchCount: 8,
+        });
+        evidenceContext = formatEvidenceContext(evidence);
+        ragChunkCount = evidence.chunks.length;
+      }
     } catch (err) {
       console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
