@@ -26,15 +26,15 @@ Investors spend 2-3 minutes reading a deck. Hook them immediately with a massive
 
 **Content (5 pain points — keep to one sentence each on the actual slide):**
 
-1. **Documentation Overload:** Practitioners spend 40%+ of their time on charting, SOAP notes, and clinical documentation instead of patient care.
+1. **Information Overload:** Staying updated with vast, rapidly evolving medical research across genetics, microbiome, metabolomics, and lifestyle medicine is overwhelming — practitioners can't keep pace.
 
-2. **Scattered Lab Intelligence:** Manually cross-referencing complex biomarker panels across 10+ lab vendors is tedious, error-prone, and misses critical functional range insights.
+2. **Time Constraints & Documentation Burden:** Practitioners spend 40%+ of their time on charting, SOAP notes, and clinical documentation. There are no efficient, tailored tools for integrative medicine workflows.
 
-3. **Supplement & Interaction Chaos:** Formulating safe protocols requires checking drug-supplement AND supplement-supplement interactions across dozens of databases. A missed interaction can be dangerous.
+3. **Complex, Personalized Care:** Functional medicine addresses the whole person — genetics, microbiome analysis, metabolomics, lifestyle factors & nutrition. Creating data-driven, personalized treatment plans across all these domains manually is unsustainable.
 
-4. **The Monday Morning Gap:** Practitioners leave IFM and A4M weekend seminars inspired but overwhelmed — they learn the IFM Matrix and ATM Timeline but have zero tools to operationalize them in practice.
+4. **No Specialized AI Exists:** There is no AI tool purpose-built for functional/integrative medicine. General-purpose AI hallucinates citations and doesn't understand IFM frameworks. Traditional software overlooks functional practitioners' needs entirely.
 
-5. **Legacy EHRs Actively Hinder:** Epic, Athena, and conventional EHRs are built for insurance billing and standard ranges. They are anti-functional-medicine.
+5. **Legacy EHRs Actively Hinder:** Epic, Athena, and conventional EHRs are built for insurance billing and standard ranges. They cannot render functional ranges, root-cause frameworks, or holistic patient views. They are anti-functional-medicine.
 
 **Visual:** Split screen — left: frustrated practitioner buried in paper lab reports and open browser tabs. Right: clean Apothecare interface showing organized biomarker data with functional ranges.
 
@@ -109,10 +109,11 @@ Investors spend 2-3 minutes reading a deck. Hook them immediately with a massive
 ### 1. LLMs Crossed the Clinical Accuracy Threshold (2024-2025)
 For the first time, large language models are accurate enough for clinical decision support when combined with retrieval-augmented generation and citation validation. Two years ago, hallucinated references made AI unusable in clinical settings. Our 3-tier citation validation pipeline (CrossRef → PubMed → curated DB) solves this — every recommendation is evidence-backed.
 
-### 2. Functional Medicine at an Inflection Point
+### 2. Functional Medicine: A Paradigm Shift — and It's Accelerating
 - IFM membership grown **340%+ in 5 years**
 - A4M certifies **1,000+ new practitioners annually**
 - Longevity clinic openings up **200%+ since 2022**
+- This is a paradigm shift in medicine: practitioners now integrate genetics, microbiome analysis, metabolomics, and lifestyle factors to address the whole person rather than isolated symptoms. This data-intensive, personalized approach is inherently AI-native — practitioners in these fields are early adopters of technology, leveraging cutting-edge research, biomarkers, and precision diagnostics. They are prime candidates for AI-driven support.
 - These practitioners are tech-forward, out-of-network, and paying out of pocket for tools. They are not locked into Epic.
 
 ### 3. openEvidence Proved the Model
@@ -224,13 +225,16 @@ Practitioners generate supplement protocols → patients order through integrate
 - **Practitioner switching costs** — After 6 months of patient data, lab history, IFM matrices, and timeline events, migration cost is prohibitive.
 - **Partnership exclusivity** — First-mover RAG deals with supplement companies (Apex Energetics, Designs for Health, etc.) create distribution lock-in.
 
+### vs. FunctionalMind (John Snow Labs)
+The closest competitor: a medical RAG chatbot built on John Snow Labs' NLP infrastructure. Their strategic approach: custom-built AI for data privacy and cost efficiency (single-digit vs. double-digit million enterprise costs). **But FunctionalMind is a chatbot only** — no lab parsing, no visit documentation, no supplement reviews, no IFM Matrix, no patient records, no clinical workflow. They have multi-step query planning and scale (millions of papers), but no citation verification pipeline and no structured clinical platform. Apothecare is a full clinical operating system; FunctionalMind is one feature within it.
+
 ### vs. ChatGPT/General AI
 No biomarker parsing, no citation validation, no IFM Matrix, no HIPAA compliance, no patient records, no supplement interaction database.
 
 ### vs. Epic/Legacy EHRs
 Built for insurance billing. Cannot render functional ranges, root-cause frameworks, or AI-generated protocols. Practitioners work around them, not with them.
 
-**Visual:** 2x2 Matrix — X: Generic AI ↔ Clinical Intelligence, Y: Conventional ↔ Functional/Longevity. Apothecare alone in top-right.
+**Visual:** 2x2 Matrix — X: Chatbot Only ↔ Full Clinical Platform, Y: Conventional ↔ Functional/Longevity. Apothecare alone in top-right. FunctionalMind in upper-left (functional-focused but chatbot-only). Epic in bottom-right (platform but conventional). ChatGPT in bottom-left (generic chatbot).
 
 ---
 
@@ -296,9 +300,9 @@ This was built by one person. It is not a mockup — it is production software w
 ### 18-Month Milestones
 - **Month 3:** Stripe billing live, 500 free-tier practitioners
 - **Month 6:** First sponsored pathway revenue (supplement partner), 2,000 practitioners
-- **Month 9:** Fullscript dispensary integration live, 5,000 practitioners
-- **Month 12:** $500K ARR (SaaS + affiliate + sponsored), EHR integration planning
-- **Month 18:** $1.5M ARR run rate, Series A ready
+- **Month 9:** Fullscript dispensary integration live, 5,000 practitioners, improved data ingestion and model transparency
+- **Month 12:** $500K ARR (SaaS + affiliate + sponsored), EHR integration planning, multimodal AI capabilities (image/document understanding in clinical context)
+- **Month 18:** $1.5M ARR run rate, Series A ready, enhanced agentic management (AI-driven patient journey orchestration, longitudinal care path automation)
 
 ### Burn Rate
 $1M provides 18 months of runway. Next raise triggered by $500K+ ARR and 5,000+ active practitioners.
