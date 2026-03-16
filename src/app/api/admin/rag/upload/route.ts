@@ -14,10 +14,12 @@ function isAdmin(email: string): boolean {
 
 /**
  * POST /api/admin/rag/upload
- * Upload PDF files to Supabase Storage for a partnership.
- * Expects multipart/form-data with:
- *   - partnershipSlug: string
- *   - files: File[] (one or more PDFs)
+ * Generate a signed upload URL for direct browser-to-Storage upload.
+ * This bypasses Next.js/Vercel body size limits (4.5 MB) and allows
+ * PDFs up to 50 MB to be uploaded directly from the browser.
+ *
+ * Body: { partnershipSlug: string, fileName: string }
+ * Returns: { signedUrl: string, storagePath: string, token: string }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,11 +28,15 @@ export async function POST(request: NextRequest) {
       return jsonError("Unauthorized", 401);
     }
 
-    const formData = await request.formData();
-    const partnershipSlug = formData.get("partnershipSlug") as string;
+    const body = await request.json();
+    const { partnershipSlug, fileName } = body;
 
-    if (!partnershipSlug) {
-      return jsonError("partnershipSlug is required", 400);
+    if (!partnershipSlug || !fileName) {
+      return jsonError("partnershipSlug and fileName are required", 400);
+    }
+
+    if (!fileName.toLowerCase().endsWith(".pdf")) {
+      return jsonError("Only PDF files are allowed", 400);
     }
 
     const supabase = createServiceClient();
@@ -46,62 +52,22 @@ export async function POST(request: NextRequest) {
       return jsonError(`Partnership "${partnershipSlug}" not found`, 404);
     }
 
-    // Collect all file entries
-    const files: File[] = [];
-    for (const [key, value] of formData.entries()) {
-      if (key === "files" && value instanceof File) {
-        if (!value.name.toLowerCase().endsWith(".pdf")) {
-          return jsonError(`File "${value.name}" is not a PDF`, 400);
-        }
-        if (value.size > 50 * 1024 * 1024) {
-          return jsonError(`File "${value.name}" exceeds 50 MB limit`, 400);
-        }
-        files.push(value);
-      }
-    }
+    const storagePath = `${partnershipSlug}/${fileName}`;
 
-    if (files.length === 0) {
-      return jsonError("No PDF files provided", 400);
-    }
+    // Create a signed upload URL (valid for 10 minutes)
+    const { data, error } = await supabase.storage
+      .from("partnership-docs")
+      .createSignedUploadUrl(storagePath, { upsert: true });
 
-    const results = [];
-
-    for (const file of files) {
-      const storagePath = `${partnershipSlug}/${file.name}`;
-
-      // Upload to Supabase Storage
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      const { error: uploadErr } = await supabase.storage
-        .from("partnership-docs")
-        .upload(storagePath, buffer, {
-          contentType: "application/pdf",
-          upsert: true,
-        });
-
-      if (uploadErr) {
-        results.push({
-          file: file.name,
-          status: "error" as const,
-          message: uploadErr.message,
-        });
-        continue;
-      }
-
-      results.push({
-        file: file.name,
-        status: "uploaded" as const,
-        storagePath,
-        size: file.size,
-      });
+    if (error || !data) {
+      return jsonError(error?.message || "Failed to create signed URL", 500);
     }
 
     return NextResponse.json({
+      signedUrl: data.signedUrl,
+      storagePath,
+      token: data.token,
       partnership: partnership.name,
-      uploaded: results.filter((r) => r.status === "uploaded").length,
-      errors: results.filter((r) => r.status === "error").length,
-      results,
     });
   } catch (err: any) {
     console.error("[RAG Upload] Error:", err);
