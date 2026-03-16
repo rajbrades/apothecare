@@ -1,16 +1,26 @@
+/**
+ * Shared Embedding Module
+ *
+ * Single source of truth for OpenAI embedding generation across both the
+ * PubMed evidence pipeline and the partnership RAG pipeline.
+ * All vectors stored in evidence_chunks MUST use the same model + dimensions.
+ */
+
 import OpenAI from "openai";
 import { env } from "@/lib/env";
 
-// Must match the model used by the PubMed evidence pipeline (evidence/chunk-embed.ts)
-// so that all vectors in evidence_chunks are comparable via cosine similarity.
-const EMBEDDING_MODEL = "text-embedding-3-large";
-const EMBEDDING_DIMENSIONS = 1536;
+export const EMBEDDING_MODEL = "text-embedding-3-large";
+export const EMBEDDING_DIMENSIONS = 1536;
+
 const BATCH_SIZE = 100;
 
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
   if (!client) {
+    if (!env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is required for embedding generation");
+    }
     client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   }
   return client;

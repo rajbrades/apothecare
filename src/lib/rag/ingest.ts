@@ -3,7 +3,7 @@ import { readFile } from "fs/promises";
 import pdf from "pdf-parse";
 import { createServiceClient } from "@/lib/supabase/server";
 import { chunkDocument } from "./chunk";
-import { embedBatch } from "./embed";
+import { embedBatch } from "@/lib/embeddings";
 import type { IngestionResult } from "./types";
 
 interface IngestOptions {

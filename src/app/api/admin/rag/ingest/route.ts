@@ -3,7 +3,7 @@ import { createHash } from "crypto";
 import pdf from "pdf-parse";
 import { createServiceClient } from "@/lib/supabase/server";
 import { chunkDocument } from "@/lib/rag/chunk";
-import { embedBatch } from "@/lib/rag/embed";
+import { embedBatch } from "@/lib/embeddings";
 import { getAuthUser } from "@/lib/supabase/cached-queries";
 import { env } from "@/lib/env";
 

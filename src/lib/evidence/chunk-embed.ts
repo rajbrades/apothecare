@@ -1,13 +1,15 @@
 /**
- * Chunking & Embedding for Evidence Documents
+ * Chunking & Embedding for Evidence Documents (PubMed)
  *
- * Splits evidence documents into chunks, generates OpenAI embeddings,
- * and stores them in the evidence_chunks table.
+ * Splits evidence documents into chunks, generates embeddings via the
+ * shared embeddings module, and stores them in the evidence_chunks table.
  */
 
-import OpenAI from "openai";
-import { env } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/server";
+import { embedText, embedBatch } from "@/lib/embeddings";
+
+// Re-export for consumers that import query embedding from here
+export { embedText as generateQueryEmbedding } from "@/lib/embeddings";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -26,20 +28,9 @@ interface ChunkData {
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const EMBEDDING_MODEL = "text-embedding-3-large";
-const EMBEDDING_DIMENSIONS = 1536;
 const MAX_CHUNK_TOKENS = 1500; // ~6000 chars, leave headroom for the 8191 token limit
 const OVERLAP_CHARS = 400;
-const EMBED_BATCH_SIZE = 50; // OpenAI allows up to 2048 inputs per request
-
-// ── OpenAI Client ──────────────────────────────────────────────────────────
-
-function getOpenAIClient(): OpenAI {
-  if (!env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is required for embedding generation");
-  }
-  return new OpenAI({ apiKey: env.OPENAI_API_KEY });
-}
+const EMBED_BATCH_SIZE = 50;
 
 // ── Chunking ───────────────────────────────────────────────────────────────
 
@@ -168,47 +159,6 @@ function splitAtParagraphs(text: string, maxChars: number, overlapChars: number)
   return chunks;
 }
 
-// ── Embedding ──────────────────────────────────────────────────────────────
-
-/**
- * Generate embeddings for an array of text strings.
- * Batches requests to stay within OpenAI limits.
- */
-async function generateEmbeddings(texts: string[]): Promise<number[][]> {
-  const openai = getOpenAIClient();
-  const allEmbeddings: number[][] = [];
-
-  for (let i = 0; i < texts.length; i += EMBED_BATCH_SIZE) {
-    const batch = texts.slice(i, i + EMBED_BATCH_SIZE);
-
-    const response = await openai.embeddings.create({
-      model: EMBEDDING_MODEL,
-      dimensions: EMBEDDING_DIMENSIONS,
-      input: batch,
-    });
-
-    const sorted = response.data.sort((a, b) => a.index - b.index);
-    allEmbeddings.push(...sorted.map((d) => d.embedding));
-  }
-
-  return allEmbeddings;
-}
-
-/**
- * Generate a single embedding for a query string.
- */
-export async function generateQueryEmbedding(query: string): Promise<number[]> {
-  const openai = getOpenAIClient();
-
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    dimensions: EMBEDDING_DIMENSIONS,
-    input: query,
-  });
-
-  return response.data[0].embedding;
-}
-
 // ── Orchestrator ───────────────────────────────────────────────────────────
 
 /**
@@ -222,7 +172,7 @@ export async function chunkAndEmbedDocument(doc: DocumentForChunking): Promise<n
 
   // Generate embeddings for all chunks
   const texts = chunks.map((c) => c.content);
-  const embeddings = await generateEmbeddings(texts);
+  const embeddings = await embedBatch(texts);
 
   // Insert chunks with embeddings
   const rows = chunks.map((chunk, i) => ({
