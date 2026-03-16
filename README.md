@@ -56,6 +56,9 @@ Chronological feed of all patient events — lab results, visits, supplement cha
 ### Vitals & Pillars of Health Tracking
 Track vital signs (weight, blood pressure, heart rate, temperature, SpO2) and lifestyle pillars (sleep, stress, exercise, diet quality) over time with Recharts visualizations. Trends tab provides both biomarker and vitals/pillars views.
 
+### Evidence Knowledge Base & RAG Pipeline
+PubMed-sourced evidence database with 39 curated seed queries across 11 functional medicine categories. Multi-query retrieval generates variant queries from different clinical angles (pathophysiology, diagnosis, treatment, FM perspective), searches independently, and merges results with relevance scoring. Analyze-then-synthesize pipeline reduces context window usage by scoring chunks before expensive synthesis. Admin UI at `/admin/evidence` provides stats dashboard, one-click seed button, and custom PubMed query ingestion.
+
 ### Deep Consult Mode
 Toggle to use Claude Opus for complex multi-system cases, differential diagnoses, and cross-lab correlations. Extended 4096-token responses with advanced clinical reasoning.
 
@@ -203,7 +206,14 @@ src/
 │   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
 │   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
+│   ├── (admin)/admin/                 # Admin console (protected)
+│   │   ├── evidence/               # Evidence DB management (seed, ingest, stats)
+│   │   ├── partnerships/           # Partnership PDF management
+│   │   ├── audits/                 # Audit log viewer
+│   │   ├── users/                  # User management
+│   │   └── jobs/                   # Job queue monitor
 │   ├── api/
+│   │   ├── admin/evidence/          # seed, ingest, stats endpoints
 │   │   ├── chat/                    # stream, history, deprecated route
 │   │   ├── supplements/             # review (SSE), reviews list, interactions (SSE), brands
 │   │   ├── labs/                    # GET/POST list, GET detail, POST review (stub)
@@ -224,7 +234,8 @@ src/
 ├── hooks/                           # Chat, dictation, audio, speech, visit stream, supplements
 ├── lib/
 │   ├── ai/                          # Provider abstraction, Claude, prompts, parsing
-│   ├── api/                         # Shared CSRF validation
+│   ├── api/                         # Shared CSRF, audit, rate-limit utilities
+│   ├── evidence/                    # PubMed ingestion, multi-query retrieval, seed, analyze
 │   ├── editor/                      # Tiptap template section extension
 │   ├── labs/                        # Biomarker normalization, flag mapping
 │   ├── templates/                   # 4 encounter templates + conversion
@@ -244,8 +255,9 @@ src/
 **Supplements:** supplement_reviews, interaction_checks, practitioner_brand_preferences, patient_supplements
 **Timeline:** timeline_events (polymorphic via source_table/source_id, auto-triggers for labs, visits, documents, supplements)
 **FM Timeline:** patients.fm_timeline_data (JSONB — ATM events across life stages)
-**Evidence:** evidence_sources, evidence_embeddings
-**System:** audit_logs, usage_tracking
+**Evidence:** evidence_documents, evidence_chunks (pgvector), supplement_evidence (curated citations)
+**Partnerships:** partnerships, practitioner_partnerships
+**System:** audit_logs, usage_tracking, practitioner_biomarker_ranges
 
 ## API Reference
 
@@ -283,6 +295,9 @@ See [`docs/API.md`](docs/API.md) for the complete reference.
 | `/api/patients/[id]/fm-timeline/analyze` | POST | AI root cause analysis of FM Timeline |
 | `/api/patients/[id]/vitals` | GET/POST | List / record vital signs |
 | `/api/visits/[id]/export` | POST | Export visit document |
+| `/api/admin/evidence/seed` | POST | Run 39 curated PubMed seed queries |
+| `/api/admin/evidence/ingest` | POST | Custom PubMed query ingestion |
+| `/api/admin/evidence/stats` | GET | Evidence DB stats (docs, chunks, sources) |
 
 All POST endpoints are Zod-validated, CSRF-protected, and audit-logged with IP + user agent.
 

@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 11, 2026
+**Last updated:** March 16, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -62,7 +62,14 @@ src/
 │   │   │   ├── new/page.tsx        # New visit (patient + encounter type)
 │   │   │   └── page.tsx            # Visit list
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
+│   ├── (admin)/admin/                 # Admin console (protected, requireAdmin())
+│   │   ├── evidence/               # Evidence DB management (seed, ingest, stats)
+│   │   ├── partnerships/           # Partnership PDF management
+│   │   ├── audits/                 # Audit log viewer
+│   │   ├── users/                  # User management
+│   │   └── jobs/                   # Job queue monitor
 │   ├── api/
+│   │   ├── admin/evidence/          # POST seed, POST ingest, GET stats
 │   │   ├── conversations/
 │   │   │   └── route.ts            # GET list conversations (search, filter, cursor pagination)
 │   │   ├── chat/
@@ -240,6 +247,15 @@ src/
 │   │   ├── audit.ts                # Shared fire-and-forget audit logging
 │   │   ├── csrf.ts                 # Shared CSRF validation utility
 │   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
+│   ├── evidence/
+│   │   ├── ingest-pubmed.ts        # NCBI E-utilities fetch + parse + store
+│   │   ├── chunk-embed.ts          # Token-based chunking + embedding generation
+│   │   ├── retrieve.ts             # pgvector similarity search + dedup
+│   │   ├── multi-query.ts          # Multi-angle query generation + merge
+│   │   ├── analyze.ts              # Relevance scoring + filtering
+│   │   ├── seed-evidence.ts        # 39 curated PubMed queries (11 categories)
+│   │   └── format-context.ts       # System prompt addendum formatting
+│   ├── embeddings.ts               # Shared OpenAI text-embedding-3-large module
 │   ├── chat/
 │   │   ├── citation-meta-context.ts # CitationMeta interface + CitationMetaContext (Map<string, CitationMeta[]>)
 │   │   ├── classify-evidence.ts    # classifyEvidenceLevel(title, pubTypes?) — PubMed pub types + title keywords → EvidenceLevel
@@ -667,11 +683,17 @@ src/
 ## What Needs To Be Done Next
 
 ### High Priority
+- [ ] **Wire RAG into chat** — integrate evidence retrieval into `/api/chat/stream` system prompt
+- [ ] **Wire RAG into supplements** — evidence-grounded supplement review responses
+- [ ] **Wire RAG into visits** — evidence context for visit generation prompts
 - [ ] **Source filter persistence** — "Save as Default" → `preferred_evidence_sources` column
-- [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table
-- [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
+
+### Recently Completed (Mar 11–16)
+- [x] **Evidence pipeline** — PubMed ingestion, multi-query retrieval, analyze-then-synthesize, 39 seed queries, admin UI (v0.26.0)
+- [x] **Custom biomarker ranges** — practitioner-level overrides from Settings (v0.26.0)
+- [x] **Embedding consolidation** — unified on text-embedding-3-large, removed dead RAG modules (v0.26.0)
 - [x] **Data export** — ZIP export of all practitioner data from Settings > Account & Security (v0.23.0)
 - [x] **Visit AI assistant** — right-edge synthesis drawer on visit workspace pages (v0.23.0)
 
@@ -685,7 +707,6 @@ src/
 - PWA support
 - Analytics (PostHog or Mixpanel)
 - Accessibility audit (WCAG 2.1 AA)
-- Evidence ingestion pipeline (PubMed, IFM, A4M for RAG knowledge base)
 - Patient Education Studio (NotebookLM-style audio + slides)
 - Practice Analytics Dashboard
 
@@ -733,7 +754,7 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 
 ## Database Migrations
 
-23 migrations must be applied in order in Supabase SQL Editor:
+25 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
@@ -759,24 +780,42 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 22. `022_lab_source_document.sql` — `lab_reports.source_document_id UUID` FK to `patient_documents(id)` for parse-as-lab linking
 23. `023_patient_recommendations.sql` — `dietary_recommendations`, `lifestyle_recommendations`, `follow_up_labs` JSONB columns on patients
 24. `024_partnership_rag.sql` — `partnerships` table, `practitioner_partnerships` join table, extended `evidence_documents` for partnership content, `search_evidence_v2()` RPC with partnership filtering, Apex Energetics seed
+25. `025_practitioner_biomarker_ranges.sql` — `practitioner_biomarker_ranges` table for per-practitioner custom functional range overrides
 
-## Partnership RAG System (In Progress)
+## Evidence Pipeline (PubMed + Multi-Query RAG) ✅ COMPLETE
+
+### Architecture
+- **Ingestion**: PubMed query → NCBI E-utilities (esearch + efetch) → XML parse → `evidence_documents` storage → token-based chunking (800 tokens, 200 overlap) → OpenAI `text-embedding-3-large` embeddings → `evidence_chunks` (pgvector 1536-dim)
+- **Multi-Query Retrieval**: User query → generate 3–5 variant queries (pathophysiology, diagnosis, treatment, clinical evidence, FM perspective) → parallel vector search → merge + deduplicate + re-rank
+- **Analyze-then-Synthesize**: Retrieved chunks → lightweight relevance scoring (smaller model) → filter low-relevance → top chunks injected as system prompt addendum
+- **Seed**: 39 curated queries across 11 categories (FM Core, Gut, Thyroid, Endocrine, Nutrients, Metabolic, Inflammation, Environmental, Mainstream, Neuro, Women's Health)
+
+### Key Files
+- `src/lib/evidence/` — Core evidence module (ingest-pubmed, chunk-embed, retrieve, multi-query, analyze, seed-evidence, format-context)
+- `src/lib/embeddings.ts` — Shared embedding module (text-embedding-3-large)
+- `src/app/api/admin/evidence/` — Admin API (seed, ingest, stats)
+- `src/app/(admin)/admin/evidence/` — Admin UI (stats dashboard, seed button, custom query form)
+
+## Partnership RAG System
 
 The RAG infrastructure enables partnership content (e.g., Apex Energetics masterclass PDFs) to be ingested, embedded, and retrieved during AI interactions.
 
 ### Architecture
-- **Ingestion**: PDF → `pdf-parse` text extraction → section-aware chunking (800 tokens, 200 overlap) → OpenAI `text-embedding-3-small` embeddings → stored in `evidence_documents` + `evidence_chunks` (pgvector 1536-dim)
+- **Ingestion**: PDF → `pdf-parse` text extraction → section-aware chunking (800 tokens, 200 overlap) → OpenAI `text-embedding-3-large` embeddings → stored in `evidence_documents` + `evidence_chunks` (pgvector 1536-dim)
 - **Retrieval**: Query embedded → `search_evidence_v2()` cosine similarity search → top-k chunks formatted as system prompt addendum → injected before LLM call
+- **Storage**: Hybrid Supabase Storage workflow — signed-URL uploads for large PDFs, streaming ingestion, incremental embedding
 - **Access Control**: `practitioner_partnerships` join table gates which practitioners see which partnership content (with expiration support)
 
 ### Key Files
-- `src/lib/rag/` — Core RAG module (types, chunk, embed, retrieve, format-context, ingest)
-- `src/app/api/admin/rag/ingest/route.ts` — Admin ingestion endpoint
+- `src/lib/evidence/` — Core evidence module (shared with PubMed pipeline)
+- `src/app/api/admin/rag/ingest/route.ts` — Admin partnership ingestion endpoint
 - `supabase/migrations/024_partnership_rag.sql` — Schema migration
 - `docs/partnerships/apex-energetics/` — Test PDFs (gitignored)
 
-### Status (as of Mar 11, 2026)
+### Status (as of Mar 16, 2026)
 - Phase 1 code complete — migration, ingestion pipeline, retrieval layer, admin API all built
+- Embedding model consolidated on `text-embedding-3-large` (was `text-embedding-3-small`)
+- Dead `src/lib/rag/` modules removed — functionality consolidated into `src/lib/evidence/`
 - **PENDING**: Apply migration 024 in Supabase Dashboard SQL Editor, then run ingestion
 - **NEXT**: Wire retrieval into chat/supplement/visit endpoints (Phase 2-3)
 

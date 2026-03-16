@@ -2,6 +2,33 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.26.0] - 2026-03-16
+
+### Added — Admin Evidence Page
+- **Evidence management UI** (`/admin/evidence`): Admin page with stats dashboard (document count, chunk count, sources breakdown, last ingestion date), "Run Full Seed" button to trigger all 39 curated PubMed queries, and custom PubMed query form with configurable max results. Results display shows ingested/skipped/error counts.
+- **Evidence nav item**: Added to admin sidebar and dashboard card grid with Database icon (cyan accent).
+
+### Added — Evidence Pipeline (PubMed + Multi-Query RAG)
+- **PubMed ingestion** (`src/lib/evidence/ingest-pubmed.ts`): NCBI E-utilities (esearch + efetch) integration with XML parsing, document storage, and automatic chunking + embedding.
+- **Multi-query retrieval** (`src/lib/evidence/multi-query.ts`): Generates 3–5 variant queries from different clinical angles (pathophysiology, diagnosis, treatment, functional medicine), searches independently, and merges results with deduplication and re-ranking.
+- **Analyze-then-synthesize** (`src/lib/evidence/analyze.ts`): Lightweight relevance scoring pass over retrieved chunks using a smaller model before expensive synthesis. Reduces context window usage and inference costs.
+- **Evidence seed** (`src/lib/evidence/seed-evidence.ts`): 39 curated PubMed queries across 11 categories (FM Core, Gut, Thyroid, Endocrine, Nutrients, Metabolic, Inflammation, Environmental, Mainstream, Neuro, Women's Health).
+- **Admin evidence API**: `POST /api/admin/evidence/seed` (full seed), `POST /api/admin/evidence/ingest` (custom query with Zod validation), `GET /api/admin/evidence/stats` (document/chunk counts by source).
+- **Tests**: Comprehensive tests for multi-query retrieval and analyze pipeline.
+
+### Added — Custom Biomarker Ranges
+- **Practitioner biomarker overrides** (Migration 025): `practitioner_biomarker_ranges` table for per-practitioner functional range customization. Overrides applied during lab parsing normalization.
+- **Biomarker overrides API** (`PATCH /api/practitioners/biomarker-ranges`): CRUD with Zod validation for managing custom ranges.
+- **Biomarker overrides UI**: Settings > Clinical Preferences section for editing custom ranges.
+
+### Fixed — Embedding Model Consistency
+- **Unified embedding model**: Consolidated all embedding generation on `text-embedding-3-large` (1536 dims). Previously, different modules used different models causing vector mismatch.
+- **Consolidated embedding code**: Removed duplicate `src/lib/rag/embed.ts`, shared `src/lib/embeddings.ts` module used by both evidence and partnership pipelines.
+- **Dead RAG modules**: Removed obsolete `src/lib/rag/` files that were superseded by `src/lib/evidence/`.
+
+### Changed — Partnership PDF Workflow
+- **Hybrid Supabase Storage**: Large PDFs now use signed-URL uploads with streaming ingestion and incremental embedding instead of loading entire files into memory.
+
 ## [0.24.0] - 2026-03-11
 
 ### Added — Partnership RAG Infrastructure (Phase 1)

@@ -355,19 +355,73 @@ Layer 10: Service    → Service role client is standalone (no cookie inheritanc
 
 The Supabase service role client (`createServiceClient()`) uses `@supabase/supabase-js` directly — NOT `@supabase/ssr`. This prevents cookie data from being passed alongside the service role key, which bypasses RLS. The service client is a singleton, created once and reused.
 
-## RAG Architecture (Planned)
+## Evidence RAG Architecture ✅ IMPLEMENTED
 
-### Retrieval Pipeline
+### Ingestion Pipeline
 
 ```
-1. Query → generate embedding (text-embedding-3-large, 1536 dims)
-2. pgvector similarity search (cosine, threshold 0.7, top 10)
-3. BM25 keyword search (pg_trgm) for exact term matching
-4. Hybrid merge: RRF (Reciprocal Rank Fusion)
-5. Filter by evidence source (IFM, A4M, PubMed)
-6. Rerank: Claude scores each chunk for relevance
-7. Top 5 chunks injected into prompt with source metadata
+1. PubMed query → NCBI E-utilities (esearch + efetch)
+2. XML response → parse articles (title, abstract, authors, journal, DOI, MeSH terms)
+3. Store in evidence_documents table (source, external_id, metadata)
+4. Token-based chunking (800 tokens, 200 overlap, abstract prioritized)
+5. Generate embeddings → OpenAI text-embedding-3-large (1536 dims)
+6. Store chunks in evidence_chunks table (pgvector)
 ```
+
+**Key files:** `src/lib/evidence/ingest-pubmed.ts`, `src/lib/evidence/chunk-embed.ts`, `src/lib/embeddings.ts`
+
+### Multi-Query Retrieval Pipeline
+
+```
+1. User query → multi-query.ts generates 3–5 variant queries:
+   - Pathophysiology angle
+   - Diagnosis/assessment angle
+   - Treatment/intervention angle
+   - Clinical evidence/trials angle
+   - Functional medicine perspective angle
+2. Each variant → generate embedding (text-embedding-3-large, 1536 dims)
+3. Parallel pgvector similarity search via search_evidence() RPC
+4. Merge results across all queries → deduplicate by document_id
+5. Re-rank by combined relevance scores
+```
+
+**Key files:** `src/lib/evidence/multi-query.ts`, `src/lib/evidence/retrieve.ts`
+
+### Analyze-then-Synthesize Pipeline
+
+```
+1. Retrieved chunks from multi-query retrieval (top 10–20)
+2. Lightweight analysis pass (smaller model):
+   - Score each chunk for relevance to clinical context (0–1)
+   - Generate brief summary of each chunk
+   - Filter chunks below relevance threshold
+3. Top-k relevant chunks formatted as system prompt addendum
+4. Injected before main LLM call with [Source: Title] citation format
+```
+
+**Key files:** `src/lib/evidence/analyze.ts`, `src/lib/evidence/format-context.ts`
+
+### Seed Corpus
+
+39 curated PubMed queries across 11 categories:
+- FM Core, Gut Health, Thyroid, Endocrine, Nutrients
+- Metabolic Health, Inflammation, Environmental/Detox
+- Mainstream Journals, Neurology, Women's Health
+
+**Key file:** `src/lib/evidence/seed-evidence.ts`
+
+### Admin Interface
+
+- `/admin/evidence` — Stats dashboard, "Run Full Seed" button, custom PubMed query form
+- `GET /api/admin/evidence/stats` — Document count, chunk count, by-source breakdown
+- `POST /api/admin/evidence/seed` — Trigger all 39 seed queries
+- `POST /api/admin/evidence/ingest` — Custom query with max results
+
+### Partnership RAG (Extension)
+
+Partnership PDFs (e.g., Apex Energetics) follow the same pipeline but use Supabase Storage for PDF hosting with signed-URL uploads and `search_evidence_v2()` RPC for partnership-filtered retrieval.
+
+**Key files:** `src/app/api/admin/rag/ingest/route.ts`, `supabase/migrations/024_partnership_rag.sql`
 
 ## Current File Structure
 
@@ -402,7 +456,11 @@ src/
 │   │   └── layout.tsx              # Shared app layout (sidebar + React cache)
 │   ├── api/
 │   │   ├── admin/
-│   │   │   └── cleanup-stuck-jobs/route.ts  # GET mark stuck jobs as error (cron)
+│   │   │   ├── cleanup-stuck-jobs/route.ts  # GET mark stuck jobs as error (cron)
+│   │   │   └── evidence/
+│   │   │       ├── seed/route.ts      # POST run 39 PubMed seed queries
+│   │   │       ├── ingest/route.ts    # POST custom PubMed query ingestion
+│   │   │       └── stats/route.ts     # GET evidence DB statistics
 │   │   ├── supplements/
 │   │   │   ├── review/
 │   │   │   │   ├── route.ts         # POST SSE supplement review generation
@@ -604,6 +662,15 @@ src/
 │   │   ├── audit.ts                # Shared fire-and-forget audit logging
 │   │   ├── csrf.ts                 # Shared CSRF validation utility
 │   │   └── rate-limit.ts           # Per-action, tier-aware rate limiting
+│   ├── evidence/
+│   │   ├── ingest-pubmed.ts        # NCBI E-utilities fetch + XML parse + store
+│   │   ├── chunk-embed.ts          # Token-based chunking (800 tokens, 200 overlap) + embedding
+│   │   ├── retrieve.ts             # pgvector similarity search + dedup by document
+│   │   ├── multi-query.ts          # Multi-angle query generation (3–5 variants) + merge + re-rank
+│   │   ├── analyze.ts              # Lightweight relevance scoring + filtering before synthesis
+│   │   ├── seed-evidence.ts        # 39 curated PubMed queries across 11 FM categories
+│   │   └── format-context.ts       # System prompt addendum formatting with citations
+│   ├── embeddings.ts               # Shared OpenAI text-embedding-3-large module
 │   ├── editor/
 │   │   └── template-section-extension.ts  # Custom Tiptap templateSection node
 │   ├── ifm/

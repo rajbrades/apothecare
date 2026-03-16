@@ -830,6 +830,68 @@ AI root cause analysis of a patient's FM Timeline events using the ATM (Antecede
 
 ---
 
+### `GET /api/admin/evidence/stats` ✅ Implemented
+
+Get evidence database statistics. **Admin-only.**
+
+**Response (200):**
+```json
+{
+  "totalDocuments": 1250,
+  "totalChunks": 8500,
+  "bySource": { "pubmed": 1200, "partnership": 50 },
+  "latestIngestion": "2026-03-16T14:30:00Z"
+}
+```
+
+---
+
+### `POST /api/admin/evidence/seed` ✅ Implemented
+
+Run all 39 curated PubMed seed queries. **Admin-only.** Takes several minutes. Max duration: 5 minutes.
+
+**Response (200):**
+```json
+{
+  "totalIngested": 450,
+  "totalSkipped": 120,
+  "totalErrors": 3,
+  "queryResults": [
+    { "category": "FM Core", "query": "functional medicine integrative...", "result": { "ingested": 15, "skipped": 5, "errors": [] } }
+  ]
+}
+```
+
+**Notes:**
+- CSRF protected, audit logged
+- Already-ingested articles are automatically skipped (dedup by PubMed ID)
+- Sequential query execution with 500ms NCBI rate-limit delays
+
+---
+
+### `POST /api/admin/evidence/ingest` ✅ Implemented
+
+Ingest articles from a custom PubMed query. **Admin-only.**
+
+**Request Body:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `query` | string | Yes | PubMed search query |
+| `maxResults` | number | No | Default: 50, max: 200 |
+| `source` | string | No | Source label (default: "pubmed") |
+
+**Response (200):**
+```json
+{
+  "ingested": 25,
+  "skipped": 10,
+  "errors": ["Failed to parse PMID 12345678"]
+}
+```
+
+---
+
 ### `POST /api/protocols/generate` 🔲 Planned
 
 Generate treatment protocol from lab reviews, visits, or chat context.

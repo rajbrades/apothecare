@@ -287,7 +287,7 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Feature:** Wire retrieval into visit generation prompts
 
 ### Phase 4: Access Control + Admin UI
-- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
+- [x] **Feature:** Admin Evidence page with seed button, stats dashboard, and custom PubMed query form (`/admin/evidence`)
 - [ ] **Feature:** Practitioner settings to view/manage partnership access
 - [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
 
@@ -441,9 +441,26 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Dependency:** Added `jszip` for in-memory ZIP generation
 - [x] **Refactor:** Lab report action bar overflow menu — reduced from 8 visible buttons to 3 primary (Assign Patient, Push to Record, Copy) + overflow dropdown for secondary actions (View PDF, Download, Add to Visit, Re-parse, Archive)
 
-## Lab & Biomarker Enhancements
+## Lab & Biomarker Enhancements ✅ COMPLETE
 
-- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
+- [x] **Feature:** Custom functional ranges — Practitioners can override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization (Migration 025 — `practitioner_biomarker_ranges` table). Admin UI in Settings > Clinical Preferences.
+
+---
+
+## Evidence Pipeline (PubMed + Multi-Query RAG) ✅ COMPLETE
+
+- [x] **Feature:** PubMed ingestion pipeline (`src/lib/evidence/ingest-pubmed.ts`) — NCBI E-utilities (esearch + efetch), XML parsing, document storage with chunking + embedding
+- [x] **Feature:** Chunk + embed pipeline (`src/lib/evidence/chunk-embed.ts`) — token-based chunking (800 tokens, 200 overlap), OpenAI text-embedding-3-large, batch storage to `evidence_chunks`
+- [x] **Feature:** Evidence retrieval (`src/lib/evidence/retrieve.ts`) — pgvector similarity search via `search_evidence()` RPC, deduplication by document
+- [x] **Feature:** Multi-query retrieval (`src/lib/evidence/multi-query.ts`) — generates 3–5 variant queries from different clinical angles (pathophysiology, diagnosis, treatment, FM perspective), independent search + merge with re-ranking
+- [x] **Feature:** Analyze-then-synthesize (`src/lib/evidence/analyze.ts`) — lightweight relevance scoring pass over retrieved chunks before expensive synthesis, reduces context window usage
+- [x] **Feature:** Evidence seed pipeline (`src/lib/evidence/seed-evidence.ts`) — 39 curated PubMed queries across 11 categories (FM Core, Gut, Thyroid, Endocrine, Nutrients, Metabolic, Inflammation, Environmental, Mainstream, Neuro, Women's Health)
+- [x] **Feature:** Format context (`src/lib/evidence/format-context.ts`) — structures retrieved chunks as system prompt addendum with citation formatting
+- [x] **API:** Admin evidence endpoints — `POST /api/admin/evidence/seed` (full 39-query seed), `POST /api/admin/evidence/ingest` (custom query), `GET /api/admin/evidence/stats` (document/chunk counts by source)
+- [x] **UI:** Admin Evidence page (`/admin/evidence`) — stats dashboard, "Run Full Seed" button, custom PubMed query form with max results, results display
+- [x] **Infra:** Unified embedding model on `text-embedding-3-large` (1536 dims), consolidated `src/lib/embeddings.ts` shared module
+- [x] **Infra:** Hybrid Supabase Storage workflow for large PDFs — signed-URL uploads, streaming ingestion, incremental embedding
+- [x] **Tests:** Comprehensive tests for multi-query retrieval and analyze pipeline
 
 ---
 
