@@ -1,7 +1,10 @@
 import OpenAI from "openai";
 import { env } from "@/lib/env";
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
+// Must match the model used by the PubMed evidence pipeline (evidence/chunk-embed.ts)
+// so that all vectors in evidence_chunks are comparable via cosine similarity.
+const EMBEDDING_MODEL = "text-embedding-3-large";
+const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 100;
 
 let client: OpenAI | null = null;
@@ -20,6 +23,7 @@ export async function embedText(text: string): Promise<number[]> {
   const openai = getClient();
   const response = await openai.embeddings.create({
     model: EMBEDDING_MODEL,
+    dimensions: EMBEDDING_DIMENSIONS,
     input: text,
   });
   return response.data[0].embedding;
@@ -36,6 +40,7 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
     const batch = texts.slice(i, i + BATCH_SIZE);
     const response = await openai.embeddings.create({
       model: EMBEDDING_MODEL,
+      dimensions: EMBEDDING_DIMENSIONS,
       input: batch,
     });
 
