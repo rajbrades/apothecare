@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShieldAlert, Activity, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, ShieldAlert, Activity, LogOut, FileText } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
     { href: "/admin/audits", icon: ShieldAlert, label: "Audit Logs" },
     { href: "/admin/users", icon: Users, label: "User Management" },
     { href: "/admin/jobs", icon: Activity, label: "Job Queue" },
+    { href: "/admin/partnerships", icon: FileText, label: "Partnerships" },
 ];
 
 export function AdminSidebar() {

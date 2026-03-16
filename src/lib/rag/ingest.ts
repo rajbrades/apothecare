@@ -7,10 +7,15 @@ import { embedBatch } from "./embed";
 import type { IngestionResult } from "./types";
 
 interface IngestOptions {
-  filePath: string;
+  /** Local file path — used if fileBuffer is not provided */
+  filePath?: string;
+  /** Raw PDF buffer — preferred for Supabase Storage workflows */
+  fileBuffer?: Buffer;
   title: string;
   partnershipId: string;
   source: string;
+  /** Stored as storage_path in DB for provenance */
+  storagePath?: string;
   documentType?: string;
   topics?: string[];
   conditions?: string[];
@@ -19,14 +24,29 @@ interface IngestOptions {
 
 /**
  * Ingest a PDF document: extract text, chunk, embed, and store.
+ * Accepts either a local filePath or a raw fileBuffer.
  */
 export async function ingestDocument(
   options: IngestOptions
 ): Promise<IngestionResult> {
   const supabase = createServiceClient();
 
-  // 1. Read file and compute hash
-  const fileBuffer = await readFile(options.filePath);
+  // 1. Resolve the PDF buffer
+  let fileBuffer: Buffer;
+  if (options.fileBuffer) {
+    fileBuffer = options.fileBuffer;
+  } else if (options.filePath) {
+    fileBuffer = await readFile(options.filePath);
+  } else {
+    return {
+      documentId: "",
+      title: options.title,
+      chunkCount: 0,
+      status: "error",
+      error: "Either filePath or fileBuffer must be provided",
+    };
+  }
+
   const fileHash = createHash("sha256").update(fileBuffer).digest("hex");
 
   // 2. Check if already ingested (same hash)
@@ -65,6 +85,7 @@ export async function ingestDocument(
   console.log(`[Ingest] Extracted ${extractedText.length} chars (${pdfData.numpages} pages)`);
 
   // 4. Create document record
+  const recordPath = options.storagePath || options.filePath || "";
   const { data: doc, error: docError } = await supabase
     .from("evidence_documents")
     .insert({
@@ -73,7 +94,7 @@ export async function ingestDocument(
       partnership_id: options.partnershipId,
       document_type: options.documentType || "monograph",
       file_hash: fileHash,
-      storage_path: options.filePath,
+      storage_path: recordPath,
       status: "processing",
       topics: options.topics || [],
       conditions: options.conditions || [],
@@ -137,7 +158,7 @@ export async function ingestDocument(
     .update({ status: "ready", chunk_count: chunks.length })
     .eq("id", doc.id);
 
-  console.log(`[Ingest] ✓ Done: ${options.title} — ${chunks.length} chunks embedded`);
+  console.log(`[Ingest] Done: ${options.title} — ${chunks.length} chunks embedded`);
 
   return {
     documentId: doc.id,

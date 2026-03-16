@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile, readdir } from "fs/promises";
-import { resolve } from "path";
 import { createHash } from "crypto";
 import pdf from "pdf-parse";
 import { createServiceClient } from "@/lib/supabase/server";
 import { chunkDocument } from "@/lib/rag/chunk";
 import { embedBatch } from "@/lib/rag/embed";
-import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
+import { getAuthUser } from "@/lib/supabase/cached-queries";
 import { env } from "@/lib/env";
 
 function jsonError(message: string, status: number) {
@@ -20,7 +18,7 @@ function isAdmin(email: string): boolean {
 
 /**
  * POST /api/admin/rag/ingest
- * Ingest all PDFs from a partnership's local directory.
+ * Ingest PDFs from Supabase Storage for a partnership.
  * Body: { partnershipSlug: string }
  */
 export async function POST(request: NextRequest) {
@@ -51,28 +49,49 @@ export async function POST(request: NextRequest) {
       return jsonError(`Partnership "${partnershipSlug}" not found`, 404);
     }
 
-    // Find PDFs in local docs directory
-    const docsDir = resolve(process.cwd(), `docs/partnerships/${partnershipSlug}`);
-    let files: string[];
-    try {
-      files = (await readdir(docsDir)).filter((f) => f.toLowerCase().endsWith(".pdf"));
-    } catch {
-      return jsonError(`No docs directory found at: docs/partnerships/${partnershipSlug}`, 404);
+    // List PDFs in Supabase Storage
+    const { data: storageFiles, error: listErr } = await supabase.storage
+      .from("partnership-docs")
+      .list(partnershipSlug, { sortBy: { column: "name", order: "asc" } });
+
+    if (listErr) {
+      return jsonError(`Failed to list files: ${listErr.message}`, 500);
     }
 
-    if (files.length === 0) {
-      return jsonError("No PDF files found in directory", 404);
+    const pdfFiles = (storageFiles || []).filter((f: any) =>
+      f.name.toLowerCase().endsWith(".pdf")
+    );
+
+    if (pdfFiles.length === 0) {
+      return jsonError(
+        `No PDF files found in storage for partnership "${partnershipSlug}". Upload files first via POST /api/admin/rag/upload.`,
+        404
+      );
     }
 
     const results = [];
 
-    for (const file of files) {
-      const filePath = resolve(docsDir, file);
-      const title = file.replace(/\.pdf$/i, "").replace(/[-_]/g, " ");
+    for (const file of pdfFiles) {
+      const storagePath = `${partnershipSlug}/${file.name}`;
+      const title = file.name.replace(/\.pdf$/i, "").replace(/[-_]/g, " ");
 
       try {
-        // Read and hash
-        const fileBuffer = await readFile(filePath);
+        // Download file from Supabase Storage
+        const { data: fileData, error: dlErr } = await supabase.storage
+          .from("partnership-docs")
+          .download(storagePath);
+
+        if (dlErr || !fileData) {
+          results.push({
+            file: file.name,
+            title,
+            status: "error",
+            message: dlErr?.message || "Failed to download file",
+          });
+          continue;
+        }
+
+        const fileBuffer = Buffer.from(await fileData.arrayBuffer());
         const fileHash = createHash("sha256").update(fileBuffer).digest("hex");
 
         // Skip if already ingested
@@ -85,7 +104,7 @@ export async function POST(request: NextRequest) {
 
         if (existing) {
           results.push({
-            file,
+            file: file.name,
             title,
             status: "skipped",
             message: "Already ingested",
@@ -101,7 +120,7 @@ export async function POST(request: NextRequest) {
 
         if (!text || text.trim().length < 100) {
           results.push({
-            file,
+            file: file.name,
             title,
             status: "error",
             message: "Insufficient text extracted (image-only PDF?)",
@@ -118,7 +137,7 @@ export async function POST(request: NextRequest) {
             partnership_id: partnership.id,
             document_type: "masterclass",
             file_hash: fileHash,
-            storage_path: `docs/partnerships/${partnershipSlug}/${file}`,
+            storage_path: storagePath,
             status: "processing",
             topics: ["thyroid", "hypothyroidism", "hashimotos", "t3", "t4", "tsh"],
             conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism"],
@@ -128,7 +147,7 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (docErr || !doc) {
-          results.push({ file, title, status: "error", message: docErr?.message });
+          results.push({ file: file.name, title, status: "error", message: docErr?.message });
           continue;
         }
 
@@ -140,6 +159,7 @@ export async function POST(request: NextRequest) {
 
         // Insert chunks in batches
         const BATCH = 50;
+        let chunkInsertFailed = false;
         for (let i = 0; i < chunks.length; i += BATCH) {
           const batch = chunks.slice(i, i + BATCH).map((chunk, j) => ({
             document_id: doc.id,
@@ -155,10 +175,13 @@ export async function POST(request: NextRequest) {
 
           if (chunkErr) {
             await supabase.from("evidence_documents").delete().eq("id", doc.id);
-            results.push({ file, title, status: "error", message: chunkErr.message });
-            continue;
+            results.push({ file: file.name, title, status: "error", message: chunkErr.message });
+            chunkInsertFailed = true;
+            break;
           }
         }
+
+        if (chunkInsertFailed) continue;
 
         // Mark ready
         await supabase
@@ -167,7 +190,7 @@ export async function POST(request: NextRequest) {
           .eq("id", doc.id);
 
         results.push({
-          file,
+          file: file.name,
           title,
           status: "ready",
           chunkCount: chunks.length,
@@ -177,7 +200,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (err: any) {
         results.push({
-          file,
+          file: file.name,
           title,
           status: "error",
           message: err.message,
