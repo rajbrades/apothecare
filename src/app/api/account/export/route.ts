@@ -6,6 +6,7 @@ import { auditLog } from "@/lib/api/audit";
 import { downloadFromStorage } from "@/lib/storage/patient-documents";
 import JSZip from "jszip";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -128,8 +129,9 @@ export async function POST(request: NextRequest) {
           if (!report.raw_file_url) continue;
           try {
             const buffer = await downloadFromStorage(report.raw_file_url);
-            const filename = report.raw_file_name || `${report.id}.pdf`;
-            pdfsFolder.file(filename, buffer);
+            // Use report ID as filename to avoid PHI in ZIP archive paths
+            const safeFilename = `${report.id}.pdf`;
+            pdfsFolder.file(safeFilename, buffer);
             pdfCount++;
           } catch {
             // Non-fatal — skip inaccessible PDFs
@@ -139,7 +141,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Manifest
+    const exportSessionId = randomUUID();
     const manifest = {
+      export_session_id: exportSessionId,
       exported_at: new Date().toISOString(),
       format_version: "1.0",
       practitioner_id: practitioner.id,
@@ -166,13 +170,18 @@ export async function POST(request: NextRequest) {
       practitionerId: practitioner.id,
       action: "export",
       resourceType: "account",
-      detail: { includePdfs, ...manifest.counts },
+      detail: { export_session_id: exportSessionId, includePdfs, ...manifest.counts },
     });
 
     return new Response(zipBuffer as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="apothecare-export-${today}.zip"`,
+        "Cache-Control": "no-store, no-cache, no-transform, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
       },
     });
   } catch {

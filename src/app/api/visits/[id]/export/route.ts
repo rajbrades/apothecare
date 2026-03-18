@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/api/audit";
+import { randomUUID } from "crypto";
 
 /**
  * GET /api/visits/[id]/export — Generate a simple HTML-based printable document.
@@ -41,12 +42,16 @@ export async function GET(
     return NextResponse.json({ error: "Visit not found" }, { status: 404 });
   }
 
+  const exportSessionId = randomUUID();
+  const exportedAt = new Date().toISOString();
+
   auditLog({
     request,
     practitionerId: practitioner.id,
     action: "export",
     resourceType: "visit",
     resourceId: id,
+    detail: { export_session_id: exportSessionId },
   });
 
   const patientName = visit.patients
@@ -209,12 +214,20 @@ export async function GET(
     <div>Generated with Apothecare — AI Clinical Decision Support</div>
     <div>AI-generated content. Review and verify before clinical use.</div>
   </div>
+  <div style="margin-top: 8px; text-align: center; font-size: 7pt; color: #b0b0b0; letter-spacing: 0.02em;">
+    Export ID: ${exportSessionId} · ${exportedAt} · Do not share without authorization
+  </div>
 </body>
 </html>`;
 
   return new Response(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store, no-cache, no-transform, private",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
     },
   });
 }

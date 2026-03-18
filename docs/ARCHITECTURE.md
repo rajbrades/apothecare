@@ -35,7 +35,7 @@ Apothecare is a Next.js 15 application using the App Router with React Server Co
 │Anthropic│ │ OpenAI │
 │ Claude  │ │Whisper │   ┌──────────────────────────────────┐
 │ API     │ │ API    │   │           Stripe                  │
-│         │ │        │   │   $89/mo Pro subscription         │
+│         │ │        │   │   $99/mo Pro subscription         │
 │ Sonnet  │ │ Audio  │   │   Webhook → /api/webhooks/stripe │
 │ Opus    │ │ → Text │   └──────────────────────────────────┘
 │         │ └────────┘
@@ -354,6 +354,63 @@ Layer 10: Service    → Service role client is standalone (no cookie inheritanc
 ### Service Client Isolation
 
 The Supabase service role client (`createServiceClient()`) uses `@supabase/supabase-js` directly — NOT `@supabase/ssr`. This prevents cookie data from being passed alongside the service role key, which bypasses RLS. The service client is a singleton, created once and reused.
+
+## PDF Export Architecture (Sprint 23 — Planned)
+
+### Export System Design
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Branded PDF Export System                      │
+│                                                                  │
+│  src/lib/export/                                                │
+│  ├── shared.ts      buildLetterhead() → logo + practice info    │
+│  │                   buildPatientBar() → demographics            │
+│  │                   buildFooter() → disclaimer + watermark      │
+│  │                   buildExportPage() → full HTML wrapper       │
+│  │                   fetchLogoAsBase64() → Supabase → data URI   │
+│  ├── styles.ts      Shared print CSS (@page, page-break, fonts) │
+│  ├── visit.ts       Visit/SOAP note template                    │
+│  ├── lab-report.ts  Biomarker table template                    │
+│  └── supplement-protocol.ts  Protocol template                  │
+│                                                                  │
+│  API Routes:                                                     │
+│  GET /api/visits/[id]/export         → Visit PDF (enhanced)     │
+│  GET /api/labs/[id]/export           → Lab Report PDF (NEW)     │
+│  GET /api/supplements/review/[id]/export → Protocol PDF (NEW)   │
+│                                                                  │
+│  Storage:                                                        │
+│  practice-assets bucket → {practitioner_id}/logo.{ext}          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Design decision:** Clean white background + practice logo letterhead. No custom colors — medical documents must look authoritative.
+
+**Technical approach:** Server-side styled HTML → browser print-to-PDF. Zero-dependency, no Puppeteer. Logo fetched server-side from Supabase Storage and embedded as base64 data URI.
+
+### Export Security Controls
+
+| Control | Status | Description |
+|---------|--------|-------------|
+| Auth + RLS | ✅ Done | Practitioner-patient relationship validated |
+| Audit logging | ✅ Done | Export events logged with IP + user agent |
+| Cache headers | ❌ TODO | `Cache-Control: no-store` to prevent PHI caching |
+| Watermarking | ❌ TODO | Audit log ID + practitioner + timestamp in footer |
+| Export session ID | ❌ TODO | UUID linking audit log ↔ exported document |
+| Filename sanitization | ❌ TODO | Strip PHI from ZIP archive filenames |
+| Retention policy | ❌ TODO | 6+ year audit log retention (HIPAA minimum) |
+
+### HIPAA Compliance Status
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Access control (auth + RLS) | ✅ | RLS enforced on all tables |
+| Encryption in transit | ✅ | TLS everywhere, HSTS enabled |
+| Encryption at rest | ✅ | Supabase handles (PostgreSQL + S3) |
+| Audit logging | ⚠️ Partial | Events logged but no retention policy |
+| Cache-Control on exports | ❌ | PHI may persist in browser cache |
+| Minimum necessary | ❌ | Account export dumps all data, no filtering |
+| Export watermarking | ❌ | No document tracing capability |
 
 ## RAG Architecture (Planned)
 

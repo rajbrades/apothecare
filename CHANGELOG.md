@@ -2,6 +2,28 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.25.0] - 2026-03-18
+
+### Added — Citation Verification
+- **Verify citation API** (`POST /api/supplements/citations/verify`): Authenticated endpoint allowing practitioners to confirm individual citations as accurate. Verified citations are upserted into the curated `supplement_evidence` table with `is_verified: true`, growing the Tier 3 citation database organically from real clinical usage. Evidence level classification and ranking applied server-side.
+- **Verify citation UI** in `EvidenceBadge` component: When `supplementName` prop is provided, unverified citations show a "Verify Citation" button in the hover popover. Clicking verifies the citation and flips the badge to a green "Verified" state. Citations with `origin: "curated"` start as already verified.
+- **New UI components**: `Badge` (`src/components/ui/badge.tsx`) and `Tooltip` (`src/components/ui/tooltip.tsx`).
+
+### Fixed — Vercel Build & Deployment
+- **Next.js upgrade**: Updated from 15.1.0 to 15.5.13 to fix Vercel build hang on the auto-generated security patch branch (`vercel/react-server-components-cve-vu-uq4jqn`). Also updated `ai` SDK to 6.0.116.
+- **CSP fix**: Added `'unsafe-inline'` to production `script-src` CSP directive. Next.js 15.5 injects inline scripts for hydration that were blocked by the strict `script-src 'self'` policy, causing a blank white page in production.
+- **Stale build cache**: Cleared `.next` directory containing old Pages Router artifacts (`_document.js`, `_app.js`) that conflicted with App Router builds.
+
+### Fixed — Pricing
+- **Pro plan pricing**: Updated from $89/mo to $99/mo on landing page (`pricing.tsx`) and mockup page.
+
+### Planned — Sprint 23: Branded PDF Export System
+- **Practice branding**: Logo upload, practice address/phone/website in Settings. Clean white background with logo letterhead (no custom colors — medical documents must look authoritative).
+- **Shared export templates**: `src/lib/export/` module with reusable letterhead, patient bar, footer, and print CSS across all export types.
+- **Lab report export** (new): Biomarker tables grouped by panel with H/L/C flags, trend indicators, and flagged summary section.
+- **Supplement protocol export** (new): Grouped by action (keep/modify/add/discontinue) with evidence citations, interaction warnings, and numbered references.
+- **Export security hardening**: Cache-Control headers on PHI responses, audit log watermarking, export session tracking, filename PHI sanitization, HIPAA compliance documentation.
+
 ## [0.24.0] - 2026-03-11
 
 ### Added — Partnership RAG Infrastructure (Phase 1)

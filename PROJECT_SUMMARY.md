@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 11, 2026
+**Last updated:** March 18, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -10,7 +10,7 @@
 Apothecare is an AI-powered clinical decision support platform for functional and integrative medicine practitioners. It provides evidence-cited chat (Claude-powered), multi-modal lab interpretation, protocol generation, and visit documentation — all grounded in functional medicine research from IFM, A4M, and peer-reviewed literature.
 
 **Target users:** MDs, DOs, NPs, PAs, DCs, NDs practicing functional medicine.
-**Business model:** Freemium — Free (2 queries/day) → Pro ($89/mo, unlimited).
+**Business model:** Freemium — Free (2 queries/day) → Pro ($99/mo, unlimited).
 
 ---
 
@@ -18,7 +18,7 @@ Apothecare is an AI-powered clinical decision support platform for functional an
 
 | Layer | Tech |
 |-------|------|
-| Framework | Next.js 15, TypeScript, App Router |
+| Framework | Next.js 15.5, TypeScript, App Router |
 | Styling | Tailwind CSS 4, CSS custom properties |
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | AI | Multi-provider: OpenAI (primary), Anthropic Claude (vision + fallback), MiniMax (fallback) |
@@ -123,7 +123,17 @@ src/
 │   │   ├── auth/
 │   │   │   ├── change-password/route.ts  # POST change password (email auth only)
 │   │   │   └── delete-account/route.ts   # POST cascade delete + auth delete
+│   │   ├── supplements/
+│   │   │   ├── citations/
+│   │   │   │   └── verify/route.ts       # POST verify citation → curated supplement_evidence
+│   │   │   ├── brands/route.ts           # PUT save brand preferences
+│   │   │   ├── interactions/route.ts     # POST interaction safety check
+│   │   │   ├── review/
+│   │   │   │   ├── [id]/route.ts         # GET single review
+│   │   │   │   └── route.ts             # POST create review
+│   │   │   └── reviews/route.ts          # GET list reviews
 │   │   ├── practitioners/
+│   │   │   ├── biomarker-ranges/route.ts # GET/PUT biomarker range overrides
 │   │   │   ├── evidence-sources/route.ts # PUT save default evidence sources
 │   │   │   └── profile/route.ts          # PATCH update practitioner profile
 │   ├── auth/
@@ -664,16 +674,34 @@ src/
 
 ---
 
+### Sprint 23 — Branded PDF Exports & Export Security (Mar 18, 2026) 🔧 IN PROGRESS
+
+**Planned — Practice Branding & Export System:**
+1. [ ] Export security hardening — Cache-Control headers on PHI responses, audit log watermarking, export session tracking, filename PHI sanitization
+2. [ ] HIPAA compliance documentation — `docs/COMPLIANCE.md` with audit log retention policy (6+ years), export access policies
+3. [ ] Practice branding — Migration 026 adding logo, address, phone, website fields to `practitioners`. Logo upload to `practice-assets` Supabase Storage bucket.
+4. [ ] Settings UI — new "Practice Branding" section with logo dropzone, practice address/contact fields, live letterhead preview
+5. [ ] Shared export template system — `src/lib/export/` module with `buildLetterhead()`, `buildPatientBar()`, `buildFooter()`, `buildExportPage()`, `fetchLogoAsBase64()`
+6. [ ] Enhanced visit export — refactor existing route to use shared templates with practice branding
+7. [ ] Lab report export (NEW) — `GET /api/labs/[id]/export` with biomarker tables grouped by panel, H/L/C flags, trend indicators, flagged summary
+8. [ ] Supplement protocol export (NEW) — `GET /api/supplements/review/[id]/export` grouped by action (keep/modify/add/discontinue), evidence citations, interaction warnings
+
+**Design Decision:** Clean white background with practice logo letterhead only — no practitioner-customizable colors. Medical documents must look authoritative and trustworthy.
+**Technical Approach:** Continue browser print-to-PDF pattern (no Puppeteer/jsPDF). Shared HTML templates with `@page` CSS, page-break control, and Google Fonts.
+
+---
+
 ## What Needs To Be Done Next
 
 ### High Priority
 - [ ] **Source filter persistence** — "Save as Default" → `preferred_evidence_sources` column
 - [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
-- [ ] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table
+- [x] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table (v0.25.0)
 - [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
 - [x] **Data export** — ZIP export of all practitioner data from Settings > Account & Security (v0.23.0)
 - [x] **Visit AI assistant** — right-edge synthesis drawer on visit workspace pages (v0.23.0)
+- [ ] **Branded PDF exports** — practice-branded PDF export for visits, lab reports, and supplement protocols (Sprint 23)
 
 ### Homepage Design Fixes (from Playwright audit Feb 18)
 - [ ] Move chat product mockup into hero viewport — no visual anchor above fold
