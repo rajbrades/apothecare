@@ -13,6 +13,9 @@ export function Footer() {
             practitioner.
           </p>
           <nav className="flex items-center gap-6 text-xs text-[var(--color-text-muted)]">
+            <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">
+              Terms
+            </Link>
             <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">
               Security
             </Link>
