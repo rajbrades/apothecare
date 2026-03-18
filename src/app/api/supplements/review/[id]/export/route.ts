@@ -8,12 +8,12 @@ import {
   buildFooter,
   buildExportPage,
   fetchLogoAsBase64,
-  escapeHtml,
   EXPORT_HEADERS,
 } from "@/lib/export/shared";
+import { buildSupplementProtocolBody } from "@/lib/export/supplement-protocol";
 
 /**
- * GET /api/visits/[id]/export — Generate a branded, printable visit note.
+ * GET /api/supplements/review/[id]/export — Generate a branded, printable supplement protocol.
  */
 export async function GET(
   request: NextRequest,
@@ -36,15 +36,19 @@ export async function GET(
     return NextResponse.json({ error: "Practitioner not found" }, { status: 404 });
   }
 
-  const { data: visit } = await supabase
-    .from("visits")
+  const { data: review } = await supabase
+    .from("supplement_reviews")
     .select("*, patients(first_name, last_name, date_of_birth, sex)")
     .eq("id", id)
     .eq("practitioner_id", practitioner.id)
     .single();
 
-  if (!visit) {
-    return NextResponse.json({ error: "Visit not found" }, { status: 404 });
+  if (!review) {
+    return NextResponse.json({ error: "Review not found" }, { status: 404 });
+  }
+
+  if (review.status !== "complete" || !review.review_data) {
+    return NextResponse.json({ error: "Review is not complete" }, { status: 400 });
   }
 
   const exportSessionId = randomUUID();
@@ -54,65 +58,46 @@ export async function GET(
     request,
     practitionerId: practitioner.id,
     action: "export",
-    resourceType: "visit",
+    resourceType: "supplement_review",
     resourceId: id,
     detail: { export_session_id: exportSessionId },
   });
 
   const logoDataUri = await fetchLogoAsBase64(practitioner.logo_storage_path);
 
-  const visitDate = new Date(visit.visit_date).toLocaleDateString("en-US", {
-    weekday: "long",
+  const reviewDate = new Date(review.created_at).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
-  const visitTypeLabel: Record<string, string> = {
-    soap: "SOAP",
-    follow_up: "Follow-up",
-    history_physical: "H&P",
-    consult: "Consultation",
-  };
-
   const letterhead = buildLetterhead(
-    "Visit Note",
-    visit.chief_complaint || "",
+    "Supplement Protocol",
+    `Generated: ${reviewDate}`,
     practitioner,
     logoDataUri
   );
 
-  const patientBar = buildPatientBar(visit.patients, {
-    Date: visitDate,
-    Type: visitTypeLabel[visit.visit_type] || visit.visit_type,
-    Status: visit.status === "completed" ? "Completed" : "Draft",
-  });
+  const patientBar = review.patients
+    ? buildPatientBar(review.patients)
+    : "";
 
-  const sections = [
-    { label: "Subjective", content: visit.subjective },
-    { label: "Objective", content: visit.objective },
-    { label: "Assessment", content: visit.assessment },
-    { label: "Plan", content: visit.plan },
-  ]
-    .filter((s) => s.content)
-    .map(
-      (s) => `
-  <div class="section">
-    <div class="section-label">${s.label}</div>
-    <div class="section-content">${escapeHtml(s.content)}</div>
-  </div>`
-    )
-    .join("");
+  const protocolBody = buildSupplementProtocolBody(review.review_data);
 
   const footer = buildFooter(
-    "AI-generated content. Review and verify before clinical use.",
+    "Verify interactions with patient's pharmacist before implementation.",
     exportSessionId,
     exportedAt
   );
 
-  const body = `${letterhead}\n${patientBar}\n${sections}\n${footer}`;
+  const body = `${letterhead}\n${patientBar}\n${protocolBody}\n${footer}`;
+
+  const patientName = review.patients
+    ? [review.patients.last_name, review.patients.first_name].filter(Boolean).join(", ")
+    : "Freeform";
+
   const html = buildExportPage(
-    `Visit Note — ${visit.chief_complaint || "Visit"}`,
+    `Supplement Protocol — ${patientName} — ${reviewDate}`,
     body
   );
 

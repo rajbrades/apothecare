@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X, MoreHorizontal } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X, MoreHorizontal, Printer } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -489,6 +489,8 @@ function OverflowMenu({
   onDownload,
   showAddToVisit,
   onAddToVisit,
+  reportId,
+  showExport,
 }: {
   pdfUrl: string | null;
   showReparse: boolean;
@@ -501,6 +503,8 @@ function OverflowMenu({
   onDownload: () => void;
   showAddToVisit: boolean;
   onAddToVisit: () => void;
+  reportId: string;
+  showExport: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -556,6 +560,19 @@ function OverflowMenu({
               <Download className="w-4 h-4" />
               Download PDF
             </button>
+          )}
+
+          {showExport && (
+            <a
+              href={`/api/labs/${reportId}/export`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className={itemClass}
+            >
+              <Printer className="w-4 h-4" />
+              Export Report
+            </a>
           )}
 
           {showAddToVisit && (
@@ -867,6 +884,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             onDownload={handleDownloadPdf}
             showAddToVisit={report.status === "complete" && !!report.patient_id && totalBiomarkers > 0}
             onAddToVisit={() => setShowAddToVisit(true)}
+            reportId={report.id}
+            showExport={report.status === "complete" && totalBiomarkers > 0}
           />
         </div>
       </div>

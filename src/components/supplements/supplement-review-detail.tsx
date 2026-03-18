@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCircle2, Loader2, Pencil } from "lucide-react";
+import { ChevronDown, ChevronRight, AlertTriangle, FlaskConical, Upload, CheckCircle2, Loader2, Pencil, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { FullscriptStubButton } from "./fullscript-stub-button";
 import { EvidenceBadge, type EvidenceLevel, type Citation } from "@/components/chat/evidence-badge";
@@ -697,6 +697,21 @@ export function SupplementReviewDetail({
           <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">
             {data.summary}
           </p>
+        </div>
+      )}
+
+      {/* Actions */}
+      {review.status === "complete" && (
+        <div className="flex justify-end gap-2">
+          <a
+            href={`/api/supplements/review/${review.id}/export`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] bg-[var(--color-surface-secondary)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Export PDF
+          </a>
         </div>
       )}
 

@@ -8,12 +8,12 @@ import {
   buildFooter,
   buildExportPage,
   fetchLogoAsBase64,
-  escapeHtml,
   EXPORT_HEADERS,
 } from "@/lib/export/shared";
+import { buildLabReportBody } from "@/lib/export/lab-report";
 
 /**
- * GET /api/visits/[id]/export — Generate a branded, printable visit note.
+ * GET /api/labs/[id]/export — Generate a branded, printable lab report.
  */
 export async function GET(
   request: NextRequest,
@@ -36,15 +36,26 @@ export async function GET(
     return NextResponse.json({ error: "Practitioner not found" }, { status: 404 });
   }
 
-  const { data: visit } = await supabase
-    .from("visits")
+  const { data: lab } = await supabase
+    .from("lab_reports")
     .select("*, patients(first_name, last_name, date_of_birth, sex)")
     .eq("id", id)
     .eq("practitioner_id", practitioner.id)
     .single();
 
-  if (!visit) {
-    return NextResponse.json({ error: "Visit not found" }, { status: 404 });
+  if (!lab) {
+    return NextResponse.json({ error: "Lab report not found" }, { status: 404 });
+  }
+
+  const { data: biomarkers } = await supabase
+    .from("biomarker_results")
+    .select("*")
+    .eq("lab_report_id", id)
+    .order("category")
+    .order("biomarker_name");
+
+  if (!biomarkers || biomarkers.length === 0) {
+    return NextResponse.json({ error: "No biomarker results found" }, { status: 404 });
   }
 
   const exportSessionId = randomUUID();
@@ -54,65 +65,37 @@ export async function GET(
     request,
     practitionerId: practitioner.id,
     action: "export",
-    resourceType: "visit",
+    resourceType: "lab_report",
     resourceId: id,
-    detail: { export_session_id: exportSessionId },
+    detail: { export_session_id: exportSessionId, biomarker_count: biomarkers.length },
   });
 
   const logoDataUri = await fetchLogoAsBase64(practitioner.logo_storage_path);
 
-  const visitDate = new Date(visit.visit_date).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const visitTypeLabel: Record<string, string> = {
-    soap: "SOAP",
-    follow_up: "Follow-up",
-    history_physical: "H&P",
-    consult: "Consultation",
-  };
-
   const letterhead = buildLetterhead(
-    "Visit Note",
-    visit.chief_complaint || "",
+    "Lab Report",
+    lab.test_name || "",
     practitioner,
     logoDataUri
   );
 
-  const patientBar = buildPatientBar(visit.patients, {
-    Date: visitDate,
-    Type: visitTypeLabel[visit.visit_type] || visit.visit_type,
-    Status: visit.status === "completed" ? "Completed" : "Draft",
+  const patientBar = buildPatientBar(lab.patients);
+
+  const labBody = buildLabReportBody(biomarkers, {
+    test_name: lab.test_name,
+    lab_vendor: lab.lab_vendor,
+    collection_date: lab.collection_date,
   });
 
-  const sections = [
-    { label: "Subjective", content: visit.subjective },
-    { label: "Objective", content: visit.objective },
-    { label: "Assessment", content: visit.assessment },
-    { label: "Plan", content: visit.plan },
-  ]
-    .filter((s) => s.content)
-    .map(
-      (s) => `
-  <div class="section">
-    <div class="section-label">${s.label}</div>
-    <div class="section-content">${escapeHtml(s.content)}</div>
-  </div>`
-    )
-    .join("");
-
   const footer = buildFooter(
-    "AI-generated content. Review and verify before clinical use.",
+    "This report is for clinical reference only. It does not constitute a diagnosis.",
     exportSessionId,
     exportedAt
   );
 
-  const body = `${letterhead}\n${patientBar}\n${sections}\n${footer}`;
+  const body = `${letterhead}\n${patientBar}\n${labBody}\n${footer}`;
   const html = buildExportPage(
-    `Visit Note — ${visit.chief_complaint || "Visit"}`,
+    `Lab Report — ${lab.test_name || "Lab"} — ${lab.collection_date || ""}`,
     body
   );
 
