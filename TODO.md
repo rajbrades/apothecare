@@ -533,10 +533,18 @@ Based on Free vs Pro pricing tiers. Free tier is a trial experience; Pro unlocks
 - [ ] **Feature:** HIPAA BAA included
 - [ ] **Feature:** Preferred supplement brand search + strict filtering
 
+### Dashboard Evidence Source Badges
+- [ ] **Feature:** "Your Evidence Sources" row on dashboard — shows logos/badges of evidence sources available to the practitioner based on tier + partnerships
+- [ ] **Data:** Query `preferred_evidence_sources` + `practitioner_partnerships` (with expiration check) in dashboard layout
+- [ ] **UI:** Pro users see all source badges active; free users see PubMed active + remaining sources grayed out with "Upgrade" nudge
+- [ ] **UI:** Partnership sources (e.g., Apex Energetics) appear as additional badges when practitioner has active partnership access
+- [ ] **UX:** Clicking a grayed-out badge links to `/settings#subscription` upgrade flow
+
 ### Implementation
 - [ ] **Lib:** Create `src/lib/tier/gates.ts` — shared `requirePro(practitioner)`, `isFeatureAvailable(tier, feature)`, `FREE_TIER_LIMITS` constants
 - [ ] **UI:** Create `ProFeatureBadge` component — small "Pro" pill badge on gated nav items and sections
 - [ ] **UI:** Create `UpgradePrompt` component — inline upgrade CTA shown when free tier hits a gate (links to `/settings#subscription`)
+- [ ] **UI:** Create `EvidenceSourceBadges` dashboard component — renders active/locked source badges from tier + partnerships
 - [ ] **API:** Add tier checks to all gated endpoints (return 403 with `{ error: "Pro feature", upgrade_url: "/settings" }`)
 - [ ] **Middleware:** Consider route-level tier gating in middleware for `/labs/*`, `/visits/*` routes
 

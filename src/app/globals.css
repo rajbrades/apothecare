@@ -538,6 +538,15 @@ main {
   50% { transform: translateY(-6px); }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
 /* ===================================
    Standardized Container Styles
    =================================== */
@@ -1034,6 +1043,9 @@ main {
   }
   .logo-breathe:hover {
     animation: none;
+  }
+  .animate-marquee {
+    animation-play-state: paused;
   }
 }
 
