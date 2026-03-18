@@ -44,6 +44,15 @@ export interface Practitioner {
   verification_status: VerificationStatus;
   verified_at: string | null;
   practice_name: string | null;
+  logo_storage_path: string | null;
+  practice_address_line1: string | null;
+  practice_address_line2: string | null;
+  practice_city: string | null;
+  practice_state: string | null;
+  practice_zip: string | null;
+  practice_phone: string | null;
+  practice_fax: string | null;
+  practice_website: string | null;
   specialty_focus: string[] | null;
   years_in_practice: number | null;
   subscription_tier: SubscriptionTier;

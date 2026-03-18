@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import {
   User,
   Award,
+  Palette,
   SlidersHorizontal,
   CreditCard,
   Shield,
@@ -14,6 +15,7 @@ import { CredentialsSection } from "./credentials-section";
 import { PreferencesSection } from "./preferences-section";
 import { BiomarkerOverridesSection } from "./biomarker-overrides-section";
 import { SubscriptionSection } from "./subscription-section";
+import { BrandingSection } from "./branding-section";
 import { AccountSection } from "./account-section";
 
 interface BrandPref {
@@ -34,6 +36,7 @@ interface SettingsPageProps {
 const SECTIONS = [
   { id: "profile", label: "Profile", icon: User },
   { id: "credentials", label: "Practice & Credentials", icon: Award },
+  { id: "branding", label: "Practice Branding", icon: Palette },
   { id: "preferences", label: "Clinical Preferences", icon: SlidersHorizontal },
   { id: "subscription", label: "Subscription & Usage", icon: CreditCard },
   { id: "account", label: "Account & Security", icon: Shield },
@@ -131,6 +134,9 @@ export function SettingsPage({
           </div>
           <div ref={(el) => { sectionRefs.current.credentials = el; }}>
             <CredentialsSection practitioner={practitioner} />
+          </div>
+          <div ref={(el) => { sectionRefs.current.branding = el; }}>
+            <BrandingSection practitioner={practitioner} />
           </div>
           <div ref={(el) => { sectionRefs.current.preferences = el; }}>
             <PreferencesSection
