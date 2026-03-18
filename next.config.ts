@@ -15,8 +15,9 @@ const cspDirectives = [
   // Default: nothing unless explicitly allowed
   "default-src 'self'",
 
-  // Scripts: In dev, allow eval + inline for Next.js HMR. In prod, strict.
-  isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self'",
+  // Scripts: 'unsafe-inline' required because Next.js injects inline scripts for hydration.
+  // In dev, also allow 'unsafe-eval' for HMR.
+  isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline'",
 
   // Styles: self + inline (Tailwind v4 / CSS custom properties) + Google Fonts CSS
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
