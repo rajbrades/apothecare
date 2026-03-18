@@ -257,6 +257,7 @@ function SupplementItemCard({
                       source: vc.source,
                       doi: vc.doi,
                       summary: item.rationale,
+                      origin: vc.origin,
                     });
                   }
                 } else if (item.evidence_level) {
@@ -285,6 +286,7 @@ function SupplementItemCard({
                         key={`${citation.doi || citation.title}-${i}`}
                         citation={citation}
                         index={citations.length > 1 ? i + 1 : undefined}
+                        supplementName={item.name}
                       />
                     ))}
                   </span>

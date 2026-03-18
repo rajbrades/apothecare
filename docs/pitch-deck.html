@@ -37,7 +37,7 @@
     --ink-muted: #6b7280;
     /* Borders */
     --border: #e0e0e0;
-    --border-light: #c8c8c8;
+    --border-light: #e0e0e0;
     --red-muted: #8b3a3a;
     --blue-muted: #3a5a8b;
   }
@@ -325,7 +325,7 @@
   <div class="why-now-grid">
     <div class="why-now-card">
       <h4>LLMs Crossed the Clinical Threshold</h4>
-      <p>For the first time, LLMs are accurate enough for clinical decision support when combined with RAG and citation validation. Our 3-tier pipeline (CrossRef → PubMed → curated DB) eliminates hallucinated references — the #1 blocker for AI in clinical settings. We pull directly from leaders in functional and anti-aging medical education — <strong>IFM</strong>, <strong>A4M</strong>, and <strong>FMU</strong> — ensuring recommendations are grounded in the frameworks clinicians actually train on.</p>
+      <p>For the first time, LLMs are accurate enough for clinical decision support when combined with RAG and citation validation. Our 3-tier pipeline (CrossRef → PubMed → curated DB (IFM, A4M, affiliate partners)) eliminates hallucinated references — the #1 blocker for AI in clinical settings. We pull directly from leaders in functional and anti-aging medical education — <strong>IFM</strong>, <strong>A4M</strong>, and <strong>FMU</strong> — ensuring recommendations are grounded in the frameworks clinicians actually train on.</p>
     </div>
     <div class="why-now-card">
       <h4>Functional Medicine at Inflection Point</h4>
@@ -449,6 +449,10 @@
   <p>Protocols convert directly to patient orders via integrated dispensary — we earn a <strong>5% take rate</strong> on transaction volume. Functional medicine practitioners rely on extensive supplement protocols, often <strong>$200–$500/month per patient</strong>, creating substantial recurring transactional revenue.</p>
   <h4>Sponsored Educational Content</h4>
   <p>Partner with professional brands to provide <strong>"suggested protocols"</strong> based on their clinical trials — clearly marked as sponsored but clinically relevant. Surfaced contextually during clinical decision-making, not as ads.</p>
+
+  <h3>Revenue Stream 4: Institute Knowledge Licensing</h3>
+  <p>License clinical knowledge bases from <strong>A4M</strong>, <strong>IFM</strong>, and <strong>FMU</strong> to power Apothecare's RAG pipeline. Structure as a <strong>revenue-share on memberships</strong> or a flat licensing fee — positioning Apothecare as the official clinical intelligence tool for their practitioner networks.</p>
+  <p>This is a <strong>growth accelerant disguised as a cost center</strong>. Licensing creates co-branded distribution: institute members get Apothecare as a membership benefit, driving massive practitioner acquisition at near-zero CAC. The institutes gain a technology partner that operationalizes their curriculum — something none of them have today. This turns education organizations into <strong>built-in distribution channels</strong> with aligned incentives.</p>
 </section>
 
 <!-- ═══════════════ SLIDE 9: COMPETITIVE ADVANTAGE ═══════════════ -->
@@ -462,7 +466,7 @@
     <ul class="comp-list">
       <li><strong>Built on functional medicine's own knowledge base</strong> — Apothecare ingests and retrieves from <strong>IFM</strong>, <strong>A4M</strong>, and <strong>FMU</strong> — the institutions that define how integrative practitioners are trained. OpenEvidence and general AI tools pull from traditional medical journals (NEJM, Lancet, JAMA). We speak the language practitioners actually learned.</li>
       <li><strong>Domain-specific RAG pipeline</strong> — Our retrieval-augmented generation is tuned to functional medicine frameworks, protocols, and terminology. General-purpose AI treats "optimal TSH" the same as "normal TSH." We don't.</li>
-      <li><strong>3-tier citation validation</strong> — CrossRef → PubMed → curated DB. The only platform that validates every clinical citation rather than hallucinating. Every recommendation traces back to a verifiable source.</li>
+      <li><strong>3-tier citation validation</strong> — CrossRef → PubMed → curated DB (IFM, A4M, affiliate partners). The only platform that validates every clinical citation rather than hallucinating. Every recommendation traces back to a verifiable source.</li>
       <li><strong>Longitudinal patient intelligence</strong> — Apothecare maps a patient's full clinical narrative — from birth history and early exposures through present-day labs, symptoms, and interventions. AI surfaces root-cause connections across decades of data points, revealing patterns that no single visit or snapshot can capture. This is the functional medicine timeline brought to life.</li>
     </ul>
   </div>
@@ -532,25 +536,31 @@
   <div class="slide-headline">Built by One. Ready to Scale.</div>
 
   <div style="background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 28px; margin-bottom: 24px;">
-    <h3 style="margin-top: 0;">[Your Name] — Founder &amp; CEO</h3>
+    <h3 style="margin-top: 0;">Ryan Brady, MBBS, DC — Founder &amp; CEO</h3>
     <ul style="list-style: disc; padding-left: 20px; color: var(--ink-light); font-size: 14px; line-height: 1.8;">
-      <li>[Your domain expertise in functional/integrative medicine]</li>
-      <li>[Your technical background]</li>
+      <li>13 years of clinical experience in Functional &amp; Integrative Medicine</li>
+      <li>AI Clinical Strategist</li>
+      <li>10X Health Director of Clinical Strategy</li>
       <li>Built the entire MVP solo — 300+ files, 60+ endpoints, 25+ tables, multi-LLM architecture, RAG, HIPAA</li>
-      <li>Deep understanding of FM practitioner workflow and clinical frameworks (IFM, A4M, ATM)</li>
+      <li>Deep understanding of FM practitioner workflow and clinical frameworks (IFM, A4M, FMU)</li>
+      <li>Successfully built and sold 2 brick-and-mortar practices</li>
+      <li>Proven track record of 9 companies in 4 countries</li>
     </ul>
   </div>
 
   <div style="background: white; border: 1px solid var(--border-light); border-radius: 12px; padding: 28px; margin-bottom: 24px;">
     <h3 style="margin-top: 0;">Clinical Advisory Board</h3>
-    <p style="color: var(--ink-muted); font-style: italic;">[List 1-3 FM practitioners advising. If none yet, note "recruiting" with target profiles.]</p>
+    <ul style="list-style: disc; padding-left: 20px; color: var(--ink-light); font-size: 14px; line-height: 1.8;">
+      <li><strong>Castel Santana, MD</strong></li>
+      <li><strong>Carrie Carda, MD</strong></li>
+    </ul>
   </div>
 
   <h3>Key Hire Plan</h3>
   <div class="capabilities-compact" style="grid-template-columns: 1fr 1fr 1fr;">
     <div class="cap-card"><div class="cap-card-name">Engineer #1</div><div class="cap-card-desc">AI/ML — fine-tuning, inference optimization, biomarker catalog</div></div>
     <div class="cap-card"><div class="cap-card-name">Engineer #2</div><div class="cap-card-desc">Full-stack — Fullscript, Stripe billing, EHR connectors</div></div>
-    <div class="cap-card"><div class="cap-card-name">Growth Lead</div><div class="cap-card-desc">IFM/A4M conferences, KOL onboarding, community outreach</div></div>
+    <div class="cap-card"><div class="cap-card-name">Growth Lead — Eli Mamann</div><div class="cap-card-desc">IFM/A4M conferences, KOL onboarding, community outreach</div></div>
   </div>
 
   <div class="closing-quote">"This was built by one person. Imagine what we do with a team."</div>
@@ -564,8 +574,8 @@
 
   <h3>Use of Funds</h3>
   <div class="funds-grid">
-    <div class="fund-card"><div class="fund-pct">50%</div><div class="fund-label">Engineering</div><div class="fund-desc">Hire 2 engineers. AI infrastructure, biomarker catalog, EHR integration.</div></div>
-    <div class="fund-card"><div class="fund-pct">30%</div><div class="fund-label">GTM / Sales</div><div class="fund-desc">Hire 1 growth lead. Conferences, KOL onboarding, community outreach.</div></div>
+    <div class="fund-card"><div class="fund-pct">30%</div><div class="fund-label">Engineering</div><div class="fund-desc">Hire 2 engineers. AI infrastructure, biomarker catalog, EHR integration.</div></div>
+    <div class="fund-card"><div class="fund-pct">40%</div><div class="fund-label">GTM / Sales</div><div class="fund-desc">Hire 1 growth lead. Conferences, KOL onboarding, community outreach.</div></div>
     <div class="fund-card"><div class="fund-pct">20%</div><div class="fund-label">Operations</div><div class="fund-desc">Fullscript, Stripe billing, partner onboarding, SOC 2 Type II ($15–20K first year).</div></div>
   </div>
 
@@ -594,7 +604,14 @@
   <div class="reg-grid">
     <div class="reg-card">
       <h4>FDA Classification</h4>
-      <p>Operates as Clinical Decision Support under the <strong>21st Century Cures Act</strong> (Section 3060) exemption. Supports — does not replace — clinical judgment. Displays underlying evidence for independent review. Monitoring evolving FDA AI/ML guidance.</p>
+      <p>Apothecare qualifies for the <strong>Clinical Decision Support exemption</strong> under the <strong>21st Century Cures Act</strong> (Section 3060). We meet all 4 required criteria:</p>
+      <ul>
+        <li>Does not acquire, process, or analyze medical images or signals</li>
+        <li>Displays and analyzes clinical information for healthcare professionals</li>
+        <li>Supports — does not replace — clinical judgment</li>
+        <li>Every recommendation is transparent and independently reviewable (citations, evidence badges, source attribution)</li>
+      </ul>
+      <p>This means <strong>no 510(k) clearance required</strong> — we can move fast while remaining fully compliant. Regulatory counsel will be retained as we scale to stay ahead of evolving FDA AI/ML guidance.</p>
     </div>
     <div class="reg-card">
       <h4>Liability Position</h4>

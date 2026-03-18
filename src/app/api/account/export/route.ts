@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     ]);
 
     // Biomarker results — join through lab_reports
-    const labReportIds = (labReports || []).map((r) => r.id);
+    const labReportIds = (labReports || []).map((r: { id: string }) => r.id);
     let biomarkerResults: unknown[] = [];
     if (labReportIds.length > 0) {
       // Supabase .in() has a limit, batch if needed
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Messages — join through conversations
-    const conversationIds = (conversations || []).map((c) => c.id);
+    const conversationIds = (conversations || []).map((c: { id: string }) => c.id);
     let messages: unknown[] = [];
     if (conversationIds.length > 0) {
       const batches: string[][] = [];
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       detail: { includePdfs, ...manifest.counts },
     });
 
-    return new Response(zipBuffer, {
+    return new Response(zipBuffer as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="apothecare-export-${today}.zip"`,

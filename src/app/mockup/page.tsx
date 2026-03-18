@@ -1,7 +1,9 @@
 'use client';
 
-import { Suspense, useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+const ReactMarkdown = dynamic(() => import('react-markdown').then(mod => mod.default ? { default: mod.default } : mod), { ssr: false });
 import {
   Bot,
   Send,
@@ -35,7 +37,7 @@ export default function FreeTierAdMockup() {
     {
       id: '2',
       role: 'assistant',
-      content: `Based on the presentation of chronic fatigue, joint pain, brain fog, weight gain, and lab findings (TSH 4.2 µIU/mL, borderline low free T3) in the context of chronic stress, this clinical picture strongly suggests **HPA axis dysfunction (adrenal fatigue/dysregulation)** concurrently presenting with **subclinical hypothyroidism**, likely secondary to the chronic stress response.
+      content: `Based on the presentation of chronic fatigue, joint pain, brain fog, weight gain, and lab findings (TSH 4.2 uIU/mL, borderline low free T3) in the context of chronic stress, this clinical picture strongly suggests **HPA axis dysfunction (adrenal fatigue/dysregulation)** concurrently presenting with **subclinical hypothyroidism**, likely secondary to the chronic stress response.
 
 Here is a functional approach and initial protocol:
 
@@ -306,6 +308,5 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
     </div>
         </div>
       </div>
-    </div>
   );
 }

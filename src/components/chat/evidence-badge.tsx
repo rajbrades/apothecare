@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ExternalLink, BookOpen, Users, FileCheck, FlaskConical, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 export type EvidenceLevel =
   | "meta-analysis"
@@ -27,6 +28,8 @@ export interface Citation {
   doi?: string;
   /** Brief summary of the finding */
   summary?: string;
+  /** Origin of the citation */
+  origin?: "crossref" | "pubmed" | "curated";
 }
 
 const LEVEL_CONFIG: Record<
@@ -98,10 +101,14 @@ interface EvidenceBadgeProps {
   citation: Citation;
   /** Optional index number for numbered citations */
   index?: number;
+  /** Optional supplement name to allow citation verification */
+  supplementName?: string;
 }
 
-export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
+export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadgeProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verified, setVerified] = useState(citation.origin === "curated");
   const [popoverPosition, setPopoverPosition] = useState<"above" | "below">("above");
   const badgeRef = useRef<HTMLSpanElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -167,6 +174,35 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
   const formatAuthors = (authors: string[]) => {
     if (authors.length <= 2) return authors.join(" & ");
     return `${authors[0]} et al.`;
+  };
+
+  const handleVerify = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!supplementName || !citation.doi) return;
+
+    setIsVerifying(true);
+    try {
+      const res = await fetch("/api/supplements/citations/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          supplement_name: supplementName,
+          citation,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to verify citation");
+      }
+
+      setVerified(true);
+      toast.success("Citation verified and added to curated database");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to verify citation");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -253,22 +289,47 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
                 </p>
               )}
 
-              {citation.doi && (
-                <a
-                  href={
-                    citation.doi.startsWith("http")
-                      ? citation.doi
-                      : `https://doi.org/${citation.doi}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${config.textClass} hover:underline mt-1`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink size={11} />
-                  View source
-                </a>
-              )}
+              <div className="flex items-center justify-between border-t border-[var(--color-border-light)] mt-2 pt-2">
+                {citation.doi && (
+                  <a
+                    href={
+                      citation.doi.startsWith("http")
+                        ? citation.doi
+                        : `https://doi.org/${citation.doi}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${config.textClass} hover:underline`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink size={11} />
+                    View source
+                  </a>
+                )}
+
+                {supplementName && !verified && (
+                  <button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={isVerifying}
+                    className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50`}
+                  >
+                    {isVerifying ? (
+                      <span className="w-3 h-3 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FileCheck size={11} />
+                    )}
+                    Verify Citation
+                  </button>
+                )}
+
+                {verified && (
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700`}>
+                    <FileCheck size={11} />
+                    Verified
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -289,9 +350,10 @@ export function EvidenceBadge({ citation, index }: EvidenceBadgeProps) {
 /** Convenience wrapper for rendering a list of evidence badges inline */
 interface EvidenceBadgeListProps {
   citations: Citation[];
+  supplementName?: string;
 }
 
-export function EvidenceBadgeList({ citations }: EvidenceBadgeListProps) {
+export function EvidenceBadgeList({ citations, supplementName }: EvidenceBadgeListProps) {
   return (
     <span className="inline-flex flex-wrap gap-1 ml-1">
       {citations.map((citation, i) => (
@@ -299,6 +361,7 @@ export function EvidenceBadgeList({ citations }: EvidenceBadgeListProps) {
           key={`${citation.level}-${citation.title}-${i}`}
           citation={citation}
           index={citations.length > 1 ? i + 1 : undefined}
+          supplementName={supplementName}
         />
       ))}
     </span>

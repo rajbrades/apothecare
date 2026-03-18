@@ -122,7 +122,12 @@ export async function POST(
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
     if (lastUserMsg) {
       try {
-        validateInputSafety(lastUserMsg.content, "Visit assistant query");
+        validateInputSafety(lastUserMsg.content, {
+          request,
+          practitionerId: practitioner.id,
+          resourceType: "visit",
+          resourceId: visitId,
+        });
       } catch (e) {
         if (e instanceof PromptInjectionError) return jsonError(e.message, 400);
         throw e;

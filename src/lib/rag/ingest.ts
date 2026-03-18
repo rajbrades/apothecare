@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { readFile } from "fs/promises";
-import pdf from "pdf-parse";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require("pdf-parse");
 import { createServiceClient } from "@/lib/supabase/server";
 import { chunkDocument } from "./chunk";
 import { embedBatch } from "./embed";

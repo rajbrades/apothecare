@@ -147,11 +147,13 @@ async function searchPubMed(
   limit: number = 3
 ): Promise<VerifiedCitation[]> {
   try {
+    const apiKeyParam = process.env.NIH_API_KEY ? `&api_key=${process.env.NIH_API_KEY}` : "";
+
     // Build a focused search query
     const query = buildPubMedQuery(supplementName, context);
 
     // Step 1: ESearch — get PMIDs
-    const searchUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${limit}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai`;
+    const searchUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${limit}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai${apiKeyParam}`;
 
     const searchRes = await fetch(searchUrl, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -163,7 +165,7 @@ async function searchPubMed(
     if (pmids.length === 0) return [];
 
     // Step 2: ESummary — get metadata (JSON, lighter than EFetch XML)
-    const summaryUrl = `${PUBMED_SUMMARY}?db=pubmed&id=${pmids.join(",")}&retmode=json&tool=apothecare&email=support@apothecare.ai`;
+    const summaryUrl = `${PUBMED_SUMMARY}?db=pubmed&id=${pmids.join(",")}&retmode=json&tool=apothecare&email=support@apothecare.ai${apiKeyParam}`;
 
     const summaryRes = await fetch(summaryUrl, {
       signal: AbortSignal.timeout(TIMEOUT_MS),

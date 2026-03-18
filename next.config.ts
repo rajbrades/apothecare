@@ -83,6 +83,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['react-markdown', 'remark-gfm', 'remark-parse', 'unified', 'vfile', 'bail', 'is-plain-obj', 'trough'],
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb", // For lab PDF uploads

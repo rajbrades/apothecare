@@ -336,6 +336,8 @@ async function searchPubMedForCitation(
   limit: number = 2
 ): Promise<CitationResolvedData[]> {
   try {
+    const apiKeyParam = process.env.NIH_API_KEY ? `&api_key=${process.env.NIH_API_KEY}` : "";
+
     // Build a focused search query from the clinical context
     const contextTerms = context
       .toLowerCase()
@@ -354,7 +356,7 @@ async function searchPubMedForCitation(
     // Fetch more results than needed so we have enough after relevance filtering
     const fetchCount = Math.max(limit * 3, 8);
 
-    const searchUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai`;
+    const searchUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai${apiKeyParam}`;
 
     const searchRes = await fetch(searchUrl, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -367,7 +369,7 @@ async function searchPubMedForCitation(
     // If the filtered query returned too few results, retry without type filter
     if (pmids.length < 2) {
       const fallbackQuery = `${contextTerms} supplementation OR treatment`;
-      const fallbackUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(fallbackQuery)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai`;
+      const fallbackUrl = `${PUBMED_SEARCH}?db=pubmed&term=${encodeURIComponent(fallbackQuery)}&retmax=${fetchCount}&retmode=json&sort=relevance&tool=apothecare&email=support@apothecare.ai${apiKeyParam}`;
       const fallbackRes = await fetch(fallbackUrl, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
@@ -387,7 +389,7 @@ async function searchPubMedForCitation(
 
     if (pmids.length === 0) return [];
 
-    const summaryUrl = `${PUBMED_SUMMARY}?db=pubmed&id=${pmids.join(",")}&retmode=json&tool=apothecare&email=support@apothecare.ai`;
+    const summaryUrl = `${PUBMED_SUMMARY}?db=pubmed&id=${pmids.join(",")}&retmode=json&tool=apothecare&email=support@apothecare.ai${apiKeyParam}`;
 
     const summaryRes = await fetch(summaryUrl, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
