@@ -93,7 +93,7 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
               Remove all sponsored clinical pathways and unlock unlimited Deep Consult queries.
             </p>
             <Button size="sm" className="w-full bg-amber-500 hover:bg-amber-600 text-white border-0 text-xs h-8 relative z-10">
-              Upgrade for $89/mo
+              Upgrade for $99/mo
             </Button>
           </div>
           <div className="mt-3 flex items-center justify-between text-xs text-slate-500 px-1">

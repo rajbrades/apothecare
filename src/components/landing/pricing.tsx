@@ -86,7 +86,7 @@ export function Pricing() {
                   </p>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold text-[var(--color-text-primary)]">$89</span>
+                  <span className="text-5xl font-bold text-[var(--color-text-primary)]">$99</span>
                   <span className="text-[var(--color-text-tertiary)]">/mo</span>
                 </div>
                 <ul className="space-y-3 flex-1">
