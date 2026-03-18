@@ -393,24 +393,26 @@ The Supabase service role client (`createServiceClient()`) uses `@supabase/supab
 | Control | Status | Description |
 |---------|--------|-------------|
 | Auth + RLS | ✅ Done | Practitioner-patient relationship validated |
-| Audit logging | ✅ Done | Export events logged with IP + user agent |
-| Cache headers | ❌ TODO | `Cache-Control: no-store` to prevent PHI caching |
-| Watermarking | ❌ TODO | Audit log ID + practitioner + timestamp in footer |
-| Export session ID | ❌ TODO | UUID linking audit log ↔ exported document |
-| Filename sanitization | ❌ TODO | Strip PHI from ZIP archive filenames |
-| Retention policy | ❌ TODO | 6+ year audit log retention (HIPAA minimum) |
+| Audit logging | ✅ Done | Export events logged with IP + user agent + session ID |
+| Cache headers | ✅ Done | `Cache-Control: no-store, no-cache, private` on all exports |
+| Watermarking | ✅ Done | Audit log ID + timestamp in visit export footer |
+| Export session ID | ✅ Done | UUID linking audit log ↔ exported document |
+| Filename sanitization | ✅ Done | Lab PDFs use report UUID, not original filename |
+| Retention policy | ✅ Done | 6+ year policy documented in `docs/COMPLIANCE.md` |
 
 ### HIPAA Compliance Status
 
 | Area | Status | Notes |
 |------|--------|-------|
 | Access control (auth + RLS) | ✅ | RLS enforced on all tables |
-| Encryption in transit | ✅ | TLS everywhere, HSTS enabled |
-| Encryption at rest | ✅ | Supabase handles (PostgreSQL + S3) |
-| Audit logging | ⚠️ Partial | Events logged but no retention policy |
-| Cache-Control on exports | ❌ | PHI may persist in browser cache |
+| Encryption in transit | ✅ | TLS 1.3, HSTS enabled |
+| Encryption at rest | ✅ | AES-256 via Supabase (PostgreSQL + S3) |
+| Audit logging | ✅ | Events logged with 6+ year retention policy |
+| Cache-Control on exports | ✅ | `no-store, no-cache, private` on all export responses |
+| AI data handling | ✅ | Zero-retention BAA, no training on patient data |
+| Export watermarking | ✅ | Session ID + timestamp in export footer |
 | Minimum necessary | ❌ | Account export dumps all data, no filtering |
-| Export watermarking | ❌ | No document tracing capability |
+| Security page | ✅ | Public `/security` page with full compliance overview |
 
 ## RAG Architecture (Planned)
 

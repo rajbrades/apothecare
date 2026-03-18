@@ -2,6 +2,19 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.26.0] - 2026-03-18
+
+### Added — Security & Compliance Page
+- **Security page** (`/security`): Public-facing security and compliance page covering regulatory alignment (HIPAA, FTC), infrastructure security, AI data handling (zero-retention policy), data protection, encryption (TLS 1.3, AES-256), audit logging, secure development practices, security governance, incident response, independent assessments, and responsible disclosure.
+- **AI Data Handling section**: Documents zero-retention AI provider policy, prompt injection detection, and clinical content disclaimers.
+- **Footer links**: Security page linked from landing page footer.
+- **Favicon**: Apothecare "A" logomark SVG favicon for browser tabs.
+
+### Added — Sprint Plans
+- **Sprint 24**: Universal Citation Verification — DOI-keyed `verified_citations` table, general-purpose verify API, chat citation verification UI, citation quality feedback loop.
+- **Sprint 25**: Subscription Tier Feature Gating — free vs pro enforcement for sources, patients (5 max free), labs, visits, exports, brand preferences.
+- **Legal & Compliance Pages**: Terms of Use, Telehealth Compliance, Advertising & Partnerships pages planned.
+
 ## [0.25.0] - 2026-03-18
 
 ### Added — Citation Verification

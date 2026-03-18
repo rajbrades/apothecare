@@ -134,6 +134,7 @@ src/
 │   │   │   └── reviews/route.ts          # GET list reviews
 │   │   ├── practitioners/
 │   │   │   ├── biomarker-ranges/route.ts # GET/PUT biomarker range overrides
+│   │   │   ├── logo/route.ts             # POST upload / DELETE remove practice logo
 │   │   │   ├── evidence-sources/route.ts # PUT save default evidence sources
 │   │   │   └── profile/route.ts          # PATCH update practitioner profile
 │   ├── auth/
@@ -141,6 +142,9 @@ src/
 │   │   ├── login/page.tsx          # Login with forgot password
 │   │   ├── onboarding/page.tsx     # 2-step practitioner onboarding (imports from shared constants)
 │   │   └── register/page.tsx       # Registration
+│   ├── security/
+│   │   └── page.tsx                # Security & Compliance (public)
+│   ├── icon.svg                    # Favicon (brand "A" logomark)
 │   ├── globals.css                 # Design system + CSS variables
 │   ├── layout.tsx                  # Root layout (fonts via <link>)
 │   └── page.tsx                    # Landing page (public)
@@ -169,8 +173,9 @@ src/
 │   │   ├── sidebar.tsx             # Nav + gold accents + upgrade banner + "View all →" links
 │   │   └── sidebar-conversation.tsx # Conversation list management
 │   ├── settings/
-│   │   ├── settings-page.tsx       # Client layout — left nav + section cards
+│   │   ├── settings-page.tsx       # Client layout — left nav + section cards (6 sections)
 │   │   ├── profile-section.tsx     # Name + avatar display
+│   │   ├── branding-section.tsx    # Practice logo upload, address, phone, fax, website
 │   │   ├── preferences-section.tsx # Evidence sources, brands, note template
 │   │   ├── subscription-section.tsx # Plan badge, usage stats, upgrade CTA
 │   │   └── account-section.tsx     # Password change, delete account

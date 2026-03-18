@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 
 export function Footer() {
@@ -11,6 +12,11 @@ export function Footer() {
             professional medical judgment. All treatment decisions remain with the licensed
             practitioner.
           </p>
+          <nav className="flex items-center gap-6 text-xs text-[var(--color-text-muted)]">
+            <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">
+              Security
+            </Link>
+          </nav>
           <p className="text-xs text-[var(--color-text-muted)]">
             &copy; {new Date().getFullYear()} Apothecare. All rights reserved.
           </p>

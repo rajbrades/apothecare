@@ -542,6 +542,17 @@ Based on Free vs Pro pricing tiers. Free tier is a trial experience; Pro unlocks
 
 ---
 
+## Legal & Compliance Pages
+
+- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer (not a substitute for clinical judgment)
+- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling practices, BAA information, SOC 2 roadmap
+- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing requirements, informed consent language, HIPAA telehealth safeguards
+- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure (e.g., Apex Energetics), sponsored content guidelines, evidence integrity commitments
+- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
+- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
+
+---
+
 ## Backlog
 
 - [x] OAuth providers (Google) for registration — Apple deferred
