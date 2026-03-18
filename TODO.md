@@ -485,6 +485,63 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
+## Sprint 24 — Universal Citation Verification (Planned)
+
+### Phase 1: Verified Citations Table
+- [ ] **DB:** Migration 027 — `verified_citations` table (keyed on DOI, not supplement name). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by` (FK practitioners), `verified_at`, `context_type` (enum: `chat`, `supplement`, `lab`, `general`), `context_value` (topic string e.g. "thyroid autoimmunity"), `origin` (crossref/pubmed/manual), `created_at`, `updated_at`. RLS: read-all, write-own.
+- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint. Accepts `{ doi, title, authors, year, source, level, context_type, context_value }`. Upserts to `verified_citations`. CSRF + auth + audit logged.
+- [ ] **API:** `GET /api/citations/verified` — query verified citations with optional filters (context_type, search query, evidence_level). Powers future citation search UI.
+
+### Phase 2: Chat Citation Verification UI
+- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"` and extract topic from conversation title or user query as `contextValue`
+- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`) with `{ type, value }` shape
+- [ ] **Refactor:** Migrate supplement citation verify to use the new universal endpoint, deprecate `POST /api/supplements/citations/verify`
+
+### Phase 3: Citation Quality Feedback Loop
+- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` table before CrossRef/PubMed lookups (similar to supplement curated DB tier)
+- [ ] **Feature:** "Flag as Incorrect" button on citations — practitioners can report bad citations for review
+- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
+
+---
+
+## Sprint 25 — Subscription Tier Feature Gating (Planned)
+
+Based on Free vs Pro pricing tiers. Free tier is a trial experience; Pro unlocks the full clinical platform.
+
+### Free Tier Restrictions (enforce server-side + UI gates)
+- [ ] **Gate:** 2 clinical queries per day (already enforced via `check_and_increment_query()`)
+- [ ] **Gate:** PubMed evidence sources only — block A4M, IFM, Cleveland Clinic, premium sources for free tier. Gate in `buildSourceFilterAddendum()` and source filter UI.
+- [ ] **Gate:** Basic citation expansion only — disable multi-citation evidence badges for free tier. Single citation per reference, no hover popovers with full metadata.
+- [ ] **Gate:** 7-day conversation history — free tier conversations auto-archive after 7 days. Gate in `GET /api/conversations` and `GET /api/chat/history`. Show "Upgrade to access full history" prompt.
+- [ ] **Gate:** 5 patient charts max — free tier limited to 5 active patients. Gate in `POST /api/patients` with count check. Show upgrade prompt on patient list when at limit.
+- [ ] **Gate:** Lab interpretation blocked — free tier cannot upload or view lab reports. Gate in `POST /api/labs` and lab UI. Show "Pro feature" badge on Labs nav item.
+- [ ] **Gate:** Visit documentation blocked — free tier cannot create visits or use AI Scribe. Gate in `POST /api/visits` and visit UI. Show "Pro feature" badge on Visits nav item.
+- [ ] **Gate:** Protocol generation blocked — free tier cannot generate protocols. Gate in visit generation endpoint (protocol section).
+- [ ] **Gate:** Supplement brand preferences blocked — free tier cannot set preferred brands or use strict brand filtering. Gate in `PUT /api/supplements/brands` and preferences UI.
+- [ ] **Gate:** Branded PDF exports blocked — free tier cannot export branded PDFs. Gate in export endpoints and export UI.
+
+### Pro Tier Features (enforce access)
+- [ ] **Feature:** Unlimited clinical queries
+- [ ] **Feature:** All evidence sources (A4M, IFM, Cleveland Clinic, premium)
+- [ ] **Feature:** Full citation expansion + evidence badges (multi-citation, hover popovers)
+- [ ] **Feature:** Unlimited visit documentation + SOAP notes
+- [ ] **Feature:** Multi-modal lab interpretation
+- [ ] **Feature:** Cross-lab correlation analysis
+- [ ] **Feature:** Protocol generation with dosing
+- [ ] **Feature:** Unlimited patient management + biomarker trending
+- [ ] **Feature:** Branded PDF exports
+- [ ] **Feature:** HIPAA BAA included
+- [ ] **Feature:** Preferred supplement brand search + strict filtering
+
+### Implementation
+- [ ] **Lib:** Create `src/lib/tier/gates.ts` — shared `requirePro(practitioner)`, `isFeatureAvailable(tier, feature)`, `FREE_TIER_LIMITS` constants
+- [ ] **UI:** Create `ProFeatureBadge` component — small "Pro" pill badge on gated nav items and sections
+- [ ] **UI:** Create `UpgradePrompt` component — inline upgrade CTA shown when free tier hits a gate (links to `/settings#subscription`)
+- [ ] **API:** Add tier checks to all gated endpoints (return 403 with `{ error: "Pro feature", upgrade_url: "/settings" }`)
+- [ ] **Middleware:** Consider route-level tier gating in middleware for `/labs/*`, `/visits/*` routes
+
+---
+
 ## Backlog
 
 - [x] OAuth providers (Google) for registration — Apple deferred

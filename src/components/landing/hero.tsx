@@ -41,7 +41,7 @@ export function Hero() {
 
             <ScrollReveal delay={200}>
               <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto text-balance leading-relaxed">
-                Evidence-based answers in seconds. Multi-modal lab interpretation. Protocol generation with cited research&mdash;all grounded in functional medicine.
+                Evidence-based answers in seconds. Multi-modal lab interpretation. Protocol generation with cited research - all grounded in functional medicine.
               </p>
             </ScrollReveal>
 
