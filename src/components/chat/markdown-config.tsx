@@ -9,7 +9,10 @@ import type { PluggableList } from "unified";
 import type { ReactNode } from "react";
 import { CitationMetaContext } from "@/lib/chat/citation-meta-context";
 import { EvidenceBadge, EvidenceBadgeList } from "@/components/chat/evidence-badge";
-import type { EvidenceLevel } from "@/components/chat/evidence-badge";
+import type { EvidenceLevel, VerifyContext } from "@/components/chat/evidence-badge";
+
+/** Chat citations use this context for verification */
+const CHAT_VERIFY_CONTEXT: VerifyContext = { type: "chat" };
 
 export const markdownRehypePlugins: PluggableList = [
   [
@@ -63,10 +66,10 @@ function CitationLink({
       }));
 
     if (badges.length > 1) {
-      return <EvidenceBadgeList citations={badges} />;
+      return <EvidenceBadgeList citations={badges} verifyContext={CHAT_VERIFY_CONTEXT} />;
     }
     if (badges.length === 1) {
-      return <EvidenceBadge citation={badges[0]} />;
+      return <EvidenceBadge citation={badges[0]} verifyContext={CHAT_VERIFY_CONTEXT} />;
     }
   }
 

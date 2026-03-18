@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ExternalLink, BookOpen, Users, FileCheck, FlaskConical, FileText } from "lucide-react";
+import { ExternalLink, BookOpen, Users, FileCheck, FlaskConical, FileText, Flag } from "lucide-react";
 import { toast } from "sonner";
 
 export type EvidenceLevel =
@@ -97,17 +97,30 @@ const LEVEL_CONFIG: Record<
   },
 };
 
+/** Context for citation verification — determines where the citation is being verified */
+export interface VerifyContext {
+  type: "chat" | "supplement" | "lab" | "general";
+  value?: string; // e.g. supplement name, topic, or conversation title
+}
+
 interface EvidenceBadgeProps {
   citation: Citation;
   /** Optional index number for numbered citations */
   index?: number;
-  /** Optional supplement name to allow citation verification */
+  /** @deprecated Use verifyContext instead */
   supplementName?: string;
+  /** Context for verification — enables verify/flag buttons */
+  verifyContext?: VerifyContext;
 }
 
-export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadgeProps) {
+export function EvidenceBadge({ citation, index, supplementName, verifyContext }: EvidenceBadgeProps) {
+  // Backward compat: convert supplementName to verifyContext
+  const ctx: VerifyContext | undefined = verifyContext
+    || (supplementName ? { type: "supplement", value: supplementName } : undefined);
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(false);
   const [verified, setVerified] = useState(citation.origin === "curated");
   const [popoverPosition, setPopoverPosition] = useState<"above" | "below">("above");
   const badgeRef = useRef<HTMLSpanElement>(null);
@@ -178,16 +191,24 @@ export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadge
 
   const handleVerify = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!supplementName || !citation.doi) return;
+    if (!ctx || !citation.doi) return;
 
     setIsVerifying(true);
     try {
-      const res = await fetch("/api/supplements/citations/verify", {
+      const res = await fetch("/api/citations/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          supplement_name: supplementName,
-          citation,
+          doi: citation.doi,
+          title: citation.title,
+          authors: citation.authors,
+          year: citation.year,
+          source: citation.source,
+          level: citation.level,
+          summary: citation.summary,
+          context_type: ctx.type,
+          context_value: ctx.value,
+          origin: citation.origin || "manual",
         }),
       });
 
@@ -196,12 +217,43 @@ export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadge
       }
 
       setVerified(true);
-      toast.success("Citation verified and added to curated database");
+      toast.success("Citation verified");
     } catch (err) {
       console.error(err);
       toast.error("Failed to verify citation");
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleFlag = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!ctx || !citation.doi) return;
+
+    const reason = prompt("Why is this citation incorrect?");
+    if (!reason) return;
+
+    setIsFlagging(true);
+    try {
+      const res = await fetch("/api/citations/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _action: "flag",
+          doi: citation.doi,
+          reason,
+          context_type: ctx.type,
+          context_value: ctx.value,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to flag citation");
+      toast.success("Citation flagged for review");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to flag citation");
+    } finally {
+      setIsFlagging(false);
     }
   };
 
@@ -307,20 +359,31 @@ export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadge
                   </a>
                 )}
 
-                {supplementName && !verified && (
-                  <button
-                    type="button"
-                    onClick={handleVerify}
-                    disabled={isVerifying}
-                    className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50`}
-                  >
-                    {isVerifying ? (
-                      <span className="w-3 h-3 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <FileCheck size={11} />
-                    )}
-                    Verify Citation
-                  </button>
+                {ctx && citation.doi && !verified && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleVerify}
+                      disabled={isVerifying}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50`}
+                    >
+                      {isVerifying ? (
+                        <span className="w-3 h-3 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <FileCheck size={11} />
+                      )}
+                      Verify
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFlag}
+                      disabled={isFlagging}
+                      className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-medium text-amber-700 hover:bg-amber-50 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50"
+                      title="Flag as incorrect"
+                    >
+                      <Flag size={10} />
+                    </button>
+                  </div>
                 )}
 
                 {verified && (
@@ -350,10 +413,13 @@ export function EvidenceBadge({ citation, index, supplementName }: EvidenceBadge
 /** Convenience wrapper for rendering a list of evidence badges inline */
 interface EvidenceBadgeListProps {
   citations: Citation[];
+  /** @deprecated Use verifyContext instead */
   supplementName?: string;
+  /** Context for verification — enables verify/flag buttons on all badges */
+  verifyContext?: VerifyContext;
 }
 
-export function EvidenceBadgeList({ citations, supplementName }: EvidenceBadgeListProps) {
+export function EvidenceBadgeList({ citations, supplementName, verifyContext }: EvidenceBadgeListProps) {
   return (
     <span className="inline-flex flex-wrap gap-1 ml-1">
       {citations.map((citation, i) => (
@@ -362,6 +428,7 @@ export function EvidenceBadgeList({ citations, supplementName }: EvidenceBadgeLi
           citation={citation}
           index={citations.length > 1 ? i + 1 : undefined}
           supplementName={supplementName}
+          verifyContext={verifyContext}
         />
       ))}
     </span>
