@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Dna, MessageSquare, Stethoscope, Users } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
@@ -167,6 +168,17 @@ export default async function DashboardPage() {
           <Users className="icon-feature" />
           Patients
         </Link>
+      </div>
+
+      {/* Evidence trust badge */}
+      <div className="mt-8 flex flex-col items-center gap-2">
+        <span className="text-[11px] text-[var(--color-text-muted)]">Powered by evidence from</span>
+        <div className="flex items-center gap-5 opacity-40 grayscale">
+          <Image src="/logos/a4m.svg" alt="A4M" width={40} height={20} />
+          <Image src="/logos/ifm.svg" alt="IFM" width={38} height={20} />
+          <Image src="/logos/cleveland-clinic.svg" alt="Cleveland Clinic" width={108} height={20} />
+          <span className="text-[11px] text-[var(--color-text-muted)]">+3 more</span>
+        </div>
       </div>
     </div>
   );
