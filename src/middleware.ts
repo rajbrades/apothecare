@@ -9,14 +9,17 @@ export async function middleware(request: NextRequest) {
   if (SITE_PASSWORD) {
     const { pathname } = request.nextUrl;
 
-    // Allow the password page itself and static assets through
-    if (pathname !== "/password" && !pathname.startsWith("/api/site-auth")) {
-      const authed = request.cookies.get(COOKIE_NAME)?.value;
-      if (authed !== "true") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/password";
-        return NextResponse.redirect(url);
-      }
+    // Let the password page and its API through without further checks
+    if (pathname === "/password" || pathname.startsWith("/api/site-auth")) {
+      return NextResponse.next();
+    }
+
+    // All other paths require the site-auth cookie
+    const authed = request.cookies.get(COOKIE_NAME)?.value;
+    if (authed !== "true") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/password";
+      return NextResponse.redirect(url);
     }
   }
 
