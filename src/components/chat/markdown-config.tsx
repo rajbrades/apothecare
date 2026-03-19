@@ -7,12 +7,9 @@ import { Children, isValidElement } from "react";
 import type { Components } from "react-markdown";
 import type { PluggableList } from "unified";
 import type { ReactNode } from "react";
-import { CitationMetaContext } from "@/lib/chat/citation-meta-context";
+import { CitationMetaContext, CitationVerifyContext } from "@/lib/chat/citation-meta-context";
 import { EvidenceBadge, EvidenceBadgeList } from "@/components/chat/evidence-badge";
-import type { EvidenceLevel, VerifyContext } from "@/components/chat/evidence-badge";
-
-/** Chat citations use this context for verification */
-const CHAT_VERIFY_CONTEXT: VerifyContext = { type: "chat" };
+import type { EvidenceLevel } from "@/components/chat/evidence-badge";
 
 export const markdownRehypePlugins: PluggableList = [
   [
@@ -45,6 +42,7 @@ function CitationLink({
   children: ReactNode;
 }) {
   const citationMap = useContext(CitationMetaContext);
+  const verifyCtx = useContext(CitationVerifyContext);
   const citationText = flattenChildren(children);
   const metaArr = citationMap.get(citationText);
 
@@ -66,10 +64,10 @@ function CitationLink({
       }));
 
     if (badges.length > 1) {
-      return <EvidenceBadgeList citations={badges} verifyContext={CHAT_VERIFY_CONTEXT} />;
+      return <EvidenceBadgeList citations={badges} verifyContext={verifyCtx} />;
     }
     if (badges.length === 1) {
-      return <EvidenceBadge citation={badges[0]} verifyContext={CHAT_VERIFY_CONTEXT} />;
+      return <EvidenceBadge citation={badges[0]} verifyContext={verifyCtx} />;
     }
   }
 

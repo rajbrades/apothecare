@@ -39,6 +39,8 @@ const flagSchema = z.object({
   reason: z.string().min(1).max(500),
   context_type: z.enum(["chat", "supplement", "lab", "general"]).default("general"),
   context_value: z.string().optional(),
+  conversation_id: z.string().uuid().optional(),
+  message_id: z.string().uuid().optional(),
 });
 
 function jsonError(message: string, status: number) {
@@ -91,6 +93,9 @@ export async function POST(request: NextRequest) {
             context_value: parsed.data.context_value || null,
             is_flagged: true,
             flagged_reason: parsed.data.reason,
+            conversation_id: parsed.data.conversation_id || null,
+            message_id: parsed.data.message_id || null,
+            flag_count: 1,
           },
           { onConflict: "doi, verified_by, context_type, context_value" }
         );
@@ -100,15 +105,35 @@ export async function POST(request: NextRequest) {
         return jsonError("Failed to flag citation", 500);
       }
 
+      // Check total flag count across all practitioners for this DOI.
+      // If >= 3 unique practitioners flagged it, auto-exclude is handled
+      // by the admin page (auto-resolved flags don't appear for review).
+      const { count: totalFlags } = await serviceClient
+        .from("verified_citations")
+        .select("id", { count: "exact", head: true })
+        .eq("doi", parsed.data.doi)
+        .eq("is_flagged", true);
+
+      const autoExcluded = (totalFlags || 0) >= 3;
+
       auditLog({
         request,
         practitionerId: practitioner.id,
         action: "update",
         resourceType: "citation_flag",
-        detail: { doi: parsed.data.doi, context_type: parsed.data.context_type },
+        detail: {
+          doi: parsed.data.doi,
+          context_type: parsed.data.context_type,
+          total_flags: totalFlags,
+          auto_excluded: autoExcluded,
+        },
       });
 
-      return NextResponse.json({ success: true, action: "flagged" });
+      return NextResponse.json({
+        success: true,
+        action: "flagged",
+        auto_excluded: autoExcluded,
+      });
     }
 
     // Handle verify action

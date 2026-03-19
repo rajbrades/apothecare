@@ -848,7 +848,7 @@ All admin endpoints require the authenticated user's email to be in the `ADMIN_E
 
 ### `GET /api/admin/flagged-citations` ✅ Implemented
 
-List all citations flagged by practitioners as incorrect or suspect.
+List citations flagged by practitioners. Includes Q&A context (original question and AI answer) when available. DOIs flagged by 3+ practitioners are auto-excluded from results by default.
 
 **Query Parameters:**
 
@@ -856,6 +856,7 @@ List all citations flagged by practitioners as incorrect or suspect.
 |---|---|---|---|
 | `cursor` | string | — | ISO timestamp for cursor-based pagination |
 | `limit` | number | 50 | Max results per page (max 200) |
+| `include_auto` | string | — | Set to `"true"` to include auto-excluded citations |
 
 **Response (200):**
 ```json
@@ -873,7 +874,14 @@ List all citations flagged by practitioners as incorrect or suspect.
       "context_type": "chat",
       "context_value": null,
       "verified_at": "2026-03-19T12:00:00Z",
-      "flagged_by_name": "Dr. Jane Smith"
+      "flagged_by_name": "Dr. Jane Smith",
+      "total_flags": 2,
+      "auto_excluded": false,
+      "has_correction": false,
+      "qa_context": {
+        "question": "What is the evidence for vitamin D supplementation?",
+        "answer": "According to [Smith, 2024], vitamin D supplementation..."
+      }
     }
   ],
   "nextCursor": "2026-03-18T10:00:00Z"
@@ -884,16 +892,51 @@ List all citations flagged by practitioners as incorrect or suspect.
 
 ### `POST /api/admin/flagged-citations` ✅ Implemented
 
-Resolve a flagged citation by dismissing the flag or removing the citation.
+Resolve a flagged citation by dismissing, removing, or replacing it.
 
 **Request Body:**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `id` | string (UUID) | Yes | The flagged citation record ID |
-| `action` | string | Yes | `"dismiss"` (unflag, restore citation) or `"remove"` (delete citation record) |
+| `action` | string | Yes | `"dismiss"`, `"remove"`, or `"replace"` |
+| `replacement_doi` | string | For replace | DOI of the correct citation |
+| `replacement_title` | string | For replace | Title of the correct citation |
+| `replacement_authors` | string[] | No | Authors of the replacement |
+| `replacement_year` | number | No | Year of the replacement |
+| `replacement_journal` | string | No | Journal of the replacement |
+| `replacement_evidence_level` | string | No | Evidence level of the replacement |
 
 **Response (200):** `{ "success": true }`
+
+---
+
+### `GET /api/admin/flagged-citations/search` ✅ Implemented
+
+Search CrossRef for replacement citations. Admin-only.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `q` | string | — | Search query (min 3 chars) |
+| `limit` | number | 5 | Max results (max 10) |
+
+**Response (200):**
+```json
+{
+  "results": [
+    {
+      "doi": "10.1234/correct-paper",
+      "title": "Correct Paper Title",
+      "authors": ["Author A", "Author B"],
+      "year": 2024,
+      "journal": "Journal Name",
+      "evidence_level": "meta-analysis"
+    }
+  ]
+}
+```
 
 ---
 

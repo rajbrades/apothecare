@@ -26,3 +26,18 @@ export interface CitationMeta {
 export const CitationMetaContext = createContext<Map<string, CitationMeta[]>>(
   new Map()
 );
+
+/**
+ * Context providing verify context (conversation/message IDs) for citation
+ * verification and flagging within the chat markdown renderer.
+ */
+export interface CitationVerifyContextValue {
+  type: "chat" | "supplement" | "lab" | "general";
+  value?: string;
+  conversationId?: string;
+  messageId?: string;
+}
+
+export const CitationVerifyContext = createContext<CitationVerifyContextValue | undefined>(
+  undefined
+);

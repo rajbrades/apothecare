@@ -101,6 +101,8 @@ const LEVEL_CONFIG: Record<
 export interface VerifyContext {
   type: "chat" | "supplement" | "lab" | "general";
   value?: string; // e.g. supplement name, topic, or conversation title
+  conversationId?: string; // for chat context — enables Q&A review on flagged citations
+  messageId?: string; // for chat context — specific message containing the citation
 }
 
 interface EvidenceBadgeProps {
@@ -244,6 +246,8 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
           reason,
           context_type: ctx.type,
           context_value: ctx.value,
+          conversation_id: ctx.conversationId,
+          message_id: ctx.messageId,
         }),
       });
 

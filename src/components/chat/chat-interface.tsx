@@ -263,6 +263,7 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
               <MessageBubble
                 key={message.id}
                 message={message}
+                conversationId={conversationId || undefined}
                 isFavorited={isFavorited}
                 onToggleFavorite={handleToggleFavorite}
               />

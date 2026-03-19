@@ -4,12 +4,16 @@ All notable changes to Apothecare will be documented in this file.
 
 ## [0.27.0] - 2026-03-19
 
-### Added — Flagged Citations Admin Page
-- **Admin page** (`/admin/flagged-citations`): Review page for citations flagged by practitioners as incorrect or suspect. Shows DOI, title, authors, evidence level, flag reason, who flagged it, and when. Two resolution actions: "Dismiss Flag" (restores the citation) or "Remove Citation" (deletes it from the verified_citations table). Cursor-based pagination for large lists.
-- **Admin API** (`GET /api/admin/flagged-citations`): Lists all flagged citations with practitioner names enriched from the practitioners table. Supports cursor-based pagination.
-- **Admin API** (`POST /api/admin/flagged-citations`): Resolves a flagged citation — dismiss (unflag) or remove (delete). Admin-only, audit logged.
+### Added — Citation Quality Feedback Loop
+- **Admin page** (`/admin/flagged-citations`): Full review page for citations flagged by practitioners. Shows DOI, title, evidence level, flag reason, who flagged it, total flag count across practitioners, and original Q&A context (user question + AI answer) when available. Three resolution actions: **Dismiss** (restore citation), **Replace** (search CrossRef for correct citation, store correction mapping), or **Remove** (delete entirely).
+- **Citation corrections table** (`citation_corrections`): Maps `flagged_doi → replacement_doi` so future citation resolution auto-substitutes corrected citations. Admin-only writes via service client.
+- **Community consensus auto-exclusion**: DOIs flagged by 3+ practitioners are automatically excluded from citation results without admin intervention. These don't appear in the admin review queue.
+- **Q&A context capture**: When flagging a citation in chat, the conversation ID and message ID are stored. Admin review shows the original user question and AI answer that contained the flagged citation.
+- **Replacement citation search** (`GET /api/admin/flagged-citations/search`): Admin can search CrossRef for replacement citations and select the correct one with a single click.
+- **Citation resolution pipeline integration**: `resolveCitationsMulti()` now checks `citation_corrections` after resolving DOIs — any flagged DOI with an admin-verified replacement is auto-substituted.
+- **DB migration** (`028_citation_corrections.sql`): Adds `conversation_id`, `message_id`, `flag_count` columns to `verified_citations`; creates `citation_corrections` table with unique `flagged_doi` constraint.
 - **Admin sidebar**: Added "Flagged Citations" nav item with flag icon.
-- **Admin dashboard**: Added Flagged Citations card (amber theme) alongside existing Audit Logs, User Management, and Job Queue cards.
+- **Admin dashboard**: Added Flagged Citations card (amber theme).
 
 ### Changed — Evidence Partnerships Display
 - **Dashboard**: Replaced OpenEvidence-style top banner with subtle "Powered by evidence from" footer badge below quick action cards, using grayscale partner logos (A4M, IFM, Cleveland Clinic).
