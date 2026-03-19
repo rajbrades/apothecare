@@ -499,7 +499,10 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ### Phase 3: Citation Quality Feedback Loop
 - [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` table before CrossRef/PubMed lookups (similar to supplement curated DB tier)
-- [ ] **Feature:** "Flag as Incorrect" button on citations — practitioners can report bad citations for review
+- [x] **Feature:** "Flag as Incorrect" button on citations — practitioners can report bad citations for review
+- [x] **Feature:** Flagged Citations admin page — `/admin/flagged-citations` with list view, flag reason display, dismiss/remove actions, practitioner attribution, and cursor-based pagination
+- [x] **API:** `GET /api/admin/flagged-citations` — list all flagged citations with practitioner names
+- [x] **API:** `POST /api/admin/flagged-citations` — resolve flags (dismiss or remove citation)
 - [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
 
 ---

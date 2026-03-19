@@ -170,6 +170,20 @@ Per supplement item (all items run in parallel):
 - `supabase/migrations/020_supplement_evidence.sql` — Curated evidence table, 17 seed citations
 - `src/types/database.ts` — `VerifiedCitation` interface, `SupplementReviewItem.verified_citations`
 
+### Citation Flagging & Admin Review
+
+Practitioners can flag any citation as incorrect via the "Flag" button in `EvidenceBadge`. Flagged citations are stored in `verified_citations` with `is_flagged: true` and `flagged_reason`. They are excluded from all citation queries (`GET /api/citations/verified` filters `is_flagged = false`).
+
+Admins review flagged citations at `/admin/flagged-citations`:
+- **Dismiss Flag** — Sets `is_flagged = false`, restoring the citation to active use
+- **Remove Citation** — Deletes the record entirely from `verified_citations`
+
+**Key files:**
+- `src/components/chat/evidence-badge.tsx` — Flag button UI in citation popover
+- `src/app/api/citations/verify/route.ts` — `_action: "flag"` handler
+- `src/app/api/admin/flagged-citations/route.ts` — Admin GET (list) and POST (resolve)
+- `src/app/(admin)/admin/flagged-citations/` — Admin page and client component
+
 ## Data Flow Patterns
 
 ### Authentication Flow

@@ -842,6 +842,61 @@ Handle Stripe subscription events.
 
 ---
 
+## Admin Endpoints
+
+All admin endpoints require the authenticated user's email to be in the `ADMIN_EMAILS` environment variable.
+
+### `GET /api/admin/flagged-citations` ✅ Implemented
+
+List all citations flagged by practitioners as incorrect or suspect.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `cursor` | string | — | ISO timestamp for cursor-based pagination |
+| `limit` | number | 50 | Max results per page (max 200) |
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "doi": "10.1234/example",
+      "title": "Study Title",
+      "authors": ["Author A", "Author B"],
+      "year": 2024,
+      "journal": "Journal Name",
+      "evidence_level": "rct",
+      "flagged_reason": "DOI is incorrect, links to unrelated paper",
+      "context_type": "chat",
+      "context_value": null,
+      "verified_at": "2026-03-19T12:00:00Z",
+      "flagged_by_name": "Dr. Jane Smith"
+    }
+  ],
+  "nextCursor": "2026-03-18T10:00:00Z"
+}
+```
+
+---
+
+### `POST /api/admin/flagged-citations` ✅ Implemented
+
+Resolve a flagged citation by dismissing the flag or removing the citation.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | string (UUID) | Yes | The flagged citation record ID |
+| `action` | string | Yes | `"dismiss"` (unflag, restore citation) or `"remove"` (delete citation record) |
+
+**Response (200):** `{ "success": true }`
+
+---
+
 ## Rate Limits
 
 | Tier | Chat Queries | Lab Uploads | Supplement Reviews | Interaction Checks | Protocols |

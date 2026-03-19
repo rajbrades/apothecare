@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShieldAlert, Activity, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, ShieldAlert, Activity, Flag, LogOut, Menu, X } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 
 const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Overview" },
     { href: "/admin/audits", icon: ShieldAlert, label: "Audit Logs" },
     { href: "/admin/users", icon: Users, label: "User Management" },
+    { href: "/admin/flagged-citations", icon: Flag, label: "Flagged Citations" },
     { href: "/admin/jobs", icon: Activity, label: "Job Queue" },
 ];
 

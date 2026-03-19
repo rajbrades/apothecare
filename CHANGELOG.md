@@ -2,6 +2,22 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.27.0] - 2026-03-19
+
+### Added — Flagged Citations Admin Page
+- **Admin page** (`/admin/flagged-citations`): Review page for citations flagged by practitioners as incorrect or suspect. Shows DOI, title, authors, evidence level, flag reason, who flagged it, and when. Two resolution actions: "Dismiss Flag" (restores the citation) or "Remove Citation" (deletes it from the verified_citations table). Cursor-based pagination for large lists.
+- **Admin API** (`GET /api/admin/flagged-citations`): Lists all flagged citations with practitioner names enriched from the practitioners table. Supports cursor-based pagination.
+- **Admin API** (`POST /api/admin/flagged-citations`): Resolves a flagged citation — dismiss (unflag) or remove (delete). Admin-only, audit logged.
+- **Admin sidebar**: Added "Flagged Citations" nav item with flag icon.
+- **Admin dashboard**: Added Flagged Citations card (amber theme) alongside existing Audit Logs, User Management, and Job Queue cards.
+
+### Changed — Evidence Partnerships Display
+- **Dashboard**: Replaced OpenEvidence-style top banner with subtle "Powered by evidence from" footer badge below quick action cards, using grayscale partner logos (A4M, IFM, Cleveland Clinic).
+- **Chat**: Removed evidence partnerships banner entirely from chat interface for a cleaner UX.
+
+### Fixed — Sidebar Color
+- **CSS variable**: Changed `--color-surface-secondary` from `#f5f5f4` to `#fbfcfc` to match the original semi-transparent value's visual appearance when rendered over white, while keeping full opacity.
+
 ## [0.26.0] - 2026-03-18
 
 ### Added — Security & Compliance Page

@@ -703,6 +703,7 @@ src/
 - [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [x] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table (v0.25.0)
+- [x] **Flagged citations admin page** — `/admin/flagged-citations` review page for citations flagged as incorrect, with dismiss/remove actions (v0.27.0)
 - [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
 - [x] **Data export** — ZIP export of all practitioner data from Settings > Account & Security (v0.23.0)
 - [x] **Visit AI assistant** — right-edge synthesis drawer on visit workspace pages (v0.23.0)
