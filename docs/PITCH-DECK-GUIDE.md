@@ -168,11 +168,11 @@ Telehealth permanence, growing out-of-pocket care spending, and CMS encouraging 
 - **SAM:** $15B Longevity & Concierge Clinic Software Market
 - **SOM:** 100,000 forward-thinking functional medicine practitioners in the US
 
-**Bottom-Up Math:** 100,000 practitioners × $89/mo × 12 = $106M ARR at full penetration. At 5% capture = $5.3M ARR. Add sponsored pathways and dispensary affiliate revenue on top.
+**Bottom-Up Math:** 100,000 practitioners × $99/mo × 12 = $118.8M ARR at full penetration. At 5% capture = $5.9M ARR. Add sponsored pathways and dispensary affiliate revenue on top.
 
 **Pricing Justification:**
 - Practitioners currently pay $150-400/mo for basic EHRs (Cerbo, Practice Better, Jane)
-- $89/mo for AI clinical intelligence that saves 2+ hours/day of documentation is under-priced
+- $99/mo for AI clinical intelligence that saves 2+ hours/day of documentation is under-priced
 - Free tier creates organic discovery; rate limits drive natural upgrade pressure
 - Price validated against comparable practitioner SaaS tools in the market
 
@@ -187,7 +187,7 @@ Telehealth permanence, growing out-of-pocket care spending, and CMS encouraging 
 **Content:**
 
 ### Revenue Stream 1: SaaS Subscription
-| | Free | Pro ($89/mo) |
+| | Free | Pro ($99/mo) |
 |---|---|---|
 | Clinical Chat + Evidence Badges | 2/day | Unlimited |
 | Lab Uploads (10+ vendors) | 2/day | Unlimited |
@@ -470,9 +470,9 @@ When a functional medicine KOL sees you've operationalized the IFM Matrix in sof
 
 ### 7. Have Unit Economics Ready
 - **CAC:** Free tier eliminates traditional CAC. Estimated <$50 for paid conversion via organic word-of-mouth.
-- **LTV:** $89/mo × 24-month avg retention = $2,136 LTV. Plus dispensary affiliate revenue per patient.
+- **LTV:** $99/mo × 24-month avg retention = $2,376 LTV. Plus dispensary affiliate revenue per patient.
 - **Gross Margin:** SaaS 70-80% after AI inference costs. Sponsored pathways are 90%+ margin.
-- **Pricing Comp:** Cerbo charges $150-400/mo for basic EHR. $89/mo for AI clinical intelligence is under-priced.
+- **Pricing Comp:** Cerbo charges $150-400/mo for basic EHR. $99/mo for AI clinical intelligence is under-priced.
 
 ### 8. Know Your Lab Vendor Coverage
 When asked: Quest, LabCorp, Diagnostic Solutions, Genova, Precision Analytical, Mosaic Diagnostics, Vibrant, SpectraCell, RealTime Labs, ZRT Laboratory.

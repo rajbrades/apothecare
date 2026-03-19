@@ -84,10 +84,18 @@ export function ChatMockup() {
   const [charIndex, setCharIndex] = useState(0);
   const hasStarted = useRef(false);
 
-  // Trigger on scroll into view
+  // Trigger on scroll into view (or immediately if already visible)
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // If already in viewport, start immediately
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      hasStarted.current = true;
+      setPhase("thinking");
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {

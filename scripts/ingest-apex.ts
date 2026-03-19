@@ -12,7 +12,7 @@ import { readdir } from "fs/promises";
 import "dotenv/config";
 
 // We need to set up the env module manually since we're outside Next.js
-process.env.NODE_ENV = process.env.NODE_ENV || "development";
+(process.env as Record<string, string | undefined>).NODE_ENV = process.env.NODE_ENV || "development";
 
 async function main() {
   // Dynamic import after env is loaded

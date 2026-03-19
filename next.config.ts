@@ -15,8 +15,8 @@ const cspDirectives = [
   // Default: nothing unless explicitly allowed
   "default-src 'self'",
 
-  // Scripts: 'unsafe-inline' required because Next.js injects inline scripts for hydration.
-  // In dev, also allow 'unsafe-eval' for HMR.
+  // Scripts: Next.js requires 'unsafe-inline' for hydration bootstrap scripts.
+  // In dev, also allow eval for HMR.
   isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline'",
 
   // Styles: self + inline (Tailwind v4 / CSS custom properties) + Google Fonts CSS
@@ -84,7 +84,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['react-markdown', 'remark-gfm', 'remark-parse', 'unified', 'vfile', 'bail', 'is-plain-obj', 'trough'],
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb", // For lab PDF uploads

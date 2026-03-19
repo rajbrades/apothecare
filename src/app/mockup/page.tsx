@@ -306,7 +306,6 @@ Joint pain and brain fog indicate systemic inflammation, which further impairs t
       </div>
     </div>
     </div>
-        </div>
       </div>
   );
 }

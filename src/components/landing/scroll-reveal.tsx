@@ -23,12 +23,22 @@ export function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
+    // Mark as JS-ready so CSS can hide it for animation
+    el.classList.add("scroll-reveal--ready");
+
     // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
     if (prefersReducedMotion) {
+      el.classList.add("revealed");
+      return;
+    }
+
+    // If element is already in view (above fold), reveal immediately
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight - 60) {
       el.classList.add("revealed");
       return;
     }

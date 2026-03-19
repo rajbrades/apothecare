@@ -301,29 +301,31 @@ main {
   }
 }
 
-/* Scroll reveal states — hidden until IntersectionObserver triggers */
+/* Scroll reveal states — only hidden after JS is ready (prevents blank screen if JS fails) */
 .scroll-reveal {
-  opacity: 0;
   will-change: opacity, transform;
 }
+.scroll-reveal.scroll-reveal--ready {
+  opacity: 0;
+}
 
-.scroll-reveal[data-direction="up"] {
+.scroll-reveal.scroll-reveal--ready[data-direction="up"] {
   transform: translateY(32px);
 }
 
-.scroll-reveal[data-direction="left"] {
+.scroll-reveal.scroll-reveal--ready[data-direction="left"] {
   transform: translateX(-32px);
 }
 
-.scroll-reveal[data-direction="right"] {
+.scroll-reveal.scroll-reveal--ready[data-direction="right"] {
   transform: translateX(32px);
 }
 
-.scroll-reveal[data-direction="scale"] {
+.scroll-reveal.scroll-reveal--ready[data-direction="scale"] {
   transform: scale(0.95);
 }
 
-.scroll-reveal[data-direction="none"] {
+.scroll-reveal.scroll-reveal--ready[data-direction="none"] {
   /* fade only */
 }
 

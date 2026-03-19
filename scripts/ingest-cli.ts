@@ -1,6 +1,7 @@
 import { readFile, readdir } from "fs/promises";
 import { resolve } from "path";
 import { createHash } from "crypto";
+// @ts-expect-error pdf-parse lacks proper ESM default export typing
 import pdf from "pdf-parse";
 import { createClient } from "@supabase/supabase-js";
 import { chunkDocument } from "../src/lib/rag/chunk";
