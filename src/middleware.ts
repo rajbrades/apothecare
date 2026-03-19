@@ -1,28 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const SITE_PASSWORD = process.env.SITE_PASSWORD;
-const COOKIE_NAME = "site-auth";
-
 export async function middleware(request: NextRequest) {
-  // Site-wide password gate (skip if no SITE_PASSWORD env var is set)
-  if (SITE_PASSWORD) {
-    const { pathname } = request.nextUrl;
-
-    // Let the password page and its API through without further checks
-    if (pathname === "/password" || pathname.startsWith("/api/site-auth")) {
-      return NextResponse.next();
-    }
-
-    // All other paths require the site-auth cookie
-    const authed = request.cookies.get(COOKIE_NAME)?.value;
-    if (authed !== "true") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/password";
-      return NextResponse.redirect(url);
-    }
-  }
-
   return await updateSession(request);
 }
 
