@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, Download, CalendarPlus, X, MoreHorizontal, Printer } from "lucide-react";
+import { FileText, AlertCircle, Loader2, RefreshCcw, Archive, ArchiveRestore, ChevronDown, ChevronsUpDown, ChevronsDownUp, ClipboardList, Copy, Check, CalendarPlus, X, MoreHorizontal, Printer } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
@@ -485,8 +485,6 @@ function OverflowMenu({
   archiving,
   isArchived,
   onArchive,
-  showDownload,
-  onDownload,
   showAddToVisit,
   onAddToVisit,
   reportId,
@@ -499,8 +497,6 @@ function OverflowMenu({
   archiving: boolean;
   isArchived: boolean;
   onArchive: () => void;
-  showDownload: boolean;
-  onDownload: () => void;
   showAddToVisit: boolean;
   onAddToVisit: () => void;
   reportId: string;
@@ -552,17 +548,7 @@ function OverflowMenu({
             </a>
           )}
 
-          {showDownload && (
-            <button
-              onClick={() => { onDownload(); setOpen(false); }}
-              className={itemClass}
-            >
-              <Download className="w-4 h-4" />
-              Download PDF
-            </button>
-          )}
-
-          {showExport && (
+{showExport && (
             <a
               href={`/api/labs/${reportId}/export`}
               target="_blank"
@@ -585,7 +571,7 @@ function OverflowMenu({
             </button>
           )}
 
-          {(pdfUrl || showDownload || showAddToVisit) && (showReparse || true) && (
+          {(pdfUrl || showAddToVisit) && (showReparse || true) && (
             <div className="my-1 h-px bg-[var(--color-border-light)]" />
           )}
 
@@ -739,10 +725,6 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
     }
   }, [report, biomarkers]);
 
-  const handleDownloadPdf = useCallback(() => {
-    window.print();
-  }, []);
-
   const patientName = report.patients
     ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ")
     : null;
@@ -880,8 +862,6 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             archiving={archiving}
             isArchived={isArchived}
             onArchive={handleArchive}
-            showDownload={report.status === "complete" && totalBiomarkers > 0}
-            onDownload={handleDownloadPdf}
             showAddToVisit={report.status === "complete" && !!report.patient_id && totalBiomarkers > 0}
             onAddToVisit={() => setShowAddToVisit(true)}
             reportId={report.id}
