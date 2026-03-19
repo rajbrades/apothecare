@@ -180,7 +180,7 @@ export function VitalsSnapshot({ patientId, onViewTrends }: VitalsSnapshotProps)
 
       {/* Biometrics row */}
       {hasVitals && latest && (
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           {/* Weight */}
           <div>
             <div className="flex items-center gap-1.5 mb-1">
@@ -256,7 +256,7 @@ export function VitalsSnapshot({ patientId, onViewTrends }: VitalsSnapshotProps)
       {/* Pillars mini-bars */}
       {hasRatings && latestRating && (
         <div>
-          <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
             {PILLAR_META.map(({ key, label, icon: Icon }) => {
               const val = latestRating[key] as number | undefined;
               if (val == null) return null;

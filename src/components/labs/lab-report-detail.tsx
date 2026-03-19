@@ -841,7 +841,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
         </div>
 
         {/* Action row */}
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex items-center gap-2 mt-4 flex-wrap">
           {/* Primary actions — always visible */}
           <AssignPatientButton
             labId={report.id}

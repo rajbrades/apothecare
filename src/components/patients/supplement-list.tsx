@@ -132,7 +132,7 @@ function SupplementRow({
   if (isEditing) {
     return (
       <div className="p-3 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)]">
-        <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
           <input
             type="text"
             value={draft.name}

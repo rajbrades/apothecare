@@ -144,7 +144,7 @@ export function LabDetailSheet({ labId, patientId, patientName, onClose, onOpenT
       <div className="flex-1 bg-black/25" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="w-[500px] max-w-[90vw] bg-[var(--color-surface)] flex flex-col h-full overflow-hidden border-l border-[var(--color-border-light)]">
+      <div className="w-full sm:w-[500px] max-w-[90vw] bg-[var(--color-surface)] flex flex-col h-full overflow-hidden border-l border-[var(--color-border-light)]">
 
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[var(--color-border-light)] shrink-0 gap-3">

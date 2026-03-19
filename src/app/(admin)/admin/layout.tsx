@@ -12,7 +12,7 @@ export default async function AdminLayout({
     return (
         <div className="flex bg-slate-50 min-h-screen text-slate-900 font-sans">
             <AdminSidebar />
-            <main className="ml-64 flex-1">
+            <main className="pt-14 md:pt-0 md:ml-64 flex-1">
                 {children}
             </main>
             <Toaster />

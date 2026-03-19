@@ -6,7 +6,7 @@ export default async function AdminDashboardPage() {
     await requireAdmin();
 
     return (
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
             <p className="text-slate-500 mb-8">Manage users, view audit logs, and monitor system health.</p>
 
