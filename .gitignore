@@ -48,3 +48,7 @@ supabase/.temp/
 
 # partnership documents (PDFs — do not commit)
 /docs/partnerships/
+
+# throwaway demo/mockup pages (not for production)
+/src/app/mockup/
+/src/app/prototype/
