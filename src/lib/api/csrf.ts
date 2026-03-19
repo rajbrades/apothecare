@@ -12,7 +12,9 @@ export function validateCsrf(request: NextRequest): Response | null {
   const origin = request.headers.get("origin");
   if (!origin) return null; // no origin header = not a browser cross-origin request
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  // NEXT_PUBLIC_APP_URL must be set in Vercel env vars to https://apothecare.ai
+  // Fallback to production URL so CSRF is never accidentally bypassed in prod.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://apothecare.ai";
   const appOrigin = new URL(appUrl).origin;
 
   if (origin !== appOrigin) {

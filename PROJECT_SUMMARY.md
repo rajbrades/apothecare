@@ -754,7 +754,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 ANTHROPIC_API_KEY=sk-ant-api03-...
 OPENAI_API_KEY=sk-proj-...
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://apothecare.ai
 NEXT_PUBLIC_APP_NAME=Apothecare
 ```
 
@@ -763,6 +763,35 @@ NEXT_PUBLIC_APP_NAME=Apothecare
 ⚠️ **Supabase Key Format Note:** When copying keys from Supabase dashboard, strip the `sb_publishable_` prefix from anon keys and the `sb_secret_` prefix from service role keys. The actual keys are the JWT strings that follow these prefixes.
 
 ---
+
+## ⚡ Production Deployment Checklist
+
+### Vercel — Environment Variables
+Set ALL of the above in **Vercel Dashboard → Project → Settings → Environment Variables** for Production:
+- `NEXT_PUBLIC_SUPABASE_URL` → your Supabase hosted project URL (`https://<ref>.supabase.co`)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` → Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY` → Supabase service role key
+- `ANTHROPIC_API_KEY` → Claude API key
+- `OPENAI_API_KEY` → OpenAI key (required for AI Scribe / Whisper)
+- `NEXT_PUBLIC_APP_URL` → **`https://apothecare.ai`** (critical for CSRF and auth redirects)
+- `NEXT_PUBLIC_APP_NAME` → `Apothecare`
+- `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`
+- `SITE_PASSWORD` → (optional) site-wide password gate
+
+### Supabase — Auth Redirect URLs
+In **Supabase Dashboard → Authentication → URL Configuration**:
+
+| Setting | Value |
+|---------|-------|
+| **Site URL** | `https://apothecare.ai` |
+| **Redirect URLs** | `https://apothecare.ai/auth/callback` |
+| | `https://apothecare.ai/auth/callback?*` |
+| | `https://apothecare.vercel.app/auth/callback` |
+| | `https://apothecare.vercel.app/auth/callback?*` |
+| | `http://localhost:3000/auth/callback` |
+| | `http://localhost:3000/auth/callback?*` |
+
+> ⚠️ **If the Site URL is set to `localhost` or left as default, Supabase will redirect auth callbacks to localhost in production, breaking login and signup.** The `?*` wildcard entries are required to pass the `next=` redirect param through the callback.
 
 ## Database Migrations
 

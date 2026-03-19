@@ -42,7 +42,7 @@
     "geist": "^1.7.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.474.0",
-    "next": "^16.1.7",
+    "next": "^15.2.0",
     "openai": "^6.22.0",
     "pdf-parse": "^2.4.5",
     "react": "^19.0.0",
@@ -65,11 +65,11 @@
     "@vitejs/plugin-react": "^5.1.4",
     "dotenv": "^17.3.1",
     "eslint": "^9.0.0",
-    "eslint-config-next": "15.1.0",
+    "eslint-config-next": "15.2.0",
     "playwright": "^1.58.2",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "5.9.3",
+    "typescript": "5.7.3",
     "vitest": "^4.0.18"
   }
 }
