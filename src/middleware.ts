@@ -1,7 +1,22 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
+  // Site-wide password gate (set SITE_PASSWORD env var to enable)
+  const sitePassword = process.env.SITE_PASSWORD;
+  if (sitePassword) {
+    const isGatePath =
+      request.nextUrl.pathname === "/gate" ||
+      request.nextUrl.pathname === "/api/gate";
+
+    if (!isGatePath) {
+      const hasAccess = request.cookies.get("site_access")?.value === "granted";
+      if (!hasAccess) {
+        return NextResponse.redirect(new URL("/gate", request.url));
+      }
+    }
+  }
+
   return await updateSession(request);
 }
 
