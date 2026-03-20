@@ -148,6 +148,21 @@ export function LabListClient({ initialLabs, patients }: LabListClientProps) {
     applyFilters();
   }, [debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-poll every 5s when any lab is still uploading or parsing
+  const hasProcessing = labs.some((l) => l.status === "uploading" || l.status === "parsing");
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const interval = setInterval(() => {
+      fetchLabs().then((data) => {
+        if (data) {
+          setLabs(data.labs);
+          setHasMore(data.nextCursor !== null);
+        }
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [hasProcessing, fetchLabs]);
+
   const handleUploaded = () => {
     router.refresh();
     // Refetch the list to show the new upload

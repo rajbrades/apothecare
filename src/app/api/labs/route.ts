@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { uploadLabSchema, labListQuerySchema } from "@/lib/validations/lab";
 import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports";
@@ -199,10 +199,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fire-and-forget parsing
-    parseLabReport(report.id, storagePath, practitioner.id, patientId).catch((err) => {
-      console.error("Lab parsing failed:", err);
-    });
+    // Schedule parsing to run after response is sent.
+    // `after()` keeps the Vercel Lambda alive until parsing completes,
+    // preventing the fire-and-forget from being killed early.
+    after(() =>
+      parseLabReport(report.id, storagePath, practitioner.id, patientId).catch((err) => {
+        console.error("Lab parsing failed:", err);
+      })
+    );
 
     return NextResponse.json({
       report: { ...report, raw_file_url: storagePath },

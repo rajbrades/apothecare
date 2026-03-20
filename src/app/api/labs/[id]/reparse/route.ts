@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -47,10 +47,12 @@ export async function POST(
       return jsonError("Parsing already in progress", 409);
     }
 
-    // Fire-and-forget parsing
-    parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id).catch((err) => {
-      console.error("Lab re-parse failed:", err);
-    });
+    // Schedule parsing after response is sent — `after()` keeps the Lambda alive.
+    after(() =>
+      parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id).catch((err) => {
+        console.error("Lab re-parse failed:", err);
+      })
+    );
 
     return NextResponse.json({ message: "Re-parse started" });
   } catch {

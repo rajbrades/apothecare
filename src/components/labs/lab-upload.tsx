@@ -121,21 +121,25 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
   };
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] overflow-hidden">
+    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
       {/* Toggle header */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${
+          isOpen
+            ? "bg-[var(--color-brand-600)] text-white"
+            : "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-500)]"
+        }`}
       >
         <span className="flex items-center gap-2">
-          <Upload className="w-4 h-4 text-[var(--color-brand-600)]" />
+          <Upload className="w-4 h-4" />
           Upload Lab Report
         </span>
         {isOpen ? (
-          <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <ChevronUp className="w-4 h-4 opacity-80" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <ChevronDown className="w-4 h-4 opacity-80" />
         )}
       </button>
 
