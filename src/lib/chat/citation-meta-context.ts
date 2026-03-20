@@ -12,6 +12,8 @@ export interface CitationMeta {
   /** Journal or source name */
   source?: string;
   evidenceLevel?: EvidenceLevel;
+  /** crossref | pubmed | curated — "curated" means already in verified_citations */
+  origin?: "crossref" | "pubmed" | "curated";
 }
 
 /**

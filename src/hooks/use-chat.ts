@@ -14,6 +14,8 @@ export interface ChatMessageCitation {
   year?: number;
   doi?: string;
   evidence_level?: string;
+  /** crossref | pubmed | curated — "curated" = already in verified_citations */
+  origin?: "crossref" | "pubmed" | "curated";
 }
 
 export interface ChatMessage {

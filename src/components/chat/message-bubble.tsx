@@ -61,6 +61,7 @@ function AssistantContent({ message }: { message: ChatMessage }) {
             doi: c.doi,
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+            origin: c.origin as CitationMeta["origin"],
           }))
         );
       }
@@ -76,6 +77,7 @@ function AssistantContent({ message }: { message: ChatMessage }) {
             doi: c.doi,
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+            origin: c.origin as CitationMeta["origin"],
           }]);
         }
       }

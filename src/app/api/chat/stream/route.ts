@@ -7,7 +7,7 @@ import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
-import { extractCitations, resolveCitations, resolveCitationsMulti, applyCitationLinks } from "@/lib/citations/resolve";
+import { extractCitations, resolveCitations, resolveCitationsMulti, markVerifiedCitations, applyCitationLinks } from "@/lib/citations/resolve";
 import { retrieveEvidence } from "@/lib/evidence/retrieve";
 import { formatEvidenceContext } from "@/lib/evidence/format-context";
 
@@ -225,6 +225,9 @@ export async function POST(request: NextRequest) {
               // Resolve multi-citation (up to 3 per reference)
               const multiMap = await resolveCitationsMulti(citations);
 
+              // Tier 0: mark any DOIs already in verified_citations as curated
+              await markVerifiedCitations(multiMap, supabase);
+
               // Build single-citation map for inline DOI link replacement
               const singleMap = new Map(
                 [...multiMap].map(([key, arr]) => [key, arr[0]])
@@ -252,6 +255,7 @@ export async function POST(request: NextRequest) {
                     year: r.year,
                     doi: r.doi,
                     evidenceLevel: r.evidenceLevel,
+                    origin: r.origin,
                   }));
                 }
               }

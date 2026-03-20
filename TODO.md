@@ -485,22 +485,24 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
-## Sprint 24 — Universal Citation Verification (Planned)
+## Sprint 24 — Universal Citation Verification ✅ COMPLETE
 
 ### Phase 1: Verified Citations Table
-- [ ] **DB:** Migration 027 — `verified_citations` table (keyed on DOI, not supplement name). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by` (FK practitioners), `verified_at`, `context_type` (enum: `chat`, `supplement`, `lab`, `general`), `context_value` (topic string e.g. "thyroid autoimmunity"), `origin` (crossref/pubmed/manual), `created_at`, `updated_at`. RLS: read-all, write-own.
-- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint. Accepts `{ doi, title, authors, year, source, level, context_type, context_value }`. Upserts to `verified_citations`. CSRF + auth + audit logged.
-- [ ] **API:** `GET /api/citations/verified` — query verified citations with optional filters (context_type, search query, evidence_level). Powers future citation search UI.
+- [x] **DB:** Migration 027 — `verified_citations` table (DOI-keyed, `context_type` enum, `is_flagged`, RLS read-all/write-own, unique on `doi+verified_by+context_type+context_value`)
+- [x] **API:** `POST /api/citations/verify` — universal verify + flag (`_action: "flag"`) endpoint. CSRF + auth + audit logged. Backfills `supplement_evidence` for supplement context.
+- [x] **API:** `GET /api/citations/verified` — query with filters (context_type, doi, q, limit)
 
 ### Phase 2: Chat Citation Verification UI
-- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"` and extract topic from conversation title or user query as `contextValue`
-- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`) with `{ type, value }` shape
-- [ ] **Refactor:** Migrate supplement citation verify to use the new universal endpoint, deprecate `POST /api/supplements/citations/verify`
+- [x] **Feature:** `verifyContext` prop on `EvidenceBadge` + `EvidenceBadgeList` (replaces `supplementName`, backward compat shim kept)
+- [x] **Feature:** Verify + Flag buttons in `EvidenceBadge` popover — wired to `/api/citations/verify`
+- [x] **Feature:** Chat badges use `CHAT_VERIFY_CONTEXT = { type: "chat" }` in `markdown-config.tsx`
+- [x] **Refactor:** `POST /api/supplements/citations/verify` → 410 Gone (deprecated, nothing was calling it)
 
 ### Phase 3: Citation Quality Feedback Loop
-- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` table before CrossRef/PubMed lookups (similar to supplement curated DB tier)
-- [ ] **Feature:** "Flag as Incorrect" button on citations — practitioners can report bad citations for review
-- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
+- [x] **Feature:** `markVerifiedCitations()` in `resolve.ts` — post-resolution Tier 0 cache lookup. After CrossRef/PubMed resolve DOIs, batch-checks `verified_citations` and marks matching results as `origin: "curated"` so the badge renders pre-verified immediately.
+- [x] **Feature:** `origin` field threaded through: `CitationResolvedData` → SSE `citation_metadata_multi` → `CitationMeta` context → `markdown-config.tsx` badge props → `EvidenceBadge` (already shows "Verified" for `origin === "curated"`)
+- [x] **Feature:** "Flag as Incorrect" button in `EvidenceBadge` — calls flag action on `/api/citations/verify`
+- [x] **API:** `GET /api/admin/citations/stats` — total verified, flagged, breakdown by context_type, top verifiers, recent 10 verifications. Admin-only (ADMIN_EMAILS env var).
 
 ---
 

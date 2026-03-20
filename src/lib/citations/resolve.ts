@@ -45,6 +45,8 @@ export interface CitationResolvedData {
   source?: string;
   /** Evidence level inferred from the paper title */
   evidenceLevel?: EvidenceLevel;
+  /** Origin of the citation — "curated" means it exists in the verified_citations table */
+  origin?: "crossref" | "pubmed" | "curated";
 }
 
 interface CrossRefItem {
@@ -435,6 +437,7 @@ async function searchPubMedForCitation(
         year: yearMatch?.[0],
         source: journalName || undefined,
         evidenceLevel: classifyEvidenceLevel(title, pubTypes),
+        origin: "pubmed",
       });
     }
 
@@ -486,6 +489,7 @@ function buildResolvedData(
     year: year || undefined,
     source: source || undefined,
     evidenceLevel,
+    origin: "crossref",
   };
 }
 
@@ -684,6 +688,59 @@ export async function resolveCitationsMulti(
   }
 
   return resolved;
+}
+
+/**
+ * After CrossRef/PubMed resolution, check which resolved DOIs exist in the
+ * verified_citations table (Tier 0 cache). Marks matching entries as
+ * origin: "curated" so the client badge renders them as already verified.
+ *
+ * Accepts a Supabase client so this function stays usable in route context.
+ * Non-fatal: any DB errors are swallowed and the resolved map is unchanged.
+ */
+export async function markVerifiedCitations(
+  resolvedMap: Map<string, CitationResolvedData[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any
+): Promise<void> {
+  const allDois: string[] = [];
+  for (const arr of resolvedMap.values()) {
+    for (const r of arr) {
+      if (r.doi) allDois.push(r.doi);
+    }
+  }
+  if (allDois.length === 0) return;
+
+  try {
+    const { data } = await supabase
+      .from("verified_citations")
+      .select("doi, title, authors, year, journal, evidence_level")
+      .in("doi", allDois)
+      .eq("is_flagged", false);
+
+    if (!data || data.length === 0) return;
+
+    const verifiedByDoi = new Map<string, { title: string; authors: string[]; year: number; journal: string; evidence_level: string }>(
+      data.map((row: { doi: string; title: string; authors: string[]; year: number; journal: string; evidence_level: string }) => [row.doi, row])
+    );
+
+    for (const arr of resolvedMap.values()) {
+      for (const r of arr) {
+        if (r.doi && verifiedByDoi.has(r.doi)) {
+          const v = verifiedByDoi.get(r.doi)!;
+          r.origin = "curated";
+          // Upgrade metadata from verified record if richer
+          if (v.title && !r.title) r.title = v.title;
+          if (v.authors?.length && !r.authors?.length) r.authors = v.authors;
+          if (v.year && !r.year) r.year = String(v.year);
+          if (v.journal && !r.source) r.source = v.journal;
+          if (v.evidence_level && !r.evidenceLevel) r.evidenceLevel = v.evidence_level as EvidenceLevel;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[Citations] verified_citations cache lookup failed:", err);
+  }
 }
 
 /**
