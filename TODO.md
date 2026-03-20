@@ -278,13 +278,13 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Test:** Verify retrieval with a thyroid-related query
 
 ### Phase 2: Chat Integration
-- [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
+- [x] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt — best-effort alongside existing evidence RAG, 4 chunks standard / 6 deep consult
 - [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
 - [ ] **Feature:** Partnership evidence badge variant on client
 
 ### Phase 3: Supplement + Visit Integration
-- [ ] **Feature:** Wire retrieval into supplement review endpoint
-- [ ] **Feature:** Wire retrieval into visit generation prompts
+- [x] **Feature:** Wire retrieval into supplement review endpoint — query built from supplement list + patient context, 5 chunks, appended to system prompt
+- [x] **Feature:** Wire retrieval into visit generation prompts — query built from chief complaint + raw notes, 5 chunks, appended to SOAP system prompt
 
 ### Phase 4: Access Control + Admin UI
 - [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
@@ -532,14 +532,14 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
-## Legal & Compliance Pages
+## Sprint 26 — Legal & Compliance Pages (Mar 20) ✅ COMPLETE
 
-- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer (not a substitute for clinical judgment)
-- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling practices, BAA information, SOC 2 roadmap
-- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing requirements, informed consent language, HIPAA telehealth safeguards
-- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure (e.g., Apex Energetics), sponsored content guidelines, evidence integrity commitments
-- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
-- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
+- [x] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
+- [x] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling practices, BAA information, SOC 2 roadmap
+- [x] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing requirements, informed consent language, HIPAA telehealth safeguards
+- [x] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure (Apex Energetics), sponsored content guidelines, evidence integrity commitments
+- [x] **UI:** Footer links to all legal pages on landing page (Terms, Security, Telehealth, Partnerships) + authenticated sidebar
+- [x] **UI:** Terms acceptance checkbox on registration (links to `/terms` and `/security`, required before submit)
 
 ---
 

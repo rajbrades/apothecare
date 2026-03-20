@@ -420,6 +420,26 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
           </div>
         )}
 
+        {/* Legal links */}
+        <div className="px-4 pb-2">
+          <nav className="flex flex-wrap gap-x-3 gap-y-1">
+            {[
+              { href: "/terms", label: "Terms" },
+              { href: "/security", label: "Security" },
+              { href: "/telehealth", label: "Telehealth" },
+              { href: "/advertising", label: "Partnerships" },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
         {/* User profile */}
         <div className="border-t border-[var(--color-border-light)] px-3 py-3">
           <div className="flex items-center gap-3 px-2">

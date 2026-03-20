@@ -12,6 +12,8 @@ import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
+import { retrieveContext } from "@/lib/rag/retrieve";
+import { formatRagContext } from "@/lib/rag/format-context";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -101,6 +103,24 @@ export async function POST(
       .update({ raw_notes })
       .eq("id", visitId);
 
+    // Partnership RAG: retrieve relevant chunks based on clinical notes (best-effort)
+    let partnershipContext = "";
+    try {
+      const ragQuery = [
+        visit.chief_complaint ? `Chief complaint: ${visit.chief_complaint}` : "",
+        raw_notes.slice(0, 400),
+      ].filter(Boolean).join(" ");
+
+      const partnerChunks = await retrieveContext({
+        query: ragQuery,
+        maxChunks: 5,
+        threshold: 0.7,
+      });
+      partnershipContext = formatRagContext(partnerChunks);
+    } catch (err) {
+      console.warn("[RAG] Partnership context retrieval failed for visit generate:", err);
+    }
+
     const model = MODELS.standard;
     const encoder = new TextEncoder();
 
@@ -118,7 +138,7 @@ export async function POST(
             const soapPrompt = buildVisitSystemPrompt({
               visitType: visit.visit_type || "soap",
               patientContext,
-            });
+            }) + (partnershipContext ? "\n\n" + partnershipContext : "");
 
             let soapContent = "";
             await streamCompletion(

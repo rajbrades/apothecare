@@ -13,9 +13,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; fullName?: string; terms?: string }>({});
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
@@ -53,6 +54,12 @@ export default function RegisterPage() {
     try {
       if (password.length < 8) {
         setError("Password must be at least 8 characters.");
+        setLoading(false);
+        return;
+      }
+
+      if (!termsAccepted) {
+        setFieldErrors((prev) => ({ ...prev, terms: "You must accept the Terms of Use to create an account." }));
         setLoading(false);
         return;
       }
@@ -180,6 +187,37 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {/* Terms acceptance */}
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (e.target.checked) {
+                      setFieldErrors((prev) => ({ ...prev, terms: undefined }));
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-brand-600)] accent-[var(--color-brand-600)] flex-shrink-0"
+                />
+                <span className="text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
+                  I agree to the{" "}
+                  <Link href="/terms" target="_blank" className="text-[var(--color-brand-700)] hover:underline font-medium">
+                    Terms of Use
+                  </Link>{" "}
+                  and acknowledge Apothecare&apos;s{" "}
+                  <Link href="/security" target="_blank" className="text-[var(--color-brand-700)] hover:underline font-medium">
+                    Security &amp; Compliance
+                  </Link>{" "}
+                  practices. Apothecare is HIPAA-aligned and your data is encrypted at rest and in transit.
+                </span>
+              </label>
+              {fieldErrors.terms && (
+                <p role="alert" className="mt-1.5 text-xs text-red-600">{fieldErrors.terms}</p>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -188,12 +226,6 @@ export default function RegisterPage() {
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
-
-          <p className="text-[11px] text-[var(--color-text-muted)] text-center mt-4 leading-relaxed">
-            By creating an account, you agree to our Terms of Service and Privacy
-            Policy. Apothecare is HIPAA-compliant and your data is encrypted at
-            rest and in transit.
-          </p>
         </div>
 
         {/* Login link */}

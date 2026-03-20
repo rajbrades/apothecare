@@ -12,12 +12,18 @@ export function Footer() {
             professional medical judgment. All treatment decisions remain with the licensed
             practitioner.
           </p>
-          <nav className="flex items-center gap-6 text-xs text-[var(--color-text-muted)]">
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-[var(--color-text-muted)]">
             <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">
               Terms
             </Link>
             <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">
               Security
+            </Link>
+            <Link href="/telehealth" className="hover:text-[var(--color-text-secondary)] transition-colors">
+              Telehealth
+            </Link>
+            <Link href="/advertising" className="hover:text-[var(--color-text-secondary)] transition-colors">
+              Partnerships
             </Link>
           </nav>
           <p className="text-xs text-[var(--color-text-muted)]">

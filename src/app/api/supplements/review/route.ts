@@ -11,6 +11,8 @@ import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
 import { validateAllReviewCitations } from "@/lib/citations/validate-supplement";
+import { retrieveContext } from "@/lib/rag/retrieve";
+import { formatRagContext } from "@/lib/rag/format-context";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -147,12 +149,32 @@ export async function POST(request: NextRequest) {
     );
     const brandNames = activeBrands.map((b: any) => b.brand_name);
 
+    // Partnership RAG: retrieve relevant chunks based on the supplement list (best-effort)
+    let partnershipContext = "";
+    try {
+      const ragQuery = [
+        supplementsList ? `Supplement review: ${supplementsList}` : "",
+        patientContext ? patientContext.slice(0, 300) : "",
+      ].filter(Boolean).join(" ");
+
+      if (ragQuery.trim()) {
+        const partnerChunks = await retrieveContext({
+          query: ragQuery,
+          maxChunks: 5,
+          threshold: 0.68,
+        });
+        partnershipContext = formatRagContext(partnerChunks);
+      }
+    } catch (err) {
+      console.warn("[RAG] Partnership context retrieval failed for supplement review:", err);
+    }
+
     const systemPrompt = buildSupplementReviewPrompt({
       patientContext,
       labContext: labContext || undefined,
       brandPreferences: brandNames.length ? brandNames : undefined,
       strictBrandMode: strictMode,
-    });
+    }) + (partnershipContext ? "\n\n" + partnershipContext : "");
 
     // Insert review row with status 'generating'
     const { data: review, error: insertError } = await supabase

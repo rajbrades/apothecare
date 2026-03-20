@@ -11,6 +11,8 @@ import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-in
 import { extractCitations, resolveCitations, resolveCitationsMulti, markVerifiedCitations, applyCitationLinks } from "@/lib/citations/resolve";
 import { retrieveEvidence } from "@/lib/evidence/retrieve";
 import { formatEvidenceContext } from "@/lib/evidence/format-context";
+import { retrieveContext } from "@/lib/rag/retrieve";
+import { formatRagContext } from "@/lib/rag/format-context";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -184,6 +186,19 @@ export async function POST(request: NextRequest) {
       console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
 
+    // Partnership RAG: Retrieve relevant chunks from partner knowledge base (best-effort)
+    let partnershipContext = "";
+    try {
+      const partnerChunks = await retrieveContext({
+        query: message,
+        maxChunks: is_deep_consult ? 6 : 4,
+        threshold: 0.7,
+      });
+      partnershipContext = formatRagContext(partnerChunks);
+    } catch (err) {
+      console.warn("[RAG] Partnership context retrieval failed, proceeding without:", err);
+    }
+
     // Stream response
     const encoder = new TextEncoder();
     let fullContent = "";
@@ -202,7 +217,7 @@ export async function POST(request: NextRequest) {
             {
               model,
               maxTokens: is_deep_consult ? 4096 : 2048,
-              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum(filterAllowedSources((source_filter ?? []) as string[], practitioner.subscription_tier) as SourceId[]) + evidenceContext,
+              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum(filterAllowedSources((source_filter ?? []) as string[], practitioner.subscription_tier) as SourceId[]) + evidenceContext + (partnershipContext ? "\n\n" + partnershipContext : ""),
               messages,
             },
             {
