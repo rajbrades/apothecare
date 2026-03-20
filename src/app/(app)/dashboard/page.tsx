@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Dna, MessageSquare, Stethoscope, Users } from "lucide-react";
+import { Dna, Leaf, MessageSquare, Stethoscope, Users } from "lucide-react";
 import { Logomark } from "@/components/ui/logomark";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
 import { getAuthUser, getPractitioner, getSidebarData } from "@/lib/supabase/cached-queries";
@@ -167,6 +167,18 @@ export default async function DashboardPage() {
           <Users className="icon-feature" />
           Patients
         </Link>
+      </div>
+
+      {/* Evidence partnership badge */}
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <Leaf size={12} className="text-[var(--color-brand-700)]" />
+        <p className="text-[12px] text-[var(--color-text-muted)]">
+          Evidence partnerships with{" "}
+          <span className="font-semibold text-[var(--color-text-secondary)]">A4M</span>,{" "}
+          <span className="font-semibold text-[var(--color-text-secondary)]">IFM</span>,{" "}
+          <span className="font-semibold text-[var(--color-text-secondary)]">Cleveland Clinic</span>,{" "}
+          and more
+        </p>
       </div>
     </div>
   );
