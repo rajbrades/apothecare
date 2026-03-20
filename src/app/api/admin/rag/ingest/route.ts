@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile, readdir } from "fs/promises";
+
+export const runtime = "nodejs";
 import { resolve } from "path";
 import { createHash } from "crypto";
-import * as pdfParse from "pdf-parse";
-const pdf = (pdfParse as any).default || pdfParse;
 import { createServiceClient } from "@/lib/supabase/server";
 import { chunkDocument } from "@/lib/rag/chunk";
 import { embedBatch } from "@/lib/rag/embed";
@@ -96,7 +96,9 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Extract text
+        // Extract text (dynamic import avoids pdf-parse test file init crash in serverless)
+        const pdfParse = await import("pdf-parse");
+        const pdf = (pdfParse as any).default || pdfParse;
         const pdfData = await pdf(fileBuffer);
         const text = pdfData.text;
 
