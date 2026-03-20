@@ -123,6 +123,7 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
   const [isFlagging, setIsFlagging] = useState(false);
   const [verified, setVerified] = useState(citation.origin === "curated");
   const [popoverPosition, setPopoverPosition] = useState<"above" | "below">("above");
+  const [popoverAlign, setPopoverAlign] = useState<"center" | "left" | "right">("center");
   const badgeRef = useRef<HTMLSpanElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -135,9 +136,23 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
   useEffect(() => {
     if (isExpanded && badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
+
+      // Vertical
       const spaceAbove = rect.top;
       const spaceBelow = window.innerHeight - rect.bottom;
       setPopoverPosition(spaceAbove > 280 || spaceAbove > spaceBelow ? "above" : "below");
+
+      // Horizontal — clamp so popover stays within viewport (w-80 = 320px)
+      const popoverWidth = 320;
+      const centerX = rect.left + rect.width / 2;
+      const MARGIN = 8;
+      if (centerX + popoverWidth / 2 > window.innerWidth - MARGIN) {
+        setPopoverAlign("right");
+      } else if (centerX - popoverWidth / 2 < MARGIN) {
+        setPopoverAlign("left");
+      } else {
+        setPopoverAlign("center");
+      }
     }
   }, [isExpanded]);
 
@@ -289,10 +304,14 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           className={`absolute z-50 w-80 animate-evidence-expand ${
-            popoverPosition === "above"
-              ? "bottom-full mb-2"
-              : "top-full mt-2"
-          } left-1/2 -translate-x-1/2`}
+            popoverPosition === "above" ? "bottom-full mb-2" : "top-full mt-2"
+          } ${
+            popoverAlign === "right"
+              ? "right-0"
+              : popoverAlign === "left"
+              ? "left-0"
+              : "left-1/2 -translate-x-1/2"
+          }`}
         >
           <div className={`bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden`}>
             {/* Evidence level header */}
@@ -398,7 +417,13 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
 
           {/* Arrow indicator */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[var(--color-surface)] border-[var(--color-border)] rotate-45 ${
+            className={`absolute w-2.5 h-2.5 bg-[var(--color-surface)] border-[var(--color-border)] rotate-45 ${
+              popoverAlign === "right"
+                ? "right-4"
+                : popoverAlign === "left"
+                ? "left-4"
+                : "left-1/2 -translate-x-1/2"
+            } ${
               popoverPosition === "above"
                 ? "bottom-[-6px] border-r border-b"
                 : "top-[-6px] border-l border-t"
