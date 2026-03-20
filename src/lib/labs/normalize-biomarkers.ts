@@ -323,6 +323,7 @@ export async function normalizeBiomarkers(
       biomarker_code: normalizeCode(extracted.code),
       biomarker_name: extracted.name,
       category: extracted.category || (reference?.category ?? null),
+      subcategory: extracted.subcategory ?? null,
       value: extracted.value,
       unit: extracted.unit || reference?.conventional_unit || "",
       conventional_low: conventionalLow,

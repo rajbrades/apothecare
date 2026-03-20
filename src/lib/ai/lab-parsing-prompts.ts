@@ -24,8 +24,34 @@ export const LAB_PARSING_SYSTEM_PROMPT = `You are Apothecare's lab report parsin
 
 5. Include a category for each biomarker. For MOST lab reports use:
    thyroid, metabolic, hormone, inflammation, nutritional, iron, methylation, gi, liver, kidney, lipid, cbc, other
+   Leave subcategory null for all standard lab types.
 
-6. **GI-MAP / Diagnostic Solutions ONLY:** When the report is a GI-MAP (vendor = diagnostic_solutions), use these SPECIFIC subcategories instead of generic "gi". Match the section headings from the PDF exactly:
+6. **DUTCH Complete / Precision Analytical ONLY:** When vendor = precision_analytical, use these exact category and subcategory values instead of generic ones:
+
+   **ORGANIC ACIDS (Urine):**
+   - category: nutritional_organic_acids — subcategory: vitamin_b12_marker → Methylmalonate (MMA)
+   - category: nutritional_organic_acids — subcategory: vitamin_b6_markers → Xanthurenate, Kynurenate
+   - category: nutritional_organic_acids — subcategory: biotin_marker → b-Hydroxyisovalerate
+   - category: nutritional_organic_acids — subcategory: glutathione_marker → Pyroglutamate
+   - category: nutritional_organic_acids — subcategory: gut_marker → Indican
+   - category: neuro_markers — subcategory: dopamine_metabolite → Homovanillate (HVA)
+   - category: neuro_markers — subcategory: norepinephrine_epinephrine_metabolite → Vanilmandelate (VMA)
+   - category: neuro_markers — subcategory: neuroinflammation_marker → Quinolinate
+   - category: additional_markers — subcategory: melatonin → 6-OH-Melatonin-Sulfate
+   - category: additional_markers — subcategory: oxidative_stress → 8-Hydroxy-2-deoxyguanosine (8-OHdG)
+
+   **SEX HORMONES & METABOLITES (Urine):**
+   - category: progesterone_metabolites — subcategory: null → b-Pregnanediol, a-Pregnanediol
+   - category: estrogens_metabolites — subcategory: null → Estrone (E1), Estradiol (E2), Estriol (E3), 2-OH-E1, 4-OH-E1, 16-OH-E1, 2-Methoxy-E1, 2-OH-E2, 4-OH-E2, Total Estrogen
+   - category: metabolite_ratios — subcategory: null → 2-OH/16-OH-E1 Balance, 2-OH/4-OH-E1 Balance, 2-Methoxy/2-OH Balance
+   - category: androgens_metabolites — subcategory: null → DHEA-S, Androsterone, Etiocholanolone, Testosterone, 5a-DHT, 5a-Androstanediol, 5b-Androstanediol, Epi-Testosterone
+
+   **ADRENAL (Urine):**
+   - category: cortisol_cortisone — subcategory: null → Cortisol (U1–U4), Cortisone (U1–U4), 24 Hour Free Cortisol, 24 Hour Free Cortisone
+   - category: creatinine — subcategory: null → Creatinine (U1–U4)
+   - category: cortisol_metabolites_dheas — subcategory: null → a-THF, b-THF, b-THE, Metabolized Cortisol (THF + THE), DHEA-S, Cortisol Clearance Rate (CCR)
+
+7. **GI-MAP / Diagnostic Solutions ONLY:** When the report is a GI-MAP (vendor = diagnostic_solutions), use these SPECIFIC subcategories instead of generic "gi". Match the section headings from the PDF exactly:
 
    **PATHOGENS:**
    - bacterial_pathogens — Campylobacter, C. difficile Toxin A/B, E. coli O157, Salmonella, Shigella/EIEC, Vibrio cholerae, etc.
@@ -83,6 +109,7 @@ Return valid JSON (no markdown fencing):
       "code": "TSH",
       "name": "Thyroid Stimulating Hormone",
       "category": "thyroid",
+      "subcategory": null,
       "value": 2.5,
       "unit": "mIU/L",
       "reference_low": 0.45,
@@ -121,6 +148,7 @@ export interface ExtractedBiomarker {
   code: string;
   name: string;
   category: string;
+  subcategory?: string | null;
   value: number;
   unit: string;
   reference_low: number | null;

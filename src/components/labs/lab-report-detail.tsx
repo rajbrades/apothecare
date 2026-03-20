@@ -16,6 +16,7 @@ interface BiomarkerRow {
   biomarker_code: string;
   biomarker_name: string;
   category: string | null;
+  subcategory: string | null;
   value: number;
   unit: string;
   conventional_low: number | null;
@@ -105,6 +106,46 @@ function parseTestName(testName: string | null): { shortName: string; panels: st
   const shortName = parts[0];
   return { shortName, panels: parts };
 }
+
+// ── DUTCH Complete section titles and ordering ────────────────────────
+const DUTCH_SECTION_TITLES: Record<string, string> = {
+  nutritional_organic_acids: "Nutritional Organic Acids (Urine)",
+  neuro_markers: "Neuro-Related Markers (Urine)",
+  additional_markers: "Additional Markers (Urine)",
+  progesterone_metabolites: "Progesterone Metabolites (Urine)",
+  estrogens_metabolites: "Estrogens and Metabolites (Urine)",
+  metabolite_ratios: "Metabolite Ratios (Urine)",
+  androgens_metabolites: "Androgens and Metabolites (Urine)",
+  cortisol_cortisone: "Daily Free Cortisol and Cortisone (Urine)",
+  creatinine: "Creatinine (Urine)",
+  cortisol_metabolites_dheas: "Cortisol Metabolites and DHEA-S (Urine)",
+};
+
+const DUTCH_SUBCATEGORY_TITLES: Record<string, string> = {
+  vitamin_b12_marker: "Vitamin B12 Marker",
+  vitamin_b6_markers: "Vitamin B6 Markers",
+  biotin_marker: "Biotin Marker",
+  glutathione_marker: "Glutathione Marker",
+  gut_marker: "Gut Marker",
+  dopamine_metabolite: "Dopamine Metabolite",
+  norepinephrine_epinephrine_metabolite: "Norepinephrine / Epinephrine Metabolite",
+  neuroinflammation_marker: "Neuroinflammation Marker",
+  melatonin: "Melatonin",
+  oxidative_stress: "Oxidative Stress / DNA Damage",
+};
+
+const DUTCH_SECTION_ORDER = [
+  "nutritional_organic_acids",
+  "neuro_markers",
+  "additional_markers",
+  "progesterone_metabolites",
+  "estrogens_metabolites",
+  "metabolite_ratios",
+  "androgens_metabolites",
+  "cortisol_cortisone",
+  "creatinine",
+  "cortisol_metabolites_dheas",
+];
 
 // Human-readable titles for GI-MAP sections (matching the PDF headings)
 const GI_MAP_SECTION_TITLES: Record<string, string> = {
@@ -204,13 +245,23 @@ function buildPanels(
   collectedDate?: string | null,
   qualitativeResults?: ParsedQualitativeResult[],
   isGiMap?: boolean,
+  isDutch?: boolean,
   previousValues?: Record<string, number>,
 ): BiomarkerPanelData[] {
+  // When subcategories are present (DUTCH), group key = "category|||subcategory"
+  // For all other labs, group key = category (existing behaviour unchanged)
   const numericGroups = new Map<string, BiomarkerData[]>();
   const qualGroups = new Map<string, QualitativeData[]>();
+  // Track meta for each group key
+  const groupMeta = new Map<string, { category: string; subcategory: string | null }>();
 
   for (const b of biomarkers) {
     const category = b.category || "Uncategorized";
+    const subcategory = b.subcategory || null;
+    const groupKey = subcategory ? `${category}|||${subcategory}` : category;
+
+    if (!groupMeta.has(groupKey)) groupMeta.set(groupKey, { category, subcategory });
+
     const flag = b.functional_flag
       ? mapDbFlagToComponentFlag(b.functional_flag)
       : b.conventional_flag
@@ -230,53 +281,67 @@ function buildPanels(
       previousValue: previousValues?.[b.biomarker_code],
     };
 
-    if (!numericGroups.has(category)) numericGroups.set(category, []);
-    numericGroups.get(category)!.push(biomarkerData);
+    if (!numericGroups.has(groupKey)) numericGroups.set(groupKey, []);
+    numericGroups.get(groupKey)!.push(biomarkerData);
   }
 
-  // Group qualitative results by category
+  // Group qualitative results by category (qualitative results don't have subcategory)
   if (qualitativeResults) {
     for (const q of qualitativeResults) {
       const category = q.category || "Uncategorized";
+      if (!groupMeta.has(category)) groupMeta.set(category, { category, subcategory: null });
       const qualData: QualitativeData = {
         name: q.name,
         result: q.result,
         reference: q.reference,
         flagged: isQualitativeFlagged(q.result, q.reference),
       };
-
       if (!qualGroups.has(category)) qualGroups.set(category, []);
       qualGroups.get(category)!.push(qualData);
     }
   }
 
-  // Merge all category keys
-  const allCategories = new Set([...numericGroups.keys(), ...qualGroups.keys()]);
+  const allKeys = new Set([...numericGroups.keys(), ...qualGroups.keys()]);
 
-  // Sort: GI-MAP uses defined clinical order, others use alphabetical
-  let sortedCategories: string[];
-  if (isGiMap) {
-    sortedCategories = [...allCategories].sort((a, b) => {
-      const idxA = GI_MAP_SECTION_ORDER.indexOf(a);
-      const idxB = GI_MAP_SECTION_ORDER.indexOf(b);
+  // Sort group keys
+  const sortedKeys = [...allKeys].sort((a, b) => {
+    const metaA = groupMeta.get(a)!;
+    const metaB = groupMeta.get(b)!;
+    const catA = metaA.category;
+    const catB = metaB.category;
+
+    // Get category sort index
+    const getCatIdx = (cat: string) => {
+      if (isDutch) return DUTCH_SECTION_ORDER.indexOf(cat);
+      if (isGiMap) return GI_MAP_SECTION_ORDER.indexOf(cat);
+      return -1;
+    };
+
+    const idxA = getCatIdx(catA);
+    const idxB = getCatIdx(catB);
+
+    // Sort by category first
+    if (catA !== catB) {
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
-      if (a === "Uncategorized") return 1;
-      if (b === "Uncategorized") return -1;
-      return a.localeCompare(b);
-    });
-  } else {
-    sortedCategories = [...allCategories].sort((a, b) => {
-      if (a === "Uncategorized") return 1;
-      if (b === "Uncategorized") return -1;
-      return a.localeCompare(b);
-    });
-  }
+      if (catA === "Uncategorized") return 1;
+      if (catB === "Uncategorized") return -1;
+      return catA.localeCompare(catB);
+    }
 
-  return sortedCategories.map((category) => {
-    let markers = numericGroups.get(category) || [];
-    const qualitative = qualGroups.get(category) || [];
+    // Same category — sort subcategories alphabetically (no defined subcategory order)
+    return (metaA.subcategory || "").localeCompare(metaB.subcategory || "");
+  });
+
+  let lastCategory = "";
+
+  return sortedKeys.map((groupKey) => {
+    const meta = groupMeta.get(groupKey)!;
+    const { category, subcategory } = meta;
+
+    let markers = numericGroups.get(groupKey) || [];
+    const qualitative = qualGroups.get(groupKey) || [];
 
     // Sort CBC biomarkers in clinical display order
     if (category.toLowerCase() === "cbc") {
@@ -286,12 +351,28 @@ function buildPanels(
     const numericFlagCount = markers.filter((m) => m.flag !== "optimal" && m.flag !== "normal").length;
     const qualFlagCount = qualitative.filter((q) => q.flagged).length;
 
-    const title = (isGiMap && GI_MAP_SECTION_TITLES[category])
-      ? GI_MAP_SECTION_TITLES[category]
-      : category.split("_").join(" ").toUpperCase();
+    // Panel title: subcategory name → DUTCH/GI-MAP category name → generic
+    let title: string;
+    if (subcategory) {
+      title = DUTCH_SUBCATEGORY_TITLES[subcategory] || subcategory.split("_").join(" ");
+    } else if (isDutch && DUTCH_SECTION_TITLES[category]) {
+      title = DUTCH_SECTION_TITLES[category];
+    } else if (isGiMap && GI_MAP_SECTION_TITLES[category]) {
+      title = GI_MAP_SECTION_TITLES[category];
+    } else {
+      title = category.split("_").join(" ").toUpperCase();
+    }
+
+    // Section header shown when category changes and subcategories are in use
+    const sectionHeader = (subcategory && category !== lastCategory)
+      ? (isDutch ? (DUTCH_SECTION_TITLES[category] || category) : category)
+      : undefined;
+
+    lastCategory = category;
 
     return {
       title,
+      sectionHeader,
       labSource,
       collectedDate: collectedDate ? formatDate(collectedDate) : undefined,
       flagCount: numericFlagCount + qualFlagCount,
@@ -759,8 +840,9 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   }, []);
 
   const isGiMap = report.lab_vendor === "diagnostic_solutions";
+  const isDutch = report.lab_vendor === "precision_analytical";
   const qualitativeResults = (report.parsed_data?.qualitative_results as ParsedQualitativeResult[] | undefined) || [];
-  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date, qualitativeResults, isGiMap, previousValues);
+  const panels = buildPanels(biomarkers, vendorLabel, report.collection_date, qualitativeResults, isGiMap, isDutch, previousValues);
   const totalBiomarkers = biomarkers.length + qualitativeResults.length;
   const flaggedCount = biomarkers.filter((b) => {
     const flag = b.functional_flag || b.conventional_flag;
@@ -953,7 +1035,17 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
       {report.status === "complete" && panels.length > 0 && (
         <div className="space-y-4">
           {panels.map((panel, idx) => (
-            <BiomarkerPanel key={`${panel.title}-${idx}-${sectionKey}`} panel={panel} id={slugifyPanel(panel.title)} initialExpanded={sectionsExpanded} />
+            <div key={`${panel.title}-${idx}-${sectionKey}`}>
+              {panel.sectionHeader && (
+                <div className="flex items-center gap-3 pt-2 pb-1">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
+                    {panel.sectionHeader}
+                  </span>
+                  <div className="flex-1 h-px bg-[var(--color-border-light)]" />
+                </div>
+              )}
+              <BiomarkerPanel panel={panel} id={slugifyPanel(panel.title)} initialExpanded={sectionsExpanded} />
+            </div>
           ))}
         </div>
       )}

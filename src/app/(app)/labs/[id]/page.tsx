@@ -34,7 +34,7 @@ export default async function LabDetailPage({
   // Fetch biomarker results
   const { data: biomarkers } = await supabase
     .from("biomarker_results")
-    .select("id, biomarker_code, biomarker_name, category, value, unit, conventional_low, conventional_high, conventional_flag, functional_low, functional_high, functional_flag, interpretation, clinical_significance, collection_date")
+    .select("id, biomarker_code, biomarker_name, category, subcategory, value, unit, conventional_low, conventional_high, conventional_flag, functional_low, functional_high, functional_flag, interpretation, clinical_significance, collection_date")
     .eq("lab_report_id", id)
     .order("category", { ascending: true })
     .order("biomarker_name", { ascending: true });

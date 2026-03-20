@@ -38,6 +38,8 @@ export interface QualitativeData {
 export interface BiomarkerPanelData {
   /** Panel title (e.g. "Thyroid Panel") */
   title: string;
+  /** Optional section header — rendered as a divider above this panel when the category group changes */
+  sectionHeader?: string;
   /** Lab source */
   labSource?: string;
   /** Collection date */
