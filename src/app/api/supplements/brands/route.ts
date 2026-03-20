@@ -85,6 +85,11 @@ export async function PUT(request: NextRequest) {
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
+    // Brand preferences are a Pro feature
+    if (practitioner.subscription_tier !== "pro") {
+      return jsonError("Supplement brand preferences are a Pro feature. Upgrade to access.", 403);
+    }
+
     // Validate input
     const body = await request.json();
     const parsed = updateBrandPreferencesSchema.safeParse(body);

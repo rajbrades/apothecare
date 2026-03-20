@@ -4,6 +4,7 @@ import { createVisitSchema, visitListQuerySchema } from "@/lib/validations/visit
 import { validateCsrf } from "@/lib/api/csrf";
 import { escapePostgrestPattern } from "@/lib/search";
 import { auditLog } from "@/lib/api/audit";
+import { proGateResponse } from "@/lib/tier/gates";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -80,10 +81,15 @@ export async function POST(request: NextRequest) {
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    // Visit documentation is a Pro feature
+    if (practitioner.subscription_tier !== "pro") {
+      return proGateResponse(NextResponse, "Visit documentation");
+    }
 
     const body = await request.json();
     const parsed = createVisitSchema.safeParse(body);

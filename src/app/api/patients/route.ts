@@ -4,6 +4,7 @@ import { createPatientSchema, patientListQuerySchema } from "@/lib/validations/p
 import { validateCsrf } from "@/lib/api/csrf";
 import { escapePostgrestPattern } from "@/lib/search";
 import { auditLog } from "@/lib/api/audit";
+import { checkPatientLimit } from "@/lib/tier/gates";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -77,10 +78,14 @@ export async function POST(request: NextRequest) {
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
+
+    // Free tier: max 5 active patients
+    const limitErr = await checkPatientLimit(supabase, practitioner.id, practitioner.subscription_tier, NextResponse);
+    if (limitErr) return limitErr;
 
     const body = await request.json();
     const parsed = createPatientSchema.safeParse(body);

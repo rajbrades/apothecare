@@ -101,6 +101,11 @@ export async function POST(request: NextRequest) {
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
 
+    // Lab interpretation is a Pro feature
+    if (practitioner.subscription_tier !== "pro") {
+      return jsonError("Lab interpretation is a Pro feature. Upgrade to access.", 403);
+    }
+
     const rateLimitError = await checkRateLimit(
       supabase, practitioner.id, practitioner.subscription_tier, "lab_upload"
     );

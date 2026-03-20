@@ -11,6 +11,7 @@ import {
   escapeHtml,
   EXPORT_HEADERS,
 } from "@/lib/export/shared";
+import { proGateResponse } from "@/lib/tier/gates";
 
 /**
  * GET /api/visits/[id]/export — Generate a branded, printable visit note.
@@ -34,6 +35,11 @@ export async function GET(
     .single();
   if (!practitioner) {
     return NextResponse.json({ error: "Practitioner not found" }, { status: 404 });
+  }
+
+  // Branded PDF exports are a Pro feature
+  if (practitioner.subscription_tier !== "pro") {
+    return proGateResponse(NextResponse, "Branded PDF exports");
   }
 
   const { data: visit } = await supabase

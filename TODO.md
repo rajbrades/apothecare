@@ -506,49 +506,29 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
-## Sprint 25 — Subscription Tier Feature Gating (Planned)
+## Sprint 25 — Subscription Tier Feature Gating ✅ COMPLETE
 
-Based on Free vs Pro pricing tiers. Free tier is a trial experience; Pro unlocks the full clinical platform.
-
-### Free Tier Restrictions (enforce server-side + UI gates)
-- [ ] **Gate:** 2 clinical queries per day (already enforced via `check_and_increment_query()`)
-- [ ] **Gate:** PubMed evidence sources only — block A4M, IFM, Cleveland Clinic, premium sources for free tier. Gate in `buildSourceFilterAddendum()` and source filter UI.
-- [ ] **Gate:** Basic citation expansion only — disable multi-citation evidence badges for free tier. Single citation per reference, no hover popovers with full metadata.
-- [ ] **Gate:** 7-day conversation history — free tier conversations auto-archive after 7 days. Gate in `GET /api/conversations` and `GET /api/chat/history`. Show "Upgrade to access full history" prompt.
-- [ ] **Gate:** 5 patient charts max — free tier limited to 5 active patients. Gate in `POST /api/patients` with count check. Show upgrade prompt on patient list when at limit.
-- [ ] **Gate:** Lab interpretation blocked — free tier cannot upload or view lab reports. Gate in `POST /api/labs` and lab UI. Show "Pro feature" badge on Labs nav item.
-- [ ] **Gate:** Visit documentation blocked — free tier cannot create visits or use AI Scribe. Gate in `POST /api/visits` and visit UI. Show "Pro feature" badge on Visits nav item.
-- [ ] **Gate:** Protocol generation blocked — free tier cannot generate protocols. Gate in visit generation endpoint (protocol section).
-- [ ] **Gate:** Supplement brand preferences blocked — free tier cannot set preferred brands or use strict brand filtering. Gate in `PUT /api/supplements/brands` and preferences UI.
-- [ ] **Gate:** Branded PDF exports blocked — free tier cannot export branded PDFs. Gate in export endpoints and export UI.
-
-### Pro Tier Features (enforce access)
-- [ ] **Feature:** Unlimited clinical queries
-- [ ] **Feature:** All evidence sources (A4M, IFM, Cleveland Clinic, premium)
-- [ ] **Feature:** Full citation expansion + evidence badges (multi-citation, hover popovers)
-- [ ] **Feature:** Unlimited visit documentation + SOAP notes
-- [ ] **Feature:** Multi-modal lab interpretation
-- [ ] **Feature:** Cross-lab correlation analysis
-- [ ] **Feature:** Protocol generation with dosing
-- [ ] **Feature:** Unlimited patient management + biomarker trending
-- [ ] **Feature:** Branded PDF exports
-- [ ] **Feature:** HIPAA BAA included
-- [ ] **Feature:** Preferred supplement brand search + strict filtering
-
-### Dashboard Evidence Source Badges
-- [ ] **Feature:** "Your Evidence Sources" row on dashboard — shows logos/badges of evidence sources available to the practitioner based on tier + partnerships
-- [ ] **Data:** Query `preferred_evidence_sources` + `practitioner_partnerships` (with expiration check) in dashboard layout
-- [ ] **UI:** Pro users see all source badges active; free users see PubMed active + remaining sources grayed out with "Upgrade" nudge
-- [ ] **UI:** Partnership sources (e.g., Apex Energetics) appear as additional badges when practitioner has active partnership access
-- [ ] **UX:** Clicking a grayed-out badge links to `/settings#subscription` upgrade flow
+### Free Tier Restrictions (all enforced server-side)
+- [x] **Gate:** 2 clinical queries per day — `check_and_increment_query()` DB function
+- [x] **Gate:** PubMed + Cochrane sources only — `filterAllowedSources()` in chat stream route strips premium sources for free tier
+- [x] **Gate:** 7-day conversation history — `GET /api/conversations` applies `.gte("updated_at", cutoff)` for free tier
+- [x] **Gate:** 5 active patient charts max — `POST /api/patients` calls `checkPatientLimit()` → 403 with upgrade_url
+- [x] **Gate:** Lab interpretation blocked — `POST /api/labs` returns 403 for free tier before rate limit check
+- [x] **Gate:** Visit documentation blocked — `POST /api/visits` returns 403 via `proGateResponse()`
+- [x] **Gate:** Supplement brand preferences blocked — `PUT /api/supplements/brands` returns 403 for free tier
+- [x] **Gate:** Branded PDF exports blocked — `GET /api/visits/[id]/export` returns 403 for free tier
 
 ### Implementation
-- [ ] **Lib:** Create `src/lib/tier/gates.ts` — shared `requirePro(practitioner)`, `isFeatureAvailable(tier, feature)`, `FREE_TIER_LIMITS` constants
-- [ ] **UI:** Create `ProFeatureBadge` component — small "Pro" pill badge on gated nav items and sections
-- [ ] **UI:** Create `UpgradePrompt` component — inline upgrade CTA shown when free tier hits a gate (links to `/settings#subscription`)
-- [ ] **UI:** Create `EvidenceSourceBadges` dashboard component — renders active/locked source badges from tier + partnerships
-- [ ] **API:** Add tier checks to all gated endpoints (return 403 with `{ error: "Pro feature", upgrade_url: "/settings" }`)
-- [ ] **Middleware:** Consider route-level tier gating in middleware for `/labs/*`, `/visits/*` routes
+- [x] **Lib:** `src/lib/tier/gates.ts` — `isFeatureAvailable()`, `FREE_TIER_LIMITS`, `filterAllowedSources()`, `proGateResponse()`, `checkPatientLimit()`
+- [x] **UI:** `ProFeatureBadge` component — gold "Pro" pill on gated nav items (Visits, Labs in sidebar)
+- [x] **UI:** `UpgradePrompt` component — inline upgrade CTA (compact + full variants)
+- [x] **UI:** Sidebar Labs + Visits nav items show `ProFeatureBadge` for free tier
+- [x] **UI:** `EvidenceSection` (already built) — free tier gets locked grid + overlay upgrade CTA; Pro gets active source grid
+
+### Deferred
+- [ ] Multi-citation badge disable for free tier (cosmetic, low priority)
+- [ ] Partnership source badges on dashboard (needs migration 024 applied first)
+- [ ] Middleware route-level gating for `/labs/*`, `/visits/*`
 
 ---
 

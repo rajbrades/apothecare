@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ProFeatureBadge } from "@/components/ui/pro-feature-badge";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -48,11 +49,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/visits", icon: Stethoscope, label: "Visits" },
-  { href: "/labs", icon: FlaskConical, label: "Labs" },
-  { href: "/supplements", icon: Pill, label: "Supplements" },
-  { href: "/patients", icon: Users, label: "Patients" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", proOnly: false },
+  { href: "/visits", icon: Stethoscope, label: "Visits", proOnly: true },
+  { href: "/labs", icon: FlaskConical, label: "Labs", proOnly: true },
+  { href: "/supplements", icon: Pill, label: "Supplements", proOnly: false },
+  { href: "/patients", icon: Users, label: "Patients", proOnly: false },
 ];
 
 
@@ -213,6 +214,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
           <div className="space-y-0.5 mb-5">
             {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const showProBadge = item.proOnly && !isPro;
               return (
                 <Link
                   key={item.href}
@@ -223,7 +225,8 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
                     }`}
                 >
                   <item.icon className="icon-nav" strokeWidth={1.5} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {showProBadge && <ProFeatureBadge />}
                 </Link>
               );
             })}

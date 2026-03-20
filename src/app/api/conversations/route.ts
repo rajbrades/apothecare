@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { data: practitioner } = await supabase
       .from("practitioners")
-      .select("id")
+      .select("id, subscription_tier")
       .eq("auth_user_id", user.id)
       .single();
     if (!practitioner) return jsonError("Practitioner not found", 404);
@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
       .eq("practitioner_id", practitioner.id)
       .order("updated_at", { ascending: false })
       .limit(limit);
+
+    // Free tier: 7-day conversation history window
+    if (practitioner.subscription_tier !== "pro") {
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte("updated_at", cutoff);
+    }
 
     // Apply filter
     if (filter === "active") {
