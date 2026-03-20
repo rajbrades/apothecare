@@ -36,6 +36,9 @@ function isAdmin(email: string): boolean {
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+  if (adminEmails.length === 0) {
+    console.warn("[Admin] ADMIN_EMAILS env var is not configured — all admin access denied");
+  }
   return adminEmails.includes(email.toLowerCase());
 }
 
@@ -59,6 +62,15 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const user = await requireAdminUser(supabase);
     if (!user) return jsonError("Forbidden", 403);
+
+    // HIPAA §164.312(b): Log all PHI access including reads
+    auditLog({
+      request,
+      practitionerId: user.id,
+      action: "read",
+      resourceType: "flagged_citations",
+      detail: { endpoint: "GET /api/admin/flagged-citations" },
+    });
 
     const serviceClient = createServiceClient();
 
@@ -122,6 +134,17 @@ export async function GET(request: NextRequest) {
 
     // For rows with conversation_id, fetch the Q&A context (user question + AI answer)
     const conversationIds = [...new Set(filtered.map((r) => r.conversation_id).filter(Boolean))] as string[];
+
+    // HIPAA §164.312(b): Log access to conversation messages (PHI)
+    if (conversationIds.length > 0) {
+      auditLog({
+        request,
+        practitionerId: user.id,
+        action: "read",
+        resourceType: "conversation_messages",
+        detail: { conversation_ids: conversationIds, purpose: "flagged_citation_review" },
+      });
+    }
     const qaContextMap: Record<string, { question: string; answer: string }> = {};
     for (const convId of conversationIds) {
       // Get the message that was flagged and the preceding user message
@@ -199,13 +222,13 @@ export async function GET(request: NextRequest) {
 const resolveSchema = z.object({
   id: z.string().uuid(),
   action: z.enum(["dismiss", "remove", "replace"]),
-  // Required when action is "replace"
-  replacement_doi: z.string().optional(),
-  replacement_title: z.string().optional(),
-  replacement_authors: z.array(z.string()).optional(),
-  replacement_year: z.number().optional(),
-  replacement_journal: z.string().optional(),
-  replacement_evidence_level: z.string().optional(),
+  // Required when action is "replace" — validated with format constraints
+  replacement_doi: z.string().regex(/^10\.\d{4,9}\/[^\s]+$/, "Invalid DOI format").max(256).optional(),
+  replacement_title: z.string().min(1).max(1000).optional(),
+  replacement_authors: z.array(z.string().max(200)).max(50).optional(),
+  replacement_year: z.number().int().min(1800).max(2100).optional(),
+  replacement_journal: z.string().max(500).optional(),
+  replacement_evidence_level: z.string().max(50).optional(),
   correction_reason: z.string().max(500).optional(),
 });
 

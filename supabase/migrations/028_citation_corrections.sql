@@ -55,7 +55,21 @@ CREATE POLICY "Anyone can read citation corrections"
     FOR SELECT
     USING (true);
 
--- Write access is via service client (admin API), so no INSERT/UPDATE policy needed for regular users
+-- HIPAA §164.312(a)(1): Explicit deny for direct writes — admin writes go through service client only
+CREATE POLICY "Block direct inserts"
+    ON public.citation_corrections
+    FOR INSERT
+    WITH CHECK (false);
+
+CREATE POLICY "Block direct updates"
+    ON public.citation_corrections
+    FOR UPDATE
+    USING (false);
+
+CREATE POLICY "Block direct deletes"
+    ON public.citation_corrections
+    FOR DELETE
+    USING (false);
 
 -- 4. Auto-update trigger
 CREATE TRIGGER set_citation_corrections_updated_at

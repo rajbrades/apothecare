@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { auditLog } from "@/lib/api/audit";
 import { env } from "@/lib/env";
 import { classifyEvidenceLevel } from "@/lib/chat/classify-evidence";
 
@@ -12,6 +13,9 @@ function isAdmin(email: string): boolean {
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+  if (adminEmails.length === 0) {
+    console.warn("[Admin] ADMIN_EMAILS env var is not configured — all admin access denied");
+  }
   return adminEmails.includes(email.toLowerCase());
 }
 
@@ -41,6 +45,15 @@ export async function GET(request: NextRequest) {
     if (error || !user?.email || !isAdmin(user.email)) {
       return jsonError("Forbidden", 403);
     }
+
+    // HIPAA §164.312(b): Log admin citation search access
+    auditLog({
+      request,
+      practitionerId: user.id,
+      action: "read",
+      resourceType: "citation_search",
+      detail: { endpoint: "GET /api/admin/flagged-citations/search" },
+    });
 
     const q = request.nextUrl.searchParams.get("q");
     if (!q || q.length < 3) return jsonError("Query too short (min 3 chars)", 400);
