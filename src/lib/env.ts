@@ -88,8 +88,16 @@ function validateEnv(): Env {
 /**
  * Validated environment variables.
  *
- * Importing this module on the server triggers validation exactly once.
- * If any required variable is missing or invalid, the process will crash
- * immediately with a clear diagnostic message.
+ * Validation runs lazily on first property access (not at import time),
+ * so importing this module during `next build` won't crash when env vars
+ * are absent. At runtime, the first access triggers validation exactly
+ * once — if any required variable is missing or invalid, the process
+ * will crash immediately with a clear diagnostic message.
  */
-export const env = validateEnv();
+let _env: Env | undefined;
+export const env: Env = new Proxy({} as Env, {
+  get(_target, prop: string) {
+    if (!_env) _env = validateEnv();
+    return _env[prop as keyof Env];
+  },
+});
