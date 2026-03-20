@@ -24,7 +24,7 @@
   --color-gold-700: #b45309;
 
   --color-surface: #ffffff;
-  --color-surface-secondary: oklab(0.959998 -0.00481549 0.00140041 / 0.2);
+  --color-surface-secondary: oklab(0.959998 -0.00481549 0.00140041);
   --color-surface-tertiary: #efefef;
   --color-border: #e0e0e0;
   --color-border-light: #ebebeb;
