@@ -128,7 +128,8 @@ export async function POST(request: NextRequest) {
           if (!report.raw_file_url) continue;
           try {
             const buffer = await downloadFromStorage(report.raw_file_url);
-            const filename = report.raw_file_name || `${report.id}.pdf`;
+            // Use UUID filename to avoid PHI in ZIP entry names
+            const filename = `${report.id}.pdf`;
             pdfsFolder.file(filename, buffer);
             pdfCount++;
           } catch {

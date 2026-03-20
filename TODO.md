@@ -447,41 +447,41 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
-## Sprint 23 — Branded PDF Exports & Export Security (Mar 18) 🔧 IN PROGRESS
+## Sprint 23 — Branded PDF Exports & Export Security (Mar 18) ✅ COMPLETE
 
 ### Phase 1: Security Fixes (P0)
-- [ ] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to visit export and account export responses — prevents PHI caching in browser/CDN
-- [ ] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
-- [ ] **Security:** Export watermarking — embed audit log ID, practitioner email, and timestamp in exported document footer for breach tracing
-- [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
-- [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
-- [ ] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy (6+ year HIPAA minimum), export access policies, and encryption requirements
+- [x] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to all export responses
+- [x] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
+- [x] **Security:** Export watermarking — export session ID + timestamp in exported document footer
+- [x] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
+- [x] **Security:** Sanitize lab PDF filenames in account export ZIP — use UUID (`report.id`) instead of `raw_file_name`
+- [x] **Docs:** `docs/COMPLIANCE.md` — audit log retention policy, export access policies, encryption requirements, BAA status
 
 ### Phase 2: Practice Branding Infrastructure
-- [ ] **DB:** Migration 026 — Add branding columns to `practitioners` table: `logo_storage_path`, `practice_address_line1`, `practice_address_line2`, `practice_city`, `practice_state`, `practice_zip`, `practice_phone`, `practice_fax`, `practice_website`
-- [ ] **Storage:** Create `practice-assets` Supabase Storage bucket for logo uploads
-- [ ] **API:** `POST /api/practitioners/logo` — logo upload (PNG/JPG/SVG/WebP, max 2MB)
-- [ ] **API:** `DELETE /api/practitioners/logo` — remove logo
-- [ ] **API:** Update `PATCH /api/practitioners/profile` to accept new branding fields
-- [ ] **UI:** New "Practice Branding" section in Settings — logo dropzone with preview, practice address/phone/fax/website fields, live letterhead preview
-- [ ] **Types:** Update `Practitioner` interface in `database.ts` with branding fields
+- [x] **DB:** Migration 026 — branding columns on `practitioners` (`logo_storage_path`, address, phone, fax, website)
+- [x] **Storage:** `practice-assets` Supabase Storage bucket
+- [x] **API:** `POST /api/practitioners/logo` — logo upload (PNG/JPG/SVG/WebP, max 2MB)
+- [x] **API:** `DELETE /api/practitioners/logo` — remove logo
+- [x] **API:** `PATCH /api/practitioners/profile` accepts branding fields
+- [x] **UI:** "Practice Branding" section in Settings — logo dropzone + preview, address/phone/fax/website fields
+- [x] **Types:** `Practitioner` interface updated with branding fields
 
 ### Phase 3: Shared Export Template System
-- [ ] **Lib:** Create `src/lib/export/shared.ts` — `buildLetterhead()`, `buildPatientBar()`, `buildFooter()`, `buildExportPage()`, `fetchLogoAsBase64()`
-- [ ] **Lib:** Create `src/lib/export/styles.ts` — shared print CSS (typography, `@page` rules, page-break control)
+- [x] **Lib:** `src/lib/export/shared.ts` — `buildLetterhead()`, `buildPatientBar()`, `buildFooter()`, `buildExportPage()`, `fetchLogoAsBase64()`
+- [x] **Lib:** `src/lib/export/styles.ts` — shared print CSS (typography, `@page` rules, page-break control)
 
 ### Phase 4: Enhanced Visit Export
-- [ ] **Refactor:** Refactor `src/app/api/visits/[id]/export/route.ts` to use shared template system with practice branding (logo letterhead, practitioner credentials, page numbers, watermark)
+- [x] **Refactor:** `src/app/api/visits/[id]/export/route.ts` uses shared template system with practice branding
 
-### Phase 5: Lab Report Export (New)
-- [ ] **Lib:** Create `src/lib/export/lab-report.ts` — biomarker table template (grouped by panel, H/L/C flags, trend indicators, flagged summary section)
-- [ ] **API:** Create `GET /api/labs/[id]/export` — lab report PDF export with practice branding
-- [ ] **UI:** Add "Export PDF" button to lab report detail overflow menu
+### Phase 5: Lab Report Export
+- [x] **Lib:** `src/lib/export/lab-report.ts` — biomarker table template (grouped by panel, H/L/C flags, flagged summary)
+- [x] **API:** `GET /api/labs/[id]/export` — lab report PDF export with practice branding
+- [x] **UI:** "Export PDF" button in lab report detail overflow menu
 
-### Phase 6: Supplement Protocol Export (New)
-- [ ] **Lib:** Create `src/lib/export/supplement-protocol.ts` — protocol template (grouped by action: keep/modify/add/discontinue, evidence citations, interaction warnings, numbered references)
-- [ ] **API:** Create `GET /api/supplements/review/[id]/export` — supplement protocol PDF export with practice branding
-- [ ] **UI:** Add "Export PDF" button to supplement review detail header
+### Phase 6: Supplement Protocol Export
+- [x] **Lib:** `src/lib/export/supplement-protocol.ts` — protocol template (grouped by action, citations, interaction warnings, numbered references)
+- [x] **API:** `GET /api/supplements/review/[id]/export` — supplement protocol PDF export with practice branding
+- [x] **UI:** "Export PDF" button in supplement review detail header
 
 ---
 

@@ -224,4 +224,5 @@ export const EXPORT_HEADERS = {
   "Expires": "0",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
 } as const;
