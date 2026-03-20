@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Dna, Leaf, MessageSquare, Stethoscope, Users } from "lucide-react";
-import { Logomark } from "@/components/ui/logomark";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
 import { getAuthUser, getPractitioner, getSidebarData } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
@@ -10,16 +9,25 @@ import { CreateVisitButton } from "@/components/visits/create-visit-button";
 import { formatRelativeTime } from "@/lib/utils";
 import { type ConversationItem } from "@/components/layout/sidebar-conversation";
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default async function DashboardPage() {
-  // These calls are deduplicated by React cache() — the parent (app) layout
-  // already fetched this data, so no extra database round-trips occur.
   const user = await getAuthUser();
   if (!user) redirect("/auth/login");
 
   const practitioner = await getPractitioner(user.id);
   if (!practitioner) redirect("/auth/onboarding");
 
-  // Reset stale daily count on the client side for display
+  // Parse display name — use last name if full_name has multiple words
+  const nameParts = (practitioner.full_name || "").trim().split(" ");
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : practitioner.full_name || "";
+  const displayName = lastName ? `Dr. ${lastName}` : "Doctor";
+
   let queriesUsed = practitioner?.daily_query_count || 0;
   if (practitioner?.daily_query_reset_at) {
     const resetAt = new Date(practitioner.daily_query_reset_at);
@@ -31,7 +39,6 @@ export default async function DashboardPage() {
   const isFree = practitioner?.subscription_tier === "free";
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
-  // Fetch patient list + recent conversations (deduped via React cache)
   const supabase = await createClient();
   const [{ data: patients }, { recentConversations }] = await Promise.all([
     supabase
@@ -53,14 +60,19 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-40px)] px-6">
-      {/* Brand mark */}
-      <div className="mb-6">
-        <Logomark size="lg" />
+    <div className="flex flex-col items-center px-6 pt-14 pb-16 min-h-[calc(100vh-40px)]">
+      {/* Greeting */}
+      <div className="w-full max-w-2xl mb-7 text-center">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)]">
+          {getGreeting()}, {displayName}
+        </h1>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">
+          What would you like to explore today?
+        </p>
       </div>
 
       {/* Search input */}
-      <div className="w-full max-w-2xl mb-6">
+      <div className="w-full max-w-2xl mb-5">
         <DashboardSearch patients={patients || []} defaultSources={practitioner.preferred_evidence_sources} />
 
         {/* Query limit indicator for free users */}
@@ -146,7 +158,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick action cards */}
-      <div className="flex flex-wrap justify-center gap-4 mt-12">
+      <div className="flex flex-wrap justify-center gap-4 mt-6">
         <Link
           href="/labs"
           className="flex flex-col items-center gap-2 px-6 py-4 rounded-[var(--radius-md)] border border-[var(--color-border-light)] hover:border-[var(--color-brand-400)] transition-all text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)]"
@@ -171,7 +183,7 @@ export default async function DashboardPage() {
 
       {/* Evidence partnership badge */}
       <div className="flex items-center justify-center gap-2 mt-8">
-        <Leaf size={12} className="text-[var(--color-brand-700)]" />
+        <Leaf size={12} className="text-[var(--color-brand-600)]" />
         <p className="text-[12px] text-[var(--color-text-muted)]">
           Evidence partnerships with{" "}
           <span className="font-semibold text-[var(--color-text-secondary)]">A4M</span>,{" "}
