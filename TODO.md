@@ -455,7 +455,7 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Security:** Export watermarking — embed audit log ID, practitioner email, and timestamp in exported document footer for breach tracing
 - [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
 - [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
-- [ ] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy (6+ year HIPAA minimum), export access policies, and encryption requirements
+- [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy (6+ year HIPAA minimum), export access policies, and encryption requirements
 
 ### Phase 2: Practice Branding Infrastructure
 - [ ] **DB:** Migration 026 — Add branding columns to `practitioners` table: `logo_storage_path`, `practice_address_line1`, `practice_address_line2`, `practice_city`, `practice_state`, `practice_zip`, `practice_phone`, `practice_fax`, `practice_website`
@@ -482,6 +482,25 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Lib:** Create `src/lib/export/supplement-protocol.ts` — protocol template (grouped by action: keep/modify/add/discontinue, evidence citations, interaction warnings, numbered references)
 - [ ] **API:** Create `GET /api/supplements/review/[id]/export` — supplement protocol PDF export with practice branding
 - [ ] **UI:** Add "Export PDF" button to supplement review detail header
+
+---
+
+## HIPAA Audit Remediation (Citation Feedback Loop) 🔧
+
+Findings from security audit of commits 586d225, 87832dc (v0.27.0 citation quality feedback loop).
+
+### Critical — Must Fix Before Production
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations` — endpoint accesses PHI (user questions, AI answers) but does not call `auditLog()`
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations/search` — same issue
+- [ ] **HIPAA §164.312(b):** Add audit logging for Q&A context access in flagged-citations GET handler — log `resourceType: "conversation_messages"` with accessed `conversation_id`s
+
+### High — Fix Soon
+- [ ] **HIPAA §164.312(a)(1):** Add explicit RLS deny policies on `citation_corrections` table — currently relies on implicit denial for INSERT/UPDATE/DELETE. Add `WITH CHECK (false)` / `USING (false)` policies (migration 028).
+- [ ] **Security:** Add Zod validation for replacement citation data — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` needs max length (1000), `replacement_authors` needs max array size (50)
+- [ ] **Defensive:** Log warning when `ADMIN_EMAILS` env var is empty — `if (adminEmails.length === 0) console.warn("[Admin] ADMIN_EMAILS not configured")`
+
+### Completed
+- [x] **Build fix:** Lazy env validation — `env.ts` `validateEnv()` deferred to first property access via Proxy, preventing `next build` crash when env vars are absent. Also made `provider.ts` MODELS resolution lazy.
 
 ---
 

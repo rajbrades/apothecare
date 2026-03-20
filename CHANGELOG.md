@@ -2,6 +2,16 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.27.1] - 2026-03-20
+
+### Fixed — Build-Time Env Validation Crash
+- **Lazy env validation**: `src/lib/env.ts` previously ran `validateEnv()` eagerly at import time, crashing `next build` when environment variables weren't set. Replaced with a Proxy that defers validation to first property access at runtime. Build now succeeds without env vars; validation still fires on first request.
+- **Lazy provider detection**: `src/lib/ai/provider.ts` called `getProvider()` at module level (accessing `env.*`), triggering the same build crash. Made provider and model resolution lazy via the same Proxy pattern.
+
+### Added — HIPAA Audit Documentation
+- **HIPAA audit findings** in `docs/COMPLIANCE.md`: Documented critical and high findings from security audit of v0.27.0 citation quality feedback loop (missing audit logs on admin GET endpoints, missing RLS deny policies on `citation_corrections`, insufficient input validation on replacement citation data).
+- **Remediation tasks** in `TODO.md`: Added "HIPAA Audit Remediation" section with prioritized fix list (critical: audit logging on GET endpoints; high: explicit RLS deny policies, input validation, defensive admin config warning).
+
 ## [0.27.0] - 2026-03-19
 
 ### Added — Citation Quality Feedback Loop
