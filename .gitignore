@@ -46,8 +46,8 @@ supabase/.temp/
 /*.jpg
 .playwright-mcp/
 
-# partnership documents (PDFs — do not commit)
-/docs/partnerships/
+# partnership documents (PDFs — committed for Vercel RAG ingestion bundle)
+# /docs/partnerships/
 
 # throwaway demo/mockup pages (not for production)
 /src/app/mockup/
