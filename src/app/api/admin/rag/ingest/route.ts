@@ -96,11 +96,10 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Extract text (dynamic import avoids pdf-parse test file init crash in serverless)
-        const pdfParse = await import("pdf-parse");
-        const pdf = (pdfParse as any).default || pdfParse;
-        const pdfData = await pdf(fileBuffer);
-        const text = pdfData.text;
+        // Extract text using unpdf (serverless-compatible, no DOMMatrix dependency)
+        const { extractText } = await import("unpdf");
+        const { text: pages, totalPages } = await extractText(new Uint8Array(fileBuffer), { mergePages: true });
+        const text = Array.isArray(pages) ? pages.join("\n") : (pages ?? "");
 
         if (!text || text.trim().length < 100) {
           results.push({
@@ -175,7 +174,7 @@ export async function POST(request: NextRequest) {
           status: "ready",
           chunkCount: chunks.length,
           documentId: doc.id,
-          pages: pdfData.numpages,
+          pages: totalPages,
           textLength: text.length,
         });
       } catch (err: any) {
