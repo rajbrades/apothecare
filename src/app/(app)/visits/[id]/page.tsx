@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { VisitWorkspace } from "@/components/visits/visit-workspace";
+import { ShareWithPatientToggle } from "@/components/portal/share-with-patient-toggle";
 import type { VitalsData, HealthRatings } from "@/types/database";
 
 export default async function VisitDetailPage({
@@ -20,7 +21,7 @@ export default async function VisitDetailPage({
   const [{ data: visit, error }, { data: patients }] = await Promise.all([
     supabase
       .from("visits")
-      .select("*, patients(id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes)")
+      .select("*, is_shared_with_patient, patients(id, first_name, last_name, date_of_birth, sex, chief_complaints, medical_history, current_medications, supplements, allergies, notes)")
       .eq("id", id)
       .eq("practitioner_id", practitioner.id)
       .single(),
@@ -63,11 +64,27 @@ export default async function VisitDetailPage({
     }
   }
 
+  const patientName = visit.patients
+    ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
+    : null;
+
   return (
-    <VisitWorkspace
-      visit={visit}
-      patients={patients || []}
-      previousVitalsContext={previousVitalsContext}
-    />
+    <div>
+      {visit.patient_id && visit.status === "completed" && (
+        <div className="px-6 pt-4 pb-0 flex justify-end">
+          <ShareWithPatientToggle
+            resourceType="visit"
+            resourceId={id}
+            initialShared={(visit as any).is_shared_with_patient ?? false}
+            patientName={patientName}
+          />
+        </div>
+      )}
+      <VisitWorkspace
+        visit={visit}
+        patients={patients || []}
+        previousVitalsContext={previousVitalsContext}
+      />
+    </div>
   );
 }

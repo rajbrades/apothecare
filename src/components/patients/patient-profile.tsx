@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
+import { InviteToPortalButton } from "@/components/portal/invite-to-portal-button";
 import { DocumentUpload } from "./document-upload";
 import { DocumentList } from "./document-list";
 import { PopulateFromDocsBanner } from "./populate-from-docs";
@@ -433,6 +434,12 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         </div>
 
         <div className="flex items-center gap-2">
+          {!patient.is_archived && (
+            <InviteToPortalButton
+              patientId={patient.id}
+              portalStatus={patient.portal_status}
+            />
+          )}
           {!patient.is_archived && (
             <CreateVisitButton
               patientId={patient.id}

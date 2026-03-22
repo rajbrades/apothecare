@@ -19,7 +19,15 @@ type AuditAction =
   | "prompt_injection_warning"
   | "archive"
   | "unarchive"
-  | "retry_extraction";
+  | "retry_extraction"
+  | "invite_created"
+  | "invite_accepted"
+  | "invite_revoked"
+  | "invite_resent"
+  | "consent_signed"
+  | "intake_submitted"
+  | "patient_view_lab"
+  | "patient_view_note";
 
 interface AuditLogParams {
   request: NextRequest;

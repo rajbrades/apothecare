@@ -3,6 +3,7 @@ import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage/lab-reports";
 import { LabReportDetail } from "@/components/labs/lab-report-detail";
+import { ShareWithPatientToggle } from "@/components/portal/share-with-patient-toggle";
 
 export default async function LabDetailPage({
   params,
@@ -24,7 +25,7 @@ export default async function LabDetailPage({
   // Fetch lab report with ownership check
   const { data: report, error } = await supabase
     .from("lab_reports")
-    .select("id, practitioner_id, patient_id, visit_id, lab_vendor, test_type, test_name, collection_date, raw_file_url, raw_file_name, raw_file_size, parsed_data, status, error_message, parsing_model, parsing_confidence, created_at, updated_at, patients(first_name, last_name, date_of_birth, sex)")
+    .select("id, practitioner_id, patient_id, visit_id, lab_vendor, test_type, test_name, collection_date, raw_file_url, raw_file_name, raw_file_size, parsed_data, status, error_message, parsing_model, parsing_confidence, is_shared_with_patient, created_at, updated_at, patients(first_name, last_name, date_of_birth, sex)")
     .eq("id", id)
     .eq("practitioner_id", practitioner.id)
     .single();
@@ -75,13 +76,29 @@ export default async function LabDetailPage({
     ? { id: patientId, name: decodeURIComponent(patientName || "") }
     : undefined;
 
+  const assignedPatientName = report.patients
+    ? [report.patients.first_name, report.patients.last_name].filter(Boolean).join(" ")
+    : null;
+
   return (
-    <LabReportDetail
-      report={report}
-      biomarkers={biomarkers || []}
-      pdfUrl={pdfUrl}
-      previousValues={previousValues}
-      fromPatient={fromPatient}
-    />
+    <div>
+      {report.patient_id && (
+        <div className="px-6 pt-4 pb-0 flex justify-end">
+          <ShareWithPatientToggle
+            resourceType="lab"
+            resourceId={id}
+            initialShared={report.is_shared_with_patient ?? false}
+            patientName={assignedPatientName}
+          />
+        </div>
+      )}
+      <LabReportDetail
+        report={report}
+        biomarkers={biomarkers || []}
+        pdfUrl={pdfUrl}
+        previousValues={previousValues}
+        fromPatient={fromPatient}
+      />
+    </div>
   );
 }

@@ -1,0 +1,174 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Logomark } from "@/components/ui/logomark";
+import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
+import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
+import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
+import type { BiomarkerFlag as DbFlag } from "@/types/database";
+
+interface BiomarkerRow {
+  id: string;
+  biomarker_code: string;
+  biomarker_name: string;
+  category: string | null;
+  subcategory: string | null;
+  value: number;
+  unit: string;
+  conventional_low: number | null;
+  conventional_high: number | null;
+  conventional_flag: DbFlag | null;
+  functional_low: number | null;
+  functional_high: number | null;
+  functional_flag: DbFlag | null;
+  interpretation: string | null;
+}
+
+interface LabReport {
+  id: string;
+  test_name: string | null;
+  test_date: string;
+  lab_vendor: string;
+  test_type: string;
+  status: string;
+  biomarker_results: BiomarkerRow[];
+}
+
+const VENDOR_LABELS: Record<string, string> = {
+  quest: "Quest Diagnostics",
+  labcorp: "LabCorp",
+  diagnostic_solutions: "Diagnostic Solutions",
+  genova: "Genova Diagnostics",
+  precision_analytical: "Precision Analytical",
+  mosaic: "Mosaic Diagnostics",
+  vibrant: "Vibrant Wellness",
+  spectracell: "SpectraCell",
+  realtime_labs: "RealTime Labs",
+  zrt: "ZRT Laboratory",
+  other: "Other Lab",
+};
+
+function groupBiomarkers(rows: BiomarkerRow[]): BiomarkerPanelData[] {
+  const categoryMap = new Map<string, BiomarkerRow[]>();
+  for (const row of rows) {
+    const cat = row.category || "Other";
+    if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+    categoryMap.get(cat)!.push(row);
+  }
+
+  return Array.from(categoryMap.entries()).map(([category, biomarkers]) => ({
+    title: category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    biomarkers: biomarkers.map((b): BiomarkerData => ({
+      name: b.biomarker_name,
+      value: b.value,
+      unit: b.unit,
+      conventionalLow: b.conventional_low ?? 0,
+      conventionalHigh: b.conventional_high ?? 0,
+      functionalLow: b.functional_low ?? b.conventional_low ?? 0,
+      functionalHigh: b.functional_high ?? b.conventional_high ?? 0,
+      flag: b.functional_flag
+        ? mapDbFlagToComponentFlag(b.functional_flag)
+        : b.conventional_flag
+        ? mapDbFlagToComponentFlag(b.conventional_flag)
+        : "normal",
+      note: b.interpretation ?? undefined,
+    })),
+  }));
+}
+
+export default function PatientLabDetailPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const [lab, setLab] = useState<LabReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch(`/api/patient-portal/me/labs/${params.id}`)
+      .then(async (r) => {
+        if (r.status === 401) { router.replace("/portal/login"); return; }
+        if (!r.ok) { setError("Lab report not found."); setLoading(false); return; }
+        const data = await r.json();
+        setLab(data.lab);
+        setLoading(false);
+      })
+      .catch(() => { setError("Failed to load lab report."); setLoading(false); });
+  }, [params.id, router]);
+
+  if (loading) {
+    return <PortalShell><p className="text-sm text-[var(--color-text-muted)]">Loading lab report…</p></PortalShell>;
+  }
+
+  if (error || !lab) {
+    return (
+      <PortalShell>
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--color-text-secondary)]">{error || "Lab report not found."}</p>
+          <Link href="/portal/dashboard" className="text-xs underline text-[var(--color-text-muted)]">Back to dashboard</Link>
+        </div>
+      </PortalShell>
+    );
+  }
+
+  const panels = groupBiomarkers(lab.biomarker_results || []);
+  const vendorLabel = VENDOR_LABELS[lab.lab_vendor] || lab.lab_vendor;
+  const testDate = new Date(lab.test_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  return (
+    <PortalShell>
+      <div className="w-full max-w-3xl mx-auto space-y-6">
+        {/* Back */}
+        <Link href="/portal/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+          &larr; Back to dashboard
+        </Link>
+
+        {/* Header */}
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-6 py-4 space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-semibold text-[var(--color-text-primary)]">
+              {lab.test_name || `${vendorLabel} — ${lab.test_type?.replace(/_/g, " ")}`}
+            </h1>
+            <span className="ml-auto text-[10px] uppercase tracking-wide font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded px-1.5 py-0.5">
+              Read only
+            </span>
+          </div>
+          <p className="text-xs text-[var(--color-text-muted)]">{vendorLabel} &middot; {testDate}</p>
+        </div>
+
+        {/* Biomarker panels */}
+        {panels.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-[var(--color-border)] px-6 py-8 text-center">
+            <p className="text-sm text-[var(--color-text-muted)]">No biomarker data available for this report.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {panels.map((panel, i) => (
+              <BiomarkerPanel key={i} panel={panel} />
+            ))}
+          </div>
+        )}
+      </div>
+    </PortalShell>
+  );
+}
+
+function PortalShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Logomark className="h-6 w-6" />
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
+          </div>
+          <Link href="/portal/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+            Dashboard
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1 px-6 py-10">{children}</main>
+    </div>
+  );
+}

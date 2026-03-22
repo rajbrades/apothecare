@@ -45,6 +45,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: requiredUrl,
   NEXT_PUBLIC_APP_NAME: requiredString.default("Apothecare"),
 
+  // ── Email (Resend) ─────────────────────────────────────────────────────
+  RESEND_API_KEY: z.string().trim().optional(),
+  RESEND_FROM_EMAIL: z.string().trim().optional().default("noreply@apothecare.ai"),
+  RESEND_FROM_NAME: z.string().trim().optional().default("Apothecare"),
+
   // ── Admin ─────────────────────────────────────────────────────────────
   ADMIN_EMAILS: z.string().optional(), // Comma-separated list of emails
 

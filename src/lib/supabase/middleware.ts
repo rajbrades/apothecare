@@ -29,11 +29,33 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
+  // Patient portal routes — separate auth flow from provider routes
+  const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/");
+  const isPortalPublicPath =
+    pathname.startsWith("/p/") ||         // branded entry pages
+    pathname === "/portal/login" ||
+    pathname === "/portal/accept";
+
+  if (isPortalPath) {
+    // Unauthenticated access to protected portal routes → portal login
+    if (!user && !isPortalPublicPath) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal/login";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
   // Redirect unauthenticated users to login (except public routes)
-  const publicPaths = ["/", "/auth/login", "/auth/register", "/auth/callback"];
+  const publicPaths = [
+    "/", "/auth/login", "/auth/register", "/auth/callback",
+    "/terms", "/security", "/telehealth", "/advertising",
+  ];
   const isPublicPath = publicPaths.some(
-    (path) => request.nextUrl.pathname === path
-  ) || request.nextUrl.pathname.startsWith("/prototype");
+    (path) => pathname === path
+  ) || pathname.startsWith("/prototype");
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
@@ -42,7 +64,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Allow authenticated users to access onboarding
-  if (user && request.nextUrl.pathname === "/auth/onboarding") {
+  if (user && pathname === "/auth/onboarding") {
     return supabaseResponse;
   }
 
@@ -50,8 +72,8 @@ export async function updateSession(request: NextRequest) {
   // Honor ?next param to preserve the user's intended destination
   if (
     user &&
-    (request.nextUrl.pathname === "/auth/login" ||
-      request.nextUrl.pathname === "/auth/register")
+    (pathname === "/auth/login" ||
+      pathname === "/auth/register")
   ) {
     const nextParam = request.nextUrl.searchParams.get("next");
     if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {

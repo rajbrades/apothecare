@@ -117,6 +117,7 @@ export interface Patient {
   dietary_recommendations: ProtocolItem[] | null;
   lifestyle_recommendations: ProtocolItem[] | null;
   follow_up_labs: ProtocolItem[] | null;
+  portal_status: "not_invited" | "invited" | "active" | "disabled" | null;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
