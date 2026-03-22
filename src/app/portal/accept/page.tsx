@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Logomark } from "@/components/ui/logomark";
 import Link from "next/link";
 
-type Stage = "loading" | "enter_email" | "check_email" | "linking" | "done" | "error";
+type Stage = "loading" | "redirecting" | "linking" | "done" | "error";
 
 export default function AcceptInvitePage() {
   return (
@@ -20,16 +20,13 @@ function AcceptInviteInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
-  const slug = searchParams.get("slug");
 
   const [stage, setStage] = useState<Stage>("loading");
-  const [email, setEmail] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const supabase = createClient();
 
-  // On mount: check if user is already authenticated
+  // On mount: check session, then either link or get magic link
   useEffect(() => {
     if (!token) {
       setStage("error");
@@ -42,13 +39,14 @@ function AcceptInviteInner() {
         // Already signed in — go straight to linking
         linkAccount(token);
       } else {
-        setStage("enter_email");
+        // Not signed in — get an admin magic link and redirect
+        getMagicLink(token);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Listen for auth state change (magic link callback)
+  // Listen for auth state change after magic link redirect
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session && token) {
@@ -59,25 +57,21 @@ function AcceptInviteInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  async function sendMagicLink() {
-    if (!email || loading) return;
-    setLoading(true);
-    setErrorMsg("");
-
-    const redirectTo = `${window.location.origin}/portal/accept?token=${token}&slug=${slug ?? ""}`;
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: redirectTo,
-        shouldCreateUser: true,
-      },
-    });
-
-    if (error) {
-      setErrorMsg("Failed to send sign-in link. Please try again.");
-      setLoading(false);
-    } else {
-      setStage("check_email");
+  async function getMagicLink(rawToken: string) {
+    setStage("redirecting");
+    try {
+      const res = await fetch(`/api/patient-portal/accept-invite/prepare?token=${encodeURIComponent(rawToken)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setStage("error");
+        setErrorMsg(data.error || "Failed to prepare sign-in link.");
+        return;
+      }
+      // Redirect to the Supabase magic link — patient is signed in, then comes back here
+      window.location.href = data.action_link;
+    } catch {
+      setStage("error");
+      setErrorMsg("Something went wrong. Please try again.");
     }
   }
 
@@ -112,47 +106,10 @@ function AcceptInviteInner() {
           <span className="text-sm font-semibold text-[var(--color-text-primary)]">Apothecare</span>
         </div>
 
-        {stage === "loading" && (
-          <div className="text-sm text-[var(--color-text-muted)]">Verifying invitation…</div>
-        )}
-
-        {stage === "enter_email" && (
-          <div className="space-y-6">
-            <div className="space-y-1.5">
-              <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Accept your invitation</h1>
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                Enter the email address where you received your invitation. We&apos;ll send you a sign-in link.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMagicLink()}
-                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-text-primary)]/20"
-              />
-              {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
-              <button
-                onClick={sendMagicLink}
-                disabled={loading || !email}
-                className="w-full rounded-md bg-[var(--color-text-primary)] text-[var(--color-surface)] text-sm font-medium py-2.5 hover:opacity-90 transition-opacity disabled:opacity-40"
-              >
-                {loading ? "Sending…" : "Send sign-in link"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {stage === "check_email" && (
-          <div className="space-y-4">
-            <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Check your email</h1>
-            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-              We sent a sign-in link to <strong>{email}</strong>. Click the link in that email to continue.
-            </p>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              The link expires in 10 minutes. Check your spam folder if you don&apos;t see it.
+        {(stage === "loading" || stage === "redirecting") && (
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {stage === "loading" ? "Verifying invitation…" : "Preparing your sign-in…"}
             </p>
           </div>
         )}
