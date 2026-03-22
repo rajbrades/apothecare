@@ -52,6 +52,7 @@ export async function updateSession(request: NextRequest) {
   const publicPaths = [
     "/", "/auth/login", "/auth/register", "/auth/callback",
     "/terms", "/security", "/telehealth", "/advertising",
+    "/gate", "/api/gate",
   ];
   const isPublicPath = publicPaths.some(
     (path) => pathname === path
