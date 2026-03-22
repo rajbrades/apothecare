@@ -5,11 +5,12 @@ export async function middleware(request: NextRequest) {
   // Site-wide password gate (set SITE_PASSWORD env var to enable)
   const sitePassword = process.env.SITE_PASSWORD;
   if (sitePassword) {
-    const isGatePath =
-      request.nextUrl.pathname === "/gate" ||
-      request.nextUrl.pathname === "/api/gate";
+    const pathname = request.nextUrl.pathname;
+    const isGatePath = pathname === "/gate" || pathname === "/api/gate";
+    // Patient portal has its own auth — never block it with the site gate
+    const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/");
 
-    if (!isGatePath) {
+    if (!isGatePath && !isPortalPath) {
       const hasAccess = request.cookies.get("site_access")?.value === "granted";
       if (!hasAccess) {
         return NextResponse.redirect(new URL("/gate", request.url));
