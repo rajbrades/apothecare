@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Logomark } from "@/components/ui/logomark";
@@ -9,6 +9,14 @@ import Link from "next/link";
 type Stage = "enter_email" | "check_email" | "signing_in";
 
 export default function PortalLoginPage() {
+  return (
+    <Suspense>
+      <PortalLoginInner />
+    </Suspense>
+  );
+}
+
+function PortalLoginInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const slug = searchParams.get("slug");
