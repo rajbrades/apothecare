@@ -24,11 +24,11 @@ export async function GET() {
 
   const { data: labs, error } = await supabase
     .from("lab_reports")
-    .select("id, test_date, vendor, test_type, status, created_at")
+    .select("id, collection_date, lab_vendor, test_type, test_name, status, created_at")
     .eq("patient_id", patient.id)
     .eq("is_shared_with_patient", true)
     .eq("status", "complete")
-    .order("test_date", { ascending: false });
+    .order("collection_date", { ascending: false });
 
   if (error) return jsonError(error.message, 500);
 

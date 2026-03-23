@@ -243,6 +243,16 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   // Assistant drawer state
   const [assistantOpen, setAssistantOpen] = useState(false);
 
+  // Track if screen is md+ for assistant margin shift
+  const [isMdScreen, setIsMdScreen] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 768px)");
+    setIsMdScreen(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMdScreen(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
   // Push visit to patient timeline state
   const [pushingToRecord, setPushingToRecord] = useState(false);
   const [pushedToRecord, setPushedToRecord] = useState<"idle" | "pushed" | "already">( "idle");
@@ -572,11 +582,11 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
   return (
     <div
-      className="max-w-5xl mx-auto px-6 py-6 transition-[margin-right] duration-300 ease-in-out"
-      style={{ marginRight: assistantOpen ? "min(360px, 35vw)" : undefined }}
+      className="max-w-5xl mx-auto px-4 sm:px-6 py-6 transition-[margin-right] duration-300 ease-in-out"
+      style={{ marginRight: assistantOpen && isMdScreen ? "min(360px, 35vw)" : undefined }}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div className="min-w-0">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-3">
             <Link
@@ -778,7 +788,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
           {/* Recording complete — process or discard */}
           {encounterRecorder.audioBlob && !encounterRecorder.isRecording && !isScribing && scribeStatus !== "done" && (
-            <div className="px-6 py-5 flex items-center justify-center gap-3">
+            <div className="px-4 sm:px-6 py-5 flex items-center justify-center gap-3 flex-wrap">
               <span className="text-sm text-[var(--color-text-secondary)] font-[var(--font-mono)]">
                 {formatRecorderDuration(encounterRecorder.durationSeconds)}
               </span>
@@ -900,7 +910,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
       )}
 
       {/* Tab bar */}
-      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
+      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -909,12 +919,12 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
             aria-controls={`tabpanel-${key}`}
             id={`tab-${key}`}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === key
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap flex-shrink-0 ${activeTab === key
               ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
               : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
               }`}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-4 h-4 flex-shrink-0" />
             {label}
           </button>
         ))}

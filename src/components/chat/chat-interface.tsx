@@ -6,7 +6,7 @@ import { useChat } from "@/hooks/use-chat";
 import { createClient } from "@/lib/supabase/client";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
-import { ArrowRight, Leaf, Loader2, RotateCcw } from "lucide-react";
+import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
@@ -200,18 +200,6 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
         </span>
       </nav>
 
-      {/* Evidence banner */}
-      <div className="flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-[var(--color-brand-50)] to-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
-        <Leaf size={12} className="text-[var(--color-brand-700)]" />
-        <p className="text-[12px] text-[var(--color-brand-700)]">
-          Evidence partnerships with{" "}
-          <span className="font-semibold text-[var(--color-text-primary)]">A4M</span>,{" "}
-          <span className="font-semibold text-[var(--color-text-primary)]">IFM</span>,{" "}
-          <span className="font-semibold text-[var(--color-text-primary)]">Cleveland Clinic</span>,{" "}
-          and more
-        </p>
-      </div>
-
       {/* Messages area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         {messages.length === 0 && !initialQuery ? (
@@ -275,6 +263,7 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
               <MessageBubble
                 key={message.id}
                 message={message}
+                conversationId={conversationId || undefined}
                 isFavorited={isFavorited}
                 onToggleFavorite={handleToggleFavorite}
               />

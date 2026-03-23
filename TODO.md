@@ -1,10 +1,13 @@
 # Apothecare — TODO
 
-Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
+Last updated: March 20, 2026
 
 ---
 
-## P0 — Fix Before Any Demo ✅ COMPLETE
+## Completed Sprints (Collapsed)
+
+<details>
+<summary><strong>P0 — Fix Before Any Demo</strong> ✅</summary>
 
 - [x] **Security:** Fix `createServiceClient()` — standalone client, no cookie passthrough
 - [x] **Usability:** Fix query count display for new users
@@ -14,9 +17,10 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
 - [x] **Usability:** Add loading skeletons for dashboard + chat
 - [x] **UI:** Replace emoji icons with Lucide
 
----
+</details>
 
-## P1 — Ship Quality ✅ COMPLETE
+<details>
+<summary><strong>P1 — Ship Quality</strong> ✅</summary>
 
 - [x] **Security:** Zod input validation on chat stream route
 - [x] **Security:** CSRF origin checking on chat stream route
@@ -28,165 +32,259 @@ Generated from multi-angle codebase audit (Feb 11, 2026). Updated Feb 25, 2026.
 - [x] **Security:** rehype-sanitize on ReactMarkdown
 - [x] **Usability:** Forgot password wired to Supabase
 - [x] **UI:** Gold accent activated (sidebar upgrade banner, Pro badge, Deep Consult)
-
-### Remaining P1 (design-heavy)
 - [x] **UI:** Redesign landing page — product mockups, scroll animations, social proof, trust partner logos
-- [x] **Performance:** Debounce ReactMarkdown during streaming — simpler renderer while streaming, full ReactMarkdown on completion
+- [x] **Performance:** Debounce ReactMarkdown during streaming
 
----
+</details>
 
-## P2 — Award-Worthy Polish (Month 1) ✅ COMPLETE
+<details>
+<summary><strong>P2 — Award-Worthy Polish</strong> ✅</summary>
 
-- [x] **Design:** Build evidence badge component — inline citations with color-coded evidence levels. Expand on hover with full source details.
-- [x] **Design:** Build biomarker dual-range bar visualization — range bar CSS exists but no component renders it. Signature visual feature.
+- [x] **Design:** Build evidence badge component
+- [x] **Design:** Build biomarker dual-range bar visualization
 - [x] **UI:** Page transition animations (CSS-based)
 - [x] **UI:** Scroll-triggered animations on landing page
 - [x] **Design:** Create illustration/photography style guide + hero visual
 - [x] **Usability:** NPI validation — Luhn mod 10 check digit algorithm
 - [x] **UI:** Dark mode support
-- [x] **Security:** Content-Security-Policy + Strict-Transport-Security headers (dev mode relaxed for HMR)
-- [x] **Usability:** Query reset countdown timer ("Resets in X hours")
+- [x] **Security:** Content-Security-Policy + Strict-Transport-Security headers
+- [x] **Usability:** Query reset countdown timer
 - [x] **Usability:** Empty state pages for /labs, /patients, /visits
-- [x] **Usability:** Conversation management — rename, delete, archive from sidebar
-- [x] **UI:** Consistent container styling — standardize border-radius, shadow levels, border usage
-- [x] **UI:** Leverage typography system — Newsreader for ALL headings, JetBrains Mono for ALL data values
-- [x] **Performance:** Paginate conversation history API (cursor-based, 50 per page)
-- [x] **Performance:** Cache sidebar data via shared `(app)` route group layout with React `cache()`
-- [x] **Design:** Micro-animations — hover states, entrance animations, chat input glow
-- [x] **UI:** Consistent icon sizing (16px inline, 18px nav, 20px feature)
+- [x] **Usability:** Conversation management — rename, delete, archive
+- [x] **UI:** Consistent container styling
+- [x] **UI:** Leverage typography system
+- [x] **Performance:** Paginate conversation history API
+- [x] **Performance:** Cache sidebar data via shared route group layout
+- [x] **Design:** Micro-animations
+- [x] **UI:** Consistent icon sizing
 - [x] **Security:** Environment variable validation at startup
 - [x] **Design:** Landing → App visual continuity
 - [x] **Design:** Logomark — "A" on brand circle
 
----
+</details>
 
-## Clinical Visits Module ✅ COMPLETE
+<details>
+<summary><strong>Clinical Visits Module</strong> ✅</summary>
 
-- [x] **Feature:** Visit list page — searchable visit list with status badges, encounter types, linked patients
-- [x] **Feature:** New visit page — select patient, select encounter type, launch editor
-- [x] **Feature:** Visit workspace — block editor + dictation + generate flow + SOAP/IFM/Protocol tabs
-- [x] **Feature:** Block-based editor — Tiptap with custom `templateSection` nodes (collapsible sections with badges, placeholders)
-- [x] **Feature:** 4 encounter templates — SOAP (9 sections), H&P (12 sections), Consult (6 sections), Follow-up (6 sections)
+- [x] **Feature:** Visit list page
+- [x] **Feature:** New visit page
+- [x] **Feature:** Visit workspace — block editor + dictation + generate flow
+- [x] **Feature:** Block-based editor — Tiptap with custom `templateSection` nodes
+- [x] **Feature:** 4 encounter templates — SOAP, H&P, Consult, Follow-up
 - [x] **Feature:** Visit generation — SSE streaming SOAP notes, IFM Matrix mapping, protocol recommendations
-- [x] **Feature:** Visit export — formatted clinical document export
-- [x] **Feature:** Voice input — Web Speech API for live dictation, MediaRecorder for audio recording
-- [x] **Feature:** Audio transcription — OpenAI Whisper integration for recorded audio
-- [x] **Feature:** AI Scribe — record encounter → Whisper transcription → Claude section assignment → auto-populate editor
-- [x] **Feature:** Patient quick-create modal — inline patient creation from new visit form
-- [x] **DB:** Migration 002 — visit_type, status, ai_protocol columns
-- [x] **DB:** Migration 004 — template_content JSONB column for block editor persistence
+- [x] **Feature:** Visit export
+- [x] **Feature:** Voice input — Web Speech API + MediaRecorder
+- [x] **Feature:** Audio transcription — OpenAI Whisper
+- [x] **Feature:** AI Scribe — record → transcription → auto-populate editor
+- [x] **Feature:** Patient quick-create modal
+- [x] **DB:** Migration 002 — visit_type, status, ai_protocol
+- [x] **DB:** Migration 004 — template_content JSONB
 
-## Patient Management ✅ COMPLETE
+</details>
 
-- [x] **Feature:** Patient list page — searchable patient cards with demographics and chief complaints
-- [x] **Feature:** Patient detail page — full profile with medical history, medications, supplements, allergies
-- [x] **Feature:** Patient create/edit form — comprehensive demographics and medical fields
-- [x] **Feature:** Patient documents — upload, list, and manage clinical documents (lab reports, intake forms, referral letters, imaging, prior records)
-- [x] **Feature:** Document extraction — AI-powered content extraction and summarization via Claude
-- [x] **Feature:** Pre-chart view — pre-encounter patient summary with history, medications, documents
+<details>
+<summary><strong>Patient Management</strong> ✅</summary>
+
+- [x] **Feature:** Patient list page
+- [x] **Feature:** Patient detail page
+- [x] **Feature:** Patient create/edit form
+- [x] **Feature:** Patient documents — upload, list, manage
+- [x] **Feature:** Document extraction — AI-powered content extraction via Claude
+- [x] **Feature:** Pre-chart view
 - [x] **DB:** Migration 003 — patient_documents table
 
+</details>
+
+<details>
+<summary><strong>Labs Module</strong> ✅</summary>
+
+- [x] **Feature:** Lab upload page — drag-and-drop PDF
+- [x] **Feature:** Lab detail page — biomarker results with dual-range bars
+- [x] **Feature:** Lab list — searchable/filterable
+- [x] **Feature:** Lab API — GET/POST /api/labs, GET /api/labs/[id]
+- [x] **Feature:** Lab parsing pipeline — Claude Vision PDF extraction → normalization
+- [x] **Feature:** Biomarker normalization
+- [x] **Feature:** Lab reports in patient Documents tab
+- [x] **Refactor:** Merged Labs tab into Documents tab
+- [x] **Refactor:** Trends promoted to dedicated top-level tab
+
+</details>
+
+<details>
+<summary><strong>Multi-Provider AI</strong> ✅</summary>
+
+- [x] **Feature:** Provider abstraction layer — `createCompletion()` + `streamCompletion()`
+- [x] **Feature:** OpenAI primary, Anthropic for vision, MiniMax fallback
+- [x] **Feature:** `ANTHROPIC_MODELS` constant for Anthropic-only features
+
+</details>
+
+<details>
+<summary><strong>IFM Matrix</strong> ✅</summary>
+
+- [x] **Feature:** Portal-based modal for node editing
+- [x] **Feature:** Visit workspace wiring
+- [x] **Feature:** Patient-level IFM Matrix — persistent JSONB (migration 011)
+- [x] **Feature:** IFM Matrix tab on patient profile
+- [x] **Feature:** "Push to Patient Matrix" button
+- [x] **Feature:** Merge utility (`src/lib/ifm/merge.ts`)
+- [x] **Refactor:** Simplified `ifm-matrix-view.tsx` from ~530 to ~155 lines
+
+</details>
+
+<details>
+<summary><strong>Patient Timeline</strong> ✅ Phase 1 + 2</summary>
+
+- [x] **DB:** Migration 009 — `timeline_events` table
+- [x] **Feature:** Timeline API — cursor-paginated, filterable
+- [x] **Feature:** Timeline tab on patient profile
+- [x] **DB:** Migration 016 — `document_upload` trigger + `on_visit_completed` trigger
+- [x] **DB:** Migration 015 — supplement triggers
+- [x] **DB:** Migration 019 — `symptom_logs`, `protocol_milestones`, `patient_reports`, `ai_insights`
+- [x] **Feature:** CRUD APIs for all 4 producer types
+- [x] **Feature:** "Add Event" dropdown — Log Symptom, Add Milestone, Log Patient Report
+- [x] **Feature:** "Resolve" button on unresolved symptom events
+- [x] **Feature:** Smart filter bar
+
+</details>
+
+<details>
+<summary><strong>Inline-Editable Patient Overview</strong> ✅</summary>
+
+- [x] **Feature:** Per-section edit mode on Overview
+- [x] **Feature:** `EditableTextSection` — textarea editor with PATCH save
+- [x] **Feature:** `EditableTagSection` — tag-cloud editor
+
+</details>
+
+<details>
+<summary><strong>Security Hardening</strong> ✅</summary>
+
+- [x] **Security:** CSRF protection on all 13 mutating endpoints
+- [x] **Security:** Rate limiting on all AI endpoints
+- [x] **Security:** Filename sanitization on storage paths
+- [x] **Security:** Search parameter escaping for PostgREST
+
+</details>
+
+<details>
+<summary><strong>UI/UX Scalability</strong> ✅</summary>
+
+- [x] **Refactor:** Reusable `Button`, `Input`, `Label`, `DropdownMenu` components
+- [x] **Feature:** Toast Notifications (Sonner)
+- [x] **Refactor:** Updated PatientForm, Sidebar, NewVisitForm to use shared components
+
+</details>
+
+<details>
+<summary><strong>Supplement Intelligence — Phases 1 & 2</strong> ✅</summary>
+
+- [x] **Feature:** Supplement search, review module, interaction checker, brand formulary, strict mode
+- [x] **Feature:** Structured `patient_supplements` table (Migration 010)
+- [x] **Feature:** "Push to Patient File" (Migration 012)
+- [x] **Feature:** Clinician action overrides
+- [x] **Feature:** Freeform supplement reviews (Migration 014)
+- [x] **Feature:** Push protocol supplements (Migration 013)
+
+</details>
+
+<details>
+<summary><strong>Clinical Lens & Source Filtering</strong> ✅ Phase 1</summary>
+
+- [x] **Feature:** Clinical Lens toggle — Functional / Conventional / Both
+- [x] **Feature:** Conventional + Comparison lens system prompt addendums
+- [x] **Feature:** Evidence source filter UI — presets + individual source toggles
+- [x] **Feature:** Structured Comparison Card — two-column visual card
+
+</details>
+
+<details>
+<summary><strong>Sprints 7–22</strong> ✅</summary>
+
+- Sprint 7: UX Fixes & Polish (Feb 16)
+- Sprint 8: Biomarker Timeline & Chat Enhancements (Feb 16)
+- Sprint 9: Clinical Lens, Source Filtering, Brand Filtering (Feb 17)
+- Sprint 10: Evidence Quality Badges & Bug Fixes (Feb 18)
+- Sprint 11: Labs Patient Search, Assign, Browse & Auto-Timeline (Feb 23)
+- Sprint 12: Citation Integrity Pipeline & Evidence Badge UX (Feb 25–26)
+- Sprint 17: Chat Citation Relevance & Multi-Citation Badges (Feb 26)
+- Sprint 18: Document Management, AI Populate, Visit UX (Feb 27)
+- Sprint 19: Protocol Push, Vitals Snapshot, Carry-Forward (Feb 27)
+- Sprint 20: Document UX, Settings Page, Sidebar Polish (Mar 2)
+- Sprint 21: Conversation History Page (Mar 2)
+- Sprint 22: Visit AI Assistant, Data Export, Lab UX (Mar 4)
+
+</details>
+
 ---
 
-## Labs Module ✅ COMPLETE
+## Sprint 23 — Security & Compliance 🔧 IN PROGRESS
 
-- [x] **Feature:** Lab upload page — drag-and-drop PDF upload with vendor/test type/patient selection
-- [x] **Feature:** Lab detail page — biomarker results with dual-range bars, signed PDF viewer, status polling
-- [x] **Feature:** Lab list — searchable/filterable with status badges, vendor labels, patient links
-- [x] **Feature:** Lab API — `GET/POST /api/labs`, `GET /api/labs/[id]`, `POST /api/labs/[id]/review` (stub)
-- [x] **Feature:** Lab parsing pipeline — Claude Vision PDF extraction → biomarker normalization → flag calculation
-- [x] **Feature:** Biomarker normalization — reference matching, conventional + functional flag computation
-- [x] **Feature:** Lab reports in patient Documents tab — unified display merging both data sources
-- [x] **Refactor:** Merged Labs tab into Documents tab — category grouping (Lab Reports, Clinical Records, Imaging, Referrals, Administrative, Other), reduced tab bar from 7 → 6 tabs
-- [x] **Refactor:** Trends promoted from Documents sub-toggle to dedicated top-level Trends tab — tab bar back to 7 tabs (Feb 23)
+All security hardening, HIPAA remediation, and legal pages — everything needed before production.
 
-## Multi-Provider AI ✅ COMPLETE
+### HIPAA Audit Remediation (Critical)
 
-- [x] **Feature:** Provider abstraction layer — `createCompletion()` + `streamCompletion()` with automatic failover
-- [x] **Feature:** OpenAI primary, Anthropic for vision features, MiniMax as fallback
-- [x] **Feature:** `ANTHROPIC_MODELS` constant for features always using Anthropic API
+Findings from security audit of v0.27.0 citation quality feedback loop (commits 586d225, 87832dc).
 
-## IFM Matrix ✅ COMPLETE
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations` — endpoint accesses PHI (user questions, AI answers) but does not call `auditLog()`
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations/search` — same issue
+- [ ] **HIPAA §164.312(b):** Add audit logging for Q&A context access in flagged-citations GET handler — log `resourceType: "conversation_messages"` with accessed `conversation_id`s
+- [ ] **HIPAA §164.312(a)(1):** Add explicit RLS deny policies on `citation_corrections` table — add `WITH CHECK (false)` / `USING (false)` policies for INSERT/UPDATE/DELETE (migration 028)
+- [ ] **Security:** Add Zod validation for replacement citation data — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50)
+- [ ] **Defensive:** Log warning when `ADMIN_EMAILS` env var is empty
 
-- [x] **Feature:** Portal-based modal for detailed node editing (IFMNodeModal)
-- [x] **Feature:** Visit workspace wiring — `handleMatrixUpdate` persists via PATCH API
-- [x] **Feature:** Patient-level IFM Matrix — persistent `ifm_matrix` JSONB column (migration 011)
-- [x] **Feature:** IFM Matrix tab on patient profile — editable, persisted per-patient
-- [x] **Feature:** "Push to Patient Matrix" button on visit workspace — merges visit IFM findings into patient-level matrix (idempotent, dedup findings, severity escalation)
-- [x] **Feature:** Merge utility (`src/lib/ifm/merge.ts`) — pure functions for node + matrix merging
-- [x] **Refactor:** Simplified `ifm-matrix-view.tsx` from ~530 to ~155 lines — removed inline DnD editing, cards are display-only → click opens modal
+### Export Security
 
-## Patient Timeline ✅ Phase 1 + Phase 2 Complete
+- [ ] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to visit export and account export responses
+- [ ] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
+- [ ] **Security:** Export watermarking — embed audit log ID, practitioner email, and timestamp in exported document footer
+- [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
+- [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
 
-- [x] **DB:** Migration 009 — `timeline_events` table with full enum type, RLS, auto-insert triggers (lab completion + visit creation), and historical data backfill
-- [x] **Feature:** Timeline API — `GET /api/patients/[id]/timeline` cursor-paginated, filterable by event type
-- [x] **Feature:** Timeline tab on patient profile — chronological event list with type-specific icons (6th tab)
-- [x] **DB:** Migration 016 — `document_upload` enum value + `on_document_uploaded` trigger (patient_documents INSERT) + `on_visit_completed` trigger (visits UPDATE → completed) + backfill for existing documents
-- [x] **Feature:** `document_upload` events: auto-created for every patient document upload with type-specific summary and detail
-- [x] **Feature:** Visit completion events: existing visit event updated (not duplicated) when visit status → completed
-- [x] **DB:** Migration 015 — `supplement_start`/`supplement_stop`/`supplement_dose_change` triggers on `patient_supplements` INSERT/UPDATE with priority chain + backfill
-- [x] **DB:** Migration 019 — `symptom_logs`, `protocol_milestones`, `patient_reports`, `ai_insights` tables with RLS, indexes, and auto-insert triggers → `timeline_events`
-- [x] **Feature:** CRUD APIs for all 4 producer types (GET/POST + PATCH/DELETE per record) with Zod validation
-- [x] **Feature:** "Add Event" dropdown on Timeline tab — Log Symptom, Add Milestone, Log Patient Report inline forms
-- [x] **Feature:** "Resolve" button on unresolved symptom_log events — PATCH sets `resolved_at`, trigger auto-creates "Resolved:" timeline event
-- [x] **Feature:** Smart filter bar — only shows event type chips for types that have at least one event (powered by `/api/patients/[id]/timeline/types` endpoint)
+### Legal Pages
 
-## Inline-Editable Patient Overview ✅ COMPLETE
+- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
+- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
+- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
+- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
+- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
+- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
 
-- [x] **Feature:** Per-section edit mode on Overview (Chief Complaints, Medical History, Medications, Supplements, Allergies)
-- [x] **Feature:** `EditableTextSection` — textarea editor with PATCH save + optimistic UI + error rollback
-- [x] **Feature:** `EditableTagSection` — tag-cloud editor for structured multi-value fields
-
-## Security Hardening ✅ COMPLETE
-
-- [x] **Security:** CSRF protection on all 13 mutating endpoints (shared `validateCsrf()` utility)
-- [x] **Security:** Rate limiting on all AI endpoints (Sprint 3 — per-tier limits)
-- [x] **Security:** Filename sanitization on storage paths (Sprint 3)
-- [x] **Security:** Search parameter escaping for PostgREST (Sprint 3)
-
-## UI/UX Scalability Task List (Ongoing)
-
-- [x] **Refactor:** Create reusable `Button` component
-- [x] **Refactor:** Update Sidebar to use `Button` component
-- [x] **Refactor:** Update `NewVisitForm` to use `Button` component
-- [x] **Refactor:** Create reusable `Input` & `Label` components
-- [x] **Refactor:** Create reusable `DropdownMenu` component (Radix UI)
-- [x] **Refactor:** Update Sidebar & NewVisitForm to use `DropdownMenu`
-- [x] **Feature:** Implement Toast Notifications (Sonner)
-- [x] **Refactor:** Update `PatientForm` input fields
+### Completed
+- [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
+- [x] **Build fix:** Lazy env validation — `env.ts` and `provider.ts` deferred to first property access via Proxy
 
 ---
 
-## Supplement Intelligence (Core Feature) — Phases 1 & 2 Complete ✅
+## Sprint 24 — Citations & Evidence (Planned)
 
-- [x] **Feature:** Supplement search page — searchable supplement database with AI-powered lookup
-- [x] **Feature:** Supplement review module — Input patient's current supplements and evaluate against medical history, clinical goals, and lab results. Flag redundancies, gaps, and contraindications.
-- [x] **Feature:** Interaction safety checker — Quick-check product recommendations against labs and medical history for contraindications and adverse effects (e.g., RYR citrinin risk in kidney disease, high-dose Vitamin D with hypercalcemia, iron supplementation with hemochromatosis).
-- [x] **Feature:** Brand-specific supplement formulary — Allow practitioners to configure preferred supplement brands (e.g., Apex Energetics, Orthomolecular Products, Designs for Health, Pure Encapsulations, Metagenics) so protocol generation recommends specific branded products with correct SKUs and dosing.
-- [x] **Feature:** Strict brand filtering mode — Toggle between soft hints ("prioritize these brands") and strict mode ("ONLY recommend from selected brands")
-- [x] **Feature (Phase 1):** Structured `patient_supplements` table (Migration 010) — CRUD API, inline add/edit/discontinue on patient Overview tab. Replaces freeform field.
-- [x] **Feature (Phase 2):** "Push to Patient File" — Map supplement review items → `patient_supplements` with keep/modify/discontinue/add actions. Deduplication by name, `review_id` provenance, `pushed_at` tracking (Migration 012).
-- [x] **Feature (Phase 2):** Clinician action overrides — Clickable `ActionBadge` dropdown lets practitioners override AI recommendations before pushing. Ring indicator + strikethrough for overridden items.
-- [x] **Feature:** Freeform supplement reviews — Patient-free mode with textarea + structured item builder. Inserts review with `patient_id: null` (Migration 014).
-- [x] **Feature:** Push protocol supplements — Visit workspace Protocol tab pushes AI-recommended supplements to `patient_supplements` with `source: "protocol"` and `visit_id` provenance (Migration 013).
-- [ ] **Feature:** Practitioner citation verify button — After a supplement review, allow practitioners to "verify" individual citations they confirm as accurate. Verified citations are saved to the curated `supplement_evidence` table, growing the Tier 3 citation database organically from real clinical usage. Over time this reduces reliance on live CrossRef/PubMed lookups for commonly reviewed supplements.
-- [ ] **Integration:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow. Use Fullscript API for product catalog, pricing, and order management.
+All citation verification, evidence quality feedback, and supplement evidence curation.
 
----
+### Verified Citations Table
+- [ ] **DB:** Migration 027 — `verified_citations` table (DOI-keyed). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by`, `verified_at`, `context_type`, `context_value`, `origin`, `created_at`, `updated_at`. RLS: read-all, write-own.
+- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint
+- [ ] **API:** `GET /api/citations/verified` — query verified citations with filters
 
-## Patient Education & Engagement
+### Citation Verification UI
+- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"`
+- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`)
+- [ ] **Refactor:** Migrate supplement citation verify to universal endpoint, deprecate `POST /api/supplements/citations/verify`
 
-- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews (podcast style, ask questions in an interactive style) and slide decks (PDF/PPTX), and mind-maps explaining the "Why" behind the protocol.
-- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to specific functional medicine interventions (e.g., "How to do a Castor Oil Pack", "Understanding SIBO").
+### Citation Quality Enhancements
+- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` before CrossRef/PubMed lookups
+- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
+- [ ] **Feature:** Practitioner citation verify button on supplement reviews — verified citations saved to curated `supplement_evidence` table
 
 ---
 
-## Practice Analytics
+## Sprint 25 — RAG & Partnerships (Planned)
 
-- [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy (based on follow-up changes), and supplement trends.
-- [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, and Deep Consult usage stats.
+Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
 
----
+### Partnership RAG — Remaining Phase 1
+- [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
+- [x] **Test:** Verify retrieval with a thyroid-related query
 
 ## Strategy & Pricing
 
@@ -286,22 +384,20 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Feature:** Wire retrieval into supplement review endpoint — query built from supplement list + patient context, 5 chunks, appended to system prompt
 - [x] **Feature:** Wire retrieval into visit generation prompts — query built from chief complaint + raw notes, 5 chunks, appended to SOAP system prompt
 
-### Phase 4: Access Control + Admin UI
+### Source Filtering Phase 2
+- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
+- [ ] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
+
+### Admin & Access Control
 - [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
 - [ ] **Feature:** Practitioner settings to view/manage partnership access
 - [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
 
 ---
 
-## Sprint 8 — Biomarker Timeline & Chat Enhancements (Feb 16) ✅ COMPLETE
+## Sprint 26 — Exports & Practice Branding (Planned)
 
-- [x] **Feature:** Biomarker timeline API — `GET /api/patients/[id]/biomarkers/timeline` endpoint returning biomarker history grouped by code
-- [x] **Feature:** Biomarker timeline chart — Recharts line chart with functional/conventional range bands, data point click-to-navigate
-- [x] **Feature:** Patient profile "Lab Trends" tab with biomarker selector dropdown
-- [x] **Feature:** `previousValue` populated on biomarker range bars from historical data
-- [x] **Feature:** Chat file attachments — PDF/image upload (max 5 files, 10MB each), text extraction, attachment chips
-- [x] **Feature:** Chat attachment API — `POST /api/chat/attachments` with file storage and text extraction
-- [x] **DB:** Migration 008 — `chat_attachments` storage bucket
+Practice branding infrastructure + shared export templates + branded PDF exports for visits, labs, and supplement protocols.
 
 ---
 
@@ -543,15 +639,39 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 
 ---
 
+## Patient Education & Engagement (Planned)
+
+Patient-facing content tools and third-party integrations.
+
+- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
+- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
+- [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
+
+---
+
+## Analytics & Clinical Tools (Planned)
+
+Practice analytics, business metrics, and advanced clinical configuration.
+
+- [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
+- [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
+- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
+
+---
+
 ## Backlog
 
-- [x] OAuth providers (Google) for registration — Apple deferred
+### Design & UX Polish
+- [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
+- [ ] **UX:** Clarify "Start Free" button action in landing page input
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently 900px below fold)
+- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
+- [ ] **Design:** Show a rich AI response in the demo chat mockup
+- [ ] **Design:** Balance hero input microcopy alignment
+
+### Platform & Infrastructure
 - [ ] Mobile responsive pass on all pages
 - [ ] PWA support for mobile practitioners
-- [x] Error boundary components for graceful failures
 - [ ] Analytics integration (PostHog or Mixpanel)
 - [ ] A/B testing framework for landing page conversion
 - [ ] Accessibility audit (WCAG 2.1 AA)
-- [x] SEO optimization — meta tags, Open Graph images, structured data
-- [x] Rate limiting middleware (beyond daily query count) — per-endpoint, per-tier rate limiting
-- [x] Prompt injection detection layer before Claude API calls

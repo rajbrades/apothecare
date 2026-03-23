@@ -16,6 +16,8 @@ export interface ChatMessageCitation {
   evidence_level?: string;
   /** crossref | pubmed | curated — "curated" = already in verified_citations */
   origin?: "crossref" | "pubmed" | "curated";
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 export interface ChatMessage {
@@ -215,6 +217,7 @@ export function useChat(options: UseChatOptions = {}) {
                     year?: string;
                     doi?: string;
                     evidenceLevel?: string;
+                    ragSource?: string;
                   }>>;
 
                   const parsed: Record<string, ChatMessageCitation[]> = {};
@@ -230,6 +233,7 @@ export function useChat(options: UseChatOptions = {}) {
                         year: c.year ? parseInt(c.year) : undefined,
                         doi: c.doi,
                         evidence_level: c.evidenceLevel,
+                        ragSource: c.ragSource,
                       };
                       flatList.push(mapped);
                       return mapped;

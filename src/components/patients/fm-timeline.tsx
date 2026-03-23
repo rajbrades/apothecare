@@ -113,7 +113,7 @@ function EventForm({
   void life_stage; // used by parent for placement
 
   return (
-    <div className="ml-8 mt-2 mb-2 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm space-y-2 w-72">
+    <div className="ml-8 mt-2 mb-2 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm space-y-2 w-full sm:w-72">
       {/* Category selector */}
       <div className="flex items-center gap-1">
         {(Object.keys(CATEGORIES) as FMCategory[]).map((c) => {

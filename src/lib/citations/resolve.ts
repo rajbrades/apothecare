@@ -12,6 +12,7 @@
  */
 
 import { classifyEvidenceLevel } from "@/lib/chat/classify-evidence";
+import { createServiceClient } from "@/lib/supabase/server";
 import type { EvidenceLevel } from "@/components/chat/evidence-badge";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -47,6 +48,8 @@ export interface CitationResolvedData {
   evidenceLevel?: EvidenceLevel;
   /** Origin of the citation — "curated" means it exists in the verified_citations table */
   origin?: "crossref" | "pubmed" | "curated";
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 interface CrossRefItem {
@@ -670,6 +673,10 @@ export async function resolveCitations(
  * Returns a map from citation text to an array of resolved data.
  * The first item is the primary match (used for inline DOI links);
  * additional items provide supplementary evidence badges.
+ *
+ * After resolution, checks citation_corrections for any DOIs that have been
+ * flagged and replaced by admins. Corrected DOIs are auto-substituted with
+ * the verified replacement citation.
  */
 export async function resolveCitationsMulti(
   citations: ExtractedCitation[]
@@ -686,6 +693,9 @@ export async function resolveCitationsMulti(
       resolved.set(result.value[0].citationText, result.value);
     }
   }
+
+  // Apply citation corrections — replace flagged DOIs with admin-verified replacements
+  await applyCitationCorrections(resolved);
 
   return resolved;
 }
@@ -740,6 +750,72 @@ export async function markVerifiedCitations(
     }
   } catch (err) {
     console.warn("[Citations] verified_citations cache lookup failed:", err);
+  }
+}
+
+/**
+ * Check all resolved DOIs against the citation_corrections table.
+ * If a DOI has been flagged and an admin provided a replacement,
+ * substitute the corrected citation data in place.
+ */
+async function applyCitationCorrections(
+  resolved: Map<string, CitationResolvedData[]>
+): Promise<void> {
+  try {
+    // Collect all resolved DOIs
+    const allDois: string[] = [];
+    for (const arr of resolved.values()) {
+      for (const item of arr) {
+        if (item.doi) allDois.push(item.doi);
+      }
+    }
+    if (allDois.length === 0) return;
+
+    const uniqueDois = [...new Set(allDois)];
+    const serviceClient = createServiceClient();
+    const { data: corrections } = await serviceClient
+      .from("citation_corrections")
+      .select("flagged_doi, replacement_doi, replacement_title, replacement_authors, replacement_year, replacement_journal, replacement_evidence_level")
+      .in("flagged_doi", uniqueDois);
+
+    if (!corrections || corrections.length === 0) return;
+
+    const correctionMap = new Map<string, typeof corrections[0]>();
+    for (const c of corrections) {
+      correctionMap.set((c as { flagged_doi: string }).flagged_doi, c);
+    }
+
+    // Substitute corrected DOIs in all resolved results
+    for (const [key, arr] of resolved) {
+      const corrected = arr.map((item) => {
+        if (!item.doi) return item;
+        const correction = correctionMap.get(item.doi) as {
+          replacement_doi: string;
+          replacement_title: string;
+          replacement_authors: string[];
+          replacement_year: number | null;
+          replacement_journal: string | null;
+          replacement_evidence_level: string | null;
+        } | undefined;
+        if (!correction) return item;
+
+        console.log(`[Citations] Applying correction: ${item.doi} → ${correction.replacement_doi}`);
+        return {
+          ...item,
+          doi: correction.replacement_doi,
+          url: `https://doi.org/${correction.replacement_doi}`,
+          title: correction.replacement_title,
+          authors: correction.replacement_authors?.length ? correction.replacement_authors : item.authors,
+          year: correction.replacement_year ? String(correction.replacement_year) : item.year,
+          source: correction.replacement_journal || item.source,
+          evidenceLevel: (correction.replacement_evidence_level as EvidenceLevel) || item.evidenceLevel,
+        };
+      });
+      resolved.set(key, corrected);
+    }
+  } catch (err) {
+    // Non-fatal — if correction lookup fails, use original citations
+    console.warn("[Citations] Correction lookup failed:", err instanceof Error ? err.message : err);
   }
 }
 

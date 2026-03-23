@@ -95,7 +95,7 @@ export function VisitListClient({ initialVisits }: { initialVisits: VisitItem[] 
     <div className="space-y-3">
       {/* Patient filter */}
       <div className="flex items-center gap-2 mb-1">
-        <div className="w-64">
+        <div className="w-full sm:w-64">
           <PatientSearchCombobox
             value={patientFilter?.id ?? ""}
             onChange={handlePatientFilter}

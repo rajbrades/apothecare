@@ -22,8 +22,25 @@ const MODEL_MAP: Record<Provider, { standard: string; advanced: string }> = {
   },
 };
 
-const provider = getProvider();
-export const MODELS = MODEL_MAP[provider];
+let _provider: Provider | undefined;
+function resolveProvider(): Provider {
+  if (!_provider) {
+    _provider = getProvider();
+    console.log(`[AI Provider] Active: ${_provider} | Model: ${MODEL_MAP[_provider].standard}`);
+  }
+  return _provider;
+}
+
+export function getModels() {
+  return MODEL_MAP[resolveProvider()];
+}
+
+// Backwards-compatible — lazily resolved so it doesn't crash at build time.
+export const MODELS = new Proxy({} as { standard: string; advanced: string }, {
+  get(_target, prop: string) {
+    return getModels()[prop as keyof typeof MODEL_MAP["anthropic"]];
+  },
+});
 
 // Anthropic-specific models for features that always use the Anthropic API
 // (document vision, lab PDF parsing) regardless of the primary provider.
@@ -32,8 +49,6 @@ export const ANTHROPIC_MODELS = {
   vision: "claude-opus-4-6",
 };
 
-// Log which provider is active at startup (visible in terminal)
-console.log(`[AI Provider] Active: ${provider} | Model: ${MODELS.standard}`);
 export type ModelId = string;
 
 // ── Clients ─────────────────────────────────────────────────────────────
@@ -82,7 +97,7 @@ interface StreamResult {
 export async function createCompletion(
   params: CompletionParams
 ): Promise<CompletionResult> {
-  if (provider === "openai") {
+  if (resolveProvider() === "openai") {
     const client = getOpenAIClient();
     // Convert content arrays (Anthropic format) to OpenAI format
     const messages: OpenAI.ChatCompletionMessageParam[] = [
@@ -132,7 +147,7 @@ export async function streamCompletion(
   params: CompletionParams,
   callbacks: StreamCallbacks
 ): Promise<StreamResult> {
-  if (provider === "openai") {
+  if (resolveProvider() === "openai") {
     const client = getOpenAIClient();
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: "system", content: params.system },

@@ -2,6 +2,36 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.27.1] - 2026-03-20
+
+### Fixed — Build-Time Env Validation Crash
+- **Lazy env validation**: `src/lib/env.ts` previously ran `validateEnv()` eagerly at import time, crashing `next build` when environment variables weren't set. Replaced with a Proxy that defers validation to first property access at runtime. Build now succeeds without env vars; validation still fires on first request.
+- **Lazy provider detection**: `src/lib/ai/provider.ts` called `getProvider()` at module level (accessing `env.*`), triggering the same build crash. Made provider and model resolution lazy via the same Proxy pattern.
+
+### Added — HIPAA Audit Documentation
+- **HIPAA audit findings** in `docs/COMPLIANCE.md`: Documented critical and high findings from security audit of v0.27.0 citation quality feedback loop (missing audit logs on admin GET endpoints, missing RLS deny policies on `citation_corrections`, insufficient input validation on replacement citation data).
+- **Remediation tasks** in `TODO.md`: Added "HIPAA Audit Remediation" section with prioritized fix list (critical: audit logging on GET endpoints; high: explicit RLS deny policies, input validation, defensive admin config warning).
+
+## [0.27.0] - 2026-03-19
+
+### Added — Citation Quality Feedback Loop
+- **Admin page** (`/admin/flagged-citations`): Full review page for citations flagged by practitioners. Shows DOI, title, evidence level, flag reason, who flagged it, total flag count across practitioners, and original Q&A context (user question + AI answer) when available. Three resolution actions: **Dismiss** (restore citation), **Replace** (search CrossRef for correct citation, store correction mapping), or **Remove** (delete entirely).
+- **Citation corrections table** (`citation_corrections`): Maps `flagged_doi → replacement_doi` so future citation resolution auto-substitutes corrected citations. Admin-only writes via service client.
+- **Community consensus auto-exclusion**: DOIs flagged by 3+ practitioners are automatically excluded from citation results without admin intervention. These don't appear in the admin review queue.
+- **Q&A context capture**: When flagging a citation in chat, the conversation ID and message ID are stored. Admin review shows the original user question and AI answer that contained the flagged citation.
+- **Replacement citation search** (`GET /api/admin/flagged-citations/search`): Admin can search CrossRef for replacement citations and select the correct one with a single click.
+- **Citation resolution pipeline integration**: `resolveCitationsMulti()` now checks `citation_corrections` after resolving DOIs — any flagged DOI with an admin-verified replacement is auto-substituted.
+- **DB migration** (`028_citation_corrections.sql`): Adds `conversation_id`, `message_id`, `flag_count` columns to `verified_citations`; creates `citation_corrections` table with unique `flagged_doi` constraint.
+- **Admin sidebar**: Added "Flagged Citations" nav item with flag icon.
+- **Admin dashboard**: Added Flagged Citations card (amber theme).
+
+### Changed — Evidence Partnerships Display
+- **Dashboard**: Replaced OpenEvidence-style top banner with subtle "Powered by evidence from" footer badge below quick action cards, using grayscale partner logos (A4M, IFM, Cleveland Clinic).
+- **Chat**: Removed evidence partnerships banner entirely from chat interface for a cleaner UX.
+
+### Fixed — Sidebar Color
+- **CSS variable**: Changed `--color-surface-secondary` from `#f5f5f4` to `#fbfcfc` to match the original semi-transparent value's visual appearance when rendered over white, while keeping full opacity.
+
 ## [0.26.0] - 2026-03-18
 
 ### Added — Security & Compliance Page

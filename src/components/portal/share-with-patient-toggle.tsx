@@ -58,7 +58,7 @@ export function ShareWithPatientToggle({
       className={[
         "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors border",
         shared
-          ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+          ? "bg-[var(--color-brand-50)] border-[var(--color-brand-200)] text-[var(--color-brand-700)] hover:bg-[var(--color-brand-100)]"
           : "bg-[var(--color-surface-elevated)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]",
         loading ? "opacity-60 cursor-not-allowed" : "",
       ].join(" ")}

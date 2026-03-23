@@ -224,8 +224,8 @@ export function ChatInput({
           />
 
           {/* Bottom toolbar */}
-          <div className="flex items-center justify-between px-4 pb-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 pb-3 gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

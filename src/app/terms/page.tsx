@@ -51,7 +51,7 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto px-6">
           {/* Hero */}
           <div className="mb-12">
-            <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)] mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)] mb-3">
               Terms of Use
             </h1>
             <p className="text-sm text-[var(--color-text-muted)]">

@@ -388,7 +388,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
       {/* Archived banner */}
       {patient.is_archived && (
-        <div className="flex items-center justify-between px-4 py-3 mb-4 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 mb-4 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50">
           <div className="flex items-center gap-2 text-sm text-amber-800">
             <Archive className="w-4 h-4" />
             <span className="font-medium">This patient has been archived.</span>
@@ -413,7 +413,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         </div>
       )}
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] flex items-center justify-center">
             <User className="w-5 h-5 text-[var(--color-brand-600)]" strokeWidth={1.5} />
@@ -521,18 +521,18 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
       )}
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)]">
+      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap flex-shrink-0 ${
               activeTab === key
                 ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
                 : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             }`}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-4 h-4 flex-shrink-0" />
             {label}
           </button>
         ))}

@@ -29,7 +29,7 @@ function Section({
           {title}
         </h2>
       </div>
-      <div className="pl-12 space-y-4 text-[15px] text-[var(--color-text-secondary)] leading-relaxed">
+      <div className="pl-0 sm:pl-12 space-y-4 text-[15px] text-[var(--color-text-secondary)] leading-relaxed">
         {children}
       </div>
     </section>
@@ -57,7 +57,7 @@ export default function SecurityPage() {
         <div className="max-w-3xl mx-auto px-6">
           {/* Hero */}
           <div className="mb-16 text-center">
-            <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[var(--color-text-primary)] font-[var(--font-display)] mb-4">
               Security and Compliance
             </h1>
             <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto leading-relaxed">

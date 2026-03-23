@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 import { createClient } from "@/lib/supabase/client";
+import { FlaskConical, FileText, Shield } from "lucide-react";
 
 interface LabReport {
   id: string;
-  test_date: string;
-  vendor: string;
+  collection_date: string;
+  lab_vendor: string;
   test_type: string;
+  test_name: string | null;
   status: string;
 }
 
@@ -110,12 +112,18 @@ export default function PatientDashboard() {
       <div className="w-full max-w-3xl mx-auto space-y-8">
         {/* Greeting */}
         <div>
-          <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
             Welcome, {firstName}
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Your shared records are shown below. All content is read-only.
           </p>
+        </div>
+
+        {/* Privacy notice */}
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)]">
+          <Shield className="h-4 w-4 flex-shrink-0" />
+          <p className="text-xs leading-relaxed">Your records are securely encrypted and HIPAA compliant. Only your provider controls what is shared here.</p>
         </div>
 
         {/* Lab reports */}
@@ -124,9 +132,9 @@ export default function PatientDashboard() {
             Lab Reports
           </h2>
           {labs.length === 0 ? (
-            <EmptyState message="No lab reports have been shared with you yet." />
+            <EmptyState icon={<FlaskConical className="h-6 w-6" />} message="No lab reports have been shared with you yet." hint="Your provider will share results here after your labs are processed." />
           ) : (
-            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] overflow-hidden">
+            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
               {labs.map((lab) => (
                 <Link
                   key={lab.id}
@@ -135,11 +143,11 @@ export default function PatientDashboard() {
                 >
                   <div>
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                      {formatVendor(lab.vendor)} — {lab.test_type?.replace(/_/g, " ")}
+                      {lab.test_name || `${formatVendor(lab.lab_vendor)} — ${lab.test_type?.replace(/_/g, " ")}`}
                     </p>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatDate(lab.test_date)}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatDate(lab.collection_date)}</p>
                   </div>
-                  <span className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
+                  <span className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] transition-colors">
                     View &rarr;
                   </span>
                 </Link>
@@ -154,9 +162,9 @@ export default function PatientDashboard() {
             Encounter Notes
           </h2>
           {notes.length === 0 ? (
-            <EmptyState message="No encounter notes have been shared with you yet." />
+            <EmptyState icon={<FileText className="h-6 w-6" />} message="No encounter notes have been shared with you yet." hint="Visit notes will appear here after your provider shares them." />
           ) : (
-            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] overflow-hidden">
+            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
               {notes.map((note) => (
                 <Link
                   key={note.id}
@@ -173,7 +181,7 @@ export default function PatientDashboard() {
                       {note.practitioners?.full_name ? ` · ${note.practitioners.full_name}` : ""}
                     </p>
                   </div>
-                  <span className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
+                  <span className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] transition-colors">
                     View &rarr;
                   </span>
                 </Link>
@@ -186,10 +194,12 @@ export default function PatientDashboard() {
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({ icon, message, hint }: { icon: React.ReactNode; message: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-[var(--color-border)] px-6 py-8 text-center">
+    <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-secondary)] px-6 py-10 flex flex-col items-center text-center gap-3">
+      <div className="text-[var(--color-text-muted)]">{icon}</div>
       <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
+      {hint && <p className="text-xs text-[var(--color-text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -206,7 +216,8 @@ function PortalShell({ children, onSignOut }: { children: React.ReactNode; onSig
           {onSignOut && (
             <button
               onClick={onSignOut}
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              aria-label="Sign out"
+              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-secondary)]"
             >
               Sign out
             </button>

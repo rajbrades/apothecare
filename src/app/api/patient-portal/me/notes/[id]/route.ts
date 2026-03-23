@@ -30,7 +30,7 @@ export async function GET(
     .from("visits")
     .select(`
       id, visit_date, visit_type, chief_complaint, status,
-      soap_subjective, soap_objective, soap_assessment, soap_plan,
+      subjective, objective, assessment, plan,
       created_at,
       practitioners (full_name, practice_name)
     `)

@@ -9,11 +9,12 @@ import { markdownRehypePlugins, markdownComponents } from "./markdown-config";
 import { ComparisonCard } from "./comparison-card";
 import { processCitations } from "@/lib/chat/process-citations";
 import { parseComparisonSections } from "@/lib/chat/parse-comparison";
-import { CitationMetaContext, type CitationMeta } from "@/lib/chat/citation-meta-context";
+import { CitationMetaContext, CitationVerifyContext, type CitationMeta } from "@/lib/chat/citation-meta-context";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  conversationId?: string;
   isFavorited?: boolean;
   onToggleFavorite?: () => void;
 }
@@ -43,7 +44,7 @@ function StreamingRenderer({ content }: { content: string }) {
   );
 }
 
-function AssistantContent({ message }: { message: ChatMessage }) {
+function AssistantContent({ message, conversationId }: { message: ChatMessage; conversationId?: string }) {
   // Build multi-citation metadata map keyed by [Author, Year] text
   const citationMap = useMemo(() => {
     const map = new Map<string, CitationMeta[]>();
@@ -62,6 +63,7 @@ function AssistantContent({ message }: { message: ChatMessage }) {
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
             origin: c.origin as CitationMeta["origin"],
+            ragSource: c.ragSource,
           }))
         );
       }
@@ -78,6 +80,7 @@ function AssistantContent({ message }: { message: ChatMessage }) {
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
             origin: c.origin as CitationMeta["origin"],
+            ragSource: c.ragSource,
           }]);
         }
       }
@@ -87,26 +90,35 @@ function AssistantContent({ message }: { message: ChatMessage }) {
 
   const comparison = parseComparisonSections(message.content);
 
+  const verifyCtx = useMemo(() => ({
+    type: "chat" as const,
+    conversationId,
+    messageId: message.id,
+  }), [conversationId, message.id]);
+
   return (
-    <CitationMetaContext.Provider value={citationMap}>
-      {comparison ? (
-        <ComparisonCard sections={comparison} />
-      ) : (
-        <div className="prose-apothecare">
-          <ReactMarkdown
-            rehypePlugins={markdownRehypePlugins}
-            components={markdownComponents}
-          >
-            {processCitations(message.content)}
-          </ReactMarkdown>
-        </div>
-      )}
-    </CitationMetaContext.Provider>
+    <CitationVerifyContext.Provider value={verifyCtx}>
+      <CitationMetaContext.Provider value={citationMap}>
+        {comparison ? (
+          <ComparisonCard sections={comparison} />
+        ) : (
+          <div className="prose-apothecare">
+            <ReactMarkdown
+              rehypePlugins={markdownRehypePlugins}
+              components={markdownComponents}
+            >
+              {processCitations(message.content)}
+            </ReactMarkdown>
+          </div>
+        )}
+      </CitationMetaContext.Provider>
+    </CitationVerifyContext.Provider>
   );
 }
 
 export const MessageBubble = memo(function MessageBubble({
   message,
+  conversationId,
   isFavorited = false,
   onToggleFavorite,
 }: MessageBubbleProps) {
@@ -188,7 +200,7 @@ export const MessageBubble = memo(function MessageBubble({
                 <StreamingRenderer content={message.content} />
               </div>
             ) : (
-              <AssistantContent message={message} />
+              <AssistantContent message={message} conversationId={conversationId} />
             )}
 
             {/* Action bar — only show when not streaming */}

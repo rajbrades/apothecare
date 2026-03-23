@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logomark } from "@/components/ui/logomark";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
+import { Info, FlaskConical } from "lucide-react";
 import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
 import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
 import type { BiomarkerFlag as DbFlag } from "@/types/database";
@@ -29,7 +30,7 @@ interface BiomarkerRow {
 interface LabReport {
   id: string;
   test_name: string | null;
-  test_date: string;
+  collection_date: string;
   lab_vendor: string;
   test_type: string;
   status: string;
@@ -114,32 +115,43 @@ export default function PatientLabDetailPage() {
 
   const panels = groupBiomarkers(lab.biomarker_results || []);
   const vendorLabel = VENDOR_LABELS[lab.lab_vendor] || lab.lab_vendor;
-  const testDate = new Date(lab.test_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const testDate = new Date(lab.collection_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
   return (
     <PortalShell>
       <div className="w-full max-w-3xl mx-auto space-y-6">
         {/* Back */}
-        <Link href="/portal/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+        <Link href="/portal/dashboard" className="text-xs text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] hover:underline transition-colors">
           &larr; Back to dashboard
         </Link>
 
         {/* Header */}
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-6 py-4 space-y-1">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-card)] px-6 py-4 space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-semibold text-[var(--color-text-primary)]">
+            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {lab.test_name || `${vendorLabel} — ${lab.test_type?.replace(/_/g, " ")}`}
             </h1>
-            <span className="ml-auto text-[10px] uppercase tracking-wide font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded px-1.5 py-0.5">
+            <span className="ml-auto text-[10px] uppercase tracking-wide font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded px-2 py-0.5" title="You can view this, but only your provider can edit or share it.">
               Read only
             </span>
           </div>
           <p className="text-xs text-[var(--color-text-muted)]">{vendorLabel} &middot; {testDate}</p>
         </div>
 
+        {/* Health literacy banner */}
+        {panels.length > 0 && (
+          <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)]">
+            <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <p className="text-xs leading-relaxed">
+              Results show both <strong>conventional</strong> (standard medical) and <strong>optimal</strong> (functional medicine) ranges. Your provider uses optimal ranges as more precise health targets. Discuss any questions with your provider.
+            </p>
+          </div>
+        )}
+
         {/* Biomarker panels */}
         {panels.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--color-border)] px-6 py-8 text-center">
+          <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-secondary)] px-6 py-10 flex flex-col items-center text-center gap-3">
+            <FlaskConical className="h-6 w-6 text-[var(--color-text-muted)]" />
             <p className="text-sm text-[var(--color-text-muted)]">No biomarker data available for this report.</p>
           </div>
         ) : (

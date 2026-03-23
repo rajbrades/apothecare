@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
@@ -26,25 +26,30 @@ export async function GET(
 
   if (!patient) return jsonError("Patient not found", 404);
 
+  // Verify the patient owns this shared lab (via RLS)
   const { data: lab } = await supabase
     .from("lab_reports")
-    .select(`
-      id, test_name, test_date, lab_vendor, test_type, status, created_at,
-      is_shared_with_patient,
-      biomarker_results (
-        id, biomarker_code, biomarker_name, category, subcategory,
-        value, unit,
-        conventional_low, conventional_high, conventional_flag,
-        functional_low, functional_high, functional_flag,
-        interpretation
-      )
-    `)
+    .select("id, test_name, collection_date, lab_vendor, test_type, status, created_at, is_shared_with_patient")
     .eq("id", id)
     .eq("patient_id", patient.id)
     .eq("is_shared_with_patient", true)
     .single();
 
   if (!lab) return jsonError("Lab report not found", 404);
+
+  // Fetch biomarkers via service client (biomarker_results lacks patient RLS policy)
+  const service = createServiceClient();
+  const { data: biomarkers } = await service
+    .from("biomarker_results")
+    .select(`
+      id, biomarker_code, biomarker_name, category, subcategory,
+      value, unit,
+      conventional_low, conventional_high, conventional_flag,
+      functional_low, functional_high, functional_flag,
+      interpretation
+    `)
+    .eq("lab_report_id", id)
+    .eq("patient_id", patient.id);
 
   // Audit: patient viewed lab
   auditLog({
@@ -56,5 +61,7 @@ export async function GET(
     detail: { patient_id: patient.id },
   });
 
-  return NextResponse.json({ lab });
+  return NextResponse.json({
+    lab: { ...lab, biomarker_results: biomarkers || [] },
+  });
 }

@@ -4,6 +4,8 @@ import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Logomark } from "@/components/ui/logomark";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 type Stage = "enter_email" | "check_email" | "signing_in";
@@ -22,9 +24,11 @@ function PortalLoginInner() {
   const slug = searchParams.get("slug");
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [stage, setStage] = useState<Stage>("enter_email");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const isDev = process.env.NODE_ENV === "development";
 
   const supabase = createClient();
 
@@ -54,6 +58,16 @@ function PortalLoginInner() {
     setLoading(true);
     setError("");
 
+    // Dev mode: allow password sign-in for testing
+    if (isDev && password) {
+      const { error: pwError } = await supabase.auth.signInWithPassword({ email, password });
+      if (pwError) {
+        setError(pwError.message);
+        setLoading(false);
+      }
+      return;
+    }
+
     const redirectTo = `${window.location.origin}/portal/login?slug=${slug ?? ""}`;
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
@@ -80,7 +94,7 @@ function PortalLoginInner() {
             <Logomark className="h-7 w-7" />
             <span className="text-sm font-semibold text-[var(--color-text-primary)]">Apothecare</span>
           </div>
-          <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Patient portal sign in</h1>
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Patient portal sign in</h1>
           <p className="text-sm text-[var(--color-text-secondary)]">
             We&apos;ll send a secure sign-in link to your email address.
           </p>
@@ -94,16 +108,37 @@ function PortalLoginInner() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMagicLink()}
-              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-text-primary)]/20"
+              aria-label="Email address"
+              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/30 focus:border-[var(--color-brand-400)]"
             />
-            {error && <p className="text-xs text-red-500 leading-relaxed">{error}</p>}
-            <button
+            {isDev && (
+              <input
+                type="password"
+                placeholder="Password (dev only)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMagicLink()}
+                aria-label="Password"
+                className="w-full rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/30 focus:border-[var(--color-brand-400)]"
+              />
+            )}
+            {error && (
+              <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-md bg-red-50 border border-red-200 text-red-700">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed">{error}</p>
+              </div>
+            )}
+            <Button
               onClick={sendMagicLink}
               disabled={loading || !email}
-              className="w-full rounded-md bg-[var(--color-text-primary)] text-[var(--color-surface)] text-sm font-medium py-2.5 hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="w-full"
             >
-              {loading ? "Sending…" : "Send sign-in link"}
-            </button>
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Sending…</>
+              ) : (
+                "Send sign-in link"
+              )}
+            </Button>
           </div>
         )}
 

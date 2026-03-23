@@ -14,6 +14,8 @@ export interface CitationMeta {
   evidenceLevel?: EvidenceLevel;
   /** crossref | pubmed | curated — "curated" means already in verified_citations */
   origin?: "crossref" | "pubmed" | "curated";
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 /**
@@ -27,4 +29,19 @@ export interface CitationMeta {
  */
 export const CitationMetaContext = createContext<Map<string, CitationMeta[]>>(
   new Map()
+);
+
+/**
+ * Context providing verify context (conversation/message IDs) for citation
+ * verification and flagging within the chat markdown renderer.
+ */
+export interface CitationVerifyContextValue {
+  type: "chat" | "supplement" | "lab" | "general";
+  value?: string;
+  conversationId?: string;
+  messageId?: string;
+}
+
+export const CitationVerifyContext = createContext<CitationVerifyContextValue | undefined>(
+  undefined
 );

@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Logomark } from "@/components/ui/logomark";
+import { Shield } from "lucide-react";
 
 interface Props {
   params: Promise<{ portalSlug: string }>;
@@ -51,7 +52,7 @@ export default async function PortalEntryPage({ params }: Props) {
           <div className="space-y-3">
             <Link
               href={`/portal/login?slug=${portalSlug}`}
-              className="block w-full rounded-md bg-[var(--color-text-primary)] text-[var(--color-surface)] text-sm font-medium py-2.5 px-4 hover:opacity-90 transition-opacity text-center"
+              className="block w-full rounded-[var(--radius-md)] bg-[var(--color-brand-600)] text-white text-sm font-medium py-2.5 px-4 hover:bg-[var(--color-brand-500)] transition-colors text-center shadow-[var(--shadow-card)]"
             >
               Sign in to your portal
             </Link>
@@ -63,7 +64,8 @@ export default async function PortalEntryPage({ params }: Props) {
             </p>
           </div>
 
-          <div className="text-xs text-[var(--color-text-muted)] space-y-1">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+            <Shield className="h-3.5 w-3.5" />
             <p>Secured by Apothecare &middot; HIPAA compliant</p>
           </div>
         </div>

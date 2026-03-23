@@ -170,6 +170,46 @@ Per supplement item (all items run in parallel):
 - `supabase/migrations/020_supplement_evidence.sql` — Curated evidence table, 17 seed citations
 - `src/types/database.ts` — `VerifiedCitation` interface, `SupplementReviewItem.verified_citations`
 
+### Citation Flagging & Admin Review
+
+Practitioners can flag any citation as incorrect via the "Flag" button in `EvidenceBadge`. Flagged citations are stored in `verified_citations` with `is_flagged: true`, `flagged_reason`, `conversation_id`, and `message_id`. They are excluded from all citation queries (`GET /api/citations/verified` filters `is_flagged = false`).
+
+**Community consensus**: When a DOI is flagged by 3+ unique practitioners, it is auto-excluded from all future citation results without admin intervention.
+
+Admins review flagged citations at `/admin/flagged-citations` with full Q&A context:
+- **Dismiss Flag** — Sets `is_flagged = false`, restoring the citation to active use
+- **Replace Citation** — Admin searches CrossRef for the correct citation, selects it, and a `citation_corrections` record maps `flagged_doi → replacement_doi`. Future citation resolution auto-substitutes.
+- **Remove Citation** — Deletes the record entirely from `verified_citations`
+
+**Learning pipeline**: `resolveCitationsMulti()` in `resolve.ts` checks `citation_corrections` after resolving DOIs. Any DOI with an admin-verified correction is auto-replaced with the correct citation metadata.
+
+```
+Practitioner flags citation
+    ↓
+verified_citations (is_flagged=true, conversation_id, message_id)
+    ↓
+< 3 flags → Admin review queue
+    ├── View Q&A context (user question + AI answer)
+    ├── Dismiss (false flag)
+    ├── Replace → CrossRef search → citation_corrections table
+    └── Remove (delete entirely)
+≥ 3 flags → Auto-excluded (community consensus)
+    ↓
+Future citation resolution
+    ├── citation_corrections check (DOI → replacement DOI)
+    └── Auto-substitute corrected citation
+```
+
+**Key files:**
+- `src/components/chat/evidence-badge.tsx` — Flag button UI, passes conversation/message context
+- `src/lib/chat/citation-meta-context.ts` — `CitationVerifyContext` for conversation/message IDs
+- `src/app/api/citations/verify/route.ts` — `_action: "flag"` handler with context + flag count
+- `src/app/api/admin/flagged-citations/route.ts` — Admin GET (list with Q&A) and POST (dismiss/replace/remove)
+- `src/app/api/admin/flagged-citations/search/route.ts` — CrossRef search for replacement citations
+- `src/lib/citations/resolve.ts` — `applyCitationCorrections()` auto-substitutes corrected DOIs
+- `supabase/migrations/028_citation_corrections.sql` — `citation_corrections` table + context columns
+- `src/app/(admin)/admin/flagged-citations/` — Admin page and client component
+
 ## Data Flow Patterns
 
 ### Authentication Flow
