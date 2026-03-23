@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ExternalLink, BookOpen, Users, FileCheck, FlaskConical, FileText, Flag } from "lucide-react";
+import { ExternalLink, BookOpen, Users, FileCheck, FlaskConical, FileText, Flag, Library } from "lucide-react";
 import { toast } from "sonner";
 
 export type EvidenceLevel =
@@ -30,7 +30,17 @@ export interface Citation {
   summary?: string;
   /** Origin of the citation */
   origin?: "crossref" | "pubmed" | "curated";
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
+
+/** Display config for known RAG sources (partnership knowledge bases) */
+const RAG_SOURCE_CONFIG: Record<string, { label: string; bgClass: string; textClass: string; borderClass: string }> = {
+  apex_energetics: { label: "Apex Energetics", bgClass: "bg-[#ede9fe]", textClass: "text-[#5b21b6]", borderClass: "border-[#ddd6fe]" },
+  ifm: { label: "IFM", bgClass: "bg-[#fce7f3]", textClass: "text-[#9d174d]", borderClass: "border-[#fbcfe8]" },
+  a4m: { label: "A4M", bgClass: "bg-[#fff7ed]", textClass: "text-[#9a3412]", borderClass: "border-[#fed7aa]" },
+  cleveland_clinic: { label: "Cleveland Clinic", bgClass: "bg-[#ecfdf5]", textClass: "text-[#065f46]", borderClass: "border-[#a7f3d0]" },
+};
 
 const LEVEL_CONFIG: Record<
   EvidenceLevel,
@@ -284,6 +294,11 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
         <span className="font-semibold text-[11px] tracking-wide uppercase">
           {displayLabel}
         </span>
+        {citation.ragSource && RAG_SOURCE_CONFIG[citation.ragSource] && (
+          <span className={`ml-0.5 px-1 py-px text-[9px] font-semibold rounded ${RAG_SOURCE_CONFIG[citation.ragSource].bgClass} ${RAG_SOURCE_CONFIG[citation.ragSource].textClass} border ${RAG_SOURCE_CONFIG[citation.ragSource].borderClass}`}>
+            {RAG_SOURCE_CONFIG[citation.ragSource].label}
+          </span>
+        )}
       </button>
 
       {/* Expanded popover */}
@@ -306,6 +321,12 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
                 <span className={`text-xs font-semibold ${config.textClass}`}>
                   {config.label}
                 </span>
+                {citation.ragSource && RAG_SOURCE_CONFIG[citation.ragSource] && (
+                  <span className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${RAG_SOURCE_CONFIG[citation.ragSource].bgClass} ${RAG_SOURCE_CONFIG[citation.ragSource].textClass} border ${RAG_SOURCE_CONFIG[citation.ragSource].borderClass}`}>
+                    <Library size={10} />
+                    {RAG_SOURCE_CONFIG[citation.ragSource].label}
+                  </span>
+                )}
               </div>
               <p className={`text-[11px] mt-0.5 ${config.textClass} opacity-70`}>
                 {config.description}

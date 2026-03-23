@@ -12,6 +12,8 @@ export interface CitationMeta {
   /** Journal or source name */
   source?: string;
   evidenceLevel?: EvidenceLevel;
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 /**

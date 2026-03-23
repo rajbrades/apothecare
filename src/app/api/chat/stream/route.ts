@@ -172,6 +172,8 @@ export async function POST(request: NextRequest) {
     // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
     let evidenceContext = "";
     let ragChunkCount = 0;
+    // Map of title keywords → RAG source for tagging citations with their origin
+    const ragSourceByTitle = new Map<string, string>();
     try {
       const evidence = await retrieveEvidence(message, {
         sources: (source_filter ?? []) as string[],
@@ -179,6 +181,12 @@ export async function POST(request: NextRequest) {
       });
       evidenceContext = formatEvidenceContext(evidence);
       ragChunkCount = evidence.chunks.length;
+      // Build lookup: lowercase title → source (e.g. "apex_energetics", "pubmed")
+      for (const chunk of evidence.chunks) {
+        if (chunk.title && chunk.source) {
+          ragSourceByTitle.set(chunk.title.toLowerCase(), chunk.source);
+        }
+      }
     } catch (err) {
       console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
@@ -244,15 +252,23 @@ export async function POST(request: NextRequest) {
               for (const [key, arr] of multiMap) {
                 const withDoi = arr.filter((r) => r.doi);
                 if (withDoi.length > 0) {
-                  metadataByKey[key] = withDoi.map((r) => ({
-                    citationText: r.citationText,
-                    title: r.title,
-                    source: r.source,
-                    authors: r.authors,
-                    year: r.year,
-                    doi: r.doi,
-                    evidenceLevel: r.evidenceLevel,
-                  }));
+                  metadataByKey[key] = withDoi.map((r) => {
+                    // Match citation title to RAG evidence source
+                    const titleLower = r.title?.toLowerCase() || "";
+                    const matchedRagSource = r.ragSource
+                      || ragSourceByTitle.get(titleLower)
+                      || undefined;
+                    return {
+                      citationText: r.citationText,
+                      title: r.title,
+                      source: r.source,
+                      authors: r.authors,
+                      year: r.year,
+                      doi: r.doi,
+                      evidenceLevel: r.evidenceLevel,
+                      ragSource: matchedRagSource,
+                    };
+                  });
                 }
               }
 

@@ -14,6 +14,8 @@ export interface ChatMessageCitation {
   year?: number;
   doi?: string;
   evidence_level?: string;
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 export interface ChatMessage {
@@ -213,6 +215,7 @@ export function useChat(options: UseChatOptions = {}) {
                     year?: string;
                     doi?: string;
                     evidenceLevel?: string;
+                    ragSource?: string;
                   }>>;
 
                   const parsed: Record<string, ChatMessageCitation[]> = {};
@@ -228,6 +231,7 @@ export function useChat(options: UseChatOptions = {}) {
                         year: c.year ? parseInt(c.year) : undefined,
                         doi: c.doi,
                         evidence_level: c.evidenceLevel,
+                        ragSource: c.ragSource,
                       };
                       flatList.push(mapped);
                       return mapped;

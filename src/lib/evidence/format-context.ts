@@ -19,6 +19,8 @@ export function formatEvidenceContext(evidence: RetrievedEvidence): string {
 
 ## Retrieved Evidence
 The following evidence passages were retrieved from the knowledge base and are directly relevant to the query. **You MUST cite these sources** when they support your response. Use the exact [Author, Year](DOI_URL) format for each citation. Do not fabricate citations — only cite what is provided below or sources you are highly confident about.
+
+**Important:** Each source is tagged with its origin (e.g. "Source: apex_energetics", "Source: pubmed"). When generating citation metadata, include the source origin so users can see which knowledge base each citation came from.
 `;
 
   const entries = evidence.chunks.map((chunk, i) => {
@@ -40,6 +42,7 @@ The following evidence passages were retrieved from the knowledge base and are d
 
     return `### [${i + 1}] ${chunk.title}
 **${authorDisplay} (${year})** — ${chunk.publication || chunk.source} | ${levelLabel}${doiLink ? `\nDOI: ${doiLink}` : ""}
+Source: ${chunk.source}
 Relevance: ${(chunk.similarity * 100).toFixed(0)}%
 
 > ${chunk.content}`;

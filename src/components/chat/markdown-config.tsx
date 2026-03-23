@@ -61,6 +61,7 @@ function CitationLink({
         year: m.year,
         source: m.source,
         doi: m.doi,
+        ragSource: m.ragSource,
       }));
 
     if (badges.length > 1) {

@@ -23,9 +23,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   functional: "Functional / Integrative",
   conventional: "Conventional",
   general: "General Literature",
+  partnership: "Partner Knowledge Bases",
 };
 
-const CATEGORY_ORDER = ["functional", "conventional", "general"] as const;
+const CATEGORY_ORDER = ["functional", "partnership", "conventional", "general"] as const;
 
 export function SourceFilterPopover({
   selectedSources,

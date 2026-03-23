@@ -46,6 +46,8 @@ export interface CitationResolvedData {
   source?: string;
   /** Evidence level inferred from the paper title */
   evidenceLevel?: EvidenceLevel;
+  /** RAG source identifier — partnership or evidence source that provided this citation */
+  ragSource?: string;
 }
 
 interface CrossRefItem {

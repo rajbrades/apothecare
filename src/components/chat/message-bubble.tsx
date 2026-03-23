@@ -62,6 +62,7 @@ function AssistantContent({ message, conversationId }: { message: ChatMessage; c
             doi: c.doi,
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+            ragSource: c.ragSource,
           }))
         );
       }
@@ -77,6 +78,7 @@ function AssistantContent({ message, conversationId }: { message: ChatMessage; c
             doi: c.doi,
             source: c.source,
             evidenceLevel: c.evidence_level as CitationMeta["evidenceLevel"],
+            ragSource: c.ragSource,
           }]);
         }
       }

@@ -6,7 +6,7 @@ export interface EvidenceSource {
   id: string;
   name: string;
   fullName: string;
-  category: "functional" | "conventional" | "general";
+  category: "functional" | "conventional" | "general" | "partnership";
 }
 
 export const EVIDENCE_SOURCES: Record<string, EvidenceSource> = {
@@ -19,6 +19,8 @@ export const EVIDENCE_SOURCES: Record<string, EvidenceSource> = {
   acp: { id: "acp", name: "ACP", fullName: "American College of Physicians", category: "conventional" },
   endocrine_society: { id: "endocrine_society", name: "Endocrine Society", fullName: "Endocrine Society", category: "conventional" },
   acg: { id: "acg", name: "ACG", fullName: "American College of Gastroenterology", category: "conventional" },
+  // Partnership knowledge bases
+  apex_energetics: { id: "apex_energetics", name: "Apex Energetics", fullName: "Apex Energetics", category: "partnership" },
 } as const;
 
 export type SourceId = keyof typeof EVIDENCE_SOURCES;
@@ -42,8 +44,8 @@ export const SOURCE_PRESETS: SourcePreset[] = [
   {
     id: "functional_core",
     name: "Functional Core",
-    description: "IFM, A4M, Cleveland Clinic + PubMed",
-    sources: ["ifm", "a4m", "cleveland_clinic", "pubmed"],
+    description: "IFM, A4M, Cleveland Clinic, Apex Energetics + PubMed",
+    sources: ["ifm", "a4m", "cleveland_clinic", "apex_energetics", "pubmed"],
   },
   {
     id: "conventional_core",
