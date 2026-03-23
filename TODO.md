@@ -218,9 +218,11 @@ Last updated: March 20, 2026
 
 ---
 
-## Sprint 23 — HIPAA Remediation & Export Security 🔧 IN PROGRESS
+## Sprint 23 — Security & Compliance 🔧 IN PROGRESS
 
-### HIPAA Audit Remediation (Critical — before production)
+All security hardening, HIPAA remediation, and legal pages — everything needed before production.
+
+### HIPAA Audit Remediation (Critical)
 
 Findings from security audit of v0.27.0 citation quality feedback loop (commits 586d225, 87832dc).
 
@@ -231,7 +233,7 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 - [ ] **Security:** Add Zod validation for replacement citation data — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50)
 - [ ] **Defensive:** Log warning when `ADMIN_EMAILS` env var is empty
 
-### Export Security (P0)
+### Export Security
 
 - [ ] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to visit export and account export responses
 - [ ] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
@@ -239,13 +241,74 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 - [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
 - [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
 
+### Legal Pages
+
+- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
+- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
+- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
+- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
+- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
+- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
+
 ### Completed
 - [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
 - [x] **Build fix:** Lazy env validation — `env.ts` and `provider.ts` deferred to first property access via Proxy
 
 ---
 
-## Sprint 24 — Branded PDF Exports & Practice Branding (Planned)
+## Sprint 24 — Citations & Evidence (Planned)
+
+All citation verification, evidence quality feedback, and supplement evidence curation.
+
+### Verified Citations Table
+- [ ] **DB:** Migration 027 — `verified_citations` table (DOI-keyed). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by`, `verified_at`, `context_type`, `context_value`, `origin`, `created_at`, `updated_at`. RLS: read-all, write-own.
+- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint
+- [ ] **API:** `GET /api/citations/verified` — query verified citations with filters
+
+### Citation Verification UI
+- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"`
+- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`)
+- [ ] **Refactor:** Migrate supplement citation verify to universal endpoint, deprecate `POST /api/supplements/citations/verify`
+
+### Citation Quality Enhancements
+- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` before CrossRef/PubMed lookups
+- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
+- [ ] **Feature:** Practitioner citation verify button on supplement reviews — verified citations saved to curated `supplement_evidence` table
+
+---
+
+## Sprint 25 — RAG & Partnerships (Planned)
+
+Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
+
+### Partnership RAG — Remaining Phase 1
+- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
+- [ ] **Test:** Verify retrieval with a thyroid-related query
+
+### RAG Chat Integration
+- [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
+- [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
+- [ ] **Feature:** Partnership evidence badge variant on client
+
+### RAG Supplement + Visit Integration
+- [ ] **Feature:** Wire retrieval into supplement review endpoint
+- [ ] **Feature:** Wire retrieval into visit generation prompts
+
+### Source Filtering Phase 2
+- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
+- [ ] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
+
+### Admin & Access Control
+- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
+- [ ] **Feature:** Practitioner settings to view/manage partnership access
+- [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
+
+---
+
+## Sprint 26 — Exports & Practice Branding (Planned)
+
+Practice branding infrastructure + shared export templates + branded PDF exports for visits, labs, and supplement protocols.
 
 ### Practice Branding Infrastructure
 - [ ] **DB:** Migration 026 — Add branding columns to `practitioners` table: `logo_storage_path`, `practice_address_line1/2`, `practice_city/state/zip`, `practice_phone/fax/website`
@@ -263,38 +326,21 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 ### Enhanced Visit Export
 - [ ] **Refactor:** Refactor `src/app/api/visits/[id]/export/route.ts` to use shared template system with practice branding
 
-### Lab Report Export (New)
+### Lab Report Export
 - [ ] **Lib:** Create `src/lib/export/lab-report.ts` — biomarker table template (grouped by panel, H/L/C flags, trend indicators)
 - [ ] **API:** Create `GET /api/labs/[id]/export` — lab report PDF export with practice branding
 - [ ] **UI:** Add "Export PDF" button to lab report detail overflow menu
 
-### Supplement Protocol Export (New)
+### Supplement Protocol Export
 - [ ] **Lib:** Create `src/lib/export/supplement-protocol.ts` — protocol template (grouped by action, evidence citations, interaction warnings)
 - [ ] **API:** Create `GET /api/supplements/review/[id]/export` — supplement protocol PDF export with practice branding
 - [ ] **UI:** Add "Export PDF" button to supplement review detail header
 
 ---
 
-## Sprint 25 — Universal Citation Verification (Planned)
+## Sprint 27 — Monetization & Tier Gating (Planned)
 
-### Verified Citations Table
-- [ ] **DB:** Migration 027 — `verified_citations` table (DOI-keyed). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by`, `verified_at`, `context_type`, `context_value`, `origin`, `created_at`, `updated_at`. RLS: read-all, write-own.
-- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint
-- [ ] **API:** `GET /api/citations/verified` — query verified citations with filters
-
-### Chat Citation Verification UI
-- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"`
-- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`)
-- [ ] **Refactor:** Migrate supplement citation verify to universal endpoint, deprecate `POST /api/supplements/citations/verify`
-
-### Citation Quality Enhancements
-- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` before CrossRef/PubMed lookups
-- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
-- [ ] **Feature:** Practitioner citation verify button on supplement reviews — verified citations saved to curated `supplement_evidence` table
-
----
-
-## Sprint 26 — Subscription Tier Feature Gating (Planned)
+Subscription tier enforcement (Free vs Pro), feature gates, upgrade flows, and pricing strategy.
 
 ### Free Tier Restrictions (server-side + UI gates)
 - [ ] **Gate:** 2 clinical queries per day (already enforced via `check_and_increment_query()`)
@@ -335,48 +381,13 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 - [ ] **UI:** Create `EvidenceSourceBadges` dashboard component
 - [ ] **API:** Add tier checks to all gated endpoints (403 with upgrade URL)
 - [ ] **Middleware:** Consider route-level tier gating for `/labs/*`, `/visits/*`
+- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service
 
 ---
 
-## Sprint 27 — RAG & Partnership Integration (Planned)
+## Sprint 28 — Patient Education & Engagement (Planned)
 
-### Partnership RAG — Remaining Phase 1
-- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
-- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
-- [ ] **Test:** Verify retrieval with a thyroid-related query
-
-### RAG Chat Integration
-- [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
-- [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
-- [ ] **Feature:** Partnership evidence badge variant on client
-
-### RAG Supplement + Visit Integration
-- [ ] **Feature:** Wire retrieval into supplement review endpoint
-- [ ] **Feature:** Wire retrieval into visit generation prompts
-
-### RAG Source Filtering Phase 2
-- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
-- [ ] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
-
-### RAG Admin & Access Control
-- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
-- [ ] **Feature:** Practitioner settings to view/manage partnership access
-- [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
-
----
-
-## Sprint 28 — Legal & Compliance Pages (Planned)
-
-- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
-- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
-- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
-- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
-- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
-- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
-
----
-
-## Sprint 29 — Patient Education & Engagement (Planned)
+Patient-facing content tools and third-party integrations.
 
 - [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
 - [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
@@ -384,7 +395,9 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 
 ---
 
-## Sprint 30 — Practice Analytics & Business Intelligence (Planned)
+## Sprint 29 — Analytics & Clinical Tools (Planned)
+
+Practice analytics, business metrics, and advanced clinical configuration.
 
 - [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
@@ -408,6 +421,3 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 - [ ] Analytics integration (PostHog or Mixpanel)
 - [ ] A/B testing framework for landing page conversion
 - [ ] Accessibility audit (WCAG 2.1 AA)
-
-### Strategy
-- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service
