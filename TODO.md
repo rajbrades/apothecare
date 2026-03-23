@@ -283,8 +283,8 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ### Partnership RAG — Remaining Phase 1
 - [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
-- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
-- [ ] **Test:** Verify retrieval with a thyroid-related query
+- [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
+- [x] **Test:** Verify retrieval with a thyroid-related query
 
 ### RAG Chat Integration
 - [ ] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt
