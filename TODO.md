@@ -282,7 +282,7 @@ All citation verification, evidence quality feedback, and supplement evidence cu
 Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
 
 ### Partnership RAG — Remaining Phase 1
-- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
 - [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
 - [ ] **Test:** Verify retrieval with a thyroid-related query
 
