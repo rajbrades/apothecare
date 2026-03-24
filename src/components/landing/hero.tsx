@@ -59,7 +59,7 @@ export function Hero() {
                     type="submit"
                     className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 px-5 bg-[var(--color-brand-600)] text-white text-sm font-medium rounded-md hover:bg-[var(--color-brand-500)] transition-colors"
                   >
-                    Start <ArrowRight className="w-4 h-4 ml-1.5" />
+                    Start Free <ArrowRight className="w-4 h-4 ml-1.5" />
                   </button>
                 </form>
                 <p className="text-sm text-[var(--color-text-muted)] mt-4">

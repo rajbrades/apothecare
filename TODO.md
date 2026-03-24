@@ -289,7 +289,7 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 - [x] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
 - [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
-- [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
+- [x] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
 - [x] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
 
 ---
@@ -646,7 +646,7 @@ Practice analytics, business metrics, and advanced clinical configuration.
 
 - [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
-- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
+- [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
 
 ---
 
@@ -654,10 +654,10 @@ Practice analytics, business metrics, and advanced clinical configuration.
 
 ### Design & UX Polish
 - [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
-- [ ] **UX:** Clarify "Start Free" button action in landing page input
-- [ ] **Design:** Move chat product mockup into the hero viewport (currently 900px below fold)
+- [x] **UX:** Clarify "Start Free" button action in landing page input
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently below fold, requires scrolling)
 - [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
-- [ ] **Design:** Show a rich AI response in the demo chat mockup
+- [x] **Design:** Show a rich AI response in the demo chat mockup — done: 5 evidence badges (META, RCT, GUIDELINE), formatted dosing, typewriter animation
 - [ ] **Design:** Balance hero input microcopy alignment
 
 ### Platform & Infrastructure
