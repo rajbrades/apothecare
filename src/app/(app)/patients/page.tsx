@@ -5,6 +5,7 @@ import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { escapePostgrestPattern } from "@/lib/search";
 import { PatientListClient } from "@/components/patients/patient-list-client";
+import { PatientListActions } from "@/components/patients/patient-list-actions";
 
 export default async function PatientsPage({
   searchParams,
@@ -22,7 +23,7 @@ export default async function PatientsPage({
 
   let query = supabase
     .from("patients")
-    .select("id, first_name, last_name, date_of_birth, sex, chief_complaints, updated_at")
+    .select("id, first_name, last_name, date_of_birth, sex, chief_complaints, portal_status, updated_at")
     .eq("practitioner_id", practitioner.id)
     .eq("is_archived", false)
     .order("updated_at", { ascending: false })
@@ -49,13 +50,7 @@ export default async function PatientsPage({
             Manage patient profiles and clinical documents
           </p>
         </div>
-        <Link
-          href="/patients/new"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--color-brand-600)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-500)] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Patient
-        </Link>
+        <PatientListActions />
       </div>
 
       {patientList.length === 0 && !search ? (

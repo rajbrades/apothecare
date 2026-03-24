@@ -64,6 +64,15 @@ export const createPatientSchema = z.object({
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 
+// ── Create Patient + Portal Invite (Quick Invite) ─────────────────────
+export const createPatientWithInviteSchema = z.object({
+  first_name: z.string().min(1, "First name is required").max(100),
+  last_name: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Valid email is required").max(200),
+});
+
+export type CreatePatientWithInviteInput = z.infer<typeof createPatientWithInviteSchema>;
+
 // ── Update Patient ─────────────────────────────────────────────────────
 export const updatePatientSchema = createPatientSchema.extend({
   is_archived: z.boolean().optional(),

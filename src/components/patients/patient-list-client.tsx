@@ -11,6 +11,7 @@ interface PatientItem {
   date_of_birth: string | null;
   sex: string | null;
   chief_complaints: string[] | null;
+  portal_status: string | null;
   updated_at: string;
 }
 
@@ -145,7 +146,15 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
                   <User className="w-4.5 h-4.5 text-[var(--color-brand-600)]" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{name}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] flex items-center gap-2">
+                    {name}
+                    {patient.portal_status === "active" && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">Portal</span>
+                    )}
+                    {patient.portal_status === "invited" && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-200">Invited</span>
+                    )}
+                  </p>
                   <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">
                     {age !== null && <span>{age}y {patient.sex ? `/ ${patient.sex}` : ""}</span>}
                     {patient.chief_complaints?.length ? (
