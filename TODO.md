@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 20, 2026
+Last updated: March 24, 2026
 
 ---
 
@@ -621,10 +621,10 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 - [x] **UI:** Sidebar Labs + Visits nav items show `ProFeatureBadge` for free tier
 - [x] **UI:** `EvidenceSection` (already built) — free tier gets locked grid + overlay upgrade CTA; Pro gets active source grid
 
-### Deferred
-- [ ] Multi-citation badge disable for free tier (cosmetic, low priority)
-- [ ] Partnership source badges on dashboard (needs migration 024 applied first)
-- [ ] Middleware route-level gating for `/labs/*`, `/visits/*`
+### Deferred (Completed Mar 24)
+- [x] **Gate:** Multi-citation badge disable for free tier — `citation_metadata_multi` SSE event gated via `isFeatureAvailable()` in chat stream route; free tier renders single badges only
+- [x] **Feature:** Partnership source badges on dashboard — `EvidenceSection` pulls active partnerships from DB, shows partner KB cards with "Active" badge for granted partnerships
+- [x] **Gate:** Middleware route-level gating for `/labs/*`, `/visits/*` — tier cookie set during auth/session refresh, middleware redirects free users to `/upgrade` page with feature context
 
 ---
 
@@ -636,6 +636,18 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 - [x] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure (Apex Energetics), sponsored content guidelines, evidence integrity commitments
 - [x] **UI:** Footer links to all legal pages on landing page (Terms, Security, Telehealth, Partnerships) + authenticated sidebar
 - [x] **UI:** Terms acceptance checkbox on registration (links to `/terms` and `/security`, required before submit)
+
+---
+
+## Sprint 27 — Citation Grounding, HIPAA Hardening & UX Polish (Mar 24) ✅ COMPLETE
+
+- [x] **Fix:** Eliminate citation hallucinations with grounded `[REF-N]` system — RAG evidence chunks numbered in system prompt, AI cites only those references, `groundCitations()` converts to real `[Author, Year](DOI)` links post-stream. New: `src/lib/citations/ground.ts`
+- [x] **Feature:** Render Dosing as a styled pill on its own line in chat responses — `processCitations` breaks dosing onto indented paragraph, renderer displays compact `Dose | value` pill
+- [x] **Fix:** Dynamic source filter popover direction based on viewport position — opens upward in lower half, downward in upper half
+- [x] **Feature:** Source attribution footer for partnership RAG responses — `source_attributions` SSE event with unique source IDs, frontend renders "Knowledge base: Apex Energetics" pill footer
+- [x] **Fix:** Source filter popover clipping + Apex checkbox stuck — capped popover height, deselecting last source resets to all
+- [x] **Feature:** HIPAA audit hardening — `auditLogServer()` for Next.js server components, provider read logging for patient charts/labs/notes, migration 033 append-only audit trail with 6-year retention
+- [x] **Fix:** Correct RLS policy on `practitioner_biomarker_ranges` — subquery `practitioners` to match `auth_user_id = auth.uid()` instead of direct comparison
 
 ---
 

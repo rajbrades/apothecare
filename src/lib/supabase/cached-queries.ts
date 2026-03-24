@@ -92,6 +92,26 @@ export const getPatientWithDocuments = cache(async (practitionerId: string, pati
   return { patient, documents: documents || [] };
 });
 
+export const getActivePartnerships = cache(async () => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("partnerships")
+    .select("slug, name, description, logo_url")
+    .eq("is_active", true)
+    .order("name");
+  return data ?? [];
+});
+
+export const getPractitionerPartnerships = cache(async (practitionerId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("practitioner_partnerships")
+    .select("partnership_id, is_active, partnerships(slug, name, description, logo_url)")
+    .eq("practitioner_id", practitionerId)
+    .eq("is_active", true);
+  return data ?? [];
+});
+
 export const getPatientCount = cache(async (practitionerId: string) => {
   const supabase = await createClient();
   const { count } = await supabase

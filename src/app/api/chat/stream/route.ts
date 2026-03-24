@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM } from "@/lib/ai/anthropic";
 import { buildSourceFilterAddendum, type SourceId } from "@/lib/ai/source-filter";
-import { filterAllowedSources } from "@/lib/tier/gates";
+import { filterAllowedSources, isFeatureAvailable } from "@/lib/tier/gates";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
@@ -276,11 +276,14 @@ export async function POST(request: NextRequest) {
             }
 
             if (Object.keys(grounding.citationsByKey).length > 0) {
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "citation_metadata_multi", citationsByKey: grounding.citationsByKey })}\n\n`
-                )
-              );
+              // Only emit multi-citation metadata for Pro users
+              if (isFeatureAvailable(practitioner.subscription_tier, "multi_citation_badges")) {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "citation_metadata_multi", citationsByKey: grounding.citationsByKey })}\n\n`
+                  )
+                );
+              }
 
               resolvedCitationsForDB = grounding.flatCitations.map((c) => ({
                 citationText: c.citationText,
