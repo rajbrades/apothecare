@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
+import { auditLogServer } from "@/lib/api/audit";
 import { PatientProfile } from "@/components/patients/patient-profile";
 
 export default async function PatientDetailPage({
@@ -59,6 +60,14 @@ export default async function PatientDetailPage({
   ]);
 
   if (error || !patient) notFound();
+
+  auditLogServer({
+    practitionerId: practitioner.id,
+    action: "read",
+    resourceType: "patient",
+    resourceId: id,
+    detail: { patient_name: `${patient.first_name} ${patient.last_name}` },
+  });
 
   const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline", "fm_timeline"];
   const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "fm_timeline" : "overview";

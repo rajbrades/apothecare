@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
+import { auditLogServer } from "@/lib/api/audit";
 import { VisitWorkspace } from "@/components/visits/visit-workspace";
 import { ShareWithPatientToggle } from "@/components/portal/share-with-patient-toggle";
 import type { VitalsData, HealthRatings } from "@/types/database";
@@ -35,6 +36,14 @@ export default async function VisitDetailPage({
   ]);
 
   if (error || !visit) notFound();
+
+  auditLogServer({
+    practitionerId: practitioner.id,
+    action: "read",
+    resourceType: "visit",
+    resourceId: id,
+    detail: { patient_id: visit.patient_id, visit_date: visit.visit_date },
+  });
 
   // Fetch most recent prior visit with vitals for carry-forward
   let previousVitalsContext: {

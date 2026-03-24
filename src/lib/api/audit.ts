@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 
 type AuditAction =
@@ -36,6 +37,39 @@ interface AuditLogParams {
   resourceType: string;
   resourceId?: string;
   detail?: Record<string, unknown>;
+}
+
+interface AuditLogServerParams {
+  practitionerId: string;
+  action: AuditAction;
+  resourceType: string;
+  resourceId?: string;
+  detail?: Record<string, unknown>;
+}
+
+/**
+ * Write an audit log entry from a Server Component (no NextRequest available).
+ * Uses next/headers to extract IP and user-agent. Fire-and-forget.
+ */
+export function auditLogServer(params: AuditLogServerParams): void {
+  headers().then((hdrs) => {
+    const clientIp = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const userAgent = hdrs.get("user-agent") || "unknown";
+    const serviceClient = createServiceClient();
+    serviceClient
+      .from("audit_logs")
+      .insert({
+        practitioner_id: params.practitionerId,
+        action: params.action,
+        resource_type: params.resourceType,
+        resource_id: params.resourceId || null,
+        ip_address: clientIp,
+        user_agent: userAgent,
+        detail: params.detail || {},
+      })
+      .then(() => {})
+      .catch((err: unknown) => { console.error("Audit log write failed:", err); });
+  }).catch(() => {});
 }
 
 /**

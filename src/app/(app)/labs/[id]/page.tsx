@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getAuthUser, getPractitioner } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
+import { auditLogServer } from "@/lib/api/audit";
 import { getSignedUrl } from "@/lib/storage/lab-reports";
 import { LabReportDetail } from "@/components/labs/lab-report-detail";
 import { ShareWithPatientToggle } from "@/components/portal/share-with-patient-toggle";
@@ -31,6 +32,14 @@ export default async function LabDetailPage({
     .single();
 
   if (error || !report) notFound();
+
+  auditLogServer({
+    practitionerId: practitioner.id,
+    action: "read",
+    resourceType: "lab_report",
+    resourceId: id,
+    detail: { patient_id: report.patient_id, test_name: report.test_name },
+  });
 
   // Fetch biomarker results
   const { data: biomarkers } = await supabase
