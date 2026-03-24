@@ -237,7 +237,7 @@ src/
 
 ## Database Schema
 
-20+ tables across 18 migrations with RLS on every table. See [`docs/DATABASE.md`](docs/DATABASE.md) for full documentation.
+25+ tables across 29 migrations with RLS on every table. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full documentation.
 
 **Core:** practitioners, patients, conversations, messages
 **Clinical:** visits, lab_results, biomarker_results, biomarker_references (17 seeded), patient_documents
