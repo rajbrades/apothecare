@@ -52,3 +52,5 @@ supabase/.temp/
 # throwaway demo/mockup pages (not for production)
 /src/app/mockup/
 /src/app/prototype/
+test-results/
+playwright-report/

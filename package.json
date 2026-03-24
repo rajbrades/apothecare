@@ -9,6 +9,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "db:migrate": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql",
     "db:reset": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql"
   },
@@ -59,6 +61,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/dotenv": "^6.1.1",
