@@ -8,6 +8,7 @@ import {
   SlidersHorizontal,
   CreditCard,
   Shield,
+  Library,
   ChevronDown,
 } from "lucide-react";
 import type { Practitioner } from "@/types/database";
@@ -18,6 +19,7 @@ import { BiomarkerOverridesSection } from "./biomarker-overrides-section";
 import { SubscriptionSection } from "./subscription-section";
 import { BrandingSection } from "./branding-section";
 import { AccountSection } from "./account-section";
+import { PartnershipsSection } from "./partnerships-section";
 
 interface BrandPref {
   id: string;
@@ -39,6 +41,7 @@ const SECTIONS = [
   { id: "credentials", label: "Practice & Credentials", icon: Award },
   { id: "branding", label: "Practice Branding", icon: Palette },
   { id: "preferences", label: "Clinical Preferences", icon: SlidersHorizontal },
+  { id: "partnerships", label: "Evidence Partnerships", icon: Library },
   { id: "subscription", label: "Subscription & Usage", icon: CreditCard },
   { id: "account", label: "Account & Security", icon: Shield },
 ] as const;
@@ -187,6 +190,9 @@ export function SettingsPage({
               initialStrictMode={initialStrictMode}
             />
             <BiomarkerOverridesSection />
+          </div>
+          <div ref={(el) => { sectionRefs.current.partnerships = el; }}>
+            <PartnershipsSection practitioner={practitioner} />
           </div>
           <div ref={(el) => { sectionRefs.current.subscription = el; }}>
             <SubscriptionSection practitioner={practitioner} />
