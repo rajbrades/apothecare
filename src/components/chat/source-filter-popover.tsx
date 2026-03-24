@@ -101,7 +101,7 @@ export function SourceFilterPopover({
   }));
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-10 flex flex-col max-h-[min(520px,calc(100vh-6rem))]">
+    <div className="absolute top-full left-0 mt-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-50 flex flex-col max-h-[min(520px,calc(100vh-8rem))] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
