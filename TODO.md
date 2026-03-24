@@ -363,14 +363,14 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **Feature:** Wire retrieval into supplement review endpoint — query built from supplement list + patient context, 5 chunks, appended to system prompt
 - [x] **Feature:** Wire retrieval into visit generation prompts — query built from chief complaint + raw notes, 5 chunks, appended to SOAP system prompt
 
-### Source Filtering Phase 2
+### Source Filtering Phase 2 ✅ COMPLETE
 - [x] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
 - [x] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
 
-### Admin & Access Control
-- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
-- [ ] **Feature:** Practitioner settings to view/manage partnership access
-- [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
+### Admin & Access Control ✅ COMPLETE
+- [x] **Feature:** Admin dashboard for managing partnerships and document ingestion
+- [x] **Feature:** Practitioner settings to view/manage partnership access
+- [x] **Feature:** Subscription tier gating (partnership access as pro feature)
 
 ---
 
