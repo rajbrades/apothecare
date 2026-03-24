@@ -200,10 +200,12 @@ export async function POST(request: NextRequest) {
       console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
 
-    // Partnership RAG: Retrieve relevant chunks from partner knowledge base (best-effort)
+    // Partnership RAG: Retrieve relevant chunks from partner knowledge base (pro only, best-effort)
     let partnershipContext = "";
     let partnershipSources: string[] = [];
-    try {
+    if (!isFeatureAvailable(practitioner.subscription_tier, "partnership_rag")) {
+      // Free tier: skip partnership RAG entirely
+    } else try {
       const partnerChunks = await retrieveContext({
         query: message,
         maxChunks: is_deep_consult ? 6 : 4,
