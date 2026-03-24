@@ -90,7 +90,7 @@ export function PatientQuickCreate({ open, onClose, onCreated }: PatientQuickCre
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40"
         onClick={onClose}
       />
 

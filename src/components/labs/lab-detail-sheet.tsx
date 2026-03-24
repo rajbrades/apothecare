@@ -141,7 +141,7 @@ export function LabDetailSheet({ labId, patientId, patientName, onClose, onOpenT
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
-      <div className="flex-1 bg-black/25" onClick={onClose} />
+      <div className="flex-1" onClick={onClose} />
 
       {/* Drawer */}
       <div className="w-full sm:w-[500px] max-w-[90vw] bg-[var(--color-surface)] flex flex-col h-full overflow-hidden border-l border-[var(--color-border-light)]">

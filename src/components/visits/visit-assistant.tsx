@@ -162,7 +162,7 @@ export function VisitAssistant({ visitId, patientName, onOpenChange }: VisitAssi
       {/* Backdrop — click to close (rendered before drawer so drawer is on top) */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/10 print:hidden"
+          className="fixed inset-0 z-40 print:hidden"
           onClick={() => toggleOpen(false)}
         />
       )}

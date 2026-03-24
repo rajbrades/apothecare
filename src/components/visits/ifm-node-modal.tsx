@@ -182,7 +182,7 @@ export function IFMNodeModal({
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="ifm-node-title" className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}

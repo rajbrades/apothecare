@@ -839,7 +839,7 @@ function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
+      <div className="fixed inset-0" onClick={onCancel} />
       <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h2>
         <p className="text-sm text-[var(--color-text-secondary)] mb-6">{description}</p>
@@ -892,7 +892,7 @@ function PermanentDeleteDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
+      <div className="fixed inset-0" onClick={onCancel} />
       <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
