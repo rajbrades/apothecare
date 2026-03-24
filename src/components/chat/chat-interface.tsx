@@ -38,6 +38,22 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
   );
   const [savedDefault, setSavedDefault] = useState<SourceId[]>(resolvedDefault);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+
+  // Load per-patient source preferences when patient_id is present
+  useEffect(() => {
+    if (!initialPatientId || initialSourceFilter) return; // skip if sources already set via URL
+    const supabase = createClient();
+    supabase
+      .from("patients")
+      .select("preferred_evidence_sources")
+      .eq("id", initialPatientId)
+      .single()
+      .then(({ data }) => {
+        if (data?.preferred_evidence_sources?.length) {
+          setSelectedSources(data.preferred_evidence_sources as SourceId[]);
+        }
+      });
+  }, [initialPatientId, initialSourceFilter]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialQuerySentRef = useRef(false);
@@ -316,6 +332,7 @@ export function ChatInterface({ defaultSources }: ChatInterfaceProps) {
         onChangeSources={setSelectedSources}
         savedDefault={savedDefault}
         onDefaultSaved={setSavedDefault}
+        patientId={initialPatientId}
         queriesRemaining={queriesRemaining}
         initialAttachments={pendingAttachments}
       />

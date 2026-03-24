@@ -18,6 +18,8 @@ interface SourceFilterPopoverProps {
   savedDefault?: SourceId[];
   onDefaultSaved?: (sources: SourceId[]) => void;
   openUpward?: boolean;
+  /** When set, "Save for Patient" button persists sources to the patient record */
+  patientId?: string | null;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -36,9 +38,11 @@ export function SourceFilterPopover({
   savedDefault,
   onDefaultSaved,
   openUpward = false,
+  patientId,
 }: SourceFilterPopoverProps) {
   const activePreset = matchPreset(selectedSources);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingPatient, setIsSavingPatient] = useState(false);
 
   const selectionDiffersFromSaved = useMemo(() => {
     if (!savedDefault || !onDefaultSaved) return false;
@@ -69,6 +73,28 @@ export function SourceFilterPopover({
       setIsSaving(false);
     }
   }, [selectedSources, onDefaultSaved]);
+
+  const handleSaveForPatient = useCallback(async () => {
+    if (!patientId) return;
+    setIsSavingPatient(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferred_evidence_sources: selectedSources }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Failed to save for patient");
+        return;
+      }
+      toast.success("Sources saved for this patient");
+    } catch {
+      toast.error("Failed to save for patient");
+    } finally {
+      setIsSavingPatient(false);
+    }
+  }, [patientId, selectedSources]);
 
   const toggleSource = useCallback(
     (sourceId: SourceId) => {
@@ -199,16 +225,28 @@ export function SourceFilterPopover({
         <p className="text-[11px] text-[var(--color-text-muted)]">
           Filters which evidence sources the AI prioritizes.
         </p>
-        {selectionDiffersFromSaved && (
-          <button
-            onClick={handleSaveDefault}
-            disabled={isSaving}
-            className="text-[11px] font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors disabled:opacity-50 flex items-center gap-1 flex-shrink-0 ml-2"
-          >
-            {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
-            Save as Default
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          {patientId && (
+            <button
+              onClick={handleSaveForPatient}
+              disabled={isSavingPatient}
+              className="text-[11px] font-medium text-emerald-600 hover:text-emerald-500 transition-colors disabled:opacity-50 flex items-center gap-1"
+            >
+              {isSavingPatient && <Loader2 className="w-3 h-3 animate-spin" />}
+              Save for Patient
+            </button>
+          )}
+          {selectionDiffersFromSaved && (
+            <button
+              onClick={handleSaveDefault}
+              disabled={isSaving}
+              className="text-[11px] font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)] transition-colors disabled:opacity-50 flex items-center gap-1"
+            >
+              {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
+              Save as Default
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

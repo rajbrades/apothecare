@@ -20,6 +20,7 @@ interface ChatInputProps {
   onChangeSources: (sources: SourceId[]) => void;
   savedDefault?: SourceId[];
   onDefaultSaved?: (sources: SourceId[]) => void;
+  patientId?: string | null;
   placeholder?: string;
   disabled?: boolean;
   queriesRemaining?: number | null;
@@ -38,6 +39,7 @@ export function ChatInput({
   onChangeSources,
   savedDefault,
   onDefaultSaved,
+  patientId,
   placeholder = "Ask a clinical question...",
   disabled = false,
   queriesRemaining,
@@ -293,6 +295,7 @@ export function ChatInput({
                     savedDefault={savedDefault}
                     onDefaultSaved={onDefaultSaved}
                     openUpward={sourceFilterOpenUpward}
+                    patientId={patientId}
                   />
                 )}
               </div>

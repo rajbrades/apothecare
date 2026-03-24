@@ -241,14 +241,14 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 - [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
 - [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
 
-### Legal Pages
+### Legal Pages ✅ (Completed in Sprint 26)
 
-- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
-- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
-- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
-- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
-- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
-- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
+- [x] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
+- [x] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
+- [x] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
+- [x] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
+- [x] **UI:** Add footer links to all legal pages on landing page and authenticated layout
+- [x] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
 
 ### Completed
 - [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
@@ -256,32 +256,11 @@ Findings from security audit of v0.27.0 citation quality feedback loop (commits 
 
 ---
 
-## Sprint 24 — Citations & Evidence (Planned)
-
-All citation verification, evidence quality feedback, and supplement evidence curation.
-
-### Verified Citations Table
-- [ ] **DB:** Migration 027 — `verified_citations` table (DOI-keyed). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by`, `verified_at`, `context_type`, `context_value`, `origin`, `created_at`, `updated_at`. RLS: read-all, write-own.
-- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint
-- [ ] **API:** `GET /api/citations/verified` — query verified citations with filters
-
-### Citation Verification UI
-- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"`
-- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`)
-- [ ] **Refactor:** Migrate supplement citation verify to universal endpoint, deprecate `POST /api/supplements/citations/verify`
-
-### Citation Quality Enhancements
-- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` before CrossRef/PubMed lookups
-- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
-- [ ] **Feature:** Practitioner citation verify button on supplement reviews — verified citations saved to curated `supplement_evidence` table
-
----
-
 ## Sprint 25 — RAG & Partnerships (Planned)
 
 Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
 
-### Partnership RAG — Remaining Phase 1
+### Partnership RAG — Phase 1 ✅ COMPLETE
 - [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
 - [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
 - [x] **Test:** Verify retrieval with a thyroid-related query
@@ -355,9 +334,9 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Feature:** "Save as Default" — Persist practitioner's preferred source preset to `preferred_evidence_sources` column
 - [x] **Feature:** RAG retrieval integration — `search_evidence_v2()` RPC with partnership + document type filtering, `src/lib/rag/retrieve.ts` retrieval layer, `src/lib/rag/format-context.ts` for system prompt injection
 - [x] **Feature:** Evidence ingestion pipeline — `src/lib/rag/ingest.ts` (PDF extract → chunk → embed → store), admin API at `/api/admin/rag/ingest`
-- [ ] **Feature:** Wire RAG context into chat stream endpoint (`/api/chat/stream`)
+- [x] **Feature:** Wire RAG context into chat stream endpoint (`/api/chat/stream`)
 - [ ] **Feature:** Wire RAG context into supplement review endpoint
-- [ ] **Feature:** Wire RAG context into visit generation prompts
+- [x] **Feature:** Wire RAG context into visit generation prompts
 - [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
 
 ---
@@ -370,23 +349,23 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **API:** `POST/GET /api/admin/rag/ingest` — admin-only endpoint to ingest all PDFs from a partnership's local docs directory
 - [x] **Dep:** Added `pdf-parse` for text extraction
 
-### Phase 1 — PENDING (where we left off)
-- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
-- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass (3 PDFs in `docs/partnerships/apex-energetics/`)
-- [ ] **Test:** Verify retrieval with a thyroid-related query
+### Phase 1 — COMPLETE
+- [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass (3 PDFs in `docs/partnerships/apex-energetics/`)
+- [x] **Test:** Verify retrieval with a thyroid-related query
 
 ### Phase 2: Chat Integration
 - [x] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt — best-effort alongside existing evidence RAG, 4 chunks standard / 6 deep consult
-- [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
-- [ ] **Feature:** Partnership evidence badge variant on client
+- [x] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
+- [x] **Feature:** Partnership evidence badge variant on client
 
 ### Phase 3: Supplement + Visit Integration
 - [x] **Feature:** Wire retrieval into supplement review endpoint — query built from supplement list + patient context, 5 chunks, appended to system prompt
 - [x] **Feature:** Wire retrieval into visit generation prompts — query built from chief complaint + raw notes, 5 chunks, appended to SOAP system prompt
 
 ### Source Filtering Phase 2
-- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
-- [ ] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
+- [x] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
+- [x] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
 
 ### Admin & Access Control
 - [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion

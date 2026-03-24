@@ -31,6 +31,7 @@ export const createPatientSchema = z.object({
   dietary_recommendations: z.array(protocolItemSchema).nullable().optional(),
   lifestyle_recommendations: z.array(protocolItemSchema).nullable().optional(),
   follow_up_labs: z.array(protocolItemSchema).nullable().optional(),
+  preferred_evidence_sources: z.array(z.string().max(50)).max(20).nullable().optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
