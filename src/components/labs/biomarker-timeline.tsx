@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, TrendingUp } from "lucide-react";
+import {
+  Loader2,
+  TrendingUp,
+  ArrowLeft,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -42,6 +49,25 @@ interface TimelineResponse {
   conventional_low: number | null;
   conventional_high: number | null;
   data_points: TimelineDataPoint[];
+}
+
+interface TrendItem {
+  biomarker_code: string;
+  biomarker_name: string;
+  category: string | null;
+  unit: string;
+  latest_value: number;
+  previous_value: number;
+  change: number;
+  change_pct: number;
+  latest_date: string;
+  previous_date: string;
+  latest_flag: string | null;
+  functional_low: number | null;
+  functional_high: number | null;
+  conventional_low: number | null;
+  conventional_high: number | null;
+  data_points: { date: string; value: number }[];
 }
 
 interface BiomarkerTimelineProps {
@@ -86,6 +112,35 @@ const FLAG_LABELS: Record<BiomarkerFlag, string> = {
   "out-of-range": "Out of Range",
   critical: "Critical",
 };
+
+// ── Helpers ───────────────────────────────────────────────────────────
+
+function formatCategory(cat: string): string {
+  return cat
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getChangeColor(change: number, flag: string | null): string {
+  // For certain biomarkers, "going up" might be bad — but for simplicity
+  // we use the flag-based approach: optimal/normal = good color, otherwise warning
+  const mapped = mapFlag(flag);
+  if (mapped === "optimal") return "var(--color-biomarker-optimal)";
+  if (mapped === "normal") return "var(--color-text-muted)";
+  if (mapped === "borderline") return "var(--color-biomarker-borderline)";
+  if (mapped === "out-of-range") return "var(--color-biomarker-out-of-range)";
+  if (mapped === "critical") return "var(--color-biomarker-critical)";
+  return "var(--color-text-muted)";
+}
 
 // ── Custom chart elements ─────────────────────────────────────────────
 
@@ -143,46 +198,200 @@ function CustomTooltip({ active, payload, unit }: any) {
   );
 }
 
+// ── Sparkline component ──────────────────────────────────────────────
+
+function Sparkline({
+  data,
+  color,
+  width = 100,
+  height = 36,
+}: {
+  data: { date: string; value: number }[];
+  color: string;
+  width?: number;
+  height?: number;
+}) {
+  if (data.length < 2) return null;
+
+  const values = data.map((d) => d.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const padding = 2;
+
+  const points = data
+    .map((d, i) => {
+      const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+      const y =
+        height - padding - ((d.value - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg width={width} height={height} className="flex-shrink-0">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Last point dot */}
+      {(() => {
+        const lastIdx = data.length - 1;
+        const x =
+          padding + (lastIdx / (data.length - 1)) * (width - padding * 2);
+        const y =
+          height -
+          padding -
+          ((data[lastIdx].value - min) / range) * (height - padding * 2);
+        return <circle cx={x} cy={y} r={2.5} fill={color} />;
+      })()}
+    </svg>
+  );
+}
+
+// ── Trend Card ───────────────────────────────────────────────────────
+
+function TrendCard({
+  trend,
+  onClick,
+}: {
+  trend: TrendItem;
+  onClick: () => void;
+}) {
+  const flagColor = getChangeColor(trend.change, trend.latest_flag);
+  const sparklineColor =
+    mapFlag(trend.latest_flag) === "optimal" ||
+    mapFlag(trend.latest_flag) === "normal"
+      ? "var(--color-brand-600)"
+      : flagColor;
+
+  const ChangeIcon =
+    trend.change > 0 ? ArrowUpRight : trend.change < 0 ? ArrowDownRight : Minus;
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 hover:border-[var(--color-brand-400)] hover:shadow-sm transition-all group"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)] truncate">
+            {trend.biomarker_name}
+          </p>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-lg font-semibold text-[var(--color-text-primary)]">
+              {trend.latest_value}
+            </span>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {trend.unit}
+            </span>
+          </div>
+        </div>
+        <Sparkline data={trend.data_points} color={sparklineColor} />
+      </div>
+
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border-light)]">
+        <div className="flex items-center gap-1">
+          <ChangeIcon
+            className="w-3.5 h-3.5"
+            style={{ color: flagColor }}
+          />
+          <span className="text-xs font-medium" style={{ color: flagColor }}>
+            {trend.change > 0 ? "+" : ""}
+            {trend.change_pct}%
+          </span>
+          <span className="text-[10px] text-[var(--color-text-muted)] ml-1">
+            from {formatDate(trend.previous_date)}
+          </span>
+        </div>
+        <span
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
+          style={{
+            color: flagColor,
+            backgroundColor: `color-mix(in srgb, ${flagColor} 12%, transparent)`,
+          }}
+        >
+          {FLAG_LABELS[mapFlag(trend.latest_flag)]}
+        </span>
+      </div>
+    </button>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────
 
-export function BiomarkerTimeline({ patientId, initialBiomarkerCode }: BiomarkerTimelineProps) {
+export function BiomarkerTimeline({
+  patientId,
+  initialBiomarkerCode,
+}: BiomarkerTimelineProps) {
   const router = useRouter();
+
+  // Overview state
+  const [trends, setTrends] = useState<TrendItem[]>([]);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+
+  // Detail state
+  const [selectedCode, setSelectedCode] = useState<string | null>(
+    initialBiomarkerCode || null
+  );
   const [biomarkerList, setBiomarkerList] = useState<BiomarkerListItem[]>([]);
-  const [selectedCode, setSelectedCode] = useState<string | null>(null);
-  const [timelineData, setTimelineData] = useState<TimelineResponse | null>(null);
-  const [loadingList, setLoadingList] = useState(true);
+  const [timelineData, setTimelineData] = useState<TimelineResponse | null>(
+    null
+  );
+  const [loadingList, setLoadingList] = useState(false);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
+
+  // View mode: "overview" shows trend cards, "detail" shows single chart
+  const [view, setView] = useState<"overview" | "detail">(
+    initialBiomarkerCode ? "detail" : "overview"
+  );
+
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch biomarker list on mount
+  // Fetch trends overview on mount
   useEffect(() => {
+    setLoadingOverview(true);
+    fetch(`/api/patients/${patientId}/biomarkers/timeline?mode=overview`)
+      .then((res) => res.json())
+      .then((data) => {
+        setTrends(data.trends || []);
+        setLoadingOverview(false);
+      })
+      .catch(() => {
+        setError("Failed to load biomarker trends");
+        setLoadingOverview(false);
+      });
+  }, [patientId]);
+
+  // Fetch biomarker list when entering detail view
+  useEffect(() => {
+    if (view !== "detail") return;
+    if (biomarkerList.length > 0) return;
     setLoadingList(true);
     fetch(`/api/patients/${patientId}/biomarkers/timeline`)
       .then((res) => res.json())
       .then((data) => {
         const items: BiomarkerListItem[] = data.biomarkers || [];
         setBiomarkerList(items);
-        // Auto-select first biomarker with 2+ data points
-        const first = items.find((b) => b.data_points >= 2) || items[0];
-        if (first) setSelectedCode(first.biomarker_code);
+        if (!selectedCode) {
+          const first = items.find((b) => b.data_points >= 2) || items[0];
+          if (first) setSelectedCode(first.biomarker_code);
+        }
         setLoadingList(false);
       })
       .catch(() => {
         setError("Failed to load biomarkers");
         setLoadingList(false);
       });
-  }, [patientId]);
-
-  // Deep-link to a specific biomarker when initialBiomarkerCode is set
-  useEffect(() => {
-    if (!initialBiomarkerCode || biomarkerList.length === 0) return;
-    const match = biomarkerList.find((b) => b.biomarker_code === initialBiomarkerCode);
-    if (match) setSelectedCode(match.biomarker_code);
-  }, [initialBiomarkerCode, biomarkerList]);
+  }, [patientId, view, biomarkerList.length, selectedCode]);
 
   // Fetch timeline when selection changes
   useEffect(() => {
-    if (!selectedCode) return;
+    if (view !== "detail" || !selectedCode) return;
     setLoadingTimeline(true);
     fetch(
       `/api/patients/${patientId}/biomarkers/timeline?biomarker_code=${encodeURIComponent(selectedCode)}`
@@ -196,7 +405,24 @@ export function BiomarkerTimeline({ patientId, initialBiomarkerCode }: Biomarker
         setError("Failed to load timeline data");
         setLoadingTimeline(false);
       });
-  }, [patientId, selectedCode]);
+  }, [patientId, selectedCode, view]);
+
+  // Deep-link to a specific biomarker
+  useEffect(() => {
+    if (!initialBiomarkerCode) return;
+    setSelectedCode(initialBiomarkerCode);
+    setView("detail");
+  }, [initialBiomarkerCode]);
+
+  const handleCardClick = useCallback((code: string) => {
+    setSelectedCode(code);
+    setView("detail");
+  }, []);
+
+  const handleBackToOverview = useCallback(() => {
+    setView("overview");
+    setTimelineData(null);
+  }, []);
 
   // Group biomarkers by category for the selector
   const grouped = biomarkerList.reduce<Record<string, BiomarkerListItem[]>>(
@@ -234,9 +460,26 @@ export function BiomarkerTimeline({ patientId, initialBiomarkerCode }: Biomarker
     }
   };
 
+  // Group trends by category for overview
+  const trendsByCategory = trends.reduce<Record<string, TrendItem[]>>(
+    (acc, item) => {
+      const cat = item.category || "Other";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(item);
+      return acc;
+    },
+    {}
+  );
+
+  const trendCategories = Object.keys(trendsByCategory).sort((a, b) => {
+    if (a === "Other") return 1;
+    if (b === "Other") return -1;
+    return a.localeCompare(b);
+  });
+
   // ── Loading / Empty states ──
 
-  if (loadingList) {
+  if (loadingOverview) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
@@ -252,44 +495,108 @@ export function BiomarkerTimeline({ patientId, initialBiomarkerCode }: Biomarker
     );
   }
 
-  if (biomarkerList.length === 0) {
+  // ── Overview: Trend cards grid ──
+
+  if (view === "overview") {
+    if (trends.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <TrendingUp className="w-8 h-8 text-[var(--color-text-muted)] mb-3" />
+          <p className="text-sm text-[var(--color-text-muted)]">
+            No biomarker data available. Upload lab reports to see trends.
+          </p>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            Trends appear when the same biomarker is found in 2 or more lab
+            uploads.
+          </p>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <TrendingUp className="w-8 h-8 text-[var(--color-text-muted)] mb-3" />
-        <p className="text-sm text-[var(--color-text-muted)]">
-          No biomarker data available. Upload lab reports to see trends.
-        </p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+              Historical Trends
+            </h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              {trends.length} biomarker{trends.length !== 1 ? "s" : ""} tracked
+              across multiple labs
+            </p>
+          </div>
+        </div>
+
+        {trendCategories.map((cat) => (
+          <div key={cat}>
+            <h4 className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
+              {formatCategory(cat)}
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {trendsByCategory[cat].map((trend) => (
+                <TrendCard
+                  key={trend.biomarker_code}
+                  trend={trend}
+                  onClick={() => handleCardClick(trend.biomarker_code)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
+  // ── Detail: Single biomarker chart ──
+
   return (
     <div className="space-y-4">
-      {/* Biomarker selector */}
+      {/* Back button + selector row */}
       <div className="flex items-center gap-3">
-        <label
-          htmlFor="biomarker-select"
-          className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider"
-        >
-          Biomarker
-        </label>
-        <select
-          id="biomarker-select"
-          value={selectedCode || ""}
-          onChange={(e) => setSelectedCode(e.target.value)}
-          className="flex-1 max-w-xs px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:border-[var(--color-brand-400)] focus:outline-none"
-        >
-          {sortedCategories.map((cat) => (
-            <optgroup key={cat} label={cat.split("_").join(" ").toUpperCase()}>
-              {grouped[cat].map((item) => (
-                <option key={item.biomarker_code} value={item.biomarker_code}>
-                  {item.biomarker_name} ({item.data_points}{" "}
-                  {item.data_points === 1 ? "result" : "results"})
-                </option>
+        {trends.length > 0 && (
+          <button
+            onClick={handleBackToOverview}
+            className="flex items-center gap-1 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            All Trends
+          </button>
+        )}
+        <div className="flex items-center gap-3 flex-1">
+          <label
+            htmlFor="biomarker-select"
+            className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider"
+          >
+            Biomarker
+          </label>
+          {loadingList ? (
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--color-text-muted)]" />
+          ) : (
+            <select
+              id="biomarker-select"
+              value={selectedCode || ""}
+              onChange={(e) => setSelectedCode(e.target.value)}
+              className="flex-1 max-w-xs px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:border-[var(--color-brand-400)] focus:outline-none"
+            >
+              {sortedCategories.map((cat) => (
+                <optgroup
+                  key={cat}
+                  label={cat.split("_").join(" ").toUpperCase()}
+                >
+                  {grouped[cat].map((item) => (
+                    <option
+                      key={item.biomarker_code}
+                      value={item.biomarker_code}
+                    >
+                      {item.biomarker_name} ({item.data_points}{" "}
+                      {item.data_points === 1 ? "result" : "results"})
+                    </option>
+                  ))}
+                </optgroup>
               ))}
-            </optgroup>
-          ))}
-        </select>
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Chart area */}
