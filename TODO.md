@@ -655,7 +655,6 @@ Practice analytics, business metrics, and advanced clinical configuration.
 ### Design & UX Polish
 - [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
 - [x] **UX:** Clarify "Start Free" button action in landing page input
-- [ ] **Design:** Move chat product mockup into the hero viewport (currently below fold, requires scrolling)
 - [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
 - [x] **Design:** Show a rich AI response in the demo chat mockup — done: 5 evidence badges (META, RCT, GUIDELINE), formatted dosing, typewriter animation
 - [ ] **Design:** Balance hero input microcopy alignment

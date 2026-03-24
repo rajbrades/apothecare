@@ -2,6 +2,48 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.30.0] - 2026-03-24
+
+### Added — Grounded Citation System
+- **Anti-hallucination**: AI now cites only `[REF-N]` from RAG evidence chunks; fabricated `[Author, Year]` citations are stripped
+- **Relevance gate**: Each citation verified against surrounding claim context via keyword overlap; misattributed references stripped
+- **New module**: `src/lib/citations/ground.ts` replaces CrossRef/PubMed for chat citations
+
+### Added — Patient Portal Overhaul
+- **Shared PortalShell**: Extracted from 4 duplicated files; consistent header/footer across all portal pages
+- **Consent page redesign**: Custom legal markdown renderer, serif signature input, segmented progress, E-SIGN Act disclosure
+- **6-section FM intake form**: 80+ fields — demographics, medical history (22-condition checklist), family history, symptoms (0-10 sliders), lifestyle, supplements
+- **Signed Documents**: Patients can review signed consents from dashboard
+- **Extended patient table** (Migration 036): 20 new columns for intake data mapping
+
+### Added — Quick Invite Flow
+- **Quick Invite button** on patients list: 3-field modal (first name, last name, email) creates patient + sends portal invite atomically
+- **`POST /api/patients/invite`**: Combined endpoint with rollback on failure
+- **Portal status badges**: "Invited" (amber) / "Portal" (green) on patient list cards
+
+### Added — Partnership Admin & Access Control
+- **Admin partnerships dashboard** (`/admin/partnerships`): Manage partners, view ingested documents, re-ingest, create new
+- **Practitioner settings**: "Evidence Partnerships" section showing access status per partnership
+- **Tier gating**: Partnership RAG access restricted to Pro tier
+- **Per-patient source preferences**: Saved per patient, auto-loaded in chat context
+
+### Added — Testing
+- **Playwright e2e tests**: 12 tests covering auth, chat, dashboard, portal flows
+- **npm scripts**: `test:e2e` (headless), `test:e2e:ui` (interactive)
+
+### Changed
+- **Dosing display**: Rendered as styled `Dose | value` pill on own line in chat responses
+- **Source filter popover**: Dynamic direction (opens up/down based on viewport position)
+- **Landing page CTA**: "Start" → "Start Free"
+- **Source attribution footer**: Shows "Knowledge base: Apex Energetics" when partnership RAG informs response
+
+### Fixed
+- **Citation hallucinations**: Eliminated via grounded `[REF-N]` system
+- **Citation misattribution**: Relevance gate catches wrong-reference citations
+- **Dark backdrop overlays**: Removed `bg-black/*` from all modals/dialogs/drawers site-wide
+- **Stale test expectations**: CSRF fallback (apothecare.ai not localhost), biomarker flag (borderline_low)
+- **Vitest config**: Excluded e2e/ and sibling project tests
+
 ## [0.27.1] - 2026-03-20
 
 ### Fixed — Build-Time Env Validation Crash

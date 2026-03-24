@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 18, 2026
+**Last updated:** March 24, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -679,49 +679,81 @@ src/
 
 ---
 
-### Sprint 23 — Branded PDF Exports & Export Security (Mar 18, 2026) 🔧 IN PROGRESS
+### Sprint 23 — Branded PDF Exports & Export Security (Mar 18, 2026) ✅ COMPLETE
 
-**Planned — Practice Branding & Export System:**
-1. [ ] Export security hardening — Cache-Control headers on PHI responses, audit log watermarking, export session tracking, filename PHI sanitization
-2. [ ] HIPAA compliance documentation — `docs/COMPLIANCE.md` with audit log retention policy (6+ years), export access policies
-3. [ ] Practice branding — Migration 026 adding logo, address, phone, website fields to `practitioners`. Logo upload to `practice-assets` Supabase Storage bucket.
-4. [ ] Settings UI — new "Practice Branding" section with logo dropzone, practice address/contact fields, live letterhead preview
-5. [ ] Shared export template system — `src/lib/export/` module with `buildLetterhead()`, `buildPatientBar()`, `buildFooter()`, `buildExportPage()`, `fetchLogoAsBase64()`
-6. [ ] Enhanced visit export — refactor existing route to use shared templates with practice branding
-7. [ ] Lab report export (NEW) — `GET /api/labs/[id]/export` with biomarker tables grouped by panel, H/L/C flags, trend indicators, flagged summary
-8. [ ] Supplement protocol export (NEW) — `GET /api/supplements/review/[id]/export` grouped by action (keep/modify/add/discontinue), evidence citations, interaction warnings
+1. ✅ Export security hardening — Cache-Control, no-store headers, watermarking, session tracking, PHI filename sanitization
+2. ✅ HIPAA compliance documentation — `docs/COMPLIANCE.md` with audit log retention policy (6+ years)
+3. ✅ Practice branding — Migration 026 (logo, address, phone, website). Logo upload to `practice-assets` bucket.
+4. ✅ Settings UI — "Practice Branding" section with logo dropzone, address/contact fields
+5. ✅ Shared export template system — `src/lib/export/` module with `buildLetterhead()`, `buildPatientBar()`, `buildFooter()`, `buildExportPage()`
+6. ✅ Enhanced visit export — uses shared templates with practice branding
+7. ✅ Lab report export — `GET /api/labs/[id]/export` with branded biomarker tables
+8. ✅ Supplement protocol export — `GET /api/supplements/review/[id]/export` grouped by action with citations
 
-**Design Decision:** Clean white background with practice logo letterhead only — no practitioner-customizable colors. Medical documents must look authoritative and trustworthy.
-**Technical Approach:** Continue browser print-to-PDF pattern (no Puppeteer/jsPDF). Shared HTML templates with `@page` CSS, page-break control, and Google Fonts.
+### Sprint 27 — Citation Grounding, Patient Portal, Intake Forms (Mar 24, 2026) ✅ COMPLETE
+
+**Citation Grounding (eliminates hallucinations):**
+1. ✅ Grounded `[REF-N]` citation system — AI cites only from RAG evidence chunks, `groundCitations()` converts to real `[Author, Year](DOI)` links post-stream
+2. ✅ Citation relevance gate — keyword overlap check between claim context and referenced chunk, strips misattributed citations
+3. ✅ New module: `src/lib/citations/ground.ts` (replaces CrossRef/PubMed for chat; supplements still use resolve.ts)
+4. ✅ Updated system prompt forbids inventing citations
+
+**Patient Portal Overhaul:**
+5. ✅ Shared `PortalShell` component — extracted from 4 duplicated files, consistent footer (Terms, Security, Telehealth)
+6. ✅ Redesigned consent signing page — custom legal markdown renderer, serif signature input, segmented progress bar
+7. ✅ Comprehensive 6-section FM intake form — 80+ fields: demographics, medical history (22-condition checklist), family history, symptoms (0-10 sliders), lifestyle, supplements
+8. ✅ Rich field types: `CheckboxGrid`, `RadioGroup`, `SliderField`, `DynamicRows` (add/remove), `SectionCard`
+9. ✅ "Signed Documents" section on patient dashboard — patients can review signed consents
+10. ✅ Extended patient table (Migration 036) — 20 new columns for intake mapping (contact, demographics, diagnoses, surgeries, hospitalizations, family history, genetics, symptom scores, lifestyle, prior labs, health goals)
+
+**Quick Invite Flow:**
+11. ✅ "Quick Invite" button on patients list — 3-field modal (first name, last name, email) creates patient + sends portal invite atomically
+12. ✅ `POST /api/patients/invite` — combined endpoint with rollback on invite failure
+13. ✅ Portal status badges on patient list (Invited / Portal Active)
+
+**Partnership RAG & Admin:**
+14. ✅ Admin partnerships dashboard (`/admin/partnerships`) — partnership cards, document tables, re-ingest, create new partnerships
+15. ✅ Practitioner settings "Evidence Partnerships" section — view access status per partnership
+16. ✅ Partnership RAG gated to Pro tier (`partnership_rag` in `PRO_ONLY_FEATURES`)
+17. ✅ Per-patient evidence source preferences — saved per patient, auto-loaded in chat context
+18. ✅ Source filter "Save as Default" persists to `preferred_evidence_sources`
+
+**UX Polish:**
+19. ✅ Dosing rendered as styled pill on own line in chat responses
+20. ✅ Dynamic source filter popover direction (opens up/down based on viewport position)
+21. ✅ Source attribution footer for partnership RAG responses
+22. ✅ "Start Free" CTA button on landing page (was just "Start")
+23. ✅ Removed dark backdrop overlays from all modals/dialogs site-wide
+24. ✅ Custom functional ranges from Settings (biomarker overrides)
+
+**Testing:**
+25. ✅ All 113 Vitest unit tests passing
+26. ✅ 12 Playwright e2e tests (auth, chat, dashboard, portal)
+27. ✅ Fixed stale test expectations (CSRF fallback, biomarker flags)
 
 ---
 
 ## What Needs To Be Done Next
 
 ### High Priority
-- [ ] **Source filter persistence** — "Save as Default" → `preferred_evidence_sources` column
-- [ ] **RAG retrieval** — wire source filter into `search_evidence()` RPC for vector-based retrieval
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
-- [x] **Practitioner citation verify button** — UI to confirm accurate citations, saves to curated `supplement_evidence` table (v0.25.0)
-- [x] **Citation quality feedback loop** — `/admin/flagged-citations` admin review with Q&A context, CrossRef replacement search, community consensus auto-exclusion (3+ flags), and correction mapping for future auto-substitution (v0.27.0)
-- [ ] **Custom functional ranges** — practitioner-level biomarker range overrides from Settings
-- [x] **Data export** — ZIP export of all practitioner data from Settings > Account & Security (v0.23.0)
-- [x] **Visit AI assistant** — right-edge synthesis drawer on visit workspace pages (v0.23.0)
-- [ ] **Branded PDF exports** — practice-branded PDF export for visits, lab reports, and supplement protocols (Sprint 23)
+- [ ] **Mobile responsive pass** — all pages
+- [ ] **Stripe integration** — payment processing for Pro subscriptions
 
-### Homepage Design Fixes (from Playwright audit Feb 18)
-- [ ] Move chat product mockup into hero viewport — no visual anchor above fold
-- [ ] Add dark/teal CTA break section before pricing
-- [ ] Show rich AI response (with citations + badges) in demo chat mockup
+### Homepage Design
+- [ ] **Design:** Add dark/teal CTA break section before pricing
+- [ ] **Design:** Ensure Admin Dashboard retains serif typography from marketing site
+- [ ] **Design:** Balance hero input microcopy alignment
 
 ### Backlog
-- Mobile responsive pass
-- PWA support
+- PWA support for mobile practitioners
 - Analytics (PostHog or Mixpanel)
+- A/B testing framework for landing page
 - Accessibility audit (WCAG 2.1 AA)
-- Evidence ingestion pipeline (PubMed, IFM, A4M for RAG knowledge base)
 - Patient Education Studio (NotebookLM-style audio + slides)
-- Practice Analytics Dashboard
+- Video Content Library
+- Clinical Insights Dashboard (analytics)
+- Business Metrics Dashboard
 
 ---
 
