@@ -72,8 +72,11 @@ export function SourceFilterPopover({
     (sourceId: SourceId) => {
       const isSelected = selectedSources.includes(sourceId);
       if (isSelected) {
-        // Don't allow deselecting the last source
-        if (selectedSources.length <= 1) return;
+        // Deselecting the last source resets to all sources
+        if (selectedSources.length <= 1) {
+          onChangeSources([...ALL_SOURCE_IDS]);
+          return;
+        }
         onChangeSources(selectedSources.filter((s) => s !== sourceId));
       } else {
         onChangeSources([...selectedSources, sourceId]);
@@ -98,7 +101,7 @@ export function SourceFilterPopover({
   }));
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-10">
+    <div className="absolute bottom-full left-0 mb-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-10 flex flex-col max-h-[min(520px,calc(100vh-6rem))]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
@@ -147,7 +150,7 @@ export function SourceFilterPopover({
       <div className="h-px bg-[var(--color-border-light)]" />
 
       {/* Individual sources by category */}
-      <div className="px-4 py-3 max-h-56 overflow-y-auto space-y-3">
+      <div className="px-4 py-3 overflow-y-auto space-y-3 flex-1 min-h-0">
         {grouped.map(({ category, label, sources }) => (
           <div key={category}>
             <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-semibold mb-1.5">
