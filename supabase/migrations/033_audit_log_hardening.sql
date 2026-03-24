@@ -25,12 +25,8 @@ CREATE POLICY "Practitioners can view their own audit logs"
 -- Prevent any client-side deletes or updates (service role bypasses RLS)
 -- No INSERT policy needed — inserts are done via service role only
 
--- Add computed retention_until column (6 years per HIPAA)
-ALTER TABLE public.audit_logs
-  ADD COLUMN IF NOT EXISTS retention_until TIMESTAMPTZ
-  GENERATED ALWAYS AS (created_at + INTERVAL '6 years') STORED;
-
 -- Index for retention queries and time-range reporting
+-- (retention_until = created_at + 6 years — compute in queries, no stored column needed)
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at
   ON public.audit_logs (created_at DESC);
 
