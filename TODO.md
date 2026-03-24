@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 20, 2026
+Last updated: March 24, 2026
 
 ---
 
@@ -621,10 +621,10 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 - [x] **UI:** Sidebar Labs + Visits nav items show `ProFeatureBadge` for free tier
 - [x] **UI:** `EvidenceSection` (already built) — free tier gets locked grid + overlay upgrade CTA; Pro gets active source grid
 
-### Deferred
-- [ ] Multi-citation badge disable for free tier (cosmetic, low priority)
-- [ ] Partnership source badges on dashboard (needs migration 024 applied first)
-- [ ] Middleware route-level gating for `/labs/*`, `/visits/*`
+### Deferred (Completed Mar 24)
+- [x] **Gate:** Multi-citation badge disable for free tier — `citation_metadata_multi` SSE event gated via `isFeatureAvailable()` in chat stream route; free tier renders single badges only
+- [x] **Feature:** Partnership source badges on dashboard — `EvidenceSection` pulls active partnerships from DB, shows partner KB cards with "Active" badge for granted partnerships
+- [x] **Gate:** Middleware route-level gating for `/labs/*`, `/visits/*` — tier cookie set during auth/session refresh, middleware redirects free users to `/upgrade` page with feature context
 
 ---
 

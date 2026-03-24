@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getTierFromCookie, setTierCookie } from "@/lib/tier/tier-cookie";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -83,6 +84,36 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
+  }
+
+  // ── Tier cookie refresh (only when missing/expired) ───────────────────
+  if (user && !getTierFromCookie(request)) {
+    const { data: prac } = await supabase
+      .from("practitioners")
+      .select("subscription_tier")
+      .eq("auth_user_id", user.id)
+      .single();
+    if (prac?.subscription_tier) {
+      setTierCookie(supabaseResponse, prac.subscription_tier);
+    }
+  }
+
+  // ── Pro-only route gating ─────────────────────────────────────────────
+  const PRO_ONLY_PREFIXES = ["/labs", "/visits"];
+  const isProRoute = PRO_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
+
+  if (user && isProRoute) {
+    const tier = getTierFromCookie(request) ?? "free";
+    if (tier !== "pro") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/upgrade";
+      url.searchParams.set(
+        "feature",
+        pathname.startsWith("/labs") ? "Labs" : "Visits"
+      );
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

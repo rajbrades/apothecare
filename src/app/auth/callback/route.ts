@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { setTierCookie } from "@/lib/tier/tier-cookie";
 
 /**
  * Sanitize a redirect path to prevent open-redirect attacks.
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       if (user) {
         const { data: practitioner } = await supabase
           .from("practitioners")
-          .select("id")
+          .select("id, subscription_tier")
           .eq("auth_user_id", user.id)
           .single();
 
@@ -50,6 +51,11 @@ export async function GET(request: NextRequest) {
             : `${origin}/auth/onboarding`;
           return NextResponse.redirect(onboardingUrl);
         }
+
+        // Set tier cookie for middleware route gating
+        const response = NextResponse.redirect(`${origin}${next}`);
+        setTierCookie(response, practitioner.subscription_tier ?? "free");
+        return response;
       }
 
       return NextResponse.redirect(`${origin}${next}`);

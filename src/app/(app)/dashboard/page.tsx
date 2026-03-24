@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Dna, MessageSquare, Stethoscope, Users } from "lucide-react";
 import { EvidenceSection } from "@/components/dashboard/evidence-section";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
-import { getAuthUser, getPractitioner, getSidebarData } from "@/lib/supabase/cached-queries";
+import { getAuthUser, getPractitioner, getSidebarData, getActivePartnerships, getPractitionerPartnerships } from "@/lib/supabase/cached-queries";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
   const supabase = await createClient();
-  const [{ data: patients }, { recentConversations }] = await Promise.all([
+  const [{ data: patients }, { recentConversations }, partnerships, practitionerPartnerships] = await Promise.all([
     supabase
       .from("patients")
       .select("id, first_name, last_name")
@@ -51,6 +51,8 @@ export default async function DashboardPage() {
       .order("last_name", { ascending: true })
       .limit(500),
     getSidebarData(practitioner.id),
+    getActivePartnerships(),
+    isFree ? Promise.resolve([]) : getPractitionerPartnerships(practitioner.id),
   ]);
 
   const hasConversations = recentConversations.length > 0;
@@ -184,7 +186,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Evidence partnerships section — tier-aware */}
-      <EvidenceSection isFree={isFree} />
+      <EvidenceSection
+        isFree={isFree}
+        partnerships={partnerships}
+        practitionerPartnerships={practitionerPartnerships}
+      />
 
       {/* Evidence trust badge */}
       <div className="mt-8 flex flex-col items-center gap-2">
