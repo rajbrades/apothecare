@@ -178,6 +178,34 @@ export const markdownComponents: Components = {
     if (calloutLabel) {
       return <ClinicalCallout label={calloutLabel}>{children}</ClinicalCallout>;
     }
+
+    // Detect **Dosing**: paragraphs injected by processCitations
+    const fullText = flattenChildren(children);
+    if (fullText.startsWith("Dosing:")) {
+      const childArray = Children.toArray(children);
+      // childArray: [<strong>Dosing</strong>, ": 200–400 mg..."]
+      let doseContent = childArray.slice(1);
+      if (doseContent.length > 0 && typeof doseContent[0] === "string") {
+        doseContent = [
+          (doseContent[0] as string).replace(/^:\s*/, ""),
+          ...doseContent.slice(1),
+        ];
+      }
+      return (
+        <div className="mt-2 mb-1 flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] flex-shrink-0">
+              Dose
+            </span>
+            <span className="w-px h-3 bg-[var(--color-border)] flex-shrink-0" />
+            <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">
+              {doseContent}
+            </span>
+          </span>
+        </div>
+      );
+    }
+
     return (
       <p className="text-[var(--color-text-primary)] text-[16px] leading-[1.7] mb-4 last:mb-0">
         {children}
