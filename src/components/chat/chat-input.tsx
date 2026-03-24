@@ -48,8 +48,10 @@ export function ChatInput({
   const [uploading, setUploading] = useState(false);
   const [showDeepConsultInfo, setShowDeepConsultInfo] = useState(false);
   const [showSourceFilter, setShowSourceFilter] = useState(false);
+  const [sourceFilterOpenUpward, setSourceFilterOpenUpward] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourceFilterRef = useRef<HTMLDivElement>(null);
 
   // Sync initialAttachments when they change (e.g. from dashboard handoff)
   useEffect(() => {
@@ -259,10 +261,16 @@ export function ChatInput({
               </button>
 
               {/* Source Filter toggle */}
-              <div className="relative">
+              <div className="relative" ref={sourceFilterRef}>
                 <button
                   type="button"
-                  onClick={() => setShowSourceFilter(!showSourceFilter)}
+                  onClick={() => {
+                    if (!showSourceFilter && sourceFilterRef.current) {
+                      const rect = sourceFilterRef.current.getBoundingClientRect();
+                      setSourceFilterOpenUpward(rect.bottom > window.innerHeight / 2);
+                    }
+                    setShowSourceFilter(!showSourceFilter);
+                  }}
                   disabled={disabled}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors disabled:opacity-50 ${
                     !isDefaultSelection(selectedSources)
@@ -284,6 +292,7 @@ export function ChatInput({
                     onClose={() => setShowSourceFilter(false)}
                     savedDefault={savedDefault}
                     onDefaultSaved={onDefaultSaved}
+                    openUpward={sourceFilterOpenUpward}
                   />
                 )}
               </div>

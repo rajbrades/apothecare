@@ -17,6 +17,7 @@ interface SourceFilterPopoverProps {
   onClose: () => void;
   savedDefault?: SourceId[];
   onDefaultSaved?: (sources: SourceId[]) => void;
+  openUpward?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -34,6 +35,7 @@ export function SourceFilterPopover({
   onClose,
   savedDefault,
   onDefaultSaved,
+  openUpward = false,
 }: SourceFilterPopoverProps) {
   const activePreset = matchPreset(selectedSources);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,7 +103,7 @@ export function SourceFilterPopover({
   }));
 
   return (
-    <div className="absolute top-full left-0 mt-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-50 flex flex-col max-h-[min(520px,calc(100vh-8rem))] overflow-hidden">
+    <div className={`absolute left-0 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-50 flex flex-col max-h-[min(520px,calc(100vh-8rem))] overflow-hidden ${openUpward ? "bottom-full mb-2" : "top-full mt-2"}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
