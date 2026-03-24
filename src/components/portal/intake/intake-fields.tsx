@@ -238,7 +238,7 @@ export function SliderField({ label, value, onChange, min = 0, max = 10, lowLabe
 interface DynamicRowField {
   placeholder: string;
   width?: string;
-  autocomplete?: { type: "medication" | "allergen" };
+  autocomplete?: { type: "medication" | "allergen" | "supplement" };
 }
 
 interface DynamicRowsProps {
@@ -253,6 +253,17 @@ interface DynamicRowsProps {
 async function fetchMedicationSuggestions(term: string): Promise<string[]> {
   try {
     const res = await fetch(`/api/rxnorm/suggest?term=${encodeURIComponent(term)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.suggestions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchSupplementSuggestions(term: string): Promise<string[]> {
+  try {
+    const res = await fetch(`/api/supplements/suggest?term=${encodeURIComponent(term)}`);
     if (!res.ok) return [];
     const data = await res.json();
     return data.suggestions ?? [];
@@ -309,6 +320,20 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     onChange={(v) => updateCell(ri, ci, v)}
                     placeholder={field.placeholder}
                     suggestions={COMMON_ALLERGENS}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              if (field.autocomplete?.type === "supplement") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    fetchSuggestions={fetchSupplementSuggestions}
                     className={inputClass}
                     style={field.width ? { maxWidth: field.width } : undefined}
                   />
