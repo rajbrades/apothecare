@@ -333,20 +333,16 @@ interface SectionCardProps {
 
 export function SectionCard({ num, total, title, why, children }: SectionCardProps) {
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)] overflow-hidden">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)] overflow-hidden">
       {/* Header */}
-      <div className="bg-[var(--color-brand-900)] px-7 py-6 relative overflow-hidden">
-        <div className="absolute right-[-20px] top-[-20px] w-[120px] h-[120px] rounded-full bg-[var(--color-brand-700)]/20" />
-        <p className="text-[11px] font-mono tracking-widest uppercase text-[var(--color-brand-300)] mb-1.5">
-          Section {String(num).padStart(2, "0")} of {String(total).padStart(2, "0")}
+      <div className="px-7 py-5 border-b border-[var(--color-border)]">
+        <p className="text-[10px] font-mono tracking-widest uppercase text-[var(--color-text-muted)] mb-1">
+          Section {num} of {total}
         </p>
-        <h2 className="text-2xl font-semibold text-white font-[var(--font-display)] mb-2">
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
           {title}
         </h2>
-        <div className="inline-block px-2 py-0.5 mb-1.5 rounded text-[10px] font-mono uppercase tracking-wider bg-amber-500/20 border border-amber-500/30 text-amber-300">
-          Why we ask
-        </div>
-        <p className="text-[13px] text-white/60 leading-relaxed max-w-[500px]">
+        <p className="text-[12.5px] text-[var(--color-text-muted)] leading-relaxed mt-1 max-w-[520px]">
           {why}
         </p>
       </div>

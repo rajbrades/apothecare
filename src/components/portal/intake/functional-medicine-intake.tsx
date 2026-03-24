@@ -120,26 +120,19 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
 
   return (
     <div>
-      {/* Hero header */}
-      <div className="bg-[var(--color-brand-900)] px-6 py-12 text-center relative overflow-hidden -mx-6 -mt-10 mb-6">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(90,140,106,0.25)_0%,transparent_60%),radial-gradient(ellipse_at_80%_100%,rgba(184,148,42,0.15)_0%,transparent_50%)] pointer-events-none" />
-        <div className="relative">
-          <div className="flex items-center justify-center gap-2.5 mb-6">
-            <Logomark className="w-8 h-8" />
-            <span className="text-base font-semibold text-white/90 tracking-wide">Apothecare</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-white font-[var(--font-display)] italic mb-3">
-            New Patient Health Intake
-          </h1>
-          <p className="text-sm text-white/50 max-w-[520px] mx-auto leading-relaxed mb-6">
-            This comprehensive questionnaire helps your practitioner understand the full picture of your health — not just your symptoms, but the story behind them.
-          </p>
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/[0.08] border border-white/[0.15]">
-            <Clock className="w-3 h-3 text-[var(--color-brand-300)]" />
-            <span className="text-[12px] font-mono text-white/50 tracking-wide">
-              Estimated time: 15–20 minutes · All responses are private &amp; HIPAA-protected
-            </span>
-          </div>
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
+          New Patient Health Intake
+        </h1>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1.5 max-w-[480px] mx-auto leading-relaxed">
+          This questionnaire helps your practitioner understand the full picture of your health — not just your symptoms, but the story behind them.
+        </p>
+        <div className="inline-flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)]">
+          <Clock className="w-3 h-3 text-[var(--color-text-muted)]" />
+          <span className="text-[11px] text-[var(--color-text-muted)]">
+            15–20 minutes · HIPAA-protected
+          </span>
         </div>
       </div>
 
