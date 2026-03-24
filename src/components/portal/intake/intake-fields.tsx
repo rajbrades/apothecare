@@ -3,6 +3,7 @@
 import { Plus, X } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { COMMON_ALLERGENS } from "@/lib/constants/allergens";
+import { KNOWN_SUPPLEMENT_BRANDS } from "@/lib/validations/supplement";
 
 // ── Shared field components for intake form ─────────────────────────────
 
@@ -238,7 +239,7 @@ export function SliderField({ label, value, onChange, min = 0, max = 10, lowLabe
 interface DynamicRowField {
   placeholder: string;
   width?: string;
-  autocomplete?: { type: "medication" | "allergen" | "supplement" };
+  autocomplete?: { type: "medication" | "allergen" | "supplement" | "supplement_brand" };
 }
 
 interface DynamicRowsProps {
@@ -334,6 +335,21 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     onChange={(v) => updateCell(ri, ci, v)}
                     placeholder={field.placeholder}
                     fetchSuggestions={fetchSupplementSuggestions}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              if (field.autocomplete?.type === "supplement_brand") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    suggestions={KNOWN_SUPPLEMENT_BRANDS}
+                    minChars={1}
                     className={inputClass}
                     style={field.width ? { maxWidth: field.width } : undefined}
                   />

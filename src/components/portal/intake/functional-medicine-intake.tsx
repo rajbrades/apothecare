@@ -60,7 +60,7 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
     alcohol: "", caffeine: "", tobacco: "", cannabis: "", other_substances: "",
     env_exposures: [] as string[], env_detail: "",
     // Section 6
-    supplements: [["", "", ""]], past_supplements: "", preferred_brands: "",
+    supplements: [["", "", "", ""]], past_supplements: "", preferred_brands: "",
     supplement_budget: "",
     prior_labs: [] as string[],
     health_goals: "", anything_else: "",
@@ -276,7 +276,7 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
           <SectionCard num={6} total={6} title="Supplements & Current Protocols" why="Supplements can interact with each other and with medications — and more is not always better. A complete picture lets us identify gaps, duplications, and opportunities for a safer, more targeted protocol.">
             <InfoBox>Include everything — vitamins, minerals, herbs, protein powders, adaptogens, hormones (DHEA, melatonin), peptides, and any other health products.</InfoBox>
             <Subsection title="Current Supplements" />
-            <DynamicRows label="" fields={[{placeholder:"Supplement name (e.g. Magnesium Glycinate)",autocomplete:{type:"supplement"}},{placeholder:"Dose (e.g. 400mg)",width:"130px"},{placeholder:"Frequency (e.g. nightly)",width:"150px"}]} rows={r.supplements} onChange={(v) => set("supplements", v)} addLabel="Add Supplement" />
+            <DynamicRows label="" fields={[{placeholder:"Brand (e.g. Pure Encapsulations)",autocomplete:{type:"supplement_brand"},width:"200px"},{placeholder:"Name (e.g. Magnesium Glycinate)",autocomplete:{type:"supplement"}},{placeholder:"Dose (e.g. 400mg)",width:"120px"},{placeholder:"Frequency (e.g. nightly)",width:"140px"}]} rows={r.supplements} onChange={(v) => set("supplements", v)} addLabel="Add Supplement" />
             <Subsection title="Supplement History & Preferences" />
             <TextAreaField label="Past supplements you've tried and stopped" hint="Why did you stop? Did they help? Did they cause reactions?" placeholder="e.g. Tried Ashwagandha for 3 months — felt more anxious..." value={r.past_supplements} onChange={(v) => set("past_supplements", v)} />
             <TextField label="Brands you prefer or trust" placeholder="e.g. Designs for Health, Thorne, Metagenics..." value={r.preferred_brands} onChange={(v) => set("preferred_brands", v)} />
