@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM } from "@/lib/ai/anthropic";
-import { buildSourceFilterAddendum, EVIDENCE_SOURCES, type SourceId } from "@/lib/ai/source-filter";
+import { buildSourceFilterAddendum, type SourceId } from "@/lib/ai/source-filter";
 import { filterAllowedSources, isFeatureAvailable } from "@/lib/tier/gates";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -146,32 +146,14 @@ export async function POST(request: NextRequest) {
     // Build patient context
     let patientContext = "";
     if (patient_id) {
-      const [{ data: patient }, { data: biomarkers }] = await Promise.all([
-        supabase
-          .from("patients")
-          .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
-          .eq("id", patient_id)
-          .single(),
-        supabase
-          .from("biomarker_results")
-          .select("biomarker_name, value, unit, flag, reference_low, reference_high, lab_reports!inner(collection_date)")
-          .eq("lab_reports.patient_id", patient_id)
-          .order("lab_reports(collection_date)", { ascending: false })
-          .limit(50),
-      ]);
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
+        .eq("id", patient_id)
+        .single();
 
       if (patient) {
         patientContext = `\n\n## Patient Context\n- Sex: ${patient.sex || "Not specified"}\n- DOB: ${patient.date_of_birth || "Not specified"}\n- Chief Complaints: ${patient.chief_complaints?.join(", ") || "None listed"}\n- Current Medications: ${patient.current_medications || "None listed"}\n- Supplements: ${patient.supplements || "None listed"}\n- Allergies: ${patient.allergies?.join(", ") || "NKDA"}\n- History: ${patient.medical_history || "Not provided"}`;
-      }
-
-      if (biomarkers && biomarkers.length > 0) {
-        const labLines = biomarkers.map((b: any) => {
-          const ref = b.reference_low != null && b.reference_high != null ? ` (ref: ${b.reference_low}–${b.reference_high})` : "";
-          const flag = b.flag && b.flag !== "normal" ? ` [${b.flag.toUpperCase()}]` : "";
-          const date = b.lab_reports?.collection_date || "";
-          return `  - ${b.biomarker_name}: ${b.value} ${b.unit || ""}${ref}${flag}${date ? ` (${date})` : ""}`;
-        });
-        patientContext += `\n\n## Patient Lab Results (Most Recent)\n${labLines.join("\n")}`;
       }
     }
 
@@ -190,65 +172,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine which source categories are selected
-    const activeSources = (source_filter ?? []) as string[];
-    const partnershipSources = activeSources.filter(
-      (s) => EVIDENCE_SOURCES[s]?.category === "partnership"
-    );
-    const nonPartnershipSources = activeSources.filter(
-      (s) => EVIDENCE_SOURCES[s]?.category !== "partnership"
-    );
-    const hasPartnershipFilter = partnershipSources.length > 0;
-    const hasNonPartnershipFilter = nonPartnershipSources.length > 0 || activeSources.length === 0;
-
-    // RAG: Retrieve relevant evidence from PubMed/literature (skip if only partnership sources selected)
+    // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
     let evidenceContext = "";
     let ragChunkCount = 0;
     const referenceChunks: ReferenceChunk[] = [];
-    if (hasNonPartnershipFilter) {
-      try {
-        const evidence = await retrieveEvidence(message, {
-          sources: nonPartnershipSources.length > 0 ? nonPartnershipSources : (source_filter ?? []) as string[],
-          matchCount: is_deep_consult ? 12 : 8,
+    try {
+      const evidence = await retrieveEvidence(message, {
+        sources: (source_filter ?? []) as string[],
+        matchCount: is_deep_consult ? 12 : 8,
+      });
+      evidenceContext = formatEvidenceContext(evidence, 1);
+      ragChunkCount = evidence.chunks.length;
+      for (const chunk of evidence.chunks) {
+        referenceChunks.push({
+          refNum: referenceChunks.length + 1,
+          title: chunk.title,
+          authors: chunk.authors,
+          year: chunk.publishedDate?.split("-")[0] || "",
+          doi: chunk.doi || "",
+          source: chunk.source,
+          publication: chunk.publication || chunk.source,
+          evidenceLevel: chunk.evidenceLevel || "other",
         });
-        evidenceContext = formatEvidenceContext(evidence, 1);
-        ragChunkCount = evidence.chunks.length;
-        for (const chunk of evidence.chunks) {
-          referenceChunks.push({
-            refNum: referenceChunks.length + 1,
-            title: chunk.title,
-            authors: chunk.authors,
-            year: chunk.publishedDate?.split("-")[0] || "",
-            doi: chunk.doi || "",
-            source: chunk.source,
-            publication: chunk.publication || chunk.source,
-            evidenceLevel: chunk.evidenceLevel || "other",
-            content: chunk.content,
-          });
-        }
-      } catch (err) {
-        console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
       }
+    } catch (err) {
+      console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
 
-    // Partnership RAG: Retrieve relevant chunks from partner knowledge bases (pro only, best-effort)
+    // Partnership RAG: Retrieve relevant chunks from partner knowledge base (best-effort)
     let partnershipContext = "";
-    let partnershipSourcesList: string[] = [];
-    if (!isFeatureAvailable(practitioner.subscription_tier, "partnership_rag")) {
-      // Free tier: skip partnership RAG entirely
-    } else try {
-      const selectedPartnership = hasPartnershipFilter ? partnershipSources[0] : undefined;
+    let partnershipSources: string[] = [];
+    try {
       const partnerChunks = await retrieveContext({
         query: message,
-        maxChunks: is_deep_consult ? 10 : 6,
-        threshold: 0.45,
-        ...(selectedPartnership ? { sourceFilter: selectedPartnership } : {}),
+        maxChunks: is_deep_consult ? 6 : 4,
+        threshold: 0.7,
       });
-      if (partnerChunks.length === 0) {
-        console.warn(`[RAG] No partnership chunks found for query: "${message.substring(0, 80)}..." (source: ${selectedPartnership || "all"}, threshold: 0.45)`);
-      }
       partnershipContext = formatRagContext(partnerChunks, referenceChunks.length + 1);
-      partnershipSourcesList = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
+      partnershipSources = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
       for (const chunk of partnerChunks) {
         referenceChunks.push({
           refNum: referenceChunks.length + 1,
@@ -259,7 +220,6 @@ export async function POST(request: NextRequest) {
           source: chunk.source,
           publication: chunk.publication || chunk.source,
           evidenceLevel: chunk.evidenceLevel || "other",
-          content: chunk.content,
           ragSource: chunk.source,
         });
       }
@@ -339,16 +299,13 @@ export async function POST(request: NextRequest) {
             if (grounding.unresolvedRefs.length > 0) {
               console.warn(`[Citations] Unresolved REF numbers: ${grounding.unresolvedRefs.join(", ")}`);
             }
-            if (grounding.irrelevantRefs.length > 0) {
-              console.warn(`[Citations] Stripped irrelevant REFs: ${grounding.irrelevantRefs.join(", ")}`);
-            }
           }
 
           // Emit source attributions for partnership RAG (e.g. Apex Energetics)
-          if (partnershipSourcesList.length > 0) {
+          if (partnershipSources.length > 0) {
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "source_attributions", sources: partnershipSourcesList })}\n\n`
+                `data: ${JSON.stringify({ type: "source_attributions", sources: partnershipSources })}\n\n`
               )
             );
           }

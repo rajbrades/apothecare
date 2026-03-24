@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Dna, MessageSquare, Stethoscope, Users } from "lucide-react";
 import { EvidenceSection } from "@/components/dashboard/evidence-section";
 import { ResetCountdown } from "@/components/ui/reset-countdown";
@@ -41,32 +42,18 @@ export default async function DashboardPage() {
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
   const supabase = await createClient();
-
-  let patients: { id: string; first_name: string | null; last_name: string | null }[] = [];
-  let recentConversations: ConversationItem[] = [];
-  let partnerships: Awaited<ReturnType<typeof getActivePartnerships>> = [];
-  let practitionerPartnerships: Awaited<ReturnType<typeof getPractitionerPartnerships>> = [];
-
-  try {
-    const [patientsRes, sidebarRes, partnershipsRes, practPartRes] = await Promise.all([
-      supabase
-        .from("patients")
-        .select("id, first_name, last_name")
-        .eq("practitioner_id", practitioner.id)
-        .eq("is_archived", false)
-        .order("last_name", { ascending: true })
-        .limit(500),
-      getSidebarData(practitioner.id),
-      getActivePartnerships(),
-      isFree ? Promise.resolve([]) : getPractitionerPartnerships(practitioner.id),
-    ]);
-    patients = patientsRes.data || [];
-    recentConversations = sidebarRes.recentConversations;
-    partnerships = partnershipsRes;
-    practitionerPartnerships = practPartRes;
-  } catch (err) {
-    console.error("[Dashboard] Failed to load data:", err);
-  }
+  const [{ data: patients }, { recentConversations }, partnerships, practitionerPartnerships] = await Promise.all([
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name")
+      .eq("practitioner_id", practitioner.id)
+      .eq("is_archived", false)
+      .order("last_name", { ascending: true })
+      .limit(500),
+    getSidebarData(practitioner.id),
+    getActivePartnerships(),
+    isFree ? Promise.resolve([]) : getPractitionerPartnerships(practitioner.id),
+  ]);
 
   const hasConversations = recentConversations.length > 0;
 
@@ -208,12 +195,11 @@ export default async function DashboardPage() {
       {/* Evidence trust badge */}
       <div className="mt-8 flex flex-col items-center gap-2">
         <span className="text-[11px] text-[var(--color-text-muted)]">Powered by evidence from</span>
-        <div className="flex items-center gap-6 opacity-40 grayscale">
-          <img src="/logos/a4m.svg" alt="A4M" width={40} height={20} />
-          <img src="/logos/ifm.svg" alt="IFM" width={38} height={20} />
-          <img src="/logos/cleveland-clinic.svg" alt="Cleveland Clinic" width={108} height={20} />
-          <img src="/logos/pubmed.svg" alt="PubMed" width={70} height={20} />
-          <img src="/logos/cochrane.svg" alt="Cochrane" width={80} height={20} />
+        <div className="flex items-center gap-5 opacity-40 grayscale">
+          <Image src="/logos/a4m.svg" alt="A4M" width={40} height={20} />
+          <Image src="/logos/ifm.svg" alt="IFM" width={38} height={20} />
+          <Image src="/logos/cleveland-clinic.svg" alt="Cleveland Clinic" width={108} height={20} />
+          <span className="text-[11px] text-[var(--color-text-muted)]">+3 more</span>
         </div>
       </div>
     </div>

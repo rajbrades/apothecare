@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: April 1, 2026
+Last updated: March 24, 2026
 
 ---
 
@@ -218,162 +218,77 @@ Last updated: April 1, 2026
 
 ---
 
-## HIPAA Compliance Audit — March 25, 2026
+## Sprint 23 — Security & Compliance 🔧 IN PROGRESS
 
-Full codebase audit findings. Organized by severity.
+All security hardening, HIPAA remediation, and legal pages — everything needed before production.
 
----
+### HIPAA Audit Remediation (Critical)
 
-### 🔴 CRITICAL — ✅ All Resolved (March 25, 2026)
+Findings from security audit of v0.27.0 citation quality feedback loop (commits 586d225, 87832dc).
 
-- [x] **C1. Storage files not deleted on account/patient deletion** — `src/app/api/auth/delete-account/route.ts` and `src/app/api/patients/[id]/permanent-delete/route.ts` cascade-delete DB records but orphan lab PDFs and patient documents in Supabase Storage buckets (`patient-documents`, `practice-assets`). **HIPAA §164.530(c)**: PHI must be disposed when no longer needed. **Fix:** Add storage cleanup loop using `deleteFromStorage()` from `src/lib/storage/patient-documents.ts` before final deletion.
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations` — endpoint accesses PHI (user questions, AI answers) but does not call `auditLog()`
+- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations/search` — same issue
+- [ ] **HIPAA §164.312(b):** Add audit logging for Q&A context access in flagged-citations GET handler — log `resourceType: "conversation_messages"` with accessed `conversation_id`s
+- [ ] **HIPAA §164.312(a)(1):** Add explicit RLS deny policies on `citation_corrections` table — add `WITH CHECK (false)` / `USING (false)` policies for INSERT/UPDATE/DELETE (migration 028)
+- [ ] **Security:** Add Zod validation for replacement citation data — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50)
+- [ ] **Defensive:** Log warning when `ADMIN_EMAILS` env var is empty
 
-- [x] **C2. Patient portal read access not audited (5 routes)** — `GET /api/patient-portal/me`, `me/labs`, `me/notes`, `me/consents`, `me/intake` do not call `auditLog()`. **HIPAA §164.312(b)**: All PHI access must be logged, including patient self-access. **Fix:** Add `auditLog({ action: "patient_view_*", ... })` to each GET handler.
+### Export Security
 
-- [x] **C3. Account export missing Cache-Control headers** — `src/app/api/account/export/route.ts` (line 173) returns ZIP without `Cache-Control: no-store` — proxies/CDNs could cache PHI. Visit/lab/supplement exports already use `EXPORT_HEADERS` from `src/lib/export/shared.ts`. **Fix:** Add same headers to account export response.
+- [ ] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to visit export and account export responses
+- [ ] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
+- [ ] **Security:** Export watermarking — embed audit log ID, practitioner email, and timestamp in exported document footer
+- [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
+- [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
 
-- [x] **C4. Database error messages leaked to clients (19 routes)** — Pattern `return jsonError(error.message, 500)` exposes Postgres internals (table names, constraint names, column types) to the client. Affects: `ai-insights`, `supplements`, `patient-reports`, `protocol-milestones`, `symptom-logs`, `invites`, `notes`, `labs/share`, and 11 more. **Fix:** Return generic "Internal server error"; log actual error server-side with `console.error()`.
+### Legal Pages
 
----
+- [ ] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
+- [ ] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
+- [ ] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
+- [ ] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
+- [ ] **UI:** Add footer links to all legal pages on landing page and authenticated layout
+- [ ] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
 
-### 🟡 HIGH — All Resolved (H1-H11)
-
-- [x] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
-
-- [x] **H2. Console logging includes patient/practitioner IDs** — `src/app/api/patients/[id]/documents/route.ts` (lines 43, 111) logs `{ patientId, practitionerId }`. Also `src/app/api/auth/delete-account/route.ts` (line 75). Server logs may not have HIPAA-compliant access controls. **Fix:** Log error type/message only, never identifiers.
-
-- [x] **H3. Chat history read not audited** (was already implemented) — `GET /api/chat/history` retrieves conversation messages (may contain PHI in AI responses referencing patient context) but does not call `auditLog()`. **Fix:** Add audit log for message retrieval.
-
-- [x] **H4. Invite revoke not audited** (was already implemented) — `POST /api/patient-portal/invites/[id]/revoke` does not call `auditLog()`. Revocation is a security-relevant action. **Fix:** Add audit log with `action: "invite_revoked"`.
-
-- [x] **H5. Admin flagged-citations endpoints not audited** (was already implemented) — `GET /api/admin/flagged-citations` and `GET /api/admin/flagged-citations/search` access PHI (user questions, AI answers) but do not call `auditLog()`. **Fix:** Add audit logging with `resourceType: "conversation_messages"`.
-
-- [x] **H6. No automated audit log archival** — ✅ Created `scripts/archive-audit-logs.ts`: exports logs older than N months to JSON, optionally deletes from DB. Run as `npx tsx scripts/archive-audit-logs.ts --delete`. Upload to S3 Glacier via AWS CLI for cold storage.
-
-- [x] **H7. Patient right to amendment not implemented** — ✅ Full workflow: patient submits amendment request via `/portal/amendments` form (field selector, current/requested values, reason). Practitioner reviews via `GET/POST /api/patients/[id]/amendments` (approve → auto-applies change to patient record, deny → with reason). Migration 039: `amendment_requests` table with RLS policies. All actions audit logged.
-
-- [x] **H8. No patient disclosure log view** — ✅ Added `/portal/disclosures` page showing patient-accessible audit log of all PHI access events. API: `GET /api/patient-portal/me/disclosures` queries `audit_logs` table scoped to patient's resource_id. Paginated with cursor. Linked from patient dashboard "Your Rights" section.
-
-- [x] **H9. OpenAI and Supabase BAA status unverified** — ✅ Documented in `docs/COMPLIANCE.md` with action items: (1) Supabase Pro BAA via dashboard, (2) OpenAI BAA for Whisper via sales, (3) AWS BAA via Artifact console.
-
-- [x] **H10. RLS deny policies missing on `citation_corrections` table** — ✅ Already implemented in migration 028: explicit `WITH CHECK (false)` / `USING (false)` deny policies for INSERT, UPDATE, DELETE.
-
-- [x] **H11. Zod validation missing for replacement citation data** — ✅ Already implemented: DOI regex (`/^10\.\d{4,9}\/[^\s]+$/`), `replacement_title` max(1000), `replacement_authors` array max(50) with per-item max(200).
+### Completed
+- [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
+- [x] **Build fix:** Lazy env validation — `env.ts` and `provider.ts` deferred to first property access via Proxy
 
 ---
 
-### 🟠 MEDIUM — All Resolved (M1-M6)
+## Sprint 24 — Citations & Evidence (Planned)
 
-- [x] **M1. Site-access cookie missing secure flags** — ✅ Already implemented in `/api/gate`: `httpOnly: true`, `secure: true` (production), `sameSite: "lax"`.
+All citation verification, evidence quality feedback, and supplement evidence curation.
 
-- [x] **M2. Empty ADMIN_EMAILS not logged** — ✅ Added `console.warn` when `ADMIN_EMAILS` is not configured in `requireAdmin()` and `isAdminEmail()` (`src/lib/auth/admin.ts`). Inline `isAdmin()` in flagged-citations already had this.
+### Verified Citations Table
+- [ ] **DB:** Migration 027 — `verified_citations` table (DOI-keyed). Schema: `id`, `doi` (UNIQUE), `title`, `authors`, `year`, `journal`, `evidence_level`, `evidence_rank`, `abstract_snippet`, `verified_by`, `verified_at`, `context_type`, `context_value`, `origin`, `created_at`, `updated_at`. RLS: read-all, write-own.
+- [ ] **API:** `POST /api/citations/verify` — general-purpose citation verification endpoint
+- [ ] **API:** `GET /api/citations/verified` — query verified citations with filters
 
-- [x] **M3. No breach detection automation** — ✅ Added `src/lib/api/breach-detection.ts` with threshold-based anomaly detection: `checkExportAnomaly()` (>5 exports/hour), `checkAccessAnomaly()` (>100 patient views/hour). Alerts logged to `audit_logs` with `resource_type: "breach_detection"`. Wired into account export route. Console warnings emitted for operations team.
+### Citation Verification UI
+- [ ] **Feature:** Add verify button to chat `EvidenceBadge` — pass `contextType: "chat"`
+- [ ] **Feature:** Update `EvidenceBadge` to accept generic `verifyContext` prop (replaces `supplementName`)
+- [ ] **Refactor:** Migrate supplement citation verify to universal endpoint, deprecate `POST /api/supplements/citations/verify`
 
-- [x] **M4. No practitioner AI consent documentation** — ✅ Added AI processing consent checkbox to onboarding step 2. Records `ai_consent_at` timestamp in practitioners table (migration 038). Consent acknowledges Claude AI processing under zero-retention BAA.
-
-- [x] **M5. AI responses stored as-is may contain synthesized PHI** — ✅ Documented in `docs/COMPLIANCE.md` "AI-Generated Responses as PHI" section. Details: classification, protections in place (RLS, encryption, audit, cascade deletion, zero-retention BAA), and residual risk.
-
-- [x] **M6. Patient deletion doesn't cascade all tables** — ✅ Verified FK cascades: 12 tables use CASCADE, 6 use SET NULL. Updated `permanent-delete/route.ts` to explicitly delete SET NULL tables (visits, lab_reports, biomarker_results, conversations+messages, clinical_reviews, interaction_checks) before patient row deletion.
-
----
-
-### ✅ PASSING Areas (No Action Required)
-
-- [x] **Encryption in transit** — HSTS max-age=31536000, TLS 1.3, all APIs HTTPS-only
-- [x] **Encryption at rest** — AES-256 Supabase PostgreSQL + S3 storage encryption
-- [x] **Security headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy configured in `next.config.ts`
-- [x] **RLS coverage** — All 18+ tables with RLS enabled and appropriate policies
-- [x] **CSRF protection** — All mutating endpoints call `validateCsrf()`
-- [x] **Auth verification** — Service client (`createServiceClient()`) never used before auth check
-- [x] **Audit log immutability** — RLS SELECT-only for clients (migration 033), service role INSERT only
-- [x] **Audit log retention** — 6-year policy documented, indexes configured for efficient retention queries
-- [x] **Patient consent** — HIPAA NPP + Telehealth consent signed before portal access (migration 029/030)
-- [x] **Data export** — ZIP export with audit trail, session tracking, rate limiting
-- [x] **Export watermarking** — Session ID + timestamp on visit/lab/supplement exports via `EXPORT_HEADERS`
-- [x] **Invite token security** — SHA-256 hash stored, raw token never persisted, 72h TTL
-- [x] **Anthropic BAA** — Zero-retention policy confirmed, no PHI used for training
-- [x] **Legal pages** — Terms, Security, Telehealth, Advertising pages live with footer links
-- [x] **Registration consent** — Terms acceptance checkbox required before signup
+### Citation Quality Enhancements
+- [ ] **Feature:** Integrate verified citations into chat citation resolution — check `verified_citations` before CrossRef/PubMed lookups
+- [ ] **Feature:** Citation verification stats in admin dashboard — total verified, by practitioner, by context type
+- [ ] **Feature:** Practitioner citation verify button on supplement reviews — verified citations saved to curated `supplement_evidence` table
 
 ---
 
-### Previously Completed (Sprint 23/26/27)
-
-- [x] Export security headers on visit/lab/supplement exports (`EXPORT_HEADERS` in `src/lib/export/shared.ts`)
-- [x] Export watermarking with `export_session_id` UUID
-- [x] Lab PDF filename sanitization in account export (uses UUID instead of `raw_file_name`)
-- [x] `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
-- [x] Lazy env validation (build-time crash fix)
-- [x] Legal pages (Terms, Security, Telehealth, Advertising)
-- [x] Footer links + registration consent checkbox
-- [x] HIPAA audit trail hardening (migration 033 — append-only, 6-year retention, indexes)
-- [x] PHI read logging for patient charts/labs/notes (`auditLogServer()` in server components)
-- [x] Grounded citation system (eliminates hallucinated citations exposing fake medical claims)
-
----
-
-## Sprint 25 — RAG & Partnerships ✅ COMPLETE
+## Sprint 25 — RAG & Partnerships (Planned)
 
 Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
 
-### Partnership RAG — Phase 1 ✅
+### Partnership RAG — Remaining Phase 1
 - [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
 - [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
 - [x] **Test:** Verify retrieval with a thyroid-related query
 
-### Partnership RAG — Phase 2 ✅ (Sprint 34, March 26)
-- [x] **PDF restructure:** Rename and split 3 combined PDFs → 17 focused topic documents
-- [x] **Per-file metadata:** Each document has targeted `topics`, `conditions`, `interventions` arrays in ingestion scripts
-- [x] **RAG threshold:** Lowered to 0.45 (OCR content has lower similarity scores)
-- [x] **Chat context:** Patient biomarker results injected into system prompt context
-- [x] **Perspective control:** Source filter now injects functional-only or conventional-only perspective guidance
-- [x] **Prompt hardening:** Partnership context requires [REF-N] citations + specific Apex brand-name products + dosing details
-- [x] **Re-ingest:** All 17 documents re-ingested via `npx tsx scripts/ingest-apex-ocr.ts`
-
 ## Strategy & Pricing
 
-### Subscription Tiers (4-Tier — Implemented)
-
-| Feature | Free | Pro ($99/mo) | Pro+ ($179/mo) | Enterprise (Custom) |
-|---------|------|-------------|----------------|---------------------|
-| AI Chat (Sonnet) | 2/day | Unlimited | Unlimited | Unlimited |
-| Deep Consult (Opus) | — | 10/month | Unlimited | Unlimited |
-| Deep Research (autonomous lit review) | — | — | Unlimited | Unlimited |
-| Protocol Generator Pro (phased treatment plans) | — | — | 20/day | Unlimited |
-| Custom RAG (upload own knowledge bases) | — | — | — | Unlimited |
-| Partnership Knowledge Bases (Apex, etc.) | — | Included | Included | Included |
-| Patient Portal | — | Included | Included | Included |
-| Lab Parsing | 2/month | Unlimited | Unlimited | Unlimited |
-| Visit AI Generation | Included | Included | Included | Included |
-| Data Export | 1/day | 3/day | Unlimited | Unlimited |
-| Clinical Insights Dashboard | — | Included | Included | Included |
-
-### Pro+ Features — Implementation Plan
-
-- [ ] **Deep Research**: Autonomous multi-step literature review agent (see PRD: `docs/PRD-pro-plus.md`)
-- [x] **Protocol Generator Pro**: Multi-phase longitudinal treatment protocols (Sprint 29 — migration 042, 7 API routes, 5 components, SSE streaming, PDF export)
-- [x] **Protocol Progress Tracking**: Active protocol card on patient overview, phase advancement, protocol list on Protocols tab (Sprint 29)
-- [x] **Visit Protocol Context**: Active protocol injected into visit AI system prompt — phase, goal, supplements, labs to monitor (Sprint 29)
-- [ ] **Custom RAG**: Practitioner-uploaded knowledge bases with private vector search — gated to Enterprise tier (see PRD: `docs/PRD-pro-plus.md`)
-- [ ] **Stripe Integration**: Payment processing, tier management, usage metering for Deep Consult credits
-- [ ] **Usage Tracking UI**: Deep Consult credit counter in sidebar/settings, purchase flow for additional credits
-
----
-
-## Business Associate Agreements (BAAs) — Required Before Production
-
-All services that process, store, or transmit PHI require a signed BAA under HIPAA.
-
-### Signed
-- [x] **Anthropic** — Claude API (chat, OCR, lab parsing, document extraction, visit generation, pre-chart synthesis). Zero data retention policy. BAA active.
-
-### Action Required
-- [ ] **Supabase** — PostgreSQL database, Auth, Storage. Stores all patient records, lab results, visit notes, audit logs, documents. **How:** Request HIPAA BAA addendum via Supabase Dashboard > Settings > Compliance (requires Pro plan).
-- [ ] **OpenAI** — Whisper API (audio transcription of clinical recordings — may contain patient names, conditions, medications). Also `text-embedding-3-small` for RAG vector embeddings (processes chunked clinical text). **How:** Request BAA via OpenAI API dashboard or contact sales. Alternative: migrate transcription to Deepgram/AssemblyAI (both HIPAA-ready) and embeddings to Voyage AI.
-- [ ] **AWS** — Amplify (production hosting), S3 (potential audit log archival). Serves all API responses containing PHI. **How:** Sign AWS BAA via AWS Artifact console.
-- [ ] **Resend** — Transactional email service. Sends patient portal invite emails containing patient first name and practitioner practice name. **How:** Verify Resend's HIPAA compliance and BAA availability, or switch to AWS SES (covered under AWS BAA).
-- [ ] **Vercel** _(if used in production)_ — Currently marked dev-only, but if any production traffic routes through Vercel, a BAA is needed. Vercel offers HIPAA compliance on Enterprise plan. **How:** Confirm production is 100% AWS Amplify, or upgrade to Vercel Enterprise with BAA.
+- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service (autonomous literature review using advanced reasoning models).
 
 ---
 
@@ -395,7 +310,7 @@ All services that process, store, or transmit PHI require a signed BAA under HIP
 
 - [x] **Design:** Increase contrast for "Evidence partnerships" badge text on the landing page.
 - [ ] **Design:** Ensure *Admin Dashboard* (`bg-slate-50`) retains "magical" glow/serif typography from marketing site for visual continuity.
-- [x] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
+- [ ] **UX:** Clarify "Start Free" button action in landing page input (icon vs. button ambiguity).
 - [x] **UX:** Implement seamless transition from landing page query to app (persist question after signup/login).
 
 ---
@@ -440,9 +355,9 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [ ] **Feature:** "Save as Default" — Persist practitioner's preferred source preset to `preferred_evidence_sources` column
 - [x] **Feature:** RAG retrieval integration — `search_evidence_v2()` RPC with partnership + document type filtering, `src/lib/rag/retrieve.ts` retrieval layer, `src/lib/rag/format-context.ts` for system prompt injection
 - [x] **Feature:** Evidence ingestion pipeline — `src/lib/rag/ingest.ts` (PDF extract → chunk → embed → store), admin API at `/api/admin/rag/ingest`
-- [x] **Feature:** Wire RAG context into chat stream endpoint (`/api/chat/stream`)
+- [ ] **Feature:** Wire RAG context into chat stream endpoint (`/api/chat/stream`)
 - [ ] **Feature:** Wire RAG context into supplement review endpoint
-- [x] **Feature:** Wire RAG context into visit generation prompts
+- [ ] **Feature:** Wire RAG context into visit generation prompts
 - [ ] **Feature:** Per-patient source profiles — Allow source preferences to be saved per patient for recurring consults
 
 ---
@@ -455,28 +370,28 @@ _Assessed via Playwright full-page screenshots at 1440px viewport._
 - [x] **API:** `POST/GET /api/admin/rag/ingest` — admin-only endpoint to ingest all PDFs from a partnership's local docs directory
 - [x] **Dep:** Added `pdf-parse` for text extraction
 
-### Phase 1 — COMPLETE
-- [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
-- [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass (3 PDFs in `docs/partnerships/apex-energetics/`)
-- [x] **Test:** Verify retrieval with a thyroid-related query
+### Phase 1 — PENDING (where we left off)
+- [ ] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
+- [ ] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass (3 PDFs in `docs/partnerships/apex-energetics/`)
+- [ ] **Test:** Verify retrieval with a thyroid-related query
 
 ### Phase 2: Chat Integration
 - [x] **Feature:** Wire `retrieveContext()` into `/api/chat/stream` system prompt — best-effort alongside existing evidence RAG, 4 chunks standard / 6 deep consult
-- [x] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
-- [x] **Feature:** Partnership evidence badge variant on client
+- [ ] **Feature:** Partnership citation origin type (`"partnership"`) in citation pipeline
+- [ ] **Feature:** Partnership evidence badge variant on client
 
 ### Phase 3: Supplement + Visit Integration
 - [x] **Feature:** Wire retrieval into supplement review endpoint — query built from supplement list + patient context, 5 chunks, appended to system prompt
 - [x] **Feature:** Wire retrieval into visit generation prompts — query built from chief complaint + raw notes, 5 chunks, appended to SOAP system prompt
 
-### Source Filtering Phase 2 ✅ COMPLETE
-- [x] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
-- [x] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
+### Source Filtering Phase 2
+- [ ] **Feature:** "Save as Default" — persist practitioner's preferred source preset to `preferred_evidence_sources`
+- [ ] **Feature:** Per-patient source profiles — source preferences saved per patient for recurring consults
 
-### Admin & Access Control ✅ COMPLETE
-- [x] **Feature:** Admin dashboard for managing partnerships and document ingestion
-- [x] **Feature:** Practitioner settings to view/manage partnership access
-- [x] **Feature:** Subscription tier gating (partnership access as pro feature)
+### Admin & Access Control
+- [ ] **Feature:** Admin dashboard for managing partnerships and document ingestion
+- [ ] **Feature:** Practitioner settings to view/manage partnership access
+- [ ] **Feature:** Subscription tier gating (partnership access as pro feature)
 
 ---
 
@@ -624,7 +539,7 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ## Lab & Biomarker Enhancements
 
-- [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
+- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
 
 ---
 
@@ -724,109 +639,39 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
-## Sprint 27 — Citation Grounding, HIPAA Hardening & UX Polish (Mar 24) ✅ COMPLETE
+## Patient Education & Engagement (Planned)
 
-- [x] **Fix:** Eliminate citation hallucinations with grounded `[REF-N]` system — RAG evidence chunks numbered in system prompt, AI cites only those references, `groundCitations()` converts to real `[Author, Year](DOI)` links post-stream. New: `src/lib/citations/ground.ts`
-- [x] **Feature:** Render Dosing as a styled pill on its own line in chat responses — `processCitations` breaks dosing onto indented paragraph, renderer displays compact `Dose | value` pill
-- [x] **Fix:** Dynamic source filter popover direction based on viewport position — opens upward in lower half, downward in upper half
-- [x] **Feature:** Source attribution footer for partnership RAG responses — `source_attributions` SSE event with unique source IDs, frontend renders "Knowledge base: Apex Energetics" pill footer
-- [x] **Fix:** Source filter popover clipping + Apex checkbox stuck — capped popover height, deselecting last source resets to all
-- [x] **Feature:** HIPAA audit hardening — `auditLogServer()` for Next.js server components, provider read logging for patient charts/labs/notes, migration 033 append-only audit trail with 6-year retention
-- [x] **Fix:** Correct RLS policy on `practitioner_biomarker_ranges` — subquery `practitioners` to match `auth_user_id = auth.uid()` instead of direct comparison
+Patient-facing content tools and third-party integrations.
+
+- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
+- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
+- [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
 
 ---
 
-## Sprint 27 Hotfix — Patient Portal Auth (Mar 26, 2026) ✅ COMPLETE
+## Analytics & Clinical Tools (Planned)
 
-- [x] **Fix:** Patient invite link "Something went wrong" — middleware blocked `/api/patient-portal/*` routes (redirected to practitioner login instead of returning JSON)
-- [x] **Fix:** New patient auth user creation — `admin.generateLink` fails for users not yet in Supabase Auth; added `type: "signup"` fallback
-- [x] **Fix:** Resend invite button did nothing — state flow bug made email form unreachable when `portalStatus === "invited"`
-- [x] **Fix:** Pass `patientEmail` prop to `InviteToPortalButton` so resend works without re-entering email
+Practice analytics, business metrics, and advanced clinical configuration.
 
----
-
-## Sprint 28 — AI-Synthesized Pre-Chart & UX Improvements (Mar 26) ✅ COMPLETE
-
-### Pre-Chart AI Synthesis
-- [x] **Feature:** Replace concatenation in `rebuildPatientClinicalSummary` with a single Claude call that synthesizes ALL documents into ONE cohesive clinical narrative
-- [x] **Feature:** Include encounter data (visits, SOAP notes) in pre-chart synthesis context — up to 10 completed visits alongside all extracted documents
-- [x] **Feature:** Deduplicate information across documents — AI prompt instructs single-occurrence for each medication, allergy, and finding
-- [x] **Feature:** Organize synthesis by clinical system (demographics → medical history → current treatment → notable findings → treatment direction)
-- [x] **Feature:** Fast aggregation fallback for auto-rebuild after extraction (no AI latency); AI synthesis only on manual "Re-Synthesize" click
-
-### Visit UX
-- [x] **Feature:** Undo AI Generation — snapshots SOAP/IFM/protocol state before generation, shows 10-second toast with "Undo" button; persists undo to server
-- [x] **Feature:** Visit "Unlock" — already implemented (status toggle between draft/completed)
-
-### Lab Parsing Performance
-- [x] **Perf:** Reduced max_tokens from 16384 to 8192 for text path + compact output instruction to reduce generation time
-- [x] **Feature:** Real-time parsing progress indicator — step messages ("Downloading PDF…", "Extracting biomarkers…", "Normalizing N biomarkers…") shown via polling
-
-### Document Pipeline
-- [x] **Feature:** Auto-populate medications into `patient_medications` table from extracted document data with deduplication and `source: "document_extracted"`
-- [x] **Feature:** Show "Uploaded" date on lab list cards and detail views alongside collection date
-
-### Chat Stream
-- [x] **Fix:** Partnership RAG respects source filter — skips PubMed when only partnership sources selected, passes sourceFilter to `search_evidence_v2`
-
----
-
-## Sprint 29 — Protocol Generator Pro (Pro+ Tier) ✅ COMPLETE
-
-Core revenue feature — justifies $199/mo Pro+ tier. Enterprise tier added for Custom RAG.
-
-- [x] **Feature:** Protocol Generator Pro — AI-generated multi-phase treatment protocols with full patient context, SSE streaming, branded PDF export. Migration 042, 7 API routes, 5 components, AI prompts, streaming hook.
-- [x] **Feature:** Custom RAG — Deferred to Enterprise tier ($Custom). Practitioners upload own PDFs. Tier gating implemented; UI deferred.
-- [x] **Feature:** Protocol Progress Tracking — Active protocol status card on patient overview (week N of M, progress bar, focus area badges), phase advancement API, protocol list on Protocols tab.
-- [x] **Feature:** Visit Protocol Context — Active protocol injected into visit SOAP generation prompt. AI references current phase, goals, supplements, and labs to monitor.
-- [x] **Tier Gate:** Protocol generation gated to Pro+ via `isFeatureAvailable()`. Custom RAG gated to Enterprise.
-- [x] **Pricing:** 4-tier model: Free ($0) → Pro ($99/mo) → Pro+ ($179/mo) → Enterprise (Contact for pricing).
-
----
-
-## Sprint 30 — Homepage & Conversion ✅ COMPLETE
-
-Marketing site polish for demo readiness and conversion optimization.
-
-- [x] **Design:** Move chat product mockup into hero viewport — reduced hero min-height, removed scroll cue, chat demo now visible near fold
-- [x] **Design:** Add dark/teal CTA break section before pricing — `CtaBreak` component (brand-950 bg, brand-300 accent) inserted before Pricing
-- [x] **Design:** Rich AI response in demo chat mockup — already implemented (evidence badges, typewriter animation, formatted response)
-- [x] **Design:** Balance hero input microcopy — centered "2 free queries daily · No credit card required" below input
-- [ ] **Design:** Admin Dashboard visual continuity — uses slate-* colors instead of brand system (deferred, lower priority)
-
----
-
-## Sprint 31 — Integrations & Patient Engagement ✅ COMPLETE
-
-Patient-facing content tools and third-party connections.
-
-- [x] **Feature:** Patient Education Studio (Deep Dive) — Text selection triggers educational content generation with RAG grounding, slide deck presentations, and two-voice podcast audio via OpenAI TTS. Fully implemented.
-- [ ] **Feature:** Fullscript.com integration — Deferred. Requires Fullscript developer API account. Stub button exists ("coming soon").
-- [x] ~~**Feature:** Video Content Library~~ — Skipped. Low clinical value relative to other priorities.
-
----
-
-## Sprint 32 — Analytics & Business Intelligence (April 1, 2026) — IN PROGRESS
-
-Practice insights for practitioner retention and conversion optimization.
-
-- [x] **Feature:** Clinical Insights Dashboard (`/analytics`) — Recharts visualizations: top conditions treated, visit volume over time, biomarker flag frequency, most prescribed supplements, protocol generation trends, lab vendor distribution. Pro gated. Analytics sidebar nav item.
+- [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
-- [ ] **Feature:** Analytics integration (PostHog or Mixpanel)
-- [ ] **Feature:** A/B testing framework for landing page conversion
-- [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
+- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
 
 ---
 
-## Sprint 33 — Infrastructure & Compliance
+## Backlog
 
-Production hardening, accessibility, and vendor compliance.
+### Design & UX Polish
+- [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
+- [ ] **UX:** Clarify "Start Free" button action in landing page input
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently 900px below fold)
+- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
+- [ ] **Design:** Show a rich AI response in the demo chat mockup
+- [ ] **Design:** Balance hero input microcopy alignment
 
-- [ ] **Infra:** PWA support for mobile practitioners
-- [ ] **Compliance:** BAA — Supabase (Pro plan, request via dashboard)
-- [ ] **Compliance:** BAA — OpenAI (Whisper API, or migrate to Deepgram/AssemblyAI)
-- [ ] **Compliance:** BAA — AWS (via AWS Artifact console)
-- [ ] **Compliance:** BAA — Resend (verify HIPAA compliance, or switch to AWS SES)
-- [ ] **Compliance:** BAA — Vercel (confirm production is 100% AWS, or upgrade to Enterprise)
-- [ ] **Accessibility:** WCAG 2.1 AA audit across all pages
-- [x] Mobile responsive pass on all pages
+### Platform & Infrastructure
+- [ ] Mobile responsive pass on all pages
+- [ ] PWA support for mobile practitioners
+- [ ] Analytics integration (PostHog or Mixpanel)
+- [ ] A/B testing framework for landing page conversion
+- [ ] Accessibility audit (WCAG 2.1 AA)
