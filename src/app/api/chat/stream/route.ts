@@ -193,6 +193,7 @@ export async function POST(request: NextRequest) {
           source: chunk.source,
           publication: chunk.publication || chunk.source,
           evidenceLevel: chunk.evidenceLevel || "other",
+          content: chunk.content,
         });
       }
     } catch (err) {
@@ -220,6 +221,7 @@ export async function POST(request: NextRequest) {
           source: chunk.source,
           publication: chunk.publication || chunk.source,
           evidenceLevel: chunk.evidenceLevel || "other",
+          content: chunk.content,
           ragSource: chunk.source,
         });
       }
@@ -298,6 +300,9 @@ export async function POST(request: NextRequest) {
 
             if (grounding.unresolvedRefs.length > 0) {
               console.warn(`[Citations] Unresolved REF numbers: ${grounding.unresolvedRefs.join(", ")}`);
+            }
+            if (grounding.irrelevantRefs.length > 0) {
+              console.warn(`[Citations] Stripped irrelevant REFs: ${grounding.irrelevantRefs.join(", ")}`);
             }
           }
 
