@@ -10,20 +10,26 @@ import type { RetrievedEvidence } from "./retrieve";
 /**
  * Format retrieved evidence into a structured context block for the system prompt.
  *
+ * Each chunk is assigned a [REF-N] number starting from `startIndex`.
+ * The AI must cite these references by number; the server converts them
+ * to real [Author, Year](DOI) links post-generation.
+ *
  * Returns empty string if no evidence was retrieved (graceful degradation).
  */
-export function formatEvidenceContext(evidence: RetrievedEvidence): string {
+export function formatEvidenceContext(
+  evidence: RetrievedEvidence,
+  startIndex: number = 1
+): string {
   if (evidence.chunks.length === 0) return "";
 
   const header = `
 
 ## Retrieved Evidence
-The following evidence passages were retrieved from the knowledge base and are directly relevant to the query. **You MUST cite these sources** when they support your response. Use the exact [Author, Year](DOI_URL) format for each citation. Do not fabricate citations — only cite what is provided below or sources you are highly confident about.
-
-**Important:** Each source is tagged with its origin (e.g. "Source: apex_energetics", "Source: pubmed"). When generating citation metadata, include the source origin so users can see which knowledge base each citation came from.
+The following evidence passages were retrieved from the knowledge base and are relevant to the query. **Cite these sources using their reference numbers** (e.g. [REF-${startIndex}], [REF-${startIndex + 1}]) when they support your response.
 `;
 
   const entries = evidence.chunks.map((chunk, i) => {
+    const refNum = startIndex + i;
     const authorDisplay = chunk.authors.length > 0
       ? chunk.authors.length > 3
         ? `${chunk.authors[0]} et al.`
@@ -35,15 +41,13 @@ The following evidence passages were retrieved from the knowledge base and are d
       : "n.d.";
 
     const doiLink = chunk.doi
-      ? `https://doi.org/${chunk.doi}`
+      ? `\nDOI: https://doi.org/${chunk.doi}`
       : "";
 
     const levelLabel = formatEvidenceLevel(chunk.evidenceLevel);
 
-    return `### [${i + 1}] ${chunk.title}
-**${authorDisplay} (${year})** — ${chunk.publication || chunk.source} | ${levelLabel}${doiLink ? `\nDOI: ${doiLink}` : ""}
-Source: ${chunk.source}
-Relevance: ${(chunk.similarity * 100).toFixed(0)}%
+    return `[REF-${refNum}] "${chunk.title}"
+${authorDisplay} (${year}) — ${chunk.publication || chunk.source} | ${levelLabel}${doiLink}
 
 > ${chunk.content}`;
   });

@@ -8,7 +8,7 @@ import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
-import { extractCitations, resolveCitations, resolveCitationsMulti, markVerifiedCitations, applyCitationLinks } from "@/lib/citations/resolve";
+import { groundCitations, type ReferenceChunk } from "@/lib/citations/ground";
 import { retrieveEvidence } from "@/lib/evidence/retrieve";
 import { formatEvidenceContext } from "@/lib/evidence/format-context";
 import { retrieveContext } from "@/lib/rag/retrieve";
@@ -175,20 +175,25 @@ export async function POST(request: NextRequest) {
     // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
     let evidenceContext = "";
     let ragChunkCount = 0;
-    // Map of title keywords → RAG source for tagging citations with their origin
-    const ragSourceByTitle = new Map<string, string>();
+    const referenceChunks: ReferenceChunk[] = [];
     try {
       const evidence = await retrieveEvidence(message, {
         sources: (source_filter ?? []) as string[],
         matchCount: is_deep_consult ? 12 : 8,
       });
-      evidenceContext = formatEvidenceContext(evidence);
+      evidenceContext = formatEvidenceContext(evidence, 1);
       ragChunkCount = evidence.chunks.length;
-      // Build lookup: lowercase title → source (e.g. "apex_energetics", "pubmed")
       for (const chunk of evidence.chunks) {
-        if (chunk.title && chunk.source) {
-          ragSourceByTitle.set(chunk.title.toLowerCase(), chunk.source);
-        }
+        referenceChunks.push({
+          refNum: referenceChunks.length + 1,
+          title: chunk.title,
+          authors: chunk.authors,
+          year: chunk.publishedDate?.split("-")[0] || "",
+          doi: chunk.doi || "",
+          source: chunk.source,
+          publication: chunk.publication || chunk.source,
+          evidenceLevel: chunk.evidenceLevel || "other",
+        });
       }
     } catch (err) {
       console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
@@ -203,9 +208,21 @@ export async function POST(request: NextRequest) {
         maxChunks: is_deep_consult ? 6 : 4,
         threshold: 0.7,
       });
-      partnershipContext = formatRagContext(partnerChunks);
-      // Collect unique source identifiers (e.g. "apex_energetics") for attribution
+      partnershipContext = formatRagContext(partnerChunks, referenceChunks.length + 1);
       partnershipSources = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
+      for (const chunk of partnerChunks) {
+        referenceChunks.push({
+          refNum: referenceChunks.length + 1,
+          title: chunk.title,
+          authors: chunk.authors ?? [],
+          year: chunk.publishedDate?.split("-")[0] || "",
+          doi: chunk.doi || "",
+          source: chunk.source,
+          publication: chunk.publication || chunk.source,
+          evidenceLevel: chunk.evidenceLevel || "other",
+          ragSource: chunk.source,
+        });
+      }
     } catch (err) {
       console.warn("[RAG] Partnership context retrieval failed, proceeding without:", err);
     }
@@ -243,81 +260,42 @@ export async function POST(request: NextRequest) {
             }
           );
 
-          // Resolve citations via CrossRef + PubMed (best-effort, non-blocking on failure)
+          // Ground citations: convert [REF-N] to real [Author, Year](DOI) from RAG chunks
           let resolvedContent = fullContent;
           let resolvedCitationsForDB: object[] = [];
-          try {
-            const citations = extractCitations(fullContent);
-            if (citations.length > 0) {
-              // Resolve multi-citation (up to 3 per reference)
-              const multiMap = await resolveCitationsMulti(citations);
+          if (referenceChunks.length > 0) {
+            const grounding = groundCitations(fullContent, referenceChunks);
+            resolvedContent = grounding.content;
 
-              // Tier 0: mark any DOIs already in verified_citations as curated
-              await markVerifiedCitations(multiMap, supabase);
-
-              // Build single-citation map for inline DOI link replacement
-              const singleMap = new Map(
-                [...multiMap].map(([key, arr]) => [key, arr[0]])
-              );
-              resolvedContent = applyCitationLinks(fullContent, singleMap);
-
-              // Send resolved content to client so it can update the message
+            if (resolvedContent !== fullContent) {
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ type: "citations_resolved", content: resolvedContent })}\n\n`
                 )
               );
-
-              // Send multi-citation metadata for badge rendering
-              // Each citation key maps to an array of up to 3 references
-              const metadataByKey: Record<string, object[]> = {};
-              for (const [key, arr] of multiMap) {
-                const withDoi = arr.filter((r) => r.doi);
-                if (withDoi.length > 0) {
-                  metadataByKey[key] = withDoi.map((r) => {
-                    // Match citation title to RAG evidence source
-                    const titleLower = r.title?.toLowerCase() || "";
-                    const matchedRagSource = r.ragSource
-                      || ragSourceByTitle.get(titleLower)
-                      || undefined;
-                    return {
-                      citationText: r.citationText,
-                      title: r.title,
-                      source: r.source,
-                      authors: r.authors,
-                      year: r.year,
-                      doi: r.doi,
-                      evidenceLevel: r.evidenceLevel,
-                      origin: r.origin,
-                      ragSource: matchedRagSource,
-                    };
-                  });
-                }
-              }
-
-              if (Object.keys(metadataByKey).length > 0) {
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({ type: "citation_metadata_multi", citationsByKey: metadataByKey })}\n\n`
-                  )
-                );
-
-                // Flatten all citations for DB storage
-                resolvedCitationsForDB = Object.values(metadataByKey)
-                  .flat()
-                  .map((r: any) => ({
-                    citationText: r.citationText,
-                    title: r.title,
-                    source: r.source,
-                    authors: r.authors,
-                    year: r.year ? parseInt(r.year) : undefined,
-                    doi: r.doi,
-                    evidence_level: r.evidenceLevel,
-                  }));
-              }
             }
-          } catch (err) {
-            console.warn("[Citations] Resolution failed, saving unresolved text:", err);
+
+            if (Object.keys(grounding.citationsByKey).length > 0) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "citation_metadata_multi", citationsByKey: grounding.citationsByKey })}\n\n`
+                )
+              );
+
+              resolvedCitationsForDB = grounding.flatCitations.map((c) => ({
+                citationText: c.citationText,
+                title: c.title,
+                source: c.source,
+                authors: c.authors,
+                year: c.year ? parseInt(c.year) : undefined,
+                doi: c.doi,
+                evidence_level: c.evidenceLevel,
+              }));
+            }
+
+            if (grounding.unresolvedRefs.length > 0) {
+              console.warn(`[Citations] Unresolved REF numbers: ${grounding.unresolvedRefs.join(", ")}`);
+            }
           }
 
           // Emit source attributions for partnership RAG (e.g. Apex Energetics)
