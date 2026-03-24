@@ -29,6 +29,7 @@ interface VitalsPanelProps {
   onPushToChart?: () => void;
   pushingToChart?: boolean;
   vitalsPushedAt?: string | null;
+  onVitalsSaved?: (vitals: VitalsData | null, ratings: HealthRatings | null) => void;
 }
 
 const PILLARS: {
@@ -121,7 +122,7 @@ function formatPreviousDate(dateStr: string): string {
   });
 }
 
-export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly = false, patientId, patient, previousVitals, previousRatings, previousDate, onPatientFieldSaved, onPushToChart, pushingToChart, vitalsPushedAt }: VitalsPanelProps) {
+export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly = false, patientId, patient, previousVitals, previousRatings, previousDate, onPatientFieldSaved, onPushToChart, pushingToChart, vitalsPushedAt, onVitalsSaved }: VitalsPanelProps) {
   const [vitals, setVitals] = useState<VitalsData>(initialVitals ?? {});
   const [ratings, setRatings] = useState<HealthRatings>(initialRatings ?? {});
   const [saved, setSaved] = useState(false);
@@ -145,21 +146,25 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
 
   const doSave = useCallback(
     async (nextVitals: VitalsData, nextRatings: HealthRatings) => {
+      const vitalsPayload = Object.keys(nextVitals).length > 0 ? nextVitals : null;
+      const ratingsPayload = Object.keys(nextRatings).length > 0 ? nextRatings : null;
       const res = await fetch(`/api/visits/${visitId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          vitals_data: Object.keys(nextVitals).length > 0 ? nextVitals : null,
-          health_ratings: Object.keys(nextRatings).length > 0 ? nextRatings : null,
+          vitals_data: vitalsPayload,
+          health_ratings: ratingsPayload,
         }),
       });
       if (!res.ok) throw new Error("Save failed");
+      // Sync parent visit state so tab switches preserve the saved data
+      onVitalsSaved?.(vitalsPayload, ratingsPayload);
       setDirty(false);
       setSaved(true);
       if (savedTimer.current) clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 2500);
     },
-    [visitId]
+    [visitId, onVitalsSaved]
   );
 
   const scheduleSave = useCallback(

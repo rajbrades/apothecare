@@ -496,6 +496,14 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
     }));
   }, []);
 
+  const handleVitalsSaved = useCallback((vitals: VitalsData | null, ratings: HealthRatings | null) => {
+    setVisit((prev) => ({
+      ...prev,
+      vitals_data: vitals,
+      health_ratings: ratings,
+    }));
+  }, []);
+
   const handlePushToPatientMatrix = useCallback(async () => {
     if (!visit.patients?.id) return;
     setPushing(true);
@@ -954,6 +962,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
             onPushToChart={handlePushVitalsToChart}
             pushingToChart={pushingVitals}
             vitalsPushedAt={vitalsPushedAt}
+            onVitalsSaved={handleVitalsSaved}
           />
         )}
         {activeTab === "soap" && (
