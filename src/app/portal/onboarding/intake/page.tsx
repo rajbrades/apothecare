@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Logomark } from "@/components/ui/logomark";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { PortalShell } from "@/components/portal/portal-shell";
 
 interface TemplateField {
   key: string;
@@ -52,7 +50,6 @@ export default function IntakePage() {
         }
         if (data.template) {
           setTemplate(data.template);
-          // Restore draft from localStorage
           try {
             const saved = localStorage.getItem(DRAFT_KEY);
             if (saved) setResponses(JSON.parse(saved));
@@ -65,7 +62,6 @@ export default function IntakePage() {
       });
   }, [router]);
 
-  // Save draft to localStorage on changes
   useEffect(() => {
     if (template && Object.keys(responses).length > 0) {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(responses));
@@ -108,7 +104,7 @@ export default function IntakePage() {
 
   if (loading) {
     return (
-      <PortalShell>
+      <PortalShell maxWidth="2xl">
         <p className="text-sm text-[var(--color-text-muted)]">Loading intake form…</p>
       </PortalShell>
     );
@@ -116,7 +112,7 @@ export default function IntakePage() {
 
   if (alreadySubmitted) {
     return (
-      <PortalShell>
+      <PortalShell maxWidth="2xl">
         <p className="text-sm text-[var(--color-text-secondary)]">Intake already submitted. Redirecting to your dashboard…</p>
       </PortalShell>
     );
@@ -124,14 +120,14 @@ export default function IntakePage() {
 
   if (!template) {
     return (
-      <PortalShell>
+      <PortalShell maxWidth="2xl">
         <p className="text-sm text-[var(--color-text-muted)]">No intake form available. <a href="/portal/dashboard" className="underline">Continue to dashboard.</a></p>
       </PortalShell>
     );
   }
 
   return (
-    <PortalShell>
+    <PortalShell maxWidth="2xl">
       <div className="w-full max-w-2xl mx-auto space-y-6">
         {/* Progress */}
         <div className="space-y-2">
@@ -216,40 +212,5 @@ export default function IntakePage() {
         </div>
       </div>
     </PortalShell>
-  );
-}
-
-function PortalShell({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const supabase = createClient();
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/portal/login");
-  }
-
-  return (
-    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
-          </div>
-          <button onClick={signOut} aria-label="Sign out" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-secondary)]">
-            Sign out
-          </button>
-        </div>
-      </header>
-      <main className="flex-1 px-6 py-10">
-        {children}
-      </main>
-      <footer className="border-t border-[var(--color-border)] py-4 px-6">
-        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-          <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</Link>
-          <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</Link>
-        </nav>
-      </footer>
-    </div>
   );
 }

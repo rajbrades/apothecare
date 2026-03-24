@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Logomark } from "@/components/ui/logomark";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { PortalShell } from "@/components/portal/portal-shell";
 
 interface ConsentTemplate {
   id: string;
@@ -29,14 +27,16 @@ export default function ConsentsPage() {
 
   useEffect(() => {
     fetch("/api/patient-portal/me/consents")
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401) { router.replace("/portal/login"); return null; }
+        return r.json();
+      })
       .then((data) => {
-        // Only show unsigned required consents
+        if (!data) return;
         const unsigned = (data.consents || []).filter((c: ConsentTemplate) => !c.signed);
         setConsents(unsigned);
         setLoading(false);
         if (unsigned.length === 0) {
-          // All signed — advance to intake
           router.replace("/portal/onboarding/intake");
         }
       })
@@ -78,7 +78,7 @@ export default function ConsentsPage() {
 
   if (loading) {
     return (
-      <PortalShell>
+      <PortalShell maxWidth="2xl">
         <p className="text-sm text-[var(--color-text-muted)]">Loading consent forms…</p>
       </PortalShell>
     );
@@ -90,7 +90,7 @@ export default function ConsentsPage() {
   const step = currentIndex + 1;
 
   return (
-    <PortalShell>
+    <PortalShell maxWidth="2xl">
       <div className="w-full max-w-2xl mx-auto space-y-6">
         {/* Progress */}
         <div className="space-y-2">
@@ -157,40 +157,5 @@ export default function ConsentsPage() {
         </div>
       </div>
     </PortalShell>
-  );
-}
-
-function PortalShell({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const supabase = createClient();
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/portal/login");
-  }
-
-  return (
-    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
-          </div>
-          <button onClick={signOut} aria-label="Sign out" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-secondary)]">
-            Sign out
-          </button>
-        </div>
-      </header>
-      <main className="flex-1 px-6 py-10">
-        {children}
-      </main>
-      <footer className="border-t border-[var(--color-border)] py-4 px-6">
-        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-          <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</Link>
-          <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</Link>
-        </nav>
-      </footer>
-    </div>
   );
 }

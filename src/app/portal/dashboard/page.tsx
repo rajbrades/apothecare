@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Logomark } from "@/components/ui/logomark";
-import { createClient } from "@/lib/supabase/client";
-import { FlaskConical, FileText, Shield } from "lucide-react";
+import { FlaskConical, FileText, Shield, ScrollText } from "lucide-react";
+import { PortalShell } from "@/components/portal/portal-shell";
 
 interface LabReport {
   id: string;
@@ -22,6 +21,12 @@ interface EncounterNote {
   visit_type: string;
   chief_complaint: string | null;
   practitioners: { full_name: string } | null;
+}
+
+interface SignedConsent {
+  id: string;
+  title: string;
+  signed_at: string;
 }
 
 interface Patient {
@@ -46,35 +51,27 @@ export default function PatientDashboard() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [labs, setLabs] = useState<LabReport[]>([]);
   const [notes, setNotes] = useState<EncounterNote[]>([]);
+  const [signedConsents, setSignedConsents] = useState<SignedConsent[]>([]);
   const [loading, setLoading] = useState(true);
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
-  const supabase = createClient();
-
   useEffect(() => {
-    // Verify auth
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace("/portal/login");
-        return;
-      }
-      loadData();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadData();
   }, []);
 
   async function loadData() {
     try {
-      const [meRes, labsRes, notesRes] = await Promise.all([
+      const [meRes, labsRes, notesRes, consentsRes] = await Promise.all([
         fetch("/api/patient-portal/me"),
         fetch("/api/patient-portal/me/labs"),
         fetch("/api/patient-portal/me/notes"),
+        fetch("/api/patient-portal/me/consents"),
       ]);
 
       if (meRes.status === 401) { router.replace("/portal/login"); return; }
 
-      const [meData, labsData, notesData] = await Promise.all([
-        meRes.json(), labsRes.json(), notesRes.json(),
+      const [meData, labsData, notesData, consentsData] = await Promise.all([
+        meRes.json(), labsRes.json(), notesRes.json(), consentsRes.json(),
       ]);
 
       if (!meData.onboarding?.complete) {
@@ -87,19 +84,18 @@ export default function PatientDashboard() {
       setPatient(meData.patient);
       setLabs(labsData.labs || []);
       setNotes(notesData.notes || []);
+      // Show only signed consents
+      setSignedConsents(
+        (consentsData.consents || []).filter((c: SignedConsent & { signed: boolean }) => c.signed)
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/portal/login");
-  }
-
   if (loading || !onboardingComplete) {
     return (
-      <PortalShell onSignOut={signOut}>
+      <PortalShell>
         <p className="text-sm text-[var(--color-text-muted)]">Loading your dashboard…</p>
       </PortalShell>
     );
@@ -108,7 +104,7 @@ export default function PatientDashboard() {
   const firstName = patient?.first_name || "there";
 
   return (
-    <PortalShell onSignOut={signOut}>
+    <PortalShell>
       <div className="w-full max-w-3xl mx-auto space-y-8">
         {/* Greeting */}
         <div>
@@ -189,6 +185,36 @@ export default function PatientDashboard() {
             </div>
           )}
         </section>
+
+        {/* Signed consents */}
+        {signedConsents.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+              Signed Documents
+            </h2>
+            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
+              {signedConsents.map((consent) => (
+                <div
+                  key={consent.id}
+                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <ScrollText className="h-4 w-4 text-[var(--color-text-muted)] flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                        {consent.title}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        Signed {formatDate(consent.signed_at)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-emerald-600 font-medium">Signed</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </PortalShell>
   );
@@ -200,40 +226,6 @@ function EmptyState({ icon, message, hint }: { icon: React.ReactNode; message: s
       <div className="text-[var(--color-text-muted)]">{icon}</div>
       <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
       {hint && <p className="text-xs text-[var(--color-text-muted)]">{hint}</p>}
-    </div>
-  );
-}
-
-function PortalShell({ children, onSignOut }: { children: React.ReactNode; onSignOut?: () => void }) {
-  return (
-    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
-          </div>
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              aria-label="Sign out"
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-secondary)]"
-            >
-              Sign out
-            </button>
-          )}
-        </div>
-      </header>
-      <main className="flex-1 px-6 py-10">
-        {children}
-      </main>
-      <footer className="border-t border-[var(--color-border)] py-4 px-6">
-        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-          <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</Link>
-          <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</Link>
-          <Link href="/telehealth" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</Link>
-        </nav>
-      </footer>
     </div>
   );
 }

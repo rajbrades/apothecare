@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Logomark } from "@/components/ui/logomark";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
 import { Info, FlaskConical } from "lucide-react";
+import { PortalShell } from "@/components/portal/portal-shell";
 import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
 import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
 import type { BiomarkerFlag as DbFlag } from "@/types/database";
@@ -166,21 +166,3 @@ export default function PatientLabDetailPage() {
   );
 }
 
-function PortalShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
-          </div>
-          <Link href="/portal/dashboard" className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
-            Dashboard
-          </Link>
-        </div>
-      </header>
-      <main className="flex-1 px-6 py-10">{children}</main>
-    </div>
-  );
-}
