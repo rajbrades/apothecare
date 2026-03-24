@@ -639,6 +639,18 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
+## Sprint 27 — Citation Grounding, HIPAA Hardening & UX Polish (Mar 24) ✅ COMPLETE
+
+- [x] **Fix:** Eliminate citation hallucinations with grounded `[REF-N]` system — RAG evidence chunks numbered in system prompt, AI cites only those references, `groundCitations()` converts to real `[Author, Year](DOI)` links post-stream. New: `src/lib/citations/ground.ts`
+- [x] **Feature:** Render Dosing as a styled pill on its own line in chat responses — `processCitations` breaks dosing onto indented paragraph, renderer displays compact `Dose | value` pill
+- [x] **Fix:** Dynamic source filter popover direction based on viewport position — opens upward in lower half, downward in upper half
+- [x] **Feature:** Source attribution footer for partnership RAG responses — `source_attributions` SSE event with unique source IDs, frontend renders "Knowledge base: Apex Energetics" pill footer
+- [x] **Fix:** Source filter popover clipping + Apex checkbox stuck — capped popover height, deselecting last source resets to all
+- [x] **Feature:** HIPAA audit hardening — `auditLogServer()` for Next.js server components, provider read logging for patient charts/labs/notes, migration 033 append-only audit trail with 6-year retention
+- [x] **Fix:** Correct RLS policy on `practitioner_biomarker_ranges` — subquery `practitioners` to match `auth_user_id = auth.uid()` instead of direct comparison
+
+---
+
 ## Patient Education & Engagement (Planned)
 
 Patient-facing content tools and third-party integrations.
