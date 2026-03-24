@@ -98,6 +98,51 @@ export interface FMTimelineData {
   events: FMTimelineEvent[];
 }
 
+export interface PatientSymptomScores {
+  fatigue?: number;
+  morning_groggy?: number;
+  energy_crash?: number;
+  exercise_intol?: number;
+  sleep_onset?: number;
+  sleep_wake?: number;
+  sleep_unrefresh?: number;
+  bloating?: number;
+  constipation?: number;
+  diarrhea?: number;
+  reflux?: number;
+  food_sens?: number;
+  weight?: number;
+  cold?: number;
+  brain_fog?: number;
+  libido?: number;
+  mood?: number;
+  hair_skin?: number;
+  [key: string]: number | undefined;
+}
+
+export interface PatientLifestyle {
+  diet_type?: string;
+  meals_per_day?: string;
+  skip_breakfast?: string;
+  typical_day_eating?: string;
+  sugar_intake?: number;
+  water_intake?: string;
+  exercise_freq?: string;
+  exercise_type?: string;
+  exercise_tolerance?: string;
+  stress_level?: number;
+  stressors?: string[];
+  stress_management?: string;
+  alcohol?: string;
+  caffeine?: string;
+  tobacco?: string;
+  cannabis?: string;
+  other_substances?: string;
+  env_exposures?: string[];
+  env_detail?: string;
+  [key: string]: unknown;
+}
+
 export interface Patient {
   id: string;
   practitioner_id: string;
@@ -105,11 +150,39 @@ export interface Patient {
   last_name: string | null;
   date_of_birth: string | null;
   sex: string | null;
+  // Contact
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  // Demographics
+  gender_identity: string | null;
+  ethnicity: string | null;
+  referral_source: string | null;
+  // Clinical
   chief_complaints: string[] | null;
   medical_history: string | null;
   current_medications: string | null;
   supplements: string | null;
   allergies: string[] | null;
+  diagnoses: string[] | null;
+  surgeries: Array<{ name: string; year: string }> | null;
+  hospitalizations: Array<{ reason: string; year: string }> | null;
+  // Family history
+  family_history_conditions: string[] | null;
+  family_history_detail: string | null;
+  // Genetics
+  genetic_testing: string | null;
+  apoe_genotype: string | null;
+  mthfr_variants: string | null;
+  // Symptoms & Lifestyle
+  symptom_scores: PatientSymptomScores;
+  lifestyle: PatientLifestyle;
+  // Prior labs & Goals
+  prior_labs: string[] | null;
+  health_goals: string | null;
+  // Existing
   notes: string | null;
   clinical_summary: PatientClinicalSummary;
   ifm_matrix: IFMMatrix | Record<string, unknown>;
@@ -117,6 +190,7 @@ export interface Patient {
   dietary_recommendations: ProtocolItem[] | null;
   lifestyle_recommendations: ProtocolItem[] | null;
   follow_up_labs: ProtocolItem[] | null;
+  preferred_evidence_sources: string[] | null;
   portal_status: "not_invited" | "invited" | "active" | "disabled" | null;
   is_archived: boolean;
   created_at: string;

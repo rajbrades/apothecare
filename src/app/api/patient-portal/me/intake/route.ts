@@ -89,38 +89,136 @@ export async function POST(request: NextRequest) {
 
   if (!template) return jsonError("Template not found", 404);
 
-  // Map responses to patient record fields
-  const schemaFields = template.schema_json as Array<{
-    key: string;
-    maps_to?: string;
-    type?: string;
-  }>;
-
-  const mappedFields: Record<string, unknown> = {};
+  // Map intake responses to patient record fields
+  const r = responses as Record<string, unknown>;
   const patientUpdates: Record<string, unknown> = {};
 
-  const ALLOWED_PATIENT_FIELDS = new Set([
-    "chief_complaints", "medical_history", "current_medications",
-    "supplements", "allergies", "notes",
-  ]);
+  // Helper: only set if value is non-empty
+  const setIfPresent = (key: string, value: unknown) => {
+    if (value !== undefined && value !== null && value !== "") {
+      patientUpdates[key] = value;
+    }
+  };
 
-  for (const field of schemaFields) {
-    if (!field.maps_to) continue;
-    const value = responses[field.key];
-    if (value === undefined || value === null || value === "") continue;
+  // Demographics & Contact
+  setIfPresent("email", r.email);
+  setIfPresent("phone", r.phone);
+  if (r.city_state && typeof r.city_state === "string") {
+    const parts = r.city_state.split(",").map((s: string) => s.trim());
+    setIfPresent("city", parts[0]);
+    setIfPresent("state", parts[1]);
+  }
+  setIfPresent("zip_code", r.zip);
+  setIfPresent("gender_identity", r.gender_identity);
+  setIfPresent("ethnicity", r.ethnicity);
+  setIfPresent("referral_source", r.referral);
 
-    if (ALLOWED_PATIENT_FIELDS.has(field.maps_to)) {
-      // chief_complaints and allergies are arrays
-      if (field.maps_to === "chief_complaints" || field.maps_to === "allergies") {
-        patientUpdates[field.maps_to] = typeof value === "string"
-          ? value.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : value;
-      } else {
-        patientUpdates[field.maps_to] = value;
-      }
-      mappedFields[field.maps_to] = patientUpdates[field.maps_to];
+  // Clinical
+  if (r.reason_for_visit) {
+    patientUpdates.chief_complaints = typeof r.reason_for_visit === "string"
+      ? [r.reason_for_visit] : r.reason_for_visit;
+  }
+  if (Array.isArray(r.diagnoses) && r.diagnoses.length > 0) {
+    patientUpdates.diagnoses = r.diagnoses;
+    // Also append to medical_history text
+    const diagText = (r.diagnoses as string[]).join(", ");
+    const detail = r.diagnoses_detail || "";
+    patientUpdates.medical_history = detail ? `${diagText}\n\n${detail}` : diagText;
+  } else if (r.diagnoses_detail) {
+    patientUpdates.medical_history = r.diagnoses_detail;
+  }
+
+  // Surgeries & Hospitalizations (dynamic rows → JSONB arrays)
+  if (Array.isArray(r.surgeries)) {
+    const filtered = (r.surgeries as string[][])
+      .filter((row) => row[0]?.trim())
+      .map((row) => ({ name: row[0], year: row[1] || "" }));
+    if (filtered.length > 0) patientUpdates.surgeries = filtered;
+  }
+  if (Array.isArray(r.hospitalizations)) {
+    const filtered = (r.hospitalizations as string[][])
+      .filter((row) => row[0]?.trim())
+      .map((row) => ({ reason: row[0], year: row[1] || "" }));
+    if (filtered.length > 0) patientUpdates.hospitalizations = filtered;
+  }
+
+  // Medications (dynamic rows → text)
+  if (Array.isArray(r.medications)) {
+    const meds = (r.medications as string[][])
+      .filter((row) => row[0]?.trim())
+      .map((row) => [row[0], row[1], row[2]].filter(Boolean).join(" — "))
+      .join("\n");
+    setIfPresent("current_medications", meds);
+  }
+
+  // Allergies (dynamic rows → text array)
+  if (Array.isArray(r.allergies_list)) {
+    const allergies = (r.allergies_list as string[][])
+      .filter((row) => row[0]?.trim())
+      .map((row) => [row[0], row[1]].filter(Boolean).join(" (") + (row[1] ? ")" : ""));
+    if (allergies.length > 0) patientUpdates.allergies = allergies;
+  }
+
+  // Supplements (dynamic rows → text)
+  if (Array.isArray(r.supplements)) {
+    const supps = (r.supplements as string[][])
+      .filter((row) => row[0]?.trim())
+      .map((row) => [row[0], row[1], row[2]].filter(Boolean).join(" — "))
+      .join("\n");
+    setIfPresent("supplements", supps);
+  }
+
+  // Family History
+  if (Array.isArray(r.family_conditions) && r.family_conditions.length > 0) {
+    patientUpdates.family_history_conditions = r.family_conditions;
+  }
+  setIfPresent("family_history_detail", r.family_detail);
+
+  // Genetics
+  setIfPresent("genetic_testing", r.genetic_testing);
+  setIfPresent("apoe_genotype", r.apoe);
+  setIfPresent("mthfr_variants", r.mthfr);
+
+  // Symptom scores (all sym_* fields → JSONB)
+  const symptomScores: Record<string, number> = {};
+  for (const [key, val] of Object.entries(r)) {
+    if (key.startsWith("sym_") && typeof val === "number" && val > 0) {
+      symptomScores[key.replace("sym_", "")] = val;
     }
   }
+  if (Object.keys(symptomScores).length > 0) {
+    patientUpdates.symptom_scores = symptomScores;
+  }
+  setIfPresent("notes", r.top_3_symptoms);
+
+  // Lifestyle (aggregate into JSONB)
+  const lifestyle: Record<string, unknown> = {};
+  const lifestyleKeys = [
+    "diet_type", "meals_per_day", "skip_breakfast", "typical_day_eating",
+    "sugar_intake", "water_intake", "exercise_freq", "exercise_type",
+    "exercise_tolerance", "stress_level", "stressors", "stress_management",
+    "alcohol", "caffeine", "tobacco", "cannabis", "other_substances",
+    "env_exposures", "env_detail", "sleep_hours", "sleep_bedtime",
+    "food_triggers",
+  ];
+  for (const key of lifestyleKeys) {
+    const val = r[key];
+    if (val !== undefined && val !== null && val !== "" &&
+        !(Array.isArray(val) && val.length === 0)) {
+      lifestyle[key] = val;
+    }
+  }
+  if (Object.keys(lifestyle).length > 0) {
+    patientUpdates.lifestyle = lifestyle;
+  }
+
+  // Prior labs & Goals
+  if (Array.isArray(r.prior_labs) && r.prior_labs.length > 0) {
+    patientUpdates.prior_labs = r.prior_labs;
+  }
+  setIfPresent("health_goals", r.health_goals);
+
+  const mappedFields = { ...patientUpdates };
 
   const service = createServiceClient();
 
