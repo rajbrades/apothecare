@@ -539,7 +539,7 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ## Lab & Biomarker Enhancements
 
-- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
+- [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings. Stored as practitioner-level overrides that take precedence over system defaults during normalization.
 
 ---
 
