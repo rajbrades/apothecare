@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import Link from "next/link";
-import { ShieldAlert, Users, Activity, Flag } from "lucide-react";
+import { ShieldAlert, Users, Activity, Flag, Library } from "lucide-react";
 
 export default async function AdminDashboardPage() {
     await requireAdmin();
@@ -45,6 +45,18 @@ export default async function AdminDashboardPage() {
                     </div>
                     <h2 className="text-lg font-semibold text-slate-900 mb-1">Flagged Citations</h2>
                     <p className="text-sm text-slate-500">Review citations flagged by practitioners as incorrect or suspect.</p>
+                </Link>
+
+                {/* Partnerships */}
+                <Link
+                    href="/admin/partnerships"
+                    className="group block p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
+                >
+                    <div className="w-12 h-12 rounded-lg bg-violet-50 flex items-center justify-center mb-4 group-hover:bg-violet-100 transition-colors">
+                        <Library className="text-violet-600" size={24} />
+                    </div>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-1">Partnerships</h2>
+                    <p className="text-sm text-slate-500">Manage partner knowledge bases, document ingestion, and practitioner access.</p>
                 </Link>
 
                 {/* Job Queue */}
