@@ -196,9 +196,9 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
             <Subsection title="Hospitalizations" />
             <DynamicRows label="" fields={[{placeholder:"Reason for hospitalization"},{placeholder:"Approx. year",width:"120px"}]} rows={r.hospitalizations} onChange={(v) => set("hospitalizations", v)} addLabel="Add Hospitalization" />
             <Subsection title="Current Prescription Medications" desc="Include dose and how long you've been taking it" />
-            <DynamicRows label="" fields={[{placeholder:"Medication name"},{placeholder:"Dose (e.g. 50mg)",width:"130px"},{placeholder:"How long?",width:"130px"}]} rows={r.medications} onChange={(v) => set("medications", v)} addLabel="Add Medication" />
+            <DynamicRows label="" fields={[{placeholder:"Medication name",autocomplete:{type:"medication"}},{placeholder:"Dose (e.g. 50mg)",width:"130px"},{placeholder:"How long?",width:"130px"}]} rows={r.medications} onChange={(v) => set("medications", v)} addLabel="Add Medication" />
             <Subsection title="Allergies & Sensitivities" />
-            <DynamicRows label="" fields={[{placeholder:"Allergen (food, medication, environmental)"},{placeholder:"Reaction"}]} rows={r.allergies_list} onChange={(v) => set("allergies_list", v)} addLabel="Add Allergy / Sensitivity" />
+            <DynamicRows label="" fields={[{placeholder:"Allergen (food, medication, environmental)",autocomplete:{type:"allergen"}},{placeholder:"Reaction"}]} rows={r.allergies_list} onChange={(v) => set("allergies_list", v)} addLabel="Add Allergy / Sensitivity" />
           </SectionCard>
         )}
 
