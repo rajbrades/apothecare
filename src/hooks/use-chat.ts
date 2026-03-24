@@ -28,6 +28,8 @@ export interface ChatMessage {
   citations?: ChatMessageCitation[];
   /** Multi-citation map: citation text → array of up to 3 references */
   citationsByKey?: Record<string, ChatMessageCitation[]>;
+  /** Partnership knowledge bases that contributed to this response (e.g. ["apex_energetics"]) */
+  sourceAttributions?: string[];
   attachments?: ChatAttachment[];
   isStreaming?: boolean;
   created_at?: string;
@@ -254,6 +256,20 @@ export function useChat(options: UseChatOptions = {}) {
                   });
                   break;
                 }
+
+                case "source_attributions":
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.role === "assistant") {
+                      updated[updated.length - 1] = {
+                        ...last,
+                        sourceAttributions: event.sources as string[],
+                      };
+                    }
+                    return updated;
+                  });
+                  break;
 
                 case "message_complete":
                   setMessages((prev) => {

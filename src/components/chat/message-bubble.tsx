@@ -10,6 +10,7 @@ import { ComparisonCard } from "./comparison-card";
 import { processCitations } from "@/lib/chat/process-citations";
 import { parseComparisonSections } from "@/lib/chat/parse-comparison";
 import { CitationMetaContext, CitationVerifyContext, type CitationMeta } from "@/lib/chat/citation-meta-context";
+import { EVIDENCE_SOURCES } from "@/lib/ai/source-filter";
 import type { ChatMessage } from "@/hooks/use-chat";
 
 interface MessageBubbleProps {
@@ -40,6 +41,25 @@ function StreamingRenderer({ content }: { content: string }) {
     <div className="text-[var(--color-text-primary)] text-[16px] leading-[1.7] whitespace-pre-wrap break-words">
       {content}
       <StreamingCursor />
+    </div>
+  );
+}
+
+function SourceAttributionFooter({ sources }: { sources: string[] }) {
+  const labels = sources.map(
+    (s) => EVIDENCE_SOURCES[s as keyof typeof EVIDENCE_SOURCES]?.name ?? s
+  );
+  return (
+    <div className="mt-3 pt-3 border-t border-[var(--color-border-light)] flex items-center gap-1.5 flex-wrap">
+      <span className="text-[11px] text-[var(--color-text-muted)]">Knowledge base:</span>
+      {labels.map((label) => (
+        <span
+          key={label}
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border border-[var(--color-brand-200)]"
+        >
+          {label}
+        </span>
+      ))}
     </div>
   );
 }
@@ -110,6 +130,9 @@ function AssistantContent({ message, conversationId }: { message: ChatMessage; c
               {processCitations(message.content)}
             </ReactMarkdown>
           </div>
+        )}
+        {message.sourceAttributions && message.sourceAttributions.length > 0 && (
+          <SourceAttributionFooter sources={message.sourceAttributions} />
         )}
       </CitationMetaContext.Provider>
     </CitationVerifyContext.Provider>

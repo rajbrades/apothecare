@@ -196,6 +196,7 @@ export async function POST(request: NextRequest) {
 
     // Partnership RAG: Retrieve relevant chunks from partner knowledge base (best-effort)
     let partnershipContext = "";
+    let partnershipSources: string[] = [];
     try {
       const partnerChunks = await retrieveContext({
         query: message,
@@ -203,6 +204,8 @@ export async function POST(request: NextRequest) {
         threshold: 0.7,
       });
       partnershipContext = formatRagContext(partnerChunks);
+      // Collect unique source identifiers (e.g. "apex_energetics") for attribution
+      partnershipSources = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
     } catch (err) {
       console.warn("[RAG] Partnership context retrieval failed, proceeding without:", err);
     }
@@ -315,6 +318,15 @@ export async function POST(request: NextRequest) {
             }
           } catch (err) {
             console.warn("[Citations] Resolution failed, saving unresolved text:", err);
+          }
+
+          // Emit source attributions for partnership RAG (e.g. Apex Energetics)
+          if (partnershipSources.length > 0) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "source_attributions", sources: partnershipSources })}\n\n`
+              )
+            );
           }
 
           // Save assistant message (with resolved citations if available)
