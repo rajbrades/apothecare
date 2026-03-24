@@ -77,11 +77,12 @@ describe("calculateFlags", () => {
   });
 
   it("keeps conventional flag when outside functional range", () => {
-    // Value 30 is within conventional (10-100) but below functional low (50)
-    // 30 < 50 * 0.5 = 25 is false, so functional_flag = low (not critical)
+    // Value 30 is within conventional (10-100) but below functional low (50).
+    // Because conventional is still "normal", functional "low" is softened
+    // to "borderline_low" to avoid alarming language for conventionally normal values.
     const result = calculateFlags(30, 10, 100, 50, 80);
     expect(result.conventional_flag).toBe("normal");
-    expect(result.functional_flag).toBe("low");
+    expect(result.functional_flag).toBe("borderline_low");
   });
 
   it("handles value outside both ranges", () => {

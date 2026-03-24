@@ -38,13 +38,13 @@ describe("validateCsrf", () => {
     expect(result!.status).toBe(403);
   });
 
-  it("defaults to localhost:3000 when env not set", () => {
+  it("defaults to apothecare.ai when env not set", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
-    // When NEXT_PUBLIC_APP_URL is empty, new URL("") will throw,
-    // so it falls back to "http://localhost:3000"
+    // When NEXT_PUBLIC_APP_URL is empty, fallback is "https://apothecare.ai"
+    // so a localhost origin will be rejected
     const req = new NextRequest("http://localhost:3000/api/test", {
       method: "POST",
-      headers: new Headers({ origin: "http://localhost:3000" }),
+      headers: new Headers({ origin: "https://apothecare.ai" }),
     });
     const result = validateCsrf(req);
     expect(result).toBeNull();
