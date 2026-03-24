@@ -1,6 +1,9 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { COMMON_ALLERGENS } from "@/lib/constants/allergens";
+import { KNOWN_SUPPLEMENT_BRANDS } from "@/lib/validations/supplement";
 
 // ── Shared field components for intake form ─────────────────────────────
 
@@ -233,13 +236,41 @@ export function SliderField({ label, value, onChange, min = 0, max = 10, lowLabe
   );
 }
 
+interface DynamicRowField {
+  placeholder: string;
+  width?: string;
+  autocomplete?: { type: "medication" | "allergen" | "supplement" | "supplement_brand" };
+}
+
 interface DynamicRowsProps {
   label: string;
   hint?: string;
-  fields: { placeholder: string; width?: string }[];
+  fields: DynamicRowField[];
   rows: string[][];
   onChange: (rows: string[][]) => void;
   addLabel: string;
+}
+
+async function fetchMedicationSuggestions(term: string): Promise<string[]> {
+  try {
+    const res = await fetch(`/api/rxnorm/suggest?term=${encodeURIComponent(term)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.suggestions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchSupplementSuggestions(term: string): Promise<string[]> {
+  try {
+    const res = await fetch(`/api/supplements/suggest?term=${encodeURIComponent(term)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.suggestions ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: DynamicRowsProps) {
@@ -264,17 +295,79 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
       <div className="space-y-2">
         {rows.map((row, ri) => (
           <div key={ri} className="flex gap-2 items-start">
-            {fields.map((field, ci) => (
-              <input
-                key={ci}
-                type="text"
-                placeholder={field.placeholder}
-                value={row[ci] || ""}
-                onChange={(e) => updateCell(ri, ci, e.target.value)}
-                className="flex-1 px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)] transition-all"
-                style={field.width ? { maxWidth: field.width } : undefined}
-              />
-            ))}
+            {fields.map((field, ci) => {
+              const cellValue = row[ci] || "";
+              const inputClass = "w-full px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)] transition-all";
+
+              if (field.autocomplete?.type === "medication") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    fetchSuggestions={fetchMedicationSuggestions}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              if (field.autocomplete?.type === "allergen") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    suggestions={COMMON_ALLERGENS}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              if (field.autocomplete?.type === "supplement") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    fetchSuggestions={fetchSupplementSuggestions}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              if (field.autocomplete?.type === "supplement_brand") {
+                return (
+                  <AutocompleteInput
+                    key={ci}
+                    value={cellValue}
+                    onChange={(v) => updateCell(ri, ci, v)}
+                    placeholder={field.placeholder}
+                    suggestions={KNOWN_SUPPLEMENT_BRANDS}
+                    minChars={1}
+                    className={inputClass}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  />
+                );
+              }
+
+              return (
+                <input
+                  key={ci}
+                  type="text"
+                  placeholder={field.placeholder}
+                  value={cellValue}
+                  onChange={(e) => updateCell(ri, ci, e.target.value)}
+                  className={`flex-1 ${inputClass}`}
+                  style={field.width ? { maxWidth: field.width } : undefined}
+                />
+              );
+            })}
             <button
               type="button"
               onClick={() => removeRow(ri)}
