@@ -67,57 +67,91 @@ export async function parseLabReport(
       .eq("id", reportId);
 
     // Download PDF from storage
-    let pdfBuffer: Buffer | null = await downloadFromStorage(storagePath);
-    const base64Pdf = pdfBuffer.toString("base64");
-    pdfBuffer = null; // FREE MEMORY IMMEDIATELY
+    const pdfBuffer: Buffer = await downloadFromStorage(storagePath);
 
-    // Send to Claude Vision for extraction (retry with fallback on transient errors)
-    const models = [ANTHROPIC_MODELS.vision, ANTHROPIC_MODELS.standard];
+    // Strategy: Try text extraction first (fast Sonnet path), fall back to vision (slow Opus path)
+    let extractedText = "";
+    try {
+      const { extractText } = await import("unpdf");
+      const { text: pages } = await extractText(new Uint8Array(pdfBuffer), { mergePages: true });
+      extractedText = Array.isArray(pages) ? pages.join("\n") : (pages ?? "");
+    } catch {
+      // Text extraction failed — will use vision
+    }
+
+    const useTextPath = extractedText.trim().length > 200; // Has meaningful text content
+    console.log(`[Lab Parse] Strategy: ${useTextPath ? "TEXT (Sonnet)" : "VISION (Opus)"}, text length: ${extractedText.length}`);
+
     let response: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null;
     let lastError: unknown = null;
 
-    for (const model of models) {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          response = await anthropic.messages.create({
-            model,
-            max_tokens: 16384,
-            system: LAB_PARSING_SYSTEM_PROMPT,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "document",
-                    source: {
-                      type: "base64",
-                      media_type: "application/pdf",
-                      data: base64Pdf,
-                    },
-                  },
-                  {
-                    type: "text",
-                    text: "Extract all biomarker data from this lab report. Return valid JSON.",
-                  },
-                ],
-              },
-            ],
-          });
-          break; // Success — exit retry loop
-        } catch (err: unknown) {
-          lastError = err;
-          const status = (err as { status?: number }).status;
-          const isTransient = status === 429 || status === 529 || status === 503;
-          if (isTransient && attempt === 0) {
-            // Wait before retry (2s first attempt)
-            await new Promise((r) => setTimeout(r, 2000));
-            continue;
-          }
-          if (isTransient) break; // Move to fallback model
-          throw err; // Non-transient error — don't retry
-        }
+    if (useTextPath) {
+      // FAST PATH: Text-based PDF → Sonnet text completion (5-15 seconds)
+      try {
+        response = await anthropic.messages.create({
+          model: ANTHROPIC_MODELS.standard, // Sonnet — fast
+          max_tokens: 16384,
+          system: LAB_PARSING_SYSTEM_PROMPT,
+          messages: [
+            {
+              role: "user",
+              content: `Extract all biomarker data from this lab report text. Return valid JSON.\n\n---LAB REPORT TEXT---\n${extractedText}`,
+            },
+          ],
+        });
+      } catch (err: unknown) {
+        lastError = err;
+        console.warn("[Lab Parse] Sonnet text path failed, falling back to vision:", err);
       }
-      if (response) break; // Got a response — stop trying models
+    }
+
+    if (!response) {
+      // SLOW PATH: Image/scanned PDF or text path failed → Vision (30-90 seconds)
+      const base64Pdf = pdfBuffer.toString("base64");
+      const models = [ANTHROPIC_MODELS.standard, ANTHROPIC_MODELS.vision]; // Try Sonnet first, Opus fallback
+
+      for (const model of models) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            response = await anthropic.messages.create({
+              model,
+              max_tokens: 16384,
+              system: LAB_PARSING_SYSTEM_PROMPT,
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "document",
+                      source: {
+                        type: "base64",
+                        media_type: "application/pdf",
+                        data: base64Pdf,
+                      },
+                    },
+                    {
+                      type: "text",
+                      text: "Extract all biomarker data from this lab report. Return valid JSON.",
+                    },
+                  ],
+                },
+              ],
+            });
+            break;
+          } catch (err: unknown) {
+            lastError = err;
+            const status = (err as { status?: number }).status;
+            const isTransient = status === 429 || status === 529 || status === 503;
+            if (isTransient && attempt === 0) {
+              await new Promise((r) => setTimeout(r, 2000));
+              continue;
+            }
+            if (isTransient) break;
+            throw err;
+          }
+        }
+        if (response) break;
+      }
     }
 
     if (!response) {
