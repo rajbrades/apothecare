@@ -27,13 +27,13 @@ function PartnerItem({ name, subtitle }: { name: string; subtitle: string }) {
 
 export function TrustLogos() {
   return (
-    <section className="w-full bg-[var(--color-brand-600)] py-12 overflow-hidden">
+    <section className="w-full bg-[var(--color-brand-600)] pt-8 pb-12 overflow-hidden">
       <div className="max-w-6xl mx-auto px-4">
         <ScrollReveal>
-          <p className="text-center text-base text-white uppercase tracking-widest font-semibold mb-3">
+          <p className="text-center text-lg md:text-xl text-white uppercase tracking-widest font-semibold mb-1.5">
             Grounded in Evidence From
           </p>
-          <p className="text-center text-sm text-white/70 mb-10">
+          <p className="text-center text-sm text-white/70 mb-8">
             Filter by source on every query — PubMed, IFM, Cochrane, and more.
           </p>
         </ScrollReveal>
