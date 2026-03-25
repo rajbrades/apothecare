@@ -266,6 +266,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   // --- Encounter Recorder (workspace-level AI Scribe) ---
   const encounterRecorder = useAudioRecorder({
     maxDuration: 3600, // 60 min for full encounters
+    autoSave: { visitId: visit.id },
     onError: (err) => toast.error(err),
   });
   const [scribeStatus, setScribeStatus] = useState<"idle" | "transcribing" | "assigning" | "done" | "error">("idle");

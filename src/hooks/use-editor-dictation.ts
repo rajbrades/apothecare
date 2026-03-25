@@ -71,9 +71,10 @@ export function useEditorDictation({
     onError: handleDictationError,
   });
 
-  // Session recording via MediaRecorder
+  // Session recording via MediaRecorder (auto-saves to storage for HIPAA compliance)
   const recorder = useAudioRecorder({
-    maxDuration: 1800,
+    maxDuration: 3600,
+    autoSave: visitId ? { visitId } : undefined,
     onError: (err) => onError?.(err),
   });
 

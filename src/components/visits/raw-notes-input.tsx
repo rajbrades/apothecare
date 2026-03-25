@@ -97,7 +97,8 @@ export function RawNotesInput({
 
   // ── Audio Recorder (session recording → Whisper) ──
   const recorder = useAudioRecorder({
-    maxDuration: 1800,
+    maxDuration: 3600,
+    autoSave: visitId ? { visitId } : undefined,
     onError: (err) => {
       setError(err);
       setTimeout(() => setError(null), 5000);
