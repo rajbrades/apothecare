@@ -195,11 +195,12 @@ export default async function DashboardPage() {
       {/* Evidence trust badge */}
       <div className="mt-8 flex flex-col items-center gap-2">
         <span className="text-[11px] text-[var(--color-text-muted)]">Powered by evidence from</span>
-        <div className="flex items-center gap-5 opacity-40 grayscale">
+        <div className="flex items-center gap-6 opacity-40 grayscale">
           <Image src="/logos/a4m.svg" alt="A4M" width={40} height={20} />
           <Image src="/logos/ifm.svg" alt="IFM" width={38} height={20} />
           <Image src="/logos/cleveland-clinic.svg" alt="Cleveland Clinic" width={108} height={20} />
-          <span className="text-[11px] text-[var(--color-text-muted)]">+3 more</span>
+          <Image src="/logos/pubmed.svg" alt="PubMed" width={70} height={20} />
+          <Image src="/logos/cochrane.svg" alt="Cochrane" width={80} height={20} />
         </div>
       </div>
     </div>
