@@ -113,6 +113,9 @@ export async function extractDocumentContent(
     // Rebuild patient clinical summary
     await rebuildPatientClinicalSummary(patientId, practitionerId);
 
+    // Auto-populate patient fields from extracted structured data
+    await autoPopulateFromExtraction(patientId, extractedData, serviceClient);
+
     // Audit log (fire-and-forget)
     serviceClient.from("audit_logs").insert({
       practitioner_id: practitionerId,
@@ -139,5 +142,76 @@ export async function extractDocumentContent(
         error_message: err instanceof Error ? err.message : "Extraction failed",
       })
       .eq("id", documentId);
+  }
+}
+
+/**
+ * Auto-populate patient record fields from extracted document data.
+ * Merges new data into existing fields (doesn't overwrite non-empty fields).
+ * Best-effort — errors are logged but don't fail the extraction.
+ */
+async function autoPopulateFromExtraction(
+  patientId: string,
+  extractedData: Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  serviceClient: any
+): Promise<void> {
+  try {
+    if (!extractedData || Object.keys(extractedData).length === 0) return;
+
+    // Fetch current patient record to avoid overwriting existing data
+    const { data: patient } = await serviceClient
+      .from("patients")
+      .select("chief_complaints, medical_history, allergies, notes")
+      .eq("id", patientId)
+      .single();
+
+    if (!patient) return;
+
+    const updates: Record<string, unknown> = {};
+
+    // Chief complaints — merge arrays (don't duplicate)
+    if (Array.isArray(extractedData.chief_complaints) && extractedData.chief_complaints.length > 0) {
+      const existing = new Set((patient.chief_complaints || []).map((c: string) => c.toLowerCase()));
+      const newComplaints = (extractedData.chief_complaints as string[])
+        .filter((c) => typeof c === "string" && !existing.has(c.toLowerCase()));
+      if (newComplaints.length > 0) {
+        updates.chief_complaints = [...(patient.chief_complaints || []), ...newComplaints].slice(0, 20);
+      }
+    }
+
+    // Allergies — merge arrays
+    if (Array.isArray(extractedData.allergies)) {
+      const allergyNames = (extractedData.allergies as Array<string | { allergen: string }>)
+        .map((a) => typeof a === "string" ? a : a?.allergen)
+        .filter(Boolean);
+      if (allergyNames.length > 0) {
+        const existing = new Set((patient.allergies || []).map((a: string) => a.toLowerCase()));
+        const newAllergies = allergyNames.filter((a) => !existing.has(a!.toLowerCase()));
+        if (newAllergies.length > 0) {
+          updates.allergies = [...(patient.allergies || []), ...newAllergies].slice(0, 50);
+        }
+      }
+    }
+
+    // Medical history — append if patient field is empty
+    if (!patient.medical_history?.trim() && extractedData.medical_history) {
+      const history = typeof extractedData.medical_history === "string"
+        ? extractedData.medical_history
+        : Array.isArray(extractedData.medical_history)
+        ? (extractedData.medical_history as string[]).join("\n")
+        : null;
+      if (history) updates.medical_history = history;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await serviceClient
+        .from("patients")
+        .update(updates)
+        .eq("id", patientId);
+      console.log(`[Auto-Populate] Updated ${Object.keys(updates).join(", ")} for patient ${patientId}`);
+    }
+  } catch (err) {
+    console.warn("[Auto-Populate] Failed (non-blocking):", err);
   }
 }
