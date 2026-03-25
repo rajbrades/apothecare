@@ -721,7 +721,11 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "prechart" && (
-          <PreChartView patient={patient} />
+          <PreChartView
+            patient={patient}
+            documentCount={documents.length + labReports.length}
+            onResynthesized={() => router.refresh()}
+          />
         )}
 
         {activeTab === "ifm_matrix" && (
