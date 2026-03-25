@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 24, 2026
+Last updated: March 25, 2026
 
 ---
 
@@ -224,7 +224,7 @@ Full codebase audit findings. Organized by severity.
 
 ---
 
-### 🔴 CRITICAL — Fix Immediately
+### 🔴 CRITICAL — ✅ All Resolved (March 25, 2026)
 
 - [x] **C1. Storage files not deleted on account/patient deletion** — `src/app/api/auth/delete-account/route.ts` and `src/app/api/patients/[id]/permanent-delete/route.ts` cascade-delete DB records but orphan lab PDFs and patient documents in Supabase Storage buckets (`patient-documents`, `practice-assets`). **HIPAA §164.530(c)**: PHI must be disposed when no longer needed. **Fix:** Add storage cleanup loop using `deleteFromStorage()` from `src/lib/storage/patient-documents.ts` before final deletion.
 
