@@ -10,7 +10,7 @@ import { auditLog } from "@/lib/api/audit";
 import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-input";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300; // 5 min — Claude processes long transcripts for section assignment
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });

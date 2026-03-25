@@ -16,7 +16,7 @@ import { retrieveContext } from "@/lib/rag/retrieve";
 import { formatRagContext } from "@/lib/rag/format-context";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300; // 5 min — SOAP/IFM/Protocol generation from long encounter notes
 
 function jsonError(message: string, status: number) {
   return new Response(JSON.stringify({ error: message }), {
