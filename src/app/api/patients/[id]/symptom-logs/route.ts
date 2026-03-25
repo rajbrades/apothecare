@@ -43,7 +43,7 @@ export async function GET(
 
     let query = supabase
       .from("symptom_logs")
-      .select("*")
+      .select("id, patient_id, practitioner_id, symptom_name, severity, body_system, onset_date, resolved_at, notes, created_at, updated_at")
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
       .order("onset_date", { ascending: false, nullsFirst: false })

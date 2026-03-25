@@ -238,15 +238,15 @@ Full codebase audit findings. Organized by severity.
 
 ### 🟡 HIGH — Fix This Sprint
 
-- [ ] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
+- [x] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
 
-- [ ] **H2. Console logging includes patient/practitioner IDs** — `src/app/api/patients/[id]/documents/route.ts` (lines 43, 111) logs `{ patientId, practitionerId }`. Also `src/app/api/auth/delete-account/route.ts` (line 75). Server logs may not have HIPAA-compliant access controls. **Fix:** Log error type/message only, never identifiers.
+- [x] **H2. Console logging includes patient/practitioner IDs** — `src/app/api/patients/[id]/documents/route.ts` (lines 43, 111) logs `{ patientId, practitionerId }`. Also `src/app/api/auth/delete-account/route.ts` (line 75). Server logs may not have HIPAA-compliant access controls. **Fix:** Log error type/message only, never identifiers.
 
-- [ ] **H3. Chat history read not audited** — `GET /api/chat/history` retrieves conversation messages (may contain PHI in AI responses referencing patient context) but does not call `auditLog()`. **Fix:** Add audit log for message retrieval.
+- [x] **H3. Chat history read not audited** (was already implemented) — `GET /api/chat/history` retrieves conversation messages (may contain PHI in AI responses referencing patient context) but does not call `auditLog()`. **Fix:** Add audit log for message retrieval.
 
-- [ ] **H4. Invite revoke not audited** — `POST /api/patient-portal/invites/[id]/revoke` does not call `auditLog()`. Revocation is a security-relevant action. **Fix:** Add audit log with `action: "invite_revoked"`.
+- [x] **H4. Invite revoke not audited** (was already implemented) — `POST /api/patient-portal/invites/[id]/revoke` does not call `auditLog()`. Revocation is a security-relevant action. **Fix:** Add audit log with `action: "invite_revoked"`.
 
-- [ ] **H5. Admin flagged-citations endpoints not audited** — `GET /api/admin/flagged-citations` and `GET /api/admin/flagged-citations/search` access PHI (user questions, AI answers) but do not call `auditLog()`. **Fix:** Add audit logging with `resourceType: "conversation_messages"`.
+- [x] **H5. Admin flagged-citations endpoints not audited** (was already implemented) — `GET /api/admin/flagged-citations` and `GET /api/admin/flagged-citations/search` access PHI (user questions, AI answers) but do not call `auditLog()`. **Fix:** Add audit logging with `resourceType: "conversation_messages"`.
 
 - [ ] **H6. No automated audit log archival** — `docs/COMPLIANCE.md` documents 6-7 year retention policy but marks archival as "planned." No cron job or script exists to archive logs >1yr to cold storage. **Fix:** Implement scheduled function to archive to AWS S3 Glacier.
 

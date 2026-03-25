@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     let dbQuery = supabase
       .from("verified_citations")
-      .select("*")
+      .select("id, doi, title, authors, year, journal, evidence_level, evidence_rank, context_type, context_value, origin, verified_by, verified_at, created_at")
       .eq("is_flagged", false)
       .order("evidence_rank", { ascending: true })
       .order("verified_at", { ascending: false })

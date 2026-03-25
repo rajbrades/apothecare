@@ -57,13 +57,14 @@ export async function POST(request: NextRequest) {
       { data: supplementReviews },
       { data: timelineEvents },
     ] = await Promise.all([
-      supabase.from("patients").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("visits").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("lab_reports").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("conversations").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("patient_supplements").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("supplement_reviews").select("*").eq("practitioner_id", practitioner.id),
-      supabase.from("timeline_events").select("*").eq("practitioner_id", practitioner.id),
+      // Note: select("*") is intentional for data export — practitioner is exporting their own full records
+      supabase.from("patients").select("id, first_name, last_name, date_of_birth, sex, email, phone, chief_complaints, medical_history, current_medications, supplements, allergies, diagnoses, notes, health_goals, portal_status, is_archived, created_at, updated_at").eq("practitioner_id", practitioner.id),
+      supabase.from("visits").select("id, patient_id, visit_date, visit_type, status, chief_complaint, subjective, objective, assessment, plan, is_shared_with_patient, created_at, updated_at").eq("practitioner_id", practitioner.id),
+      supabase.from("lab_reports").select("id, patient_id, lab_vendor, test_type, test_name, collection_date, status, is_shared_with_patient, created_at").eq("practitioner_id", practitioner.id),
+      supabase.from("conversations").select("id, patient_id, title, is_deep_consult, model_used, is_favorited, is_archived, created_at, updated_at").eq("practitioner_id", practitioner.id),
+      supabase.from("patient_supplements").select("id, patient_id, name, dosage, form, frequency, timing, brand, status, source, started_at, discontinued_at, notes, created_at").eq("practitioner_id", practitioner.id),
+      supabase.from("supplement_reviews").select("id, patient_id, status, review_data, created_at, updated_at").eq("practitioner_id", practitioner.id),
+      supabase.from("timeline_events").select("id, patient_id, event_type, title, description, event_date, source_table, source_id, created_at").eq("practitioner_id", practitioner.id),
     ]);
 
     // Biomarker results — join through lab_reports

@@ -40,7 +40,7 @@ export async function GET(
       .eq("practitioner_id", practitioner.id)
       .single();
     if (patientError || !patient) {
-      console.error("[GET documents] Patient lookup failed:", { patientId, practitionerId: practitioner.id, error: patientError?.message });
+      console.error("[GET documents] Patient lookup failed:", patientError?.message);
       return jsonError("Patient not found", 404);
     }
 
@@ -108,7 +108,7 @@ export async function POST(
       .eq("practitioner_id", practitioner.id)
       .single();
     if (patientError || !patient) {
-      console.error("[POST documents] Patient lookup failed:", { patientId, practitionerId: practitioner.id, error: patientError?.message });
+      console.error("[POST documents] Patient lookup failed:", patientError?.message);
       return jsonError("Patient not found", 404);
     }
 

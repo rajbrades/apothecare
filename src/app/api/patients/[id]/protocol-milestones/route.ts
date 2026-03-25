@@ -42,7 +42,7 @@ export async function GET(
 
     let query = supabase
       .from("protocol_milestones")
-      .select("*")
+      .select("id, patient_id, practitioner_id, title, description, category, milestone_date, is_achieved, achieved_at, notes, created_at, updated_at")
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
       .order("milestone_date", { ascending: false });

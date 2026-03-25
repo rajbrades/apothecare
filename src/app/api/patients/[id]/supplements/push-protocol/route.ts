@@ -102,11 +102,11 @@ export async function POST(
     // Fetch ALL existing patient supplements (including discontinued) for matching
     const { data: existing, error: existingError } = await supabase
       .from("patient_supplements")
-      .select("*")
+      .select("id, name, dosage, form, frequency, timing, brand, status, source, visit_id, sort_order")
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id);
 
-    if (existingError) return jsonError(existingError.message, 500);
+    if (existingError) return jsonError("Internal server error", 500);
 
     // Build case-insensitive lookup
     const lookup = new Map<string, PatientSupplement>();

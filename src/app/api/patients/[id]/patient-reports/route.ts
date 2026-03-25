@@ -42,7 +42,7 @@ export async function GET(
 
     let query = supabase
       .from("patient_reports")
-      .select("*")
+      .select("id, patient_id, practitioner_id, report_type, title, content, severity, reported_date, related_supplement_id, visit_id, created_at, updated_at")
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
       .order("reported_date", { ascending: false });

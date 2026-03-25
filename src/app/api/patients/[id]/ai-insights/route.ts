@@ -44,7 +44,7 @@ export async function GET(
 
     let query = supabase
       .from("ai_insights")
-      .select("*")
+      .select("id, patient_id, practitioner_id, insight_type, title, content, confidence, source_type, source_id, body_systems, biomarker_codes, is_dismissed, created_at, updated_at")
       .eq("patient_id", patientId)
       .eq("practitioner_id", practitioner.id)
       .order("created_at", { ascending: false });
