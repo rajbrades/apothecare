@@ -7,6 +7,9 @@ import { validateCsrf } from "@/lib/api/csrf";
 import { sanitizeFilename } from "@/lib/sanitize";
 import { auditLog } from "@/lib/api/audit";
 
+export const runtime = "nodejs";
+export const maxDuration = 300; // 5 min — Claude document extraction can be slow
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
