@@ -86,7 +86,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb", // For lab PDF uploads
+      bodySizeLimit: "25mb", // For lab PDF uploads + audio recordings
     },
   },
   images: {

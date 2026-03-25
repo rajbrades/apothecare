@@ -111,12 +111,19 @@ export function RawNotesInput({
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("audio", recorder.audioBlob, "recording.webm");
+      // Upload audio to storage first (avoids Vercel body size limit)
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const storagePath = `audio/${visitId}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("patient-documents")
+        .upload(storagePath, recorder.audioBlob, { contentType: recorder.audioBlob.type, upsert: true });
+      if (uploadError) throw new Error(`Audio upload failed: ${uploadError.message}`);
 
       const res = await fetch(`/api/visits/${visitId}/transcribe`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio_storage_path: storagePath }),
       });
 
       if (!res.ok) {

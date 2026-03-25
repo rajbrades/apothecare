@@ -294,13 +294,19 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
     setScribeStatus("transcribing");
     try {
-      // Step 1: Transcribe audio via Whisper
-      const formData = new FormData();
-      formData.append("audio", encounterRecorder.audioBlob, "recording.webm");
+      // Step 1: Upload audio to storage, then transcribe via Whisper
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const storagePath = `audio/${visit.id}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("patient-documents")
+        .upload(storagePath, encounterRecorder.audioBlob, { contentType: encounterRecorder.audioBlob.type, upsert: true });
+      if (uploadError) throw new Error(`Audio upload failed: ${uploadError.message}`);
 
       const transcribeRes = await fetch(`/api/visits/${visit.id}/transcribe`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio_storage_path: storagePath }),
       });
       if (!transcribeRes.ok) {
         const data = await transcribeRes.json().catch(() => ({}));

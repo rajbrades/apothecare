@@ -78,18 +78,30 @@ export function useEditorDictation({
   });
 
   // Transcribe recorded audio via Whisper API (basic transcription only)
+  const uploadAudioToStorage = useCallback(async (blob: Blob): Promise<string> => {
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+    const path = `audio/${visitId}/${Date.now()}.webm`;
+    const { error } = await supabase.storage
+      .from("patient-documents")
+      .upload(path, blob, { contentType: blob.type, upsert: true });
+    if (error) throw new Error(`Audio upload failed: ${error.message}`);
+    return path;
+  }, [visitId]);
+
   const transcribeRecording = useCallback(async () => {
     if (!recorder.audioBlob || !visitId) return;
 
     setTranscribing(true);
 
     try {
-      const formData = new FormData();
-      formData.append("audio", recorder.audioBlob, "recording.webm");
+      // Upload audio to storage first (avoids body size limit)
+      const storagePath = await uploadAudioToStorage(recorder.audioBlob);
 
       const res = await fetch(`/api/visits/${visitId}/transcribe`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio_storage_path: storagePath }),
       });
 
       if (!res.ok) {
@@ -120,15 +132,15 @@ export function useEditorDictation({
     if (!recorder.audioBlob || !visitId) return;
 
     try {
-      // Step 1: Transcribe
+      // Step 1: Upload audio to storage + transcribe
       setScribeStatus("transcribing");
 
-      const formData = new FormData();
-      formData.append("audio", recorder.audioBlob, "recording.webm");
+      const storagePath = await uploadAudioToStorage(recorder.audioBlob);
 
       const transcribeRes = await fetch(`/api/visits/${visitId}/transcribe`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio_storage_path: storagePath }),
       });
 
       if (!transcribeRes.ok) {

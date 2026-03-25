@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { transcribeAudio, MAX_AUDIO_SIZE } from "@/lib/ai/transcription";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { transcribeAudio } from "@/lib/ai/transcription";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { auditLog } from "@/lib/api/audit";
@@ -15,10 +15,12 @@ function jsonError(message: string, status: number) {
 /**
  * POST /api/visits/[id]/transcribe
  *
- * Accepts an audio blob (multipart/form-data) and returns the
+ * Accepts an audio storage path (JSON body) and returns the
  * transcribed text via OpenAI Whisper.
  *
- * The transcript is also appended to the visit's raw_notes.
+ * Audio is uploaded to Supabase Storage client-side to avoid
+ * the Vercel 4.5MB request body size limit. This endpoint
+ * downloads from storage, sends to Whisper, then cleans up.
  */
 export async function POST(
   request: NextRequest,
@@ -60,36 +62,26 @@ export async function POST(
     if (!visit) return jsonError("Visit not found", 404);
     if (visit.status === "completed") return jsonError("Cannot modify a completed visit", 409);
 
-    // Parse multipart form data
-    const formData = await request.formData();
-    const audioFile = formData.get("audio") as File | null;
-    if (!audioFile) return jsonError("No audio file provided", 400);
+    // Parse JSON body with storage path
+    const body = await request.json().catch(() => null);
+    const audioStoragePath = body?.audio_storage_path;
 
-    // Validate size
-    if (audioFile.size > MAX_AUDIO_SIZE) {
-      return jsonError(`Audio file too large. Max size: ${MAX_AUDIO_SIZE / 1024 / 1024}MB`, 400);
+    if (!audioStoragePath || typeof audioStoragePath !== "string") {
+      return jsonError("audio_storage_path is required", 400);
     }
 
-    // Validate type
-    const validTypes = [
-      "audio/webm",
-      "audio/mp4",
-      "audio/mpeg",
-      "audio/ogg",
-      "audio/wav",
-      "audio/flac",
-    ];
-    const isValidType = validTypes.some((t) => audioFile.type.startsWith(t));
-    if (!isValidType) {
-      return jsonError(`Invalid audio format. Supported: ${validTypes.join(", ")}`, 400);
+    // Download audio from Supabase Storage
+    const service = createServiceClient();
+    const { data: audioData, error: dlError } = await service.storage
+      .from("patient-documents")
+      .download(audioStoragePath);
+
+    if (dlError || !audioData) {
+      return jsonError("Failed to download audio file", 500);
     }
 
-    // Convert File to Blob for transcription
-    const arrayBuffer = await audioFile.arrayBuffer();
-    const audioBlob = new Blob([arrayBuffer], { type: audioFile.type });
-
-    // Transcribe
-    const result = await transcribeAudio(audioBlob);
+    // Transcribe via Whisper
+    const result = await transcribeAudio(audioData);
 
     if (!result.text.trim()) {
       return jsonError("No speech detected in the recording", 422);
@@ -104,6 +96,12 @@ export async function POST(
       .update({ raw_notes: updatedNotes })
       .eq("id", visitId);
 
+    // Clean up audio file from storage (best-effort)
+    service.storage
+      .from("patient-documents")
+      .remove([audioStoragePath])
+      .catch(() => {});
+
     auditLog({
       request,
       practitionerId: practitioner.id,
@@ -111,8 +109,7 @@ export async function POST(
       resourceType: "visit",
       resourceId: visitId,
       detail: {
-        audio_size: audioFile.size,
-        audio_type: audioFile.type,
+        audio_path: audioStoragePath,
         duration: result.duration,
         language: result.language,
         transcript_length: result.text.length,
