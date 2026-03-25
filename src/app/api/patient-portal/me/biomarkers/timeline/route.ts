@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { biomarkerTimelineQuerySchema } from "@/lib/validations/biomarker-timeline";
 import { auditLog } from "@/lib/api/audit";
 
@@ -7,38 +7,28 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+/**
+ * GET /api/patient-portal/me/biomarkers/timeline
+ *
+ * Patient-facing biomarker timeline endpoint.
+ * Supports mode=overview (trend cards) and biomarker_code (single biomarker detail).
+ * Only returns data from shared lab reports.
+ */
+export async function GET(request: NextRequest) {
   try {
-    const { id: patientId } = await params;
     const supabase = await createClient();
-
-    // Auth
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) return jsonError("Unauthorized", 401);
+    if (!user) return jsonError("Unauthorized", 401);
 
-    const { data: practitioner } = await supabase
-      .from("practitioners")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .single();
-    if (!practitioner) return jsonError("Practitioner not found", 404);
-
-    // Verify patient ownership
     const { data: patient } = await supabase
       .from("patients")
-      .select("id")
-      .eq("id", patientId)
-      .eq("practitioner_id", practitioner.id)
+      .select("id, practitioner_id")
+      .eq("auth_user_id", user.id)
       .single();
     if (!patient) return jsonError("Patient not found", 404);
 
-    // Parse query params
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
     const parsed = biomarkerTimelineQuerySchema.safeParse(searchParams);
     if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400);
@@ -47,21 +37,36 @@ export async function GET(
 
     auditLog({
       request,
-      practitionerId: practitioner.id,
-      action: "read",
+      practitionerId: patient.practitioner_id,
+      action: "patient_view_biomarker_timeline",
       resourceType: "biomarker_timeline",
-      resourceId: patientId,
-      detail: biomarker_code ? { biomarker_code } : undefined,
+      resourceId: patient.id,
+      detail: biomarker_code ? { biomarker_code } : { mode: mode || "list" },
     });
 
-    // Mode: overview — return all biomarkers with 2+ data points, including sparkline data
+    // Get shared lab report IDs for this patient
+    const service = createServiceClient();
+    const { data: sharedLabs } = await service
+      .from("lab_reports")
+      .select("id")
+      .eq("patient_id", patient.id)
+      .eq("is_shared_with_patient", true);
+
+    const sharedLabIds = (sharedLabs || []).map((l) => l.id);
+    if (sharedLabIds.length === 0) {
+      if (mode === "overview") return NextResponse.json({ trends: [] });
+      return NextResponse.json({ biomarkers: [] });
+    }
+
+    // Mode: overview — all biomarkers with 2+ data points
     if (mode === "overview") {
-      const { data: allResults } = await supabase
+      const { data: allResults } = await service
         .from("biomarker_results")
         .select(
           "biomarker_code, biomarker_name, category, value, unit, collection_date, functional_low, functional_high, conventional_low, conventional_high, functional_flag, conventional_flag"
         )
-        .eq("patient_id", patientId)
+        .eq("patient_id", patient.id)
+        .in("lab_report_id", sharedLabIds)
         .not("collection_date", "is", null)
         .order("collection_date", { ascending: true });
 
@@ -69,7 +74,6 @@ export async function GET(
         return NextResponse.json({ trends: [] });
       }
 
-      // Group by biomarker_code
       const groupMap = new Map<string, typeof allResults>();
       for (const r of allResults) {
         const arr = groupMap.get(r.biomarker_code) || [];
@@ -77,14 +81,14 @@ export async function GET(
         groupMap.set(r.biomarker_code, arr);
       }
 
-      // Only include biomarkers with 2+ data points
       const trends = [];
       for (const [code, results] of groupMap) {
         if (results.length < 2) continue;
         const latest = results[results.length - 1];
         const previous = results[results.length - 2];
         const change = latest.value - previous.value;
-        const changePct = previous.value !== 0 ? (change / previous.value) * 100 : 0;
+        const changePct =
+          previous.value !== 0 ? (change / previous.value) * 100 : 0;
 
         trends.push({
           biomarker_code: code,
@@ -109,7 +113,6 @@ export async function GET(
         });
       }
 
-      // Sort by category, then name
       trends.sort((a, b) => {
         const catA = a.category || "zzz";
         const catB = b.category || "zzz";
@@ -120,17 +123,23 @@ export async function GET(
       return NextResponse.json({ trends });
     }
 
-    // Mode 1: Return available biomarkers list
+    // Mode: list — return available biomarkers
     if (!biomarker_code) {
-      const { data: biomarkers } = await supabase
+      const { data: biomarkers } = await service
         .from("biomarker_results")
         .select("biomarker_code, biomarker_name, category")
-        .eq("patient_id", patientId)
+        .eq("patient_id", patient.id)
+        .in("lab_report_id", sharedLabIds)
         .not("collection_date", "is", null);
 
       const biomarkerMap = new Map<
         string,
-        { biomarker_code: string; biomarker_name: string; category: string | null; data_points: number }
+        {
+          biomarker_code: string;
+          biomarker_name: string;
+          category: string | null;
+          data_points: number;
+        }
       >();
 
       for (const b of biomarkers || []) {
@@ -150,14 +159,15 @@ export async function GET(
       return NextResponse.json({ biomarkers: [...biomarkerMap.values()] });
     }
 
-    // Mode 2: Return time-series for a specific biomarker
-    const { data: results } = await supabase
+    // Mode: detail — single biomarker time series
+    const { data: results } = await service
       .from("biomarker_results")
       .select(
         "biomarker_name, category, value, unit, collection_date, lab_report_id, conventional_low, conventional_high, conventional_flag, functional_low, functional_high, functional_flag"
       )
-      .eq("patient_id", patientId)
+      .eq("patient_id", patient.id)
       .eq("biomarker_code", biomarker_code)
+      .in("lab_report_id", sharedLabIds)
       .not("collection_date", "is", null)
       .order("collection_date", { ascending: true });
 
@@ -175,7 +185,6 @@ export async function GET(
       });
     }
 
-    // Use most recent entry for metadata/ranges
     const latest = results[results.length - 1];
 
     return NextResponse.json({
