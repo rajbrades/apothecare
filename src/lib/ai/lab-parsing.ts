@@ -81,7 +81,7 @@ export async function parseLabReport(
         try {
           response = await anthropic.messages.create({
             model,
-            max_tokens: 8192,
+            max_tokens: 16384,
             system: LAB_PARSING_SYSTEM_PROMPT,
             messages: [
               {
@@ -130,15 +130,40 @@ export async function parseLabReport(
 
     let parsedData: ParsedLabData | null = null;
     try {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      // Strip code fences if present
+      const cleaned = rawText.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         parsedData = JSON.parse(jsonMatch[0]) as ParsedLabData;
       }
     } catch {
-      // JSON parsing failed
+      // JSON may be truncated due to token limit — try to repair
+      try {
+        const cleaned = rawText.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          let truncated = jsonMatch[0];
+          // Close any unclosed arrays/objects to salvage partial data
+          const openBrackets = (truncated.match(/\[/g) || []).length;
+          const closeBrackets = (truncated.match(/\]/g) || []).length;
+          const openBraces = (truncated.match(/\{/g) || []).length;
+          const closeBraces = (truncated.match(/\}/g) || []).length;
+          // Trim trailing incomplete entry (after last comma)
+          truncated = truncated.replace(/,\s*[^,\]\}]*$/, "");
+          for (let i = 0; i < openBrackets - closeBrackets; i++) truncated += "]";
+          for (let i = 0; i < openBraces - closeBraces; i++) truncated += "}";
+          parsedData = JSON.parse(truncated) as ParsedLabData;
+          console.log(`[Lab Parse] Repaired truncated JSON — salvaged ${parsedData?.biomarkers?.length || 0} biomarkers`);
+        }
+      } catch (repairErr) {
+        console.error("[Lab Parse] JSON repair also failed:", repairErr);
+        console.error("[Lab Parse] Raw text (first 500 chars):", rawText.slice(0, 500));
+      }
     }
 
     if (!parsedData || !parsedData.biomarkers || parsedData.biomarkers.length === 0) {
+      console.error("[Lab Parse] No biomarkers found. parsedData keys:", parsedData ? Object.keys(parsedData) : "null");
+      console.error("[Lab Parse] Raw response (first 1000 chars):", rawText.slice(0, 1000));
       throw new Error("Failed to extract biomarker data from the lab report. The PDF may be unclear or in an unsupported format.");
     }
 
