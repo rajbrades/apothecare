@@ -10,6 +10,7 @@ import {
   Archive, ArchiveRestore, ChevronDown, ExternalLink,
   Trash2, AlertTriangle, MoreVertical, GitBranch,
   Salad, HeartPulse, FlaskConical,
+  Mail, Phone, MapPin, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
@@ -92,6 +93,60 @@ const VitalsSnapshot = dynamic(
 );
 
 type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline";
+
+function DemographicsCard({ patient }: { patient: Patient }) {
+  const hasContact = patient.email || patient.phone;
+  const hasAddress = patient.city || patient.state || patient.zip_code;
+  const hasDemo = patient.gender_identity || patient.ethnicity || patient.referral_source;
+
+  if (!hasContact && !hasAddress && !hasDemo) return null;
+
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-3">
+        Demographics &amp; Contact
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
+        {patient.email && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <Mail className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <a href={`mailto:${patient.email}`} className="hover:text-[var(--color-brand-600)] transition-colors">{patient.email}</a>
+          </div>
+        )}
+        {patient.phone && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <Phone className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <a href={`tel:${patient.phone}`} className="hover:text-[var(--color-brand-600)] transition-colors">{patient.phone}</a>
+          </div>
+        )}
+        {hasAddress && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <MapPin className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <span>{[patient.city, patient.state].filter(Boolean).join(", ")}{patient.zip_code ? ` ${patient.zip_code}` : ""}</span>
+          </div>
+        )}
+        {patient.gender_identity && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <Users className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <span>Gender: {patient.gender_identity}</span>
+          </div>
+        )}
+        {patient.ethnicity && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <User className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <span>Ethnicity: {patient.ethnicity}</span>
+          </div>
+        )}
+        {patient.referral_source && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+            <span>Referral: {patient.referral_source}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface VisitItem {
   id: string;
@@ -547,6 +602,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               extractedDocCount={extractedDocCount}
               onPopulated={handlePopulated}
             />
+            {/* Demographics */}
+            <DemographicsCard patient={patient} />
             <VitalsSnapshot
               patientId={patient.id}
               onViewTrends={() => {
