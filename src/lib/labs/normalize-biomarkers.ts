@@ -336,14 +336,29 @@ export async function normalizeBiomarkers(
     });
   }
 
-  // Batch insert
+  // Verify lab report exists before inserting (debug FK violations)
   if (inserts.length > 0) {
-    const { error } = await supabaseClient
-      .from("biomarker_results")
-      .insert(inserts);
+    const { data: labCheck } = await supabaseClient
+      .from("lab_reports")
+      .select("id")
+      .eq("id", labReportId)
+      .maybeSingle();
 
-    if (error) {
-      throw new Error(`Failed to insert biomarker results: ${error.message}`);
+    if (!labCheck) {
+      throw new Error(`Lab report ${labReportId} not found — cannot insert biomarker results (FK violation would occur)`);
+    }
+
+    // Insert in batches of 25 to avoid payload size issues
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < inserts.length; i += BATCH_SIZE) {
+      const batch = inserts.slice(i, i + BATCH_SIZE);
+      const { error } = await supabaseClient
+        .from("biomarker_results")
+        .insert(batch);
+
+      if (error) {
+        throw new Error(`Failed to insert biomarker results (batch ${i / BATCH_SIZE + 1}): ${error.message}`);
+      }
     }
   }
 
