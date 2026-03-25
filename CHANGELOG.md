@@ -2,6 +2,21 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.31.0] - 2026-03-25
+
+### Fixed — HIPAA Compliance (Full Codebase Audit)
+
+**Critical (C1-C4) — All Resolved:**
+- **C1**: Storage file cleanup on account/patient deletion — `deleteStoragePrefix()` prevents orphaned PHI in Supabase Storage
+- **C2**: Audit logging on 5 patient portal GET routes (me, labs, notes, consents, intake) per HIPAA §164.312(b)
+- **C3**: Cache-Control headers on account export ZIP response (prevents proxy caching of PHI)
+- **C4**: 25 instances of database error messages leaking to clients replaced with generic "Internal server error"
+
+**High (H1-H5) — Resolved:**
+- **H1**: Replaced `select("*")` with explicit field lists in 9 non-export API routes (HIPAA minimum necessary standard)
+- **H2**: Removed patient/practitioner identifiers from `console.error()` logs
+- **H3-H5**: Verified chat history, invite revoke, and admin flagged-citations already have audit logging
+
 ## [0.30.0] - 2026-03-24
 
 ### Added — Grounded Citation System

@@ -743,18 +743,18 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 3. ✅ **Account export cache headers** — `Cache-Control: no-store` + security headers added (PHI caching risk)
 4. ✅ **Error message sanitization** — 25 instances of `jsonError(error.message)` replaced with generic "Internal server error" across 15 route files
 
-**High — Open (see TODO.md for full list):**
-- `select("*")` minimum necessary violations in 12+ routes
-- Console logging with patient/practitioner IDs
-- Chat history read not audited
-- Invite revoke not audited
-- Admin flagged-citations not audited
-- No automated audit log archival (documented as planned)
-- Patient right to amendment not implemented (HIPAA §164.526)
-- No patient disclosure log view in portal
-- OpenAI/Supabase BAA status unverified
-- RLS deny policies missing on `citation_corrections`
-- Zod validation missing for replacement citation data
+**High — H1-H5 Resolved, H6-H11 Open:**
+- ✅ H1: `select("*")` replaced with explicit field lists in 9 routes
+- ✅ H2: Patient/practitioner IDs removed from console logs
+- ✅ H3: Chat history audit logging (was already implemented)
+- ✅ H4: Invite revoke audit logging (was already implemented)
+- ✅ H5: Admin flagged-citations audit logging (was already implemented)
+- H6: No automated audit log archival (documented as planned)
+- H7: Patient right to amendment not implemented (HIPAA §164.526)
+- H8: No patient disclosure log view in portal
+- H9: OpenAI/Supabase BAA status unverified
+- H10: RLS deny policies missing on `citation_corrections`
+- H11: Zod validation missing for replacement citation data
 
 **Medium — Open:**
 - Site-access cookie missing secure flags

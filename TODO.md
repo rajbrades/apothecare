@@ -236,7 +236,7 @@ Full codebase audit findings. Organized by severity.
 
 ---
 
-### 🟡 HIGH — Fix This Sprint
+### 🟡 HIGH — H1-H5 Resolved, H6-H11 Remaining
 
 - [x] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
 
