@@ -24,6 +24,7 @@ const DOCUMENT_TYPES = [
   { value: "intake_form", label: "Intake Form" },
   { value: "health_history", label: "Health History" },
   { value: "lab_report", label: "Lab Report" },
+  { value: "outside_encounter_note", label: "Outside Encounter Note" },
   { value: "imaging", label: "Imaging" },
   { value: "referral", label: "Referral" },
   { value: "consent", label: "Consent" },

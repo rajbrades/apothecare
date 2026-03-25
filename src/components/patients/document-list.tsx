@@ -37,6 +37,7 @@ const DOCUMENT_TYPES = [
   { value: "intake_form", label: "Intake Form" },
   { value: "health_history", label: "Health History" },
   { value: "lab_report", label: "Lab Report" },
+  { value: "outside_encounter_note", label: "Outside Encounter Note" },
   { value: "imaging", label: "Imaging" },
   { value: "referral", label: "Referral" },
   { value: "consent", label: "Consent" },
@@ -350,7 +351,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                   </form>
                 ) : (
                   <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                    {doc.title || doc.file_name}
+                    {doc.title || (() => { try { return decodeURIComponent(doc.file_name).replace(/\.pdf$/i, ""); } catch { return doc.file_name; } })()}
                   </p>
                 )}
                 <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5" onClick={(e) => e.stopPropagation()}>

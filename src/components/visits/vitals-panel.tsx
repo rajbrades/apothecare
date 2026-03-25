@@ -412,7 +412,7 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
                         placeholder={isGhostVital("weight_kg") && prevWeightLbs != null ? String(prevWeightLbs) : "0.0"}
                         value={weightLbs ?? ""}
                         onChange={(e) => updateWeightLbs(e.target.value)}
-                        className={`w-20 px-2 py-1 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-400)] ${isGhostVital("weight_kg") ? ghostInputClass : ""}`}
+                        className={`w-24 px-2 py-1 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-400)] ${isGhostVital("weight_kg") ? ghostInputClass : ""}`}
                       />
                       <span className="text-xs text-[var(--color-text-muted)]">lbs</span>
                     </div>

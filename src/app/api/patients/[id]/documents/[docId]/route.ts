@@ -87,7 +87,7 @@ export async function PATCH(
 
     const body = await request.json();
 
-    const VALID_DOC_TYPES = ["intake_form", "health_history", "lab_report", "imaging", "referral", "consent", "insurance", "other"];
+    const VALID_DOC_TYPES = ["intake_form", "health_history", "lab_report", "imaging", "referral", "consent", "insurance", "outside_encounter_note", "other"];
     const updates: Record<string, unknown> = {};
 
     if (typeof body.title === "string") {
