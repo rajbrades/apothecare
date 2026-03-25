@@ -50,7 +50,9 @@ export async function POST(
       return jsonError("Parsing already in progress", 409);
     }
 
-    // Parse synchronously — after() is unreliable on Vercel
+    // Parse synchronously — after() is unreliable on Vercel.
+    // parseLabReport already sets status to "error" with a detailed error_message
+    // on failure, so we only need a fallback here for truly unexpected crashes.
     try {
       await parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id);
     } catch (err) {
@@ -59,7 +61,10 @@ export async function POST(
       const svc = svcClient();
       await svc
         .from("lab_reports")
-        .update({ status: "error" })
+        .update({
+          status: "error",
+          error_message: err instanceof Error ? err.message : "Re-parse failed unexpectedly",
+        })
         .eq("id", report.id)
         .catch(() => {});
     }
