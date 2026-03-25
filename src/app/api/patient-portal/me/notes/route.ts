@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -8,14 +9,14 @@ function jsonError(message: string, status: number) {
 /**
  * GET /api/patient-portal/me/notes
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Unauthorized", 401);
 
   const { data: patient } = await supabase
     .from("patients")
-    .select("id")
+    .select("id, practitioner_id")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -29,7 +30,18 @@ export async function GET() {
     .eq("status", "completed")
     .order("visit_date", { ascending: false });
 
-  if (error) return jsonError(error.message, 500);
+  if (error) {
+    console.error("[Portal Notes] Query error:", error.message);
+    return jsonError("Internal server error", 500);
+  }
+
+  auditLog({
+    request,
+    practitionerId: patient.practitioner_id,
+    action: "read",
+    resourceType: "visit",
+    detail: { via: "patient_portal", count: notes?.length || 0 },
+  });
 
   return NextResponse.json({ notes: notes || [] });
 }

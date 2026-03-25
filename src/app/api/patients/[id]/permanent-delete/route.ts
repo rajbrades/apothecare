@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
+import { deleteStoragePrefix } from "@/lib/storage/patient-documents";
 import { z } from "zod";
 
 function jsonError(message: string, status: number) {
@@ -72,6 +73,9 @@ export async function POST(
     // Use service client to bypass RLS for cascading delete
     const service = createServiceClient();
 
+    // Delete storage files first (patient documents + lab PDFs)
+    await deleteStoragePrefix(`${practitioner.id}/${id}/`);
+
     // Delete related records first, then the patient
     // Order matters due to FK constraints
     const deletions = [
@@ -88,7 +92,8 @@ export async function POST(
       .eq("practitioner_id", practitioner.id);
 
     if (deleteError) {
-      return jsonError(`Failed to permanently delete patient: ${deleteError.message}`, 500);
+      console.error("[Patient Delete] Failed:", deleteError.message);
+      return jsonError("Failed to permanently delete patient", 500);
     }
 
     // Audit log the permanent deletion

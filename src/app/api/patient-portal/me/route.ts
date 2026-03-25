@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -9,7 +10,7 @@ function jsonError(message: string, status: number) {
  * GET /api/patient-portal/me
  * Returns the current patient's profile + onboarding status.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Unauthorized", 401);
@@ -47,6 +48,15 @@ export async function GET() {
   const signedIds = new Set((signatures || []).map((s: { consent_template_id: string }) => s.consent_template_id));
   const allConsentsSigned = (requiredTemplates || []).every((t: { id: string }) => signedIds.has(t.id));
   const intakeSubmitted = (intake || []).length > 0;
+
+  auditLog({
+    request,
+    practitionerId: patient.practitioner_id,
+    action: "read",
+    resourceType: "patient",
+    resourceId: patient.id,
+    detail: { via: "patient_portal", endpoint: "me" },
+  });
 
   return NextResponse.json({
     patient,

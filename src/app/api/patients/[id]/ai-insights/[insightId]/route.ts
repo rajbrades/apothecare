@@ -56,7 +56,7 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
     if (!data) return jsonError("Insight not found", 404);
 
     auditLog({

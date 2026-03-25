@@ -29,7 +29,7 @@ export async function GET() {
       .select("id, slug, name, description, logo_url, is_active, created_at")
       .order("created_at", { ascending: true });
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
 
     // Get document counts and practitioner counts per partnership
     const enriched = await Promise.all(
@@ -56,7 +56,7 @@ export async function GET() {
 
     return NextResponse.json({ partnerships: enriched });
   } catch (err: unknown) {
-    return jsonError(err instanceof Error ? err.message : "Internal error", 500);
+    return jsonError("Internal server error", 500);
   }
 }
 
@@ -86,11 +86,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (error.code === "23505") return jsonError("Partnership with this slug already exists", 409);
-      return jsonError(error.message, 500);
+      return jsonError("Internal server error", 500);
     }
 
     return NextResponse.json({ partnership: data }, { status: 201 });
   } catch (err: unknown) {
-    return jsonError(err instanceof Error ? err.message : "Internal error", 500);
+    return jsonError("Internal server error", 500);
   }
 }

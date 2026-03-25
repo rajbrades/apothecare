@@ -76,3 +76,52 @@ export async function deleteFromStorage(storagePath: string) {
 
   if (error) throw new Error(`Storage delete failed: ${error.message}`);
 }
+
+/**
+ * Delete all files under a storage prefix (e.g. "{practitioner_id}/" or "{practitioner_id}/{patient_id}/").
+ * Best-effort — logs errors but does not throw.
+ */
+export async function deleteStoragePrefix(prefix: string): Promise<number> {
+  const serviceClient = createServiceClient();
+  let deleted = 0;
+
+  try {
+    const { data: files, error } = await serviceClient.storage
+      .from(BUCKET)
+      .list(prefix, { limit: 1000 });
+
+    if (error || !files?.length) return 0;
+
+    // Collect all file paths (may include folders — recurse one level)
+    const paths: string[] = [];
+    for (const file of files) {
+      const fullPath = `${prefix}${file.name}`;
+      if (file.id) {
+        // It's a file
+        paths.push(fullPath);
+      } else {
+        // It's a folder — list contents
+        const { data: subFiles } = await serviceClient.storage
+          .from(BUCKET)
+          .list(fullPath, { limit: 1000 });
+        if (subFiles) {
+          for (const sub of subFiles) {
+            if (sub.id) paths.push(`${fullPath}/${sub.name}`);
+          }
+        }
+      }
+    }
+
+    if (paths.length > 0) {
+      const { error: rmError } = await serviceClient.storage
+        .from(BUCKET)
+        .remove(paths);
+      if (!rmError) deleted = paths.length;
+      else console.warn(`[Storage] Failed to delete ${paths.length} files under ${prefix}:`, rmError.message);
+    }
+  } catch (err) {
+    console.warn("[Storage] Prefix cleanup error:", err);
+  }
+
+  return deleted;
+}

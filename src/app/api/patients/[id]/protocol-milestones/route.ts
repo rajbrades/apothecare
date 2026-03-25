@@ -52,7 +52,7 @@ export async function GET(
     }
 
     const { data, error } = await query;
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
 
     return NextResponse.json({ milestones: data });
   } catch {
@@ -91,7 +91,7 @@ export async function POST(
       .select()
       .single();
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
 
     auditLog({
       practitionerId: practitioner.id,

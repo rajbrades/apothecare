@@ -68,6 +68,6 @@ export async function GET() {
 
     return NextResponse.json({ partnerships });
   } catch (err: unknown) {
-    return jsonError(err instanceof Error ? err.message : "Internal error", 500);
+    return jsonError("Internal server error", 500);
   }
 }

@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -9,7 +10,7 @@ function jsonError(message: string, status: number) {
  * GET /api/patient-portal/me/consents
  * Returns required consent templates and which ones the patient has signed.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Unauthorized", 401);
@@ -45,6 +46,14 @@ export async function GET() {
     signed: signedMap.has(t.id),
     signed_at: signedMap.get(t.id) ?? null,
   }));
+
+  auditLog({
+    request,
+    practitionerId: patient.practitioner_id,
+    action: "read",
+    resourceType: "consent",
+    detail: { via: "patient_portal", count: consents.length },
+  });
 
   return NextResponse.json({ consents });
 }

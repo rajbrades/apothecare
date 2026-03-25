@@ -45,7 +45,7 @@ export async function PATCH(
     .eq("id", id)
     .eq("practitioner_id", practitioner.id);
 
-  if (error) return jsonError(error.message, 500);
+  if (error) return jsonError("Internal server error", 500);
 
   return NextResponse.json({ shared: parsed.data.shared });
 }

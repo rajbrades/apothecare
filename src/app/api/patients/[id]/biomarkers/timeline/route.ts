@@ -102,7 +102,7 @@ export async function GET(
           functional_high: latest.functional_high,
           conventional_low: latest.conventional_low,
           conventional_high: latest.conventional_high,
-          data_points: results.map((r) => ({
+          data_points: results.map((r: { collection_date: string; value: number }) => ({
             date: r.collection_date,
             value: r.value,
           })),

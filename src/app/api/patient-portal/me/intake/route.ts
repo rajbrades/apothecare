@@ -12,7 +12,7 @@ function jsonError(message: string, status: number) {
  * GET /api/patient-portal/me/intake
  * Returns the active intake form template for the patient's practice.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Unauthorized", 401);
@@ -45,6 +45,14 @@ export async function GET() {
     .order("submitted_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  auditLog({
+    request,
+    practitionerId: patient.practitioner_id,
+    action: "read",
+    resourceType: "intake_template",
+    detail: { via: "patient_portal", already_submitted: !!existing },
+  });
 
   return NextResponse.json({ template, already_submitted: !!existing, submitted_at: existing?.submitted_at ?? null });
 }

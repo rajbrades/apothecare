@@ -226,13 +226,13 @@ Full codebase audit findings. Organized by severity.
 
 ### 🔴 CRITICAL — Fix Immediately
 
-- [ ] **C1. Storage files not deleted on account/patient deletion** — `src/app/api/auth/delete-account/route.ts` and `src/app/api/patients/[id]/permanent-delete/route.ts` cascade-delete DB records but orphan lab PDFs and patient documents in Supabase Storage buckets (`patient-documents`, `practice-assets`). **HIPAA §164.530(c)**: PHI must be disposed when no longer needed. **Fix:** Add storage cleanup loop using `deleteFromStorage()` from `src/lib/storage/patient-documents.ts` before final deletion.
+- [x] **C1. Storage files not deleted on account/patient deletion** — `src/app/api/auth/delete-account/route.ts` and `src/app/api/patients/[id]/permanent-delete/route.ts` cascade-delete DB records but orphan lab PDFs and patient documents in Supabase Storage buckets (`patient-documents`, `practice-assets`). **HIPAA §164.530(c)**: PHI must be disposed when no longer needed. **Fix:** Add storage cleanup loop using `deleteFromStorage()` from `src/lib/storage/patient-documents.ts` before final deletion.
 
-- [ ] **C2. Patient portal read access not audited (5 routes)** — `GET /api/patient-portal/me`, `me/labs`, `me/notes`, `me/consents`, `me/intake` do not call `auditLog()`. **HIPAA §164.312(b)**: All PHI access must be logged, including patient self-access. **Fix:** Add `auditLog({ action: "patient_view_*", ... })` to each GET handler.
+- [x] **C2. Patient portal read access not audited (5 routes)** — `GET /api/patient-portal/me`, `me/labs`, `me/notes`, `me/consents`, `me/intake` do not call `auditLog()`. **HIPAA §164.312(b)**: All PHI access must be logged, including patient self-access. **Fix:** Add `auditLog({ action: "patient_view_*", ... })` to each GET handler.
 
-- [ ] **C3. Account export missing Cache-Control headers** — `src/app/api/account/export/route.ts` (line 173) returns ZIP without `Cache-Control: no-store` — proxies/CDNs could cache PHI. Visit/lab/supplement exports already use `EXPORT_HEADERS` from `src/lib/export/shared.ts`. **Fix:** Add same headers to account export response.
+- [x] **C3. Account export missing Cache-Control headers** — `src/app/api/account/export/route.ts` (line 173) returns ZIP without `Cache-Control: no-store` — proxies/CDNs could cache PHI. Visit/lab/supplement exports already use `EXPORT_HEADERS` from `src/lib/export/shared.ts`. **Fix:** Add same headers to account export response.
 
-- [ ] **C4. Database error messages leaked to clients (19 routes)** — Pattern `return jsonError(error.message, 500)` exposes Postgres internals (table names, constraint names, column types) to the client. Affects: `ai-insights`, `supplements`, `patient-reports`, `protocol-milestones`, `symptom-logs`, `invites`, `notes`, `labs/share`, and 11 more. **Fix:** Return generic "Internal server error"; log actual error server-side with `console.error()`.
+- [x] **C4. Database error messages leaked to clients (19 routes)** — Pattern `return jsonError(error.message, 500)` exposes Postgres internals (table names, constraint names, column types) to the client. Affects: `ai-insights`, `supplements`, `patient-reports`, `protocol-milestones`, `symptom-logs`, `invites`, `notes`, `labs/share`, and 11 more. **Fix:** Return generic "Internal server error"; log actual error server-side with `console.error()`.
 
 ---
 

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     auditLog({
       request,
       practitionerId: patient.practitioner_id,
-      action: "patient_view_biomarker_timeline",
+      action: "read",
       resourceType: "biomarker_timeline",
       resourceId: patient.id,
       detail: biomarker_code ? { biomarker_code } : { mode: mode || "list" },
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       .eq("patient_id", patient.id)
       .eq("is_shared_with_patient", true);
 
-    const sharedLabIds = (sharedLabs || []).map((l) => l.id);
+    const sharedLabIds = (sharedLabs || []).map((l: { id: string }) => l.id);
     if (sharedLabIds.length === 0) {
       if (mode === "overview") return NextResponse.json({ trends: [] });
       return NextResponse.json({ biomarkers: [] });
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
           functional_high: latest.functional_high,
           conventional_low: latest.conventional_low,
           conventional_high: latest.conventional_high,
-          data_points: results.map((r) => ({
+          data_points: results.map((r: { collection_date: string; value: number }) => ({
             date: r.collection_date,
             value: r.value,
           })),

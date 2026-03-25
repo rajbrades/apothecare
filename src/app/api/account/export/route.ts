@@ -174,6 +174,12 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="apothecare-export-${today}.zip"`,
+        "Cache-Control": "no-store, no-cache, no-transform, private",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "no-referrer",
       },
     });
   } catch {

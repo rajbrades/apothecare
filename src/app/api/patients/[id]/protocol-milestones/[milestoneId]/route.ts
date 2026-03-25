@@ -56,7 +56,7 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
     if (!data) return jsonError("Milestone not found", 404);
 
     auditLog({
@@ -98,7 +98,7 @@ export async function DELETE(
       .select("id, title")
       .single();
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
     if (!data) return jsonError("Milestone not found", 404);
 
     auditLog({

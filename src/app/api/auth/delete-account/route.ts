@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { deleteAccountSchema } from "@/lib/validations/settings";
+import { deleteStoragePrefix } from "@/lib/storage/patient-documents";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = createServiceClient();
     const pid = practitioner.id;
+
+    // Delete storage files first (before DB records that reference them)
+    await deleteStoragePrefix(`${pid}/`);
 
     // Delete dependent data in order (child tables first)
     // Some may CASCADE from practitioner FK, but explicit deletion is safer

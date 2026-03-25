@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: any) {
     console.error("[RAG Ingest] Error:", err);
-    return jsonError(err.message, 500);
+    return jsonError("Internal server error", 500);
   }
 }
 
@@ -218,10 +218,10 @@ export async function GET() {
       .not("partnership_id", "is", null)
       .order("ingested_at", { ascending: false });
 
-    if (error) return jsonError(error.message, 500);
+    if (error) return jsonError("Internal server error", 500);
 
     return NextResponse.json({ documents: data || [] });
   } catch (err: any) {
-    return jsonError(err.message, 500);
+    return jsonError("Internal server error", 500);
   }
 }
