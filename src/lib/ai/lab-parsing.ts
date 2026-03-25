@@ -1,9 +1,20 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getAnthropicClient, ANTHROPIC_MODELS } from "./provider";
+import { ANTHROPIC_MODELS } from "./provider";
 import { LAB_PARSING_SYSTEM_PROMPT } from "./lab-parsing-prompts";
 import type { ParsedLabData } from "./lab-parsing-prompts";
 import { downloadFromStorage } from "@/lib/storage/lab-reports";
 import { normalizeBiomarkers } from "@/lib/labs/normalize-biomarkers";
+import { env } from "@/lib/env";
+
+/**
+ * Get a direct Anthropic client for vision features.
+ * Always uses ANTHROPIC_API_KEY directly — never routed through MiniMax,
+ * because MiniMax doesn't support the `document` content type for PDF vision.
+ */
+function getDirectAnthropicClient(): Anthropic {
+  return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+}
 
 /**
  * Parse a lab report PDF using Claude Vision and normalize biomarker results.
@@ -18,7 +29,7 @@ export async function parseLabReport(
   patientId: string | null
 ): Promise<void> {
   const serviceClient = createServiceClient();
-  const anthropic = getAnthropicClient();
+  const anthropic = getDirectAnthropicClient();
 
   try {
     // Update status to parsing
