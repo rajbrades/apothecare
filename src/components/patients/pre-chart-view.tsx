@@ -1,5 +1,6 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
 import { FileText, Pill, AlertTriangle, Sparkles, Clipboard } from "lucide-react";
 import type { Patient, PatientClinicalSummary } from "@/types/database";
 
@@ -45,8 +46,8 @@ export function PreChartView({ patient }: PreChartViewProps) {
           <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">
             Clinical Summary
           </h3>
-          <div className="text-sm text-[var(--color-text-primary)] whitespace-pre-wrap leading-relaxed">
-            {summary.intake_summary}
+          <div className="text-sm text-[var(--color-text-primary)] leading-relaxed prose prose-sm prose-slate max-w-none">
+            <ReactMarkdown>{summary.intake_summary}</ReactMarkdown>
           </div>
         </div>
       )}
