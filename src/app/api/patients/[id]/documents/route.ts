@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { uploadDocumentSchema, documentListQuerySchema } from "@/lib/validations/document";
 import { buildStoragePath, uploadToStorage } from "@/lib/storage/patient-documents";
+import { buildLabStoragePath, uploadToStorage as uploadLabToStorage } from "@/lib/storage/lab-reports";
 import { extractDocumentContent } from "@/lib/ai/document-extraction";
+import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
 import { sanitizeFilename } from "@/lib/sanitize";
 import { auditLog } from "@/lib/api/audit";
@@ -204,6 +206,40 @@ export async function POST(
       console.error("Document extraction failed:", err);
     }
 
+    // Auto-parse as lab when document type is "lab_report"
+    // Creates a lab_reports row and runs full biomarker extraction so
+    // biomarkers appear in Trends without a manual "Parse as Lab" step.
+    let labReportId: string | null = null;
+    if (parsed.data.document_type === "lab_report") {
+      try {
+        const { createServiceClient } = await import("@/lib/supabase/server");
+        const service = createServiceClient();
+
+        const { data: labReport } = await service
+          .from("lab_reports")
+          .insert({
+            practitioner_id: practitioner.id,
+            patient_id: patientId,
+            lab_vendor: "other",
+            test_type: "blood_panel",
+            raw_file_url: storagePath,
+            raw_file_name: sanitizeFilename(file.name),
+            raw_file_size: file.size,
+            status: "uploading",
+            source_document_id: document.id,
+          })
+          .select("id")
+          .single();
+
+        if (labReport) {
+          labReportId = labReport.id;
+          await parseLabReport(labReport.id, storagePath, practitioner.id, patientId);
+        }
+      } catch (err) {
+        console.error("Auto lab parsing failed (non-blocking):", err);
+      }
+    }
+
     // Re-fetch to get final status after extraction
     const { data: finalDoc } = await supabase
       .from("patient_documents")
@@ -213,6 +249,7 @@ export async function POST(
 
     return NextResponse.json({
       document: finalDoc || { ...document, storage_path: storagePath },
+      lab_report_id: labReportId,
     }, { status: 201 });
   } catch {
     return jsonError("Internal server error", 500);
