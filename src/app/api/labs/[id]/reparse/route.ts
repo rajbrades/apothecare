@@ -4,6 +4,9 @@ import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 
+export const runtime = "nodejs";
+export const maxDuration = 300; // 5 min — Claude Vision PDF parsing can be slow
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -48,11 +51,20 @@ export async function POST(
     }
 
     // Schedule parsing after response is sent — `after()` keeps the Lambda alive.
-    after(() =>
-      parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id).catch((err) => {
+    after(async () => {
+      try {
+        await parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id);
+      } catch (err) {
         console.error("Lab re-parse failed:", err);
-      })
-    );
+        const { createServiceClient } = await import("@/lib/supabase/server");
+        const svc = createServiceClient();
+        await svc
+          .from("lab_reports")
+          .update({ status: "error" })
+          .eq("id", report.id)
+          .catch(() => {});
+      }
+    });
 
     return NextResponse.json({ message: "Re-parse started" });
   } catch {

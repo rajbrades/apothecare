@@ -10,7 +10,7 @@ import { escapePostgrestPattern } from "@/lib/search";
 import { auditLog } from "@/lib/api/audit";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300; // 5 min — Claude Vision PDF parsing can be slow
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -207,11 +207,21 @@ export async function POST(request: NextRequest) {
     // Schedule parsing to run after response is sent.
     // `after()` keeps the Vercel Lambda alive until parsing completes,
     // preventing the fire-and-forget from being killed early.
-    after(() =>
-      parseLabReport(report.id, storagePath, practitioner.id, patientId).catch((err) => {
+    after(async () => {
+      try {
+        await parseLabReport(report.id, storagePath, practitioner.id, patientId);
+      } catch (err) {
         console.error("Lab parsing failed:", err);
-      })
-    );
+        // Mark as error so the UI doesn't show "processing" forever
+        const { createServiceClient } = await import("@/lib/supabase/server");
+        const svc = createServiceClient();
+        await svc
+          .from("lab_reports")
+          .update({ status: "error" })
+          .eq("id", report.id)
+          .catch(() => {});
+      }
+    });
 
     return NextResponse.json({
       report: { ...report, raw_file_url: storagePath },
