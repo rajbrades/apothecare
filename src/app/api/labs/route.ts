@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { uploadLabSchema, labListQuerySchema } from "@/lib/validations/lab";
 import { buildLabStoragePath, uploadToStorage } from "@/lib/storage/lab-reports";
@@ -204,27 +204,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Schedule parsing to run after response is sent.
-    // `after()` keeps the Vercel Lambda alive until parsing completes,
-    // preventing the fire-and-forget from being killed early.
-    after(async () => {
-      try {
-        await parseLabReport(report.id, storagePath, practitioner.id, patientId);
-      } catch (err) {
-        console.error("Lab parsing failed:", err);
-        // Mark as error so the UI doesn't show "processing" forever
-        const { createServiceClient } = await import("@/lib/supabase/server");
-        const svc = createServiceClient();
-        await svc
-          .from("lab_reports")
-          .update({ status: "error" })
-          .eq("id", report.id)
-          .catch(() => {});
-      }
-    });
+    // Parse synchronously — `after()` is unreliable on Vercel (function freezes after response).
+    // The client polls for status, so it handles the wait gracefully.
+    try {
+      await parseLabReport(report.id, storagePath, practitioner.id, patientId);
+    } catch (err) {
+      console.error("Lab parsing failed:", err);
+      const { createServiceClient: svcClient } = await import("@/lib/supabase/server");
+      const svc = svcClient();
+      await svc
+        .from("lab_reports")
+        .update({ status: "error" })
+        .eq("id", report.id)
+        .catch(() => {});
+    }
+
+    // Re-fetch report to get final status after parsing
+    const { data: finalReport } = await supabase
+      .from("lab_reports")
+      .select("id, status, lab_vendor, test_type, test_name, collection_date, patient_id, created_at")
+      .eq("id", report.id)
+      .single();
 
     return NextResponse.json({
-      report: { ...report, raw_file_url: storagePath },
+      report: finalReport || { ...report, raw_file_url: storagePath },
     }, { status: 201 });
   } catch {
     return jsonError("Internal server error", 500);

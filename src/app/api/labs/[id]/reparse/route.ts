@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseLabReport } from "@/lib/ai/lab-parsing";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -50,23 +50,21 @@ export async function POST(
       return jsonError("Parsing already in progress", 409);
     }
 
-    // Schedule parsing after response is sent — `after()` keeps the Lambda alive.
-    after(async () => {
-      try {
-        await parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id);
-      } catch (err) {
-        console.error("Lab re-parse failed:", err);
-        const { createServiceClient } = await import("@/lib/supabase/server");
-        const svc = createServiceClient();
-        await svc
-          .from("lab_reports")
-          .update({ status: "error" })
-          .eq("id", report.id)
-          .catch(() => {});
-      }
-    });
+    // Parse synchronously — after() is unreliable on Vercel
+    try {
+      await parseLabReport(report.id, report.raw_file_url, practitioner.id, report.patient_id);
+    } catch (err) {
+      console.error("Lab re-parse failed:", err);
+      const { createServiceClient: svcClient } = await import("@/lib/supabase/server");
+      const svc = svcClient();
+      await svc
+        .from("lab_reports")
+        .update({ status: "error" })
+        .eq("id", report.id)
+        .catch(() => {});
+    }
 
-    return NextResponse.json({ message: "Re-parse started" });
+    return NextResponse.json({ message: "Re-parse complete" });
   } catch {
     return jsonError("Internal server error", 500);
   }
