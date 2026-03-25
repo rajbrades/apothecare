@@ -197,13 +197,22 @@ export async function POST(
       detail: { patient_id: patientId, file_name: file.name, file_size: file.size, document_type: parsed.data.document_type },
     });
 
-    // Fire-and-forget extraction
-    extractDocumentContent(document.id, storagePath, practitioner.id, patientId).catch((err) => {
+    // Extract synchronously — fire-and-forget is unreliable on Vercel (function freezes after response)
+    try {
+      await extractDocumentContent(document.id, storagePath, practitioner.id, patientId);
+    } catch (err) {
       console.error("Document extraction failed:", err);
-    });
+    }
+
+    // Re-fetch to get final status after extraction
+    const { data: finalDoc } = await supabase
+      .from("patient_documents")
+      .select("id, title, document_type, status, extraction_summary, created_at")
+      .eq("id", document.id)
+      .single();
 
     return NextResponse.json({
-      document: { ...document, storage_path: storagePath, status: "uploaded" },
+      document: finalDoc || { ...document, storage_path: storagePath },
     }, { status: 201 });
   } catch {
     return jsonError("Internal server error", 500);
