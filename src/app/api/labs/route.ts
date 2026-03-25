@@ -205,7 +205,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Parse synchronously — `after()` is unreliable on Vercel (function freezes after response).
-    // The client polls for status, so it handles the wait gracefully.
+    // parseLabReport already sets status to "error" with a detailed error_message
+    // on failure, so we only need a fallback here for truly unexpected crashes.
     try {
       await parseLabReport(report.id, storagePath, practitioner.id, patientId);
     } catch (err) {
@@ -214,7 +215,10 @@ export async function POST(request: NextRequest) {
       const svc = svcClient();
       await svc
         .from("lab_reports")
-        .update({ status: "error" })
+        .update({
+          status: "error",
+          error_message: err instanceof Error ? err.message : "Lab parsing failed unexpectedly",
+        })
         .eq("id", report.id)
         .catch(() => {});
     }

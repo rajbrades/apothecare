@@ -13,7 +13,35 @@ import { env } from "@/lib/env";
  * because MiniMax doesn't support the `document` content type for PDF vision.
  */
 function getDirectAnthropicClient(): Anthropic {
-  return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const apiKey = env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "ANTHROPIC_API_KEY is not configured. Lab parsing requires a direct Anthropic API key — set it in your environment variables."
+    );
+  }
+  return new Anthropic({ apiKey });
+}
+
+/**
+ * Extract a human-readable error message from Anthropic SDK errors.
+ */
+function formatApiError(err: unknown): string {
+  if (err instanceof Anthropic.APIError) {
+    const status = err.status;
+    const type = (err.error as Record<string, unknown>)?.error
+      ? ((err.error as Record<string, Record<string, unknown>>).error?.type as string)
+      : undefined;
+
+    if (status === 401) return "Anthropic API key is invalid or expired. Check your ANTHROPIC_API_KEY environment variable.";
+    if (status === 403) return "Anthropic API key lacks permission for this operation. Ensure your plan supports the Claude model being used.";
+    if (status === 429) return "Anthropic API rate limit exceeded. Please wait a moment and retry.";
+    if (status === 529) return "Anthropic API is temporarily overloaded. Please retry in a few minutes.";
+    if (status === 413) return "Lab report PDF is too large for the API. Try a smaller or lower-resolution scan.";
+
+    return `Anthropic API error (${status}${type ? `, ${type}` : ""}): ${err.message}`;
+  }
+  if (err instanceof Error) return err.message;
+  return "Lab parsing failed due to an unknown error.";
 }
 
 /**
@@ -93,7 +121,7 @@ export async function parseLabReport(
     }
 
     if (!response) {
-      throw lastError || new Error("All models failed for lab parsing");
+      throw lastError || new Error("All models failed for lab parsing. Check Anthropic API key and account status.");
     }
 
     // Parse extraction result
@@ -183,13 +211,14 @@ export async function parseLabReport(
       console.error("Audit log write failed:", err);
     });
   } catch (err) {
-    console.error("Lab parsing error:", err);
+    const errorMessage = formatApiError(err);
+    console.error("Lab parsing error:", errorMessage, err);
 
     await serviceClient
       .from("lab_reports")
       .update({
         status: "error",
-        error_message: err instanceof Error ? err.message : "Lab parsing failed",
+        error_message: errorMessage,
       })
       .eq("id", reportId);
   }
