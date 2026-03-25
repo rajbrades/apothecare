@@ -733,9 +733,57 @@ src/
 
 ---
 
+### HIPAA Compliance Audit (March 25, 2026)
+
+Full codebase security audit with 3 parallel agents covering PHI exposure, access controls, and compliance.
+
+**Critical — ✅ All Resolved:**
+1. ✅ **Storage file cleanup on deletion** — `deleteStoragePrefix()` wired into account + patient deletion (orphaned PHI files in Supabase Storage)
+2. ✅ **Patient portal audit logging** — all 5 GET routes (me, labs, notes, consents, intake) now log PHI access per HIPAA §164.312(b)
+3. ✅ **Account export cache headers** — `Cache-Control: no-store` + security headers added (PHI caching risk)
+4. ✅ **Error message sanitization** — 25 instances of `jsonError(error.message)` replaced with generic "Internal server error" across 15 route files
+
+**High — Open (see TODO.md for full list):**
+- `select("*")` minimum necessary violations in 12+ routes
+- Console logging with patient/practitioner IDs
+- Chat history read not audited
+- Invite revoke not audited
+- Admin flagged-citations not audited
+- No automated audit log archival (documented as planned)
+- Patient right to amendment not implemented (HIPAA §164.526)
+- No patient disclosure log view in portal
+- OpenAI/Supabase BAA status unverified
+- RLS deny policies missing on `citation_corrections`
+- Zod validation missing for replacement citation data
+
+**Medium — Open:**
+- Site-access cookie missing secure flags
+- Empty ADMIN_EMAILS not logged
+- No breach detection automation
+- No practitioner AI consent documentation
+- AI responses stored as-is may contain synthesized PHI
+- Patient deletion cascade verification needed
+
+**Passing Areas:**
+- Encryption in transit (HSTS + TLS 1.3) ✓
+- Encryption at rest (AES-256 Supabase + S3) ✓
+- Security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options) ✓
+- RLS on all 18+ tables ✓
+- CSRF on all mutations ✓
+- Auth before service client ✓
+- Audit log immutability (migration 033) ✓
+- 6-year retention policy ✓
+- Patient consent (HIPAA NPP + Telehealth) ✓
+- Export watermarking ✓
+- Invite token security (SHA-256) ✓
+- Anthropic zero-retention BAA ✓
+
+---
+
 ## What Needs To Be Done Next
 
 ### High Priority
+- [ ] **HIPAA High findings** — see TODO.md "🟡 HIGH" section (11 items)
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Mobile responsive pass** — all pages
 - [ ] **Stripe integration** — payment processing for Pro subscriptions
@@ -746,6 +794,7 @@ src/
 - [ ] **Design:** Balance hero input microcopy alignment
 
 ### Backlog
+- HIPAA Medium findings (6 items — see TODO.md)
 - PWA support for mobile practitioners
 - Analytics (PostHog or Mixpanel)
 - A/B testing framework for landing page
