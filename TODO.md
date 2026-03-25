@@ -218,41 +218,98 @@ Last updated: March 24, 2026
 
 ---
 
-## Sprint 23 — Security & Compliance 🔧 IN PROGRESS
+## HIPAA Compliance Audit — March 25, 2026
 
-All security hardening, HIPAA remediation, and legal pages — everything needed before production.
+Full codebase audit findings. Organized by severity.
 
-### HIPAA Audit Remediation (Critical)
+---
 
-Findings from security audit of v0.27.0 citation quality feedback loop (commits 586d225, 87832dc).
+### 🔴 CRITICAL — Fix Immediately
 
-- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations` — endpoint accesses PHI (user questions, AI answers) but does not call `auditLog()`
-- [ ] **HIPAA §164.312(b):** Add audit logging to `GET /api/admin/flagged-citations/search` — same issue
-- [ ] **HIPAA §164.312(b):** Add audit logging for Q&A context access in flagged-citations GET handler — log `resourceType: "conversation_messages"` with accessed `conversation_id`s
-- [ ] **HIPAA §164.312(a)(1):** Add explicit RLS deny policies on `citation_corrections` table — add `WITH CHECK (false)` / `USING (false)` policies for INSERT/UPDATE/DELETE (migration 028)
-- [ ] **Security:** Add Zod validation for replacement citation data — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50)
-- [ ] **Defensive:** Log warning when `ADMIN_EMAILS` env var is empty
+- [ ] **C1. Storage files not deleted on account/patient deletion** — `src/app/api/auth/delete-account/route.ts` and `src/app/api/patients/[id]/permanent-delete/route.ts` cascade-delete DB records but orphan lab PDFs and patient documents in Supabase Storage buckets (`patient-documents`, `practice-assets`). **HIPAA §164.530(c)**: PHI must be disposed when no longer needed. **Fix:** Add storage cleanup loop using `deleteFromStorage()` from `src/lib/storage/patient-documents.ts` before final deletion.
 
-### Export Security
+- [ ] **C2. Patient portal read access not audited (5 routes)** — `GET /api/patient-portal/me`, `me/labs`, `me/notes`, `me/consents`, `me/intake` do not call `auditLog()`. **HIPAA §164.312(b)**: All PHI access must be logged, including patient self-access. **Fix:** Add `auditLog({ action: "patient_view_*", ... })` to each GET handler.
 
-- [ ] **Security:** Add `Cache-Control: no-store, no-cache, private` + `Pragma: no-cache` + `Expires: 0` headers to visit export and account export responses
-- [ ] **Security:** Add `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` to all export responses
-- [ ] **Security:** Export watermarking — embed audit log ID, practitioner email, and timestamp in exported document footer
-- [ ] **Security:** Link audit log entries to specific export sessions via `export_session_id` UUID
-- [ ] **Security:** Sanitize lab PDF filenames in account export ZIP to remove potential PHI from file names
+- [ ] **C3. Account export missing Cache-Control headers** — `src/app/api/account/export/route.ts` (line 173) returns ZIP without `Cache-Control: no-store` — proxies/CDNs could cache PHI. Visit/lab/supplement exports already use `EXPORT_HEADERS` from `src/lib/export/shared.ts`. **Fix:** Add same headers to account export response.
 
-### Legal Pages ✅ (Completed in Sprint 26)
+- [ ] **C4. Database error messages leaked to clients (19 routes)** — Pattern `return jsonError(error.message, 500)` exposes Postgres internals (table names, constraint names, column types) to the client. Affects: `ai-insights`, `supplements`, `patient-reports`, `protocol-milestones`, `symptom-logs`, `invites`, `notes`, `labs/share`, and 11 more. **Fix:** Return generic "Internal server error"; log actual error server-side with `console.error()`.
 
-- [x] **Page:** Terms of Use — `/terms` static page with service terms, acceptable use, liability limitations, AI disclaimer
-- [x] **Page:** Privacy & Security — `/security` static page with HIPAA compliance overview, encryption details, data handling, BAA info, SOC 2 roadmap
-- [x] **Page:** Telehealth Compliance — `/telehealth` static page with telehealth disclaimer, state licensing, informed consent, HIPAA telehealth safeguards
-- [x] **Page:** Advertising & Partnerships — `/advertising` static page with advertising policy, partnership disclosure, sponsored content guidelines, evidence integrity
-- [x] **UI:** Add footer links to all legal pages on landing page and authenticated layout
-- [x] **UI:** Terms acceptance checkbox on registration (link to `/terms`)
+---
 
-### Completed
-- [x] **Docs:** Create `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
-- [x] **Build fix:** Lazy env validation — `env.ts` and `provider.ts` deferred to first property access via Proxy
+### 🟡 HIGH — Fix This Sprint
+
+- [ ] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
+
+- [ ] **H2. Console logging includes patient/practitioner IDs** — `src/app/api/patients/[id]/documents/route.ts` (lines 43, 111) logs `{ patientId, practitionerId }`. Also `src/app/api/auth/delete-account/route.ts` (line 75). Server logs may not have HIPAA-compliant access controls. **Fix:** Log error type/message only, never identifiers.
+
+- [ ] **H3. Chat history read not audited** — `GET /api/chat/history` retrieves conversation messages (may contain PHI in AI responses referencing patient context) but does not call `auditLog()`. **Fix:** Add audit log for message retrieval.
+
+- [ ] **H4. Invite revoke not audited** — `POST /api/patient-portal/invites/[id]/revoke` does not call `auditLog()`. Revocation is a security-relevant action. **Fix:** Add audit log with `action: "invite_revoked"`.
+
+- [ ] **H5. Admin flagged-citations endpoints not audited** — `GET /api/admin/flagged-citations` and `GET /api/admin/flagged-citations/search` access PHI (user questions, AI answers) but do not call `auditLog()`. **Fix:** Add audit logging with `resourceType: "conversation_messages"`.
+
+- [ ] **H6. No automated audit log archival** — `docs/COMPLIANCE.md` documents 6-7 year retention policy but marks archival as "planned." No cron job or script exists to archive logs >1yr to cold storage. **Fix:** Implement scheduled function to archive to AWS S3 Glacier.
+
+- [ ] **H7. Patient right to amendment not implemented** — No correction request workflow in patient portal. **HIPAA §164.526**: Patients have the right to request amendments to their PHI. **Fix:** Add "Request Correction" form in portal → notification to practitioner → review/approve workflow.
+
+- [ ] **H8. No patient disclosure log view** — Audit logs capture all PHI access but patients cannot see who accessed their data. Some state privacy laws require this. **Fix:** Add read-only audit log view in patient portal showing access events for their record.
+
+- [ ] **H9. OpenAI and Supabase BAA status unverified** — Anthropic BAA confirmed (zero-retention). OpenAI (Whisper transcription) and Supabase marked "required" in `docs/COMPLIANCE.md` but not confirmed as signed. **Fix:** Verify and document current BAA status for both vendors.
+
+- [ ] **H10. RLS deny policies missing on `citation_corrections` table** — `citation_corrections` (migration 028) lacks explicit `WITH CHECK (false)` / `USING (false)` deny policies for client INSERT/UPDATE/DELETE. Currently admin-only via service client, but explicit deny is defense-in-depth. **Fix:** Add migration with deny policies.
+
+- [ ] **H11. Zod validation missing for replacement citation data** — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50) in the admin flagged-citations endpoint.
+
+---
+
+### 🟠 MEDIUM — Fix Next Sprint
+
+- [ ] **M1. Site-access cookie missing secure flags** — `src/middleware.ts` (line 14) sets `site_access` cookie without HttpOnly, Secure, SameSite=Strict flags. Only relevant if `SITE_PASSWORD` is used in production.
+
+- [ ] **M2. Empty ADMIN_EMAILS not logged** — If env var is unset/empty, all admin routes silently deny access. No warning logged at startup or request time. **Fix:** Log warning when `isAdmin()` is checked and ADMIN_EMAILS is empty.
+
+- [ ] **M3. No breach detection automation** — No alerting for anomalous export volumes, unusual IP access patterns, or failed login tracking. `docs/COMPLIANCE.md` documents a 5-step response process but no detection. **Fix:** Add thresholds and alerts (e.g., >3 exports/hour, access from new country).
+
+- [ ] **M4. No practitioner AI consent documentation** — Patients sign consent forms before portal access. Practitioners don't explicitly consent to AI processing of patient PHI. **Fix:** Add consent checkbox in practitioner settings or onboarding.
+
+- [ ] **M5. AI responses stored as-is may contain synthesized PHI** — Chat responses referencing patient context (name, DOB, medications) are stored in `messages` table. Mitigated by RLS (practitioners see only their own conversations). **Fix:** Document in compliance guide that stored AI responses are PHI and subject to same protections.
+
+- [ ] **M6. Patient deletion doesn't cascade all tables** — `POST /api/patients/[id]/permanent-delete` only explicitly deletes `patient_supplements` and `timeline_events`. Other tables (`patient_documents`, `lab_reports`, `visits`, conversation `messages`) may rely on FK cascades but this isn't verified. **Fix:** Verify FK cascade behavior or add explicit deletes.
+
+---
+
+### ✅ PASSING Areas (No Action Required)
+
+- [x] **Encryption in transit** — HSTS max-age=31536000, TLS 1.3, all APIs HTTPS-only
+- [x] **Encryption at rest** — AES-256 Supabase PostgreSQL + S3 storage encryption
+- [x] **Security headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy configured in `next.config.ts`
+- [x] **RLS coverage** — All 18+ tables with RLS enabled and appropriate policies
+- [x] **CSRF protection** — All mutating endpoints call `validateCsrf()`
+- [x] **Auth verification** — Service client (`createServiceClient()`) never used before auth check
+- [x] **Audit log immutability** — RLS SELECT-only for clients (migration 033), service role INSERT only
+- [x] **Audit log retention** — 6-year policy documented, indexes configured for efficient retention queries
+- [x] **Patient consent** — HIPAA NPP + Telehealth consent signed before portal access (migration 029/030)
+- [x] **Data export** — ZIP export with audit trail, session tracking, rate limiting
+- [x] **Export watermarking** — Session ID + timestamp on visit/lab/supplement exports via `EXPORT_HEADERS`
+- [x] **Invite token security** — SHA-256 hash stored, raw token never persisted, 72h TTL
+- [x] **Anthropic BAA** — Zero-retention policy confirmed, no PHI used for training
+- [x] **Legal pages** — Terms, Security, Telehealth, Advertising pages live with footer links
+- [x] **Registration consent** — Terms acceptance checkbox required before signup
+
+---
+
+### Previously Completed (Sprint 23/26/27)
+
+- [x] Export security headers on visit/lab/supplement exports (`EXPORT_HEADERS` in `src/lib/export/shared.ts`)
+- [x] Export watermarking with `export_session_id` UUID
+- [x] Lab PDF filename sanitization in account export (uses UUID instead of `raw_file_name`)
+- [x] `docs/COMPLIANCE.md` with audit log retention policy, export access policies, encryption requirements
+- [x] Lazy env validation (build-time crash fix)
+- [x] Legal pages (Terms, Security, Telehealth, Advertising)
+- [x] Footer links + registration consent checkbox
+- [x] HIPAA audit trail hardening (migration 033 — append-only, 6-year retention, indexes)
+- [x] PHI read logging for patient charts/labs/notes (`auditLogServer()` in server components)
+- [x] Grounded citation system (eliminates hallucinated citations exposing fake medical claims)
 
 ---
 
