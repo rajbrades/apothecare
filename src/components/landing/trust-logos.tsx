@@ -33,7 +33,7 @@ export function TrustLogos() {
           <p className="text-center text-xl md:text-2xl text-white uppercase tracking-widest font-semibold mb-1">
             Grounded in Evidence From
           </p>
-          <p className="text-center text-sm text-white/70 mb-10">
+          <p className="text-center text-sm text-white/70 mb-15">
             Filter by source on every query — PubMed, IFM, Cochrane, and more.
           </p>
         </ScrollReveal>
