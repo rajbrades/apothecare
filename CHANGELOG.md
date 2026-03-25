@@ -2,6 +2,28 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.32.0] - 2026-03-25
+
+### Added — Document & Lab Pipeline Overhaul
+- **Lab parsing**: Text extraction + Sonnet path (5x faster for text-based PDFs), JSON repair for truncated responses, batch biomarker inserts, synchronous parsing (no more `after()`)
+- **Auto lab parsing**: Uploading document as "Lab Report" type automatically triggers biomarker extraction
+- **Auto-populate**: Extracted document data (chief complaints, allergies, medical history) automatically merges into patient record
+- **Structured medications**: New `patient_medications` table + CRUD API + list component (name, dosage, form, frequency, route, prescriber, indication)
+- **Outside Encounter Note**: New document type for external provider notes
+- **Re-Synthesize button**: Pre-chart tab shows "Re-Synthesize (N new)" when documents were added after last synthesis
+- **Pre-chart markdown**: Clinical summary now renders with ReactMarkdown instead of plain text
+- **Demographics card**: Patient Overview shows email, phone, address, ethnicity, referral source
+- **Audio auto-save**: Recordings auto-upload to Supabase Storage after recording stops (survives page refresh)
+- **Audio transcription via storage**: Bypasses Vercel 4.5MB body limit by uploading to storage first
+
+### Fixed — Infrastructure
+- **Vercel `after()` unreliable**: All AI processing (lab parsing, document extraction, transcription) now runs synchronously before response
+- **Lab parsing timeout**: Increased to 300s, added error recovery (marks "error" instead of stuck "processing")
+- **Document extraction timeout**: Added `maxDuration: 300` + `runtime: "nodejs"` (was using default 10s)
+- **Weight input**: Widened from w-20 to w-24 (can now enter "200 lbs")
+- **URL-encoded filenames**: Decoded in document list display
+- **Direct Anthropic client for labs**: Always uses ANTHROPIC_API_KEY directly, never MiniMax proxy
+
 ## [0.31.0] - 2026-03-25
 
 ### Fixed — HIPAA Compliance (Full Codebase Audit)

@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 24, 2026
+**Last updated:** March 25, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -787,6 +787,13 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Mobile responsive pass** — all pages
 - [ ] **Stripe integration** — payment processing for Pro subscriptions
+
+### Sprint 28 — Planned (Next Session)
+- AI-Synthesized Pre-Chart (single Claude call replaces concatenation)
+- Undo AI Generation on visit editor
+- Lab parsing performance (target: under 30 seconds)
+- Auto-populate medications into structured table from documents
+- "Uploaded" date on lab list/detail views
 
 ### Homepage Design
 - [ ] **Design:** Add dark/teal CTA break section before pricing

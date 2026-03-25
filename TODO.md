@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 25, 2026
+Last updated: March 25, 2026 (end of day)
 
 ---
 
@@ -684,6 +684,28 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 - [x] **Fix:** Source filter popover clipping + Apex checkbox stuck — capped popover height, deselecting last source resets to all
 - [x] **Feature:** HIPAA audit hardening — `auditLogServer()` for Next.js server components, provider read logging for patient charts/labs/notes, migration 033 append-only audit trail with 6-year retention
 - [x] **Fix:** Correct RLS policy on `practitioner_biomarker_ranges` — subquery `practitioners` to match `auth_user_id = auth.uid()` instead of direct comparison
+
+---
+
+## Sprint 28 — AI-Synthesized Pre-Chart & UX Improvements (Planned)
+
+### Pre-Chart AI Synthesis
+- [ ] **Feature:** Replace concatenation in `rebuildPatientClinicalSummary` with a single Claude call that synthesizes ALL documents into ONE cohesive clinical narrative
+- [ ] **Feature:** Include encounter data (visits, SOAP notes) in pre-chart synthesis context — not just uploaded documents
+- [ ] **Feature:** Deduplicate information across documents (demographics, complaints, medications appear once)
+- [ ] **Feature:** Organize synthesis by clinical system (demographics → chief complaints → medical history → medications → supplements → allergies → lifestyle → notable findings → treatment plan)
+
+### Visit UX
+- [ ] **Feature:** Undo AI Generation — snapshot editor state before SOAP fill, show "Undo" toast to restore manual edits if AI generation was triggered accidentally
+- [ ] **Feature:** Visit "Unlock" — allow reverting a signed/locked note back to draft for further editing
+
+### Lab Parsing Performance
+- [ ] **Perf:** Get lab parsing under 30 seconds — optimize Claude prompt for compact JSON output, consider splitting into per-panel requests for large labs
+- [ ] **Feature:** Show parsing progress indicator (percentage or "Extracting panel 3 of 12...")
+
+### Document Pipeline
+- [ ] **Feature:** Auto-populate medications into structured `patient_medications` table from extracted document data (currently only populates chief complaints, allergies, medical history)
+- [ ] **Feature:** Show "Uploaded" date on lab list and detail views (currently only shows collection date)
 
 ---
 
