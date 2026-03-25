@@ -22,6 +22,7 @@ import { LabDetailSheet } from "@/components/labs/lab-detail-sheet";
 import { DocumentDetailSheet } from "./document-detail-sheet";
 import { PreChartView } from "./pre-chart-view";
 import { SupplementList } from "./supplement-list";
+import { MedicationList } from "./medication-list";
 import { SectionShell, EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
 import type { Patient, PatientDocument, PatientSupplement, ProtocolItem, FMTimelineData, FMCategory, FMLifeStage, DocumentType } from "@/types/database";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
@@ -625,13 +626,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               fieldName="medical_history"
               onSaved={handleFieldSaved}
             />
-            <EditableTextSection
-              title="Current Medications"
-              value={patient.current_medications}
-              patientId={patient.id}
-              fieldName="current_medications"
-              onSaved={handleFieldSaved}
-            />
+            <MedicationList patientId={patient.id} />
             <SupplementList
               patientId={patient.id}
               initialSupplements={initialSupplements}

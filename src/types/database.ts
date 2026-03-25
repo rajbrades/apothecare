@@ -197,6 +197,30 @@ export interface Patient {
   updated_at: string;
 }
 
+export type PatientMedicationStatus = "active" | "discontinued" | "as_needed";
+export type PatientMedicationSource = "manual" | "patient_reported" | "document_extracted";
+
+export interface PatientMedication {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  name: string;
+  dosage: string | null;
+  frequency: string | null;
+  route: string | null;
+  form: string | null;
+  prescriber: string | null;
+  indication: string | null;
+  status: PatientMedicationStatus;
+  source: PatientMedicationSource;
+  started_at: string | null;
+  discontinued_at: string | null;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PatientSupplement {
   id: string;
   patient_id: string;
