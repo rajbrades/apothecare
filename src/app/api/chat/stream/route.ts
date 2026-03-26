@@ -146,14 +146,32 @@ export async function POST(request: NextRequest) {
     // Build patient context
     let patientContext = "";
     if (patient_id) {
-      const { data: patient } = await supabase
-        .from("patients")
-        .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
-        .eq("id", patient_id)
-        .single();
+      const [{ data: patient }, { data: biomarkers }] = await Promise.all([
+        supabase
+          .from("patients")
+          .select("sex, date_of_birth, chief_complaints, current_medications, supplements, allergies, medical_history")
+          .eq("id", patient_id)
+          .single(),
+        supabase
+          .from("biomarker_results")
+          .select("biomarker_name, value, unit, flag, reference_low, reference_high, lab_reports!inner(collection_date)")
+          .eq("lab_reports.patient_id", patient_id)
+          .order("lab_reports(collection_date)", { ascending: false })
+          .limit(50),
+      ]);
 
       if (patient) {
         patientContext = `\n\n## Patient Context\n- Sex: ${patient.sex || "Not specified"}\n- DOB: ${patient.date_of_birth || "Not specified"}\n- Chief Complaints: ${patient.chief_complaints?.join(", ") || "None listed"}\n- Current Medications: ${patient.current_medications || "None listed"}\n- Supplements: ${patient.supplements || "None listed"}\n- Allergies: ${patient.allergies?.join(", ") || "NKDA"}\n- History: ${patient.medical_history || "Not provided"}`;
+      }
+
+      if (biomarkers && biomarkers.length > 0) {
+        const labLines = biomarkers.map((b: any) => {
+          const ref = b.reference_low != null && b.reference_high != null ? ` (ref: ${b.reference_low}–${b.reference_high})` : "";
+          const flag = b.flag && b.flag !== "normal" ? ` [${b.flag.toUpperCase()}]` : "";
+          const date = b.lab_reports?.collection_date || "";
+          return `  - ${b.biomarker_name}: ${b.value} ${b.unit || ""}${ref}${flag}${date ? ` (${date})` : ""}`;
+        });
+        patientContext += `\n\n## Patient Lab Results (Most Recent)\n${labLines.join("\n")}`;
       }
     }
 

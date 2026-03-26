@@ -109,11 +109,27 @@ export function buildSourceFilterAddendum(selectedSources: SourceId[]): string {
     .map((id) => EVIDENCE_SOURCES[id]?.fullName)
     .filter(Boolean);
 
+  // Determine if selection is purely functional or conventional
+  const categories = new Set(
+    selectedSources
+      .map((id) => EVIDENCE_SOURCES[id]?.category)
+      .filter(Boolean)
+  );
+  const onlyFunctional = !categories.has("conventional") && (categories.has("functional") || categories.has("partnership"));
+  const onlyConventional = !categories.has("functional") && !categories.has("partnership") && categories.has("conventional");
+
+  let perspectiveGuidance = "";
+  if (onlyFunctional) {
+    perspectiveGuidance = `\nRespond from a functional and integrative medicine perspective. Use functional/optimal reference ranges. Do NOT frame your response as "conventional vs functional" — the practitioner has selected functional sources only.`;
+  } else if (onlyConventional) {
+    perspectiveGuidance = `\nRespond from a conventional/standard-of-care perspective. Use conventional reference ranges.`;
+  }
+
   return `
 
 ## Evidence Source Filter
 For this query, prioritize and restrict your evidence citations to the following sources:
 ${sourceNames.map((n) => `- ${n}`).join("\n")}
 
-When citing evidence, preferentially draw from these sources. If critical information is only available outside these sources, you may include it but clearly note it falls outside the selected evidence base. Label each citation with its source organization when possible.`;
+When citing evidence, preferentially draw from these sources. If critical information is only available outside these sources, you may include it but clearly note it falls outside the selected evidence base. You MUST cite retrieved evidence using [REF-N] format when available — do not ignore evidence chunks provided to you.${perspectiveGuidance}`;
 }
