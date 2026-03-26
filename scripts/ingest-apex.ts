@@ -106,10 +106,35 @@ async function main() {
       conditions: ["serotonin_deficiency", "dopamine_deficiency", "gaba_deficiency", "acetylcholine_deficiency", "catecholamine_imbalance"],
       interventions: ["apex_energetics_products", "5_htp", "tyrosine", "gaba", "phosphatidylserine", "acetyl_l_carnitine", "b_vitamins"],
     },
-    "thyroid": {
-      topics: ["thyroid", "hypothyroidism", "hashimotos", "thyroid_antibodies", "t3", "t4", "tsh"],
-      conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism", "subclinical_hypothyroidism"],
-      interventions: ["selenium", "iodine", "zinc", "vitamin_d", "ashwagandha", "thyroid_support"],
+    "thyroid physiology": {
+      topics: ["thyroid_physiology", "thyroid_biochemistry", "tsh", "t3", "t4", "thyroid_hormone_synthesis", "hypothyroidism_patterns", "thyroid_prevalence", "functional_hypothyroidism"],
+      conditions: ["hypothyroidism", "subclinical_hypothyroidism", "thyroid_hormone_resistance", "conversion_disorder"],
+      interventions: ["thyroid_assessment", "tsh_interpretation", "functional_thyroid_evaluation"],
+    },
+    "thyroid autoimmunity": {
+      topics: ["thyroid_autoimmunity", "hashimotos", "autoimmune_thyroid", "thyroid_antibodies", "tpo_antibodies", "thyroglobulin_antibodies", "gut_thyroid_connection", "leaky_gut", "intestinal_permeability", "molecular_mimicry"],
+      conditions: ["hashimotos_thyroiditis", "autoimmune_thyroiditis", "leaky_gut", "gluten_sensitivity", "celiac_thyroid"],
+      interventions: ["gluten_free_diet", "gut_repair", "immune_modulation", "autoimmune_dietary_protocol"],
+    },
+    "thyroid clinical assessment": {
+      topics: ["thyroid_lab_interpretation", "thyroid_markers", "anemia_thyroid", "vitamin_d_thyroid", "thyroid_hormone_replacement", "liver_thyroid_recycling", "dietary_interventions_thyroid", "case_studies"],
+      conditions: ["thyroid_anemia", "vitamin_d_deficiency", "liver_congestion", "gallbladder_dysfunction", "thyroid_medication_management"],
+      interventions: ["apex_energetics_products", "thyroid_hormone_replacement", "nutritional_support", "dietary_interventions", "thyrocsin", "liver_support"],
+    },
+    "thyroid & neurochemistry": {
+      topics: ["thyroid_neurotransmitters", "dopamine_thyroid", "serotonin_thyroid", "acetylcholine_thyroid", "brain_thyroid_axis", "neurochemistry"],
+      conditions: ["neurotransmitter_imbalance", "dopamine_deficiency", "serotonin_deficiency", "brain_fog_thyroid", "depression_thyroid", "cognitive_decline_thyroid"],
+      interventions: ["apex_energetics_products", "neurotransmitter_support", "dopamine_support", "serotonin_support"],
+    },
+    "thyroid evaluation": {
+      topics: ["thyroid_evaluation", "thyroid_patterns", "24_thyroid_patterns", "thyroid_patient_presentation", "clinical_thyroid_assessment", "thyroid_differential_diagnosis"],
+      conditions: ["hypothyroidism", "hyperthyroidism", "hashimotos_thyroiditis", "subclinical_hypothyroidism", "thyroid_resistance", "pituitary_hypothyroidism", "tbg_elevation"],
+      interventions: ["apex_energetics_products", "thyroid_protocol_selection", "pattern_based_treatment"],
+    },
+    "thyroid references": {
+      topics: ["thyroid_research", "thyroid_bibliography", "case_studies"],
+      conditions: ["hypothyroidism", "hashimotos_thyroiditis"],
+      interventions: ["evidence_based_thyroid_management"],
     },
   };
 
