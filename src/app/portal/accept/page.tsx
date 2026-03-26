@@ -67,8 +67,29 @@ function AcceptInviteInner() {
         setErrorMsg(data.error || "Failed to prepare sign-in link.");
         return;
       }
-      // Redirect to the Supabase magic link — patient is signed in, then comes back here
-      window.location.href = data.action_link;
+
+      // Use verifyOtp() client-side instead of redirecting to Supabase's
+      // /auth/v1/verify GET endpoint (which has strict rate limits).
+      if (data.token_hash && data.type) {
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: data.type,
+        });
+        if (otpError) {
+          console.error("[accept] verifyOtp error:", otpError);
+          if (otpError.message?.includes("rate") || otpError.status === 429) {
+            setStage("error");
+            setErrorMsg("Too many sign-in attempts. Please wait a few minutes and try again.");
+            return;
+          }
+          // Fall back to redirect if verifyOtp fails for other reasons
+          window.location.href = data.action_link;
+        }
+        // onAuthStateChange listener will fire and call linkAccount()
+      } else {
+        // Fallback: redirect to the magic link URL
+        window.location.href = data.action_link;
+      }
     } catch {
       setStage("error");
       setErrorMsg("Something went wrong. Please try again.");
