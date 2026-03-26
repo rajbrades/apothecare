@@ -794,12 +794,15 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 3. ✅ Fixed Resend invite button state flow bug — form was unreachable when `portalStatus === "invited"`
 4. ✅ Passed `patientEmail` prop to `InviteToPortalButton` for immediate resend
 
-### Sprint 28 — Planned (Next Session)
-- AI-Synthesized Pre-Chart (single Claude call replaces concatenation)
-- Undo AI Generation on visit editor
-- Lab parsing performance (target: under 30 seconds)
-- Auto-populate medications into structured table from documents
-- "Uploaded" date on lab list/detail views
+### Sprint 28 — AI Pre-Chart, Visit Undo, Lab UX (Mar 26, 2026) ✅ COMPLETE
+1. ✅ AI-Synthesized Pre-Chart — Claude synthesizes all documents + visits into cohesive clinical narrative (fast aggregation fallback for auto-rebuild)
+2. ✅ Undo AI Generation — snapshots SOAP state, 10s undo toast with server persist
+3. ✅ Lab parsing progress indicator — real-time step messages during parsing
+4. ✅ Lab parsing perf — reduced max_tokens, compact output instruction
+5. ✅ Medication auto-populate — extracted meds auto-insert into `patient_medications` table
+6. ✅ Upload date on lab list cards and detail views
+7. ✅ Partnership RAG source filter — skips PubMed when only Apex selected
+8. ✅ Portal dynamic layout for Vercel prerender fix
 
 ### Homepage Design
 - [ ] **Design:** Add dark/teal CTA break section before pricing

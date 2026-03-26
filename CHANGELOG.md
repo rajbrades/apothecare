@@ -2,6 +2,21 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.33.0] - 2026-03-26
+
+### Added — Sprint 28: AI Pre-Chart, Visit Undo, Lab UX
+- **AI-synthesized pre-chart**: Manual re-synthesis sends all documents + up to 10 completed visits to Claude, producing a deduplicated clinical narrative organized by system. Fast aggregation fallback for auto-rebuild.
+- **Undo AI generation**: Visit workspace snapshots SOAP state before AI fill; 10-second toast with "Undo" button restores previous content and persists to server.
+- **Lab parsing progress**: Real-time step indicator during parsing ("Downloading PDF…", "Extracting biomarkers…", "Normalizing N biomarkers…") via polling.
+- **Medication auto-populate**: Document extraction auto-inserts extracted medications into `patient_medications` table with deduplication (`source: "document_extracted"`).
+- **Upload date on labs**: Lab list cards and detail view show "Uploaded [date]" alongside collection date.
+- **Partnership RAG source filter**: Chat stream skips PubMed retrieval when only partnership sources (e.g., Apex Energetics) are selected; passes filter to `search_evidence_v2`.
+- **Portal dynamic layout**: Added `force-dynamic` layout for portal routes to fix Vercel prerender failures.
+
+### Changed
+- Lab parsing text path reduced from 16384 to 8192 max_tokens with compact output instruction.
+- Pre-chart view shows visit count alongside document count.
+
 ## [0.32.1] - 2026-03-26
 
 ### Fixed — Patient Portal Auth

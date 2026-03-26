@@ -696,25 +696,29 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
-## Sprint 28 — AI-Synthesized Pre-Chart & UX Improvements (Planned)
+## Sprint 28 — AI-Synthesized Pre-Chart & UX Improvements (Mar 26) ✅ COMPLETE
 
 ### Pre-Chart AI Synthesis
-- [ ] **Feature:** Replace concatenation in `rebuildPatientClinicalSummary` with a single Claude call that synthesizes ALL documents into ONE cohesive clinical narrative
-- [ ] **Feature:** Include encounter data (visits, SOAP notes) in pre-chart synthesis context — not just uploaded documents
-- [ ] **Feature:** Deduplicate information across documents (demographics, complaints, medications appear once)
-- [ ] **Feature:** Organize synthesis by clinical system (demographics → chief complaints → medical history → medications → supplements → allergies → lifestyle → notable findings → treatment plan)
+- [x] **Feature:** Replace concatenation in `rebuildPatientClinicalSummary` with a single Claude call that synthesizes ALL documents into ONE cohesive clinical narrative
+- [x] **Feature:** Include encounter data (visits, SOAP notes) in pre-chart synthesis context — up to 10 completed visits alongside all extracted documents
+- [x] **Feature:** Deduplicate information across documents — AI prompt instructs single-occurrence for each medication, allergy, and finding
+- [x] **Feature:** Organize synthesis by clinical system (demographics → medical history → current treatment → notable findings → treatment direction)
+- [x] **Feature:** Fast aggregation fallback for auto-rebuild after extraction (no AI latency); AI synthesis only on manual "Re-Synthesize" click
 
 ### Visit UX
-- [ ] **Feature:** Undo AI Generation — snapshot editor state before SOAP fill, show "Undo" toast to restore manual edits if AI generation was triggered accidentally
-- [ ] **Feature:** Visit "Unlock" — allow reverting a signed/locked note back to draft for further editing
+- [x] **Feature:** Undo AI Generation — snapshots SOAP/IFM/protocol state before generation, shows 10-second toast with "Undo" button; persists undo to server
+- [x] **Feature:** Visit "Unlock" — already implemented (status toggle between draft/completed)
 
 ### Lab Parsing Performance
-- [ ] **Perf:** Get lab parsing under 30 seconds — optimize Claude prompt for compact JSON output, consider splitting into per-panel requests for large labs
-- [ ] **Feature:** Show parsing progress indicator (percentage or "Extracting panel 3 of 12...")
+- [x] **Perf:** Reduced max_tokens from 16384 to 8192 for text path + compact output instruction to reduce generation time
+- [x] **Feature:** Real-time parsing progress indicator — step messages ("Downloading PDF…", "Extracting biomarkers…", "Normalizing N biomarkers…") shown via polling
 
 ### Document Pipeline
-- [ ] **Feature:** Auto-populate medications into structured `patient_medications` table from extracted document data (currently only populates chief complaints, allergies, medical history)
-- [ ] **Feature:** Show "Uploaded" date on lab list and detail views (currently only shows collection date)
+- [x] **Feature:** Auto-populate medications into `patient_medications` table from extracted document data with deduplication and `source: "document_extracted"`
+- [x] **Feature:** Show "Uploaded" date on lab list cards and detail views alongside collection date
+
+### Chat Stream
+- [x] **Fix:** Partnership RAG respects source filter — skips PubMed when only partnership sources selected, passes sourceFilter to `search_evidence_v2`
 
 ---
 
