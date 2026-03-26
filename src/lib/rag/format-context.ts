@@ -31,9 +31,14 @@ ${authors}${year ? ` (${year})` : ""} — ${source}${level}${doi}
 > ${chunk.content}`;
   });
 
+  const partnerName = chunks[0]?.source?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Partner";
+
   return [
     "\n\n## Partnership Knowledge Base Context",
-    "The following excerpts from clinical partner resources are relevant. Cite using reference numbers (e.g. [REF-" + startIndex + "]).",
+    `The following excerpts are from ${partnerName}'s clinical education materials. You MUST:`,
+    `1. Cite these using their reference numbers (e.g. [REF-${startIndex}]) inline with your claims.`,
+    `2. When recommending supplements or protocols, use the SPECIFIC PRODUCT NAMES mentioned in these excerpts (e.g. brand-name formulations, not generic ingredients).`,
+    `3. Include dosing details from the excerpts when available.`,
     "",
     ...sections,
   ].join("\n");
