@@ -240,10 +240,13 @@ export async function POST(request: NextRequest) {
       const selectedPartnership = hasPartnershipFilter ? partnershipSources[0] : undefined;
       const partnerChunks = await retrieveContext({
         query: message,
-        maxChunks: is_deep_consult ? 8 : 5,
-        threshold: 0.65,
+        maxChunks: is_deep_consult ? 10 : 6,
+        threshold: 0.45,
         ...(selectedPartnership ? { sourceFilter: selectedPartnership } : {}),
       });
+      if (partnerChunks.length === 0) {
+        console.warn(`[RAG] No partnership chunks found for query: "${message.substring(0, 80)}..." (source: ${selectedPartnership || "all"}, threshold: 0.45)`);
+      }
       partnershipContext = formatRagContext(partnerChunks, referenceChunks.length + 1);
       partnershipSourcesList = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
       for (const chunk of partnerChunks) {
