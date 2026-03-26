@@ -804,6 +804,19 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 7. ✅ Partnership RAG source filter — skips PubMed when only Apex selected
 8. ✅ Portal dynamic layout for Vercel prerender fix
 
+### Sprint 34 — Partnership RAG Overhaul & Chat Intelligence (Mar 26, 2026) ✅ COMPLETE
+1. ✅ Apex Energetics PDF restructure — renamed and split 3 combined PDFs into 17 focused topic documents (Blood Chemistry, Metabolic Assessment, Lab Evaluation, MAF Guide, GI, Hepatobiliary, Endocrine, Pharmaceutical, Product Dosing, NTAP, Neurotransmitter Protocols, 6 Thyroid documents)
+2. ✅ Per-file RAG metadata — each document has targeted `topics`, `conditions`, `interventions` arrays in ingestion scripts
+3. ✅ Lower RAG threshold — 0.65 → 0.45 for OCR-scanned PDFs, increased max chunks 5/8 → 6/10
+4. ✅ Patient biomarker context in chat — system prompt includes patient's latest 50 lab results
+5. ✅ Source filter perspective control — functional-only selection gets functional framing; conventional-only gets conventional framing
+6. ✅ Partnership prompt hardening — MUST cite [REF-N], MUST use specific Apex brand-name products, MUST include dosing
+7. ✅ Evidence badge crash fix — fallback for unknown evidence levels (`"other"` → case-study config)
+8. ✅ Supplement Form/Frequency/Timing converted from free-text → structured dropdowns
+9. ✅ Weight input restricted to whole integers (step=1, Math.round display)
+10. ✅ Stress pillar color inversion — 10/10 stress = red (inverted scale)
+11. ✅ Post-hoc patient assignment — any visit without patient_id shows assign dropdown (not just fresh visits)
+
 ### Homepage Design
 - [ ] **Design:** Add dark/teal CTA break section before pricing
 - [ ] **Design:** Ensure Admin Dashboard retains serif typography from marketing site

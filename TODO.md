@@ -313,14 +313,23 @@ Full codebase audit findings. Organized by severity.
 
 ---
 
-## Sprint 25 — RAG & Partnerships (Planned)
+## Sprint 25 — RAG & Partnerships ✅ COMPLETE
 
 Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit wiring, source filtering, admin.
 
-### Partnership RAG — Phase 1 ✅ COMPLETE
+### Partnership RAG — Phase 1 ✅
 - [x] **DB:** Apply migration 024 via Supabase Dashboard SQL Editor
 - [x] **Ingest:** Run ingestion for Apex Energetics "Mastering the Thyroid" 3-part masterclass
 - [x] **Test:** Verify retrieval with a thyroid-related query
+
+### Partnership RAG — Phase 2 ✅ (Sprint 34, March 26)
+- [x] **PDF restructure:** Rename and split 3 combined PDFs → 17 focused topic documents
+- [x] **Per-file metadata:** Each document has targeted `topics`, `conditions`, `interventions` arrays in ingestion scripts
+- [x] **RAG threshold:** Lowered to 0.45 (OCR content has lower similarity scores)
+- [x] **Chat context:** Patient biomarker results injected into system prompt context
+- [x] **Perspective control:** Source filter now injects functional-only or conventional-only perspective guidance
+- [x] **Prompt hardening:** Partnership context requires [REF-N] citations + specific Apex brand-name products + dosing details
+- [x] **Re-ingest:** All 17 documents re-ingested via `npx tsx scripts/ingest-apex-ocr.ts`
 
 ## Strategy & Pricing
 

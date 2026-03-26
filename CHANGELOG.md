@@ -2,6 +2,27 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.34.0] - 2026-03-26
+
+### Added — Partnership RAG Overhaul & Chat Intelligence
+
+- **Apex Energetics PDF restructure**: Renamed and split 3 combined PDFs (268 pages total) into 17 focused documents organized by clinical topic — each document now has its own precise metadata for accurate RAG retrieval. Documents: Mastering Functional Blood Chemistry, Metabolic Assessment Form, Functional Laboratory Evaluation, MAF Assessment Guide, GI & Digestive Protocols, Hepatobiliary & Metabolic Protocols, Endocrine & Hormonal Protocols, Pharmaceutical Interactions, Product Dosing Protocols, Neurotransmitter Assessment (NTAP), Neurotransmitter Nutritional Protocols, Thyroid Physiology & Biochemistry, Thyroid Autoimmunity & Gut Connection, Thyroid Clinical Assessment & Lab Interpretation, Thyroid & Neurochemistry, Thyroid Evaluation & 24 Patterns, Thyroid References & Case Studies.
+- **Patient biomarkers in chat context**: Chat stream now queries the patient's `biomarker_results` (latest 50) and includes them in the system prompt as a formatted lab results section — enables evidence-grounded responses without requiring PDF attachment.
+- **Stress pillar color inversion**: Vitals panel and snapshot now correctly show stress as red at 10/10 (extreme stress = bad). Added `inverted` flag to pillar config; color/slider calculations apply `11 - value` for effective score.
+- **Post-hoc patient assignment on visits**: Visit workspace shows "Assign to patient…" dropdown for any visit missing a `patient_id` — not limited to fresh visits. Practitioner can link an unassigned encounter after the fact.
+- **Supplement dropdown fields**: Form, Frequency, and Timing fields in the supplement editor converted from free-text inputs to structured dropdowns (16 form types, 11 frequency options, 10 timing options) in both SupplementRow and AddSupplementForm.
+
+### Fixed
+- **Evidence badge crash on unknown evidence level**: `LEVEL_CONFIG[citation.level]` returning `undefined` for `"other"` caused a crash. Added fallback to `LEVEL_CONFIG["case-study"]` config.
+- **Source filter not controlling clinical perspective**: `buildSourceFilterAddendum` now detects whether selected sources are purely functional vs. conventional and injects corresponding perspective guidance. Functional-only selection no longer gets "conventional vs. functional" framing.
+- **Partnership RAG threshold too high for OCR content**: Lowered from 0.65 → 0.45 (OCR-scanned PDFs have lower cosine similarity). Increased max chunks from 5/8 → 6/10.
+- **Weight input decimal restriction**: Weight field now uses `step="1"` — whole integers only. Display rounds via `Math.round()`.
+- **Per-file metadata mismatch**: `ingest-apex.ts` and `ingest-apex-ocr.ts` now use a keyed `FILE_METADATA` dictionary with per-document `topics`, `conditions`, and `interventions` arrays matching actual PDF content — replacing the previous thyroid-only defaults applied to all files.
+
+### Changed
+- Partnership context prompt strengthened: 3 explicit instructions — MUST cite with `[REF-N]`, MUST use specific Apex brand-name products, MUST include dosing details when available.
+- Anthropic system prompt updated: "Dual-range awareness" now defaults to functional ranges with conventional noted when relevant (not both always).
+
 ## [0.33.0] - 2026-03-26
 
 ### Added — Sprint 28: AI Pre-Chart, Visit Undo, Lab UX
