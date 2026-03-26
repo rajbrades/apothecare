@@ -95,57 +95,109 @@ const VitalsSnapshot = dynamic(
 
 type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline";
 
-function DemographicsCard({ patient }: { patient: Patient }) {
-  const hasContact = patient.email || patient.phone;
-  const hasAddress = patient.city || patient.state || patient.zip_code;
-  const hasDemo = patient.gender_identity || patient.ethnicity || patient.referral_source;
+interface DemoField {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  type?: "email" | "tel" | "text";
+  placeholder: string;
+  format?: (v: string) => React.ReactNode;
+}
 
-  if (!hasContact && !hasAddress && !hasDemo) return null;
+const DEMO_FIELDS: DemoField[] = [
+  { key: "email", label: "Email", icon: Mail, type: "email", placeholder: "patient@email.com", format: (v) => <a href={`mailto:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
+  { key: "phone", label: "Phone", icon: Phone, type: "tel", placeholder: "(555) 555-1234", format: (v) => <a href={`tel:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
+  { key: "city", label: "City", icon: MapPin, placeholder: "City" },
+  { key: "state", label: "State", icon: MapPin, placeholder: "State" },
+  { key: "zip_code", label: "Zip", icon: MapPin, placeholder: "Zip code" },
+  { key: "gender_identity", label: "Gender Identity", icon: Users, placeholder: "Gender identity" },
+  { key: "ethnicity", label: "Ethnicity", icon: User, placeholder: "Ethnicity" },
+  { key: "referral_source", label: "Referral Source", icon: ExternalLink, placeholder: "Referral source" },
+];
+
+function DemographicsCard({ patient, onSaved }: { patient: Patient; onSaved: (field: string, value: string | null) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+
+  function startEdit() {
+    const d: Record<string, string> = {};
+    for (const f of DEMO_FIELDS) d[f.key] = (patient as Record<string, unknown>)[f.key] as string || "";
+    setDraft(d);
+    setIsEditing(true);
+  }
+
+  async function handleSave() {
+    setIsSaving(true);
+    // Build only changed fields
+    const updates: Record<string, string | null> = {};
+    for (const f of DEMO_FIELDS) {
+      const current = ((patient as Record<string, unknown>)[f.key] as string) || "";
+      const next = draft[f.key]?.trim() || "";
+      if (current !== next) updates[f.key] = next || null;
+    }
+    if (Object.keys(updates).length === 0) {
+      setIsEditing(false);
+      setIsSaving(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/patients/${patient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error();
+      for (const [k, v] of Object.entries(updates)) onSaved(k, v);
+      toast.success("Demographics updated");
+      setIsEditing(false);
+    } catch {
+      toast.error("Failed to save demographics");
+    }
+    setIsSaving(false);
+  }
 
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-3">
-        Demographics &amp; Contact
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
-        {patient.email && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <Mail className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <a href={`mailto:${patient.email}`} className="hover:text-[var(--color-brand-600)] transition-colors">{patient.email}</a>
-          </div>
-        )}
-        {patient.phone && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <Phone className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <a href={`tel:${patient.phone}`} className="hover:text-[var(--color-brand-600)] transition-colors">{patient.phone}</a>
-          </div>
-        )}
-        {hasAddress && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <MapPin className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <span>{[patient.city, patient.state].filter(Boolean).join(", ")}{patient.zip_code ? ` ${patient.zip_code}` : ""}</span>
-          </div>
-        )}
-        {patient.gender_identity && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <Users className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <span>Gender: {patient.gender_identity}</span>
-          </div>
-        )}
-        {patient.ethnicity && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <User className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <span>Ethnicity: {patient.ethnicity}</span>
-          </div>
-        )}
-        {patient.referral_source && (
-          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
-            <span>Referral: {patient.referral_source}</span>
-          </div>
-        )}
-      </div>
-    </div>
+    <SectionShell
+      title="Demographics & Contact"
+      isEditing={isEditing}
+      isSaving={isSaving}
+      onEdit={startEdit}
+      onSave={handleSave}
+      onCancel={() => setIsEditing(false)}
+    >
+      {isEditing ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+          {DEMO_FIELDS.map((f) => (
+            <div key={f.key} className="flex flex-col gap-1">
+              <label className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider">{f.label}</label>
+              <input
+                type={f.type || "text"}
+                value={draft[f.key] || ""}
+                onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                className="h-7 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-2.5 text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--color-text-primary)]/20"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
+          {DEMO_FIELDS.map((f) => {
+            const val = (patient as Record<string, unknown>)[f.key] as string | null;
+            const Icon = f.icon;
+            return (
+              <div key={f.key} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+                <Icon className="w-3.5 h-3.5 text-[var(--color-text-muted)] flex-shrink-0" />
+                {val ? (f.format ? f.format(val) : <span>{val}</span>) : (
+                  <span className="text-[var(--color-text-muted)] italic text-xs">No {f.label.toLowerCase()}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </SectionShell>
   );
 }
 
@@ -605,7 +657,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               onPopulated={handlePopulated}
             />
             {/* Demographics */}
-            <DemographicsCard patient={patient} />
+            <DemographicsCard patient={patient} onSaved={handleFieldSaved} />
             <VitalsSnapshot
               patientId={patient.id}
               onViewTrends={() => {
