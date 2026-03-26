@@ -2,6 +2,14 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.32.1] - 2026-03-26
+
+### Fixed — Patient Portal Auth
+- **Patient invite link broken**: Middleware redirected `/api/patient-portal/*` API calls to practitioner login (`/auth/login`) because these paths weren't recognized as portal routes. The patient's browser received HTML instead of JSON, causing "Something went wrong" error on invite acceptance.
+- **New patient auth user creation**: `admin.generateLink({ type: "magiclink" })` failed when the patient had no Supabase Auth user (Quick Invite only creates a DB record). Added `type: "signup"` fallback to auto-create the auth user on first invite click.
+- **Resend invite button non-functional**: Component state flow bug — `alreadyInvited` check always matched before `showForm` on re-render, making the email form unreachable. Reordered render branches and added direct resend (skips form when email is known).
+- **Missing patient email on resend**: `InviteToPortalButton` wasn't receiving `patientEmail` prop from patient profile, so resend form was always empty.
+
 ## [0.32.0] - 2026-03-25
 
 ### Added — Document & Lab Pipeline Overhaul

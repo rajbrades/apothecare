@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 25, 2026 (end of day)
+Last updated: March 26, 2026
 
 ---
 
@@ -684,6 +684,15 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 - [x] **Fix:** Source filter popover clipping + Apex checkbox stuck — capped popover height, deselecting last source resets to all
 - [x] **Feature:** HIPAA audit hardening — `auditLogServer()` for Next.js server components, provider read logging for patient charts/labs/notes, migration 033 append-only audit trail with 6-year retention
 - [x] **Fix:** Correct RLS policy on `practitioner_biomarker_ranges` — subquery `practitioners` to match `auth_user_id = auth.uid()` instead of direct comparison
+
+---
+
+## Sprint 27 Hotfix — Patient Portal Auth (Mar 26, 2026) ✅ COMPLETE
+
+- [x] **Fix:** Patient invite link "Something went wrong" — middleware blocked `/api/patient-portal/*` routes (redirected to practitioner login instead of returning JSON)
+- [x] **Fix:** New patient auth user creation — `admin.generateLink` fails for users not yet in Supabase Auth; added `type: "signup"` fallback
+- [x] **Fix:** Resend invite button did nothing — state flow bug made email form unreachable when `portalStatus === "invited"`
+- [x] **Fix:** Pass `patientEmail` prop to `InviteToPortalButton` so resend works without re-entering email
 
 ---
 

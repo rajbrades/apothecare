@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 25, 2026
+**Last updated:** March 26, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -787,6 +787,12 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 - [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
 - [ ] **Mobile responsive pass** — all pages
 - [ ] **Stripe integration** — payment processing for Pro subscriptions
+
+### Sprint 27 Hotfix — Patient Portal Auth (Mar 26, 2026) ✅ COMPLETE
+1. ✅ Fixed patient invite link "Something went wrong" — middleware blocked `/api/patient-portal/*` (redirected to practitioner login)
+2. ✅ Added `type: "signup"` fallback in `admin.generateLink` for new patients without Supabase Auth user
+3. ✅ Fixed Resend invite button state flow bug — form was unreachable when `portalStatus === "invited"`
+4. ✅ Passed `patientEmail` prop to `InviteToPortalButton` for immediate resend
 
 ### Sprint 28 — Planned (Next Session)
 - AI-Synthesized Pre-Chart (single Claude call replaces concatenation)
