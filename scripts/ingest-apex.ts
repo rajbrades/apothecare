@@ -56,6 +56,31 @@ async function main() {
       conditions: ["anemia", "iron_deficiency", "b12_deficiency", "folate_deficiency", "infection", "inflammation", "leukocytosis", "leukopenia", "thrombocytopenia", "polycythemia", "hypothyroidism", "hyperthyroidism", "diabetes", "insulin_resistance", "dyslipidemia", "liver_disease", "kidney_disease"],
       interventions: ["iron", "b12", "folate", "vitamin_d", "zinc", "selenium", "omega_3", "magnesium", "functional_ranges", "optimal_ranges"],
     },
+    "metabolic assessment": {
+      topics: ["metabolic_assessment", "symptom_questionnaire", "functional_assessment", "patient_intake", "review_of_systems"],
+      conditions: ["metabolic_dysfunction", "gi_symptoms", "fatigue", "hormonal_imbalance", "neurological_symptoms", "cardiovascular_symptoms"],
+      interventions: ["metabolic_support", "symptom_tracking", "patient_assessment"],
+    },
+    "laboratory evaluation": {
+      topics: ["functional_lab_ranges", "optimal_ranges", "blood_chemistry", "cbc", "metabolic_panel", "lipid_panel", "liver_function", "kidney_function", "thyroid_panel", "electrolytes", "iron_studies"],
+      conditions: ["anemia", "hypothyroidism", "hyperthyroidism", "diabetes", "insulin_resistance", "liver_disease", "kidney_disease", "dyslipidemia", "electrolyte_imbalance"],
+      interventions: ["functional_ranges", "optimal_ranges", "lab_interpretation"],
+    },
+    "clinical category": {
+      topics: ["clinical_interpretation", "blood_chemistry_categories", "intestinal_barrier", "biliary", "blood_sugar", "thyroid", "adrenal", "electrolyte_balance", "menopausal", "prostate", "pituitary"],
+      conditions: ["leaky_gut", "biliary_stasis", "blood_sugar_dysregulation", "hypothyroidism", "adrenal_dysfunction", "electrolyte_imbalance", "hormonal_imbalance"],
+      interventions: ["apex_energetics_products", "nutritional_protocols", "dietary_interventions", "supplement_dosing"],
+    },
+    "neurotransmitter assessment": {
+      topics: ["neurotransmitter_assessment", "ntap", "mood", "cognition", "sleep", "stress", "autonomic_function", "brain_health"],
+      conditions: ["depression", "anxiety", "insomnia", "cognitive_decline", "stress_response", "autonomic_dysfunction", "neurotransmitter_imbalance"],
+      interventions: ["neurotransmitter_support", "mood_support", "sleep_support", "stress_management"],
+    },
+    "neurotransmitter nutritional": {
+      topics: ["neurotransmitter_protocols", "nutritional_key", "brain_health", "mood_support", "cognitive_support"],
+      conditions: ["serotonin_deficiency", "dopamine_deficiency", "gaba_deficiency", "acetylcholine_deficiency", "catecholamine_imbalance"],
+      interventions: ["apex_energetics_products", "5_htp", "tyrosine", "gaba", "phosphatidylserine", "acetyl_l_carnitine", "b_vitamins"],
+    },
     "thyroid": {
       topics: ["thyroid", "hypothyroidism", "hashimotos", "thyroid_antibodies", "t3", "t4", "tsh"],
       conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism", "subclinical_hypothyroidism"],
