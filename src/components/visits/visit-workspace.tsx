@@ -964,7 +964,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
       )}
 
       {/* Tab bar */}
-      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto">
+      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}

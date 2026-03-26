@@ -129,7 +129,7 @@ export function SourceFilterPopover({
   }));
 
   return (
-    <div className={`absolute left-0 w-80 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-50 flex flex-col max-h-[min(520px,calc(100vh-8rem))] overflow-hidden ${openUpward ? "bottom-full mb-2" : "top-full mt-2"}`}>
+    <div className={`absolute left-0 w-[min(320px,calc(100vw-2rem))] bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-modal)] z-50 flex flex-col max-h-[min(520px,calc(100vh-8rem))] overflow-hidden ${openUpward ? "bottom-full mb-2" : "top-full mt-2"}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
@@ -140,7 +140,8 @@ export function SourceFilterPopover({
         </div>
         <button
           onClick={onClose}
-          className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+          aria-label="Close source filter"
+          className="p-2 -mr-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors rounded-md hover:bg-[var(--color-surface-secondary)]"
         >
           <X className="w-4 h-4" />
         </button>

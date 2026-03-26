@@ -166,7 +166,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
       <div className="md:hidden fixed top-0 left-0 right-0 h-[var(--header-height)] bg-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)] flex items-center px-4 z-50">
         <button
           onClick={() => setMobileOpen(true)}
-          className="p-1.5 -ml-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+          className="p-2.5 -ml-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
           aria-label="Open navigation menu"
         >
           <Menu className="icon-nav" />
@@ -193,7 +193,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1.5 -mr-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
+            className="md:hidden p-2.5 -mr-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
             aria-label="Close navigation menu"
           >
             <X className="icon-inline" />
