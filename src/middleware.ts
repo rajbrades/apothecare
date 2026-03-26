@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const isGatePath = pathname === "/gate" || pathname === "/api/gate";
     // Patient portal has its own auth — never block it with the site gate
-    const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/");
+    const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/") || pathname.startsWith("/api/patient-portal/");
 
     if (!isGatePath && !isPortalPath) {
       const hasAccess = request.cookies.get("site_access")?.value === "granted";

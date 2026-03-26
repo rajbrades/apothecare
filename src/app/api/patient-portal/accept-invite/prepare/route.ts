@@ -45,7 +45,11 @@ export async function GET(request: NextRequest) {
   const slug = practitioner?.portal_slug ?? invite.practitioner_id;
   const redirectTo = `${env.NEXT_PUBLIC_APP_URL}/portal/accept?token=${rawToken}&slug=${slug}`;
 
-  // Generate a magic link for the invite email via the admin API
+  // Ensure an auth user exists for this email (Quick Invite only creates
+  // a patient record, not a Supabase Auth user). Try magiclink first — if
+  // the user doesn't exist yet, fall back to a signup link which auto-creates.
+  let actionLink: string | undefined;
+
   const { data, error } = await service.auth.admin.generateLink({
     type: "magiclink",
     email: invite.email,
@@ -53,9 +57,21 @@ export async function GET(request: NextRequest) {
   });
 
   if (error || !data?.properties?.action_link) {
-    console.error("[accept-invite/prepare] generateLink error:", error);
-    return jsonError("Failed to generate sign-in link", 500);
+    // User likely doesn't exist in Auth yet — create via signup link
+    const { data: signupData, error: signupError } = await service.auth.admin.generateLink({
+      type: "signup",
+      email: invite.email,
+      options: { redirectTo },
+    });
+
+    if (signupError || !signupData?.properties?.action_link) {
+      console.error("[accept-invite/prepare] generateLink error:", error, signupError);
+      return jsonError("Failed to generate sign-in link", 500);
+    }
+    actionLink = signupData.properties.action_link;
+  } else {
+    actionLink = data.properties.action_link;
   }
 
-  return NextResponse.json({ action_link: data.properties.action_link });
+  return NextResponse.json({ action_link: actionLink });
 }

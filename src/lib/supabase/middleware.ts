@@ -33,11 +33,12 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Patient portal routes — separate auth flow from provider routes
-  const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/");
+  const isPortalPath = pathname.startsWith("/portal/") || pathname.startsWith("/p/") || pathname.startsWith("/api/patient-portal/");
   const isPortalPublicPath =
     pathname.startsWith("/p/") ||         // branded entry pages
     pathname === "/portal/login" ||
-    pathname === "/portal/accept";
+    pathname === "/portal/accept" ||
+    pathname.startsWith("/api/patient-portal/");  // API routes handle their own auth
 
   if (isPortalPath) {
     // Unauthenticated access to protected portal routes → portal login
