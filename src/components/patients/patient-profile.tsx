@@ -122,7 +122,7 @@ function DemographicsCard({ patient, onSaved }: { patient: Patient; onSaved: (fi
 
   function startEdit() {
     const d: Record<string, string> = {};
-    for (const f of DEMO_FIELDS) d[f.key] = (patient as Record<string, unknown>)[f.key] as string || "";
+    for (const f of DEMO_FIELDS) d[f.key] = (patient as unknown as Record<string, unknown>)[f.key] as string || "";
     setDraft(d);
     setIsEditing(true);
   }
@@ -132,7 +132,7 @@ function DemographicsCard({ patient, onSaved }: { patient: Patient; onSaved: (fi
     // Build only changed fields
     const updates: Record<string, string | null> = {};
     for (const f of DEMO_FIELDS) {
-      const current = ((patient as Record<string, unknown>)[f.key] as string) || "";
+      const current = ((patient as unknown as Record<string, unknown>)[f.key] as string) || "";
       const next = draft[f.key]?.trim() || "";
       if (current !== next) updates[f.key] = next || null;
     }
@@ -184,7 +184,7 @@ function DemographicsCard({ patient, onSaved }: { patient: Patient; onSaved: (fi
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
           {DEMO_FIELDS.map((f) => {
-            const val = (patient as Record<string, unknown>)[f.key] as string | null;
+            const val = (patient as unknown as Record<string, unknown>)[f.key] as string | null;
             const Icon = f.icon;
             return (
               <div key={f.key} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
