@@ -645,42 +645,40 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
                   <Calendar className="w-3 h-3" />
                   {formatDate(visit.visit_date)}
                 </span>
-                {isFreshVisit ? (
-                  <>
-                    <select
-                      value={visit.visit_type}
-                      onChange={(e) => handleVisitTypeChange(e.target.value)}
-                      disabled={updatingVisitType}
-                      className="text-xs font-medium bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50"
-                    >
-                      {Object.entries(VISIT_TYPE_LABELS).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={visit.patient_id || ""}
-                      onChange={(e) => handlePatientChange(e.target.value)}
-                      disabled={updatingPatient}
-                      className="text-xs font-medium bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50 max-w-[180px]"
-                    >
-                      <option value="">No patient</option>
-                      {patients.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {[p.last_name, p.first_name].filter(Boolean).join(", ") || "Unnamed"}
-                        </option>
-                      ))}
-                    </select>
-                  </>
+                {isFreshVisit && (
+                  <select
+                    value={visit.visit_type}
+                    onChange={(e) => handleVisitTypeChange(e.target.value)}
+                    disabled={updatingVisitType}
+                    className="text-xs font-medium bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50"
+                  >
+                    {Object.entries(VISIT_TYPE_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                )}
+                {!isFreshVisit && (
+                  <span>{VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"}</span>
+                )}
+                {visit.patient_id ? (
+                  <span className="inline-flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    {patientName}
+                  </span>
                 ) : (
-                  <>
-                    {patientName && (
-                      <span className="inline-flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {patientName}
-                      </span>
-                    )}
-                    <span>{VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"}</span>
-                  </>
+                  <select
+                    value=""
+                    onChange={(e) => handlePatientChange(e.target.value)}
+                    disabled={updatingPatient}
+                    className="text-xs font-medium bg-amber-50 border border-amber-200 rounded-[var(--radius-sm)] px-2 py-0.5 text-amber-700 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50 max-w-[200px]"
+                  >
+                    <option value="">Assign to patient…</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {[p.last_name, p.first_name].filter(Boolean).join(", ") || "Unnamed"}
+                      </option>
+                    ))}
+                  </select>
                 )}
                 {saving && (
                   <span className="text-[var(--color-brand-500)]">Saving...</span>
