@@ -27,6 +27,27 @@ const EMPTY_FORM: SupplementFormData = {
   brand: "",
 };
 
+const FORM_OPTIONS = [
+  "", "Capsule", "Softgel", "Tablet", "Chewable", "Gummy",
+  "Powder", "Liquid", "Drops", "Spray", "Sublingual", "Lozenge",
+  "Patch", "Topical", "Injection", "Other",
+];
+
+const FREQUENCY_OPTIONS = [
+  "", "1x daily", "2x daily", "3x daily", "4x daily",
+  "Every other day", "Weekly", "2x weekly", "3x weekly",
+  "As needed", "With each meal", "Other",
+];
+
+const TIMING_OPTIONS = [
+  "", "With food", "With breakfast", "With lunch", "With dinner",
+  "Before bed", "On empty stomach", "Morning", "Evening",
+  "30 min before meal", "Other",
+];
+
+const selectClass = "text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]";
+const inputClass = selectClass;
+
 // ── Helpers ───────────────────────────────────────────────────────────
 
 function buildDetailLine(sup: PatientSupplement): string {
@@ -138,7 +159,7 @@ function SupplementRow({
             value={draft.name}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
             placeholder="Supplement name *"
-            className="col-span-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+            className={`col-span-2 ${inputClass}`}
             autoFocus
           />
           <input
@@ -146,35 +167,38 @@ function SupplementRow({
             value={draft.dosage}
             onChange={(e) => setDraft((d) => ({ ...d, dosage: e.target.value }))}
             placeholder="Dosage (e.g., 400mg)"
-            className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+            className={inputClass}
           />
-          <input
-            type="text"
+          <select
             value={draft.form}
             onChange={(e) => setDraft((d) => ({ ...d, form: e.target.value }))}
-            placeholder="Form (e.g., capsule)"
-            className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-          />
-          <input
-            type="text"
+            className={`${selectClass} ${!draft.form ? "text-[var(--color-text-muted)]" : ""}`}
+          >
+            <option value="">Form</option>
+            {FORM_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <select
             value={draft.frequency}
             onChange={(e) => setDraft((d) => ({ ...d, frequency: e.target.value }))}
-            placeholder="Frequency (e.g., 1x daily)"
-            className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-          />
-          <input
-            type="text"
+            className={`${selectClass} ${!draft.frequency ? "text-[var(--color-text-muted)]" : ""}`}
+          >
+            <option value="">Frequency</option>
+            {FREQUENCY_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <select
             value={draft.timing}
             onChange={(e) => setDraft((d) => ({ ...d, timing: e.target.value }))}
-            placeholder="Timing (e.g., with food)"
-            className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-          />
+            className={`${selectClass} ${!draft.timing ? "text-[var(--color-text-muted)]" : ""}`}
+          >
+            <option value="">Timing</option>
+            {TIMING_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
           <input
             type="text"
             value={draft.brand}
             onChange={(e) => setDraft((d) => ({ ...d, brand: e.target.value }))}
             placeholder="Brand (optional)"
-            className="col-span-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+            className={`col-span-2 ${inputClass}`}
           />
         </div>
         {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
@@ -297,7 +321,7 @@ function AddSupplementForm({
           value={draft.name}
           onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
           placeholder="Supplement name *"
-          className="col-span-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+          className={`col-span-2 ${inputClass}`}
           autoFocus
         />
         <input
@@ -305,35 +329,38 @@ function AddSupplementForm({
           value={draft.dosage}
           onChange={(e) => setDraft((d) => ({ ...d, dosage: e.target.value }))}
           placeholder="Dosage (e.g., 400mg)"
-          className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+          className={inputClass}
         />
-        <input
-          type="text"
+        <select
           value={draft.form}
           onChange={(e) => setDraft((d) => ({ ...d, form: e.target.value }))}
-          placeholder="Form (e.g., capsule)"
-          className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-        />
-        <input
-          type="text"
+          className={`${selectClass} ${!draft.form ? "text-[var(--color-text-muted)]" : ""}`}
+        >
+          <option value="">Form</option>
+          {FORM_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select
           value={draft.frequency}
           onChange={(e) => setDraft((d) => ({ ...d, frequency: e.target.value }))}
-          placeholder="Frequency (e.g., 1x daily)"
-          className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-        />
-        <input
-          type="text"
+          className={`${selectClass} ${!draft.frequency ? "text-[var(--color-text-muted)]" : ""}`}
+        >
+          <option value="">Frequency</option>
+          {FREQUENCY_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select
           value={draft.timing}
           onChange={(e) => setDraft((d) => ({ ...d, timing: e.target.value }))}
-          placeholder="Timing (e.g., with food)"
-          className="text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
-        />
+          className={`${selectClass} ${!draft.timing ? "text-[var(--color-text-muted)]" : ""}`}
+        >
+          <option value="">Timing</option>
+          {TIMING_OPTIONS.filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
         <input
           type="text"
           value={draft.brand}
           onChange={(e) => setDraft((d) => ({ ...d, brand: e.target.value }))}
           placeholder="Brand (optional)"
-          className="col-span-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)]"
+          className={`col-span-2 ${inputClass}`}
         />
       </div>
       {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
