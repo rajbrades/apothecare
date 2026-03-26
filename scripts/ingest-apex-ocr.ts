@@ -192,10 +192,35 @@ async function main() {
       conditions: ["anemia", "hypothyroidism", "hyperthyroidism", "diabetes", "insulin_resistance", "liver_disease", "kidney_disease", "dyslipidemia", "electrolyte_imbalance"],
       interventions: ["functional_ranges", "optimal_ranges", "lab_interpretation"],
     },
-    "clinical category": {
-      topics: ["clinical_interpretation", "blood_chemistry_categories", "intestinal_barrier", "biliary", "blood_sugar", "thyroid", "adrenal", "electrolyte_balance", "menopausal", "prostate", "pituitary"],
-      conditions: ["leaky_gut", "biliary_stasis", "blood_sugar_dysregulation", "hypothyroidism", "adrenal_dysfunction", "electrolyte_imbalance", "hormonal_imbalance"],
-      interventions: ["apex_energetics_products", "nutritional_protocols", "dietary_interventions", "supplement_dosing"],
+    "maf assessment guide": {
+      topics: ["maf_assessment", "metabolic_assessment_form", "category_keys", "blood_chemistry_interpretation", "functional_assessment"],
+      conditions: ["metabolic_dysfunction", "gi_symptoms", "endocrine_dysfunction", "neurological_symptoms"],
+      interventions: ["apex_energetics_products", "metabolic_support", "clinical_assessment"],
+    },
+    "gi & digestive": {
+      topics: ["gi_health", "colon", "intestinal_barrier", "leaky_gut", "chemical_tolerance", "stomach", "hcl", "pancreas", "digestive_enzymes"],
+      conditions: ["leaky_gut", "ibs", "dysbiosis", "hypochlorhydria", "pancreatic_insufficiency", "food_sensitivities", "chemical_sensitivity", "sibo"],
+      interventions: ["apex_energetics_products", "repairvite", "strengtia", "gastrazyme", "bilemin", "dipan_9", "glutagenics"],
+    },
+    "hepatobiliary & metabolic": {
+      topics: ["liver", "biliary", "gallbladder", "bile", "blood_sugar", "insulin_resistance", "sugar_metabolism", "small_intestine"],
+      conditions: ["biliary_stasis", "liver_congestion", "blood_sugar_dysregulation", "insulin_resistance", "hypoglycemia", "hyperglycemia", "metabolic_syndrome"],
+      interventions: ["apex_energetics_products", "livotrit_plus", "bilemin", "glucobalance", "adaptocrine", "adrenacalm"],
+    },
+    "endocrine & hormonal": {
+      topics: ["adrenal", "thyroid", "pituitary", "hpa_axis", "andropause", "menopause", "estrogen", "testosterone", "cortisol", "dhea", "hormonal_balance"],
+      conditions: ["adrenal_fatigue", "adrenal_dysfunction", "hypothyroidism", "hyperthyroidism", "andropause", "menopause", "hormonal_imbalance", "pituitary_dysfunction"],
+      interventions: ["apex_energetics_products", "adaptocrine", "adrenacalm", "thyrocsin", "x_flam", "testanex", "femicrine", "pituitrophin"],
+    },
+    "pharmaceutical interactions": {
+      topics: ["drug_nutrient_interactions", "pharmaceutical_considerations", "cortisone", "diuretics", "hormones", "nsaids", "insulin_management", "anxiety_medications", "cholesterol_lowering", "oral_contraceptives", "dietary_guidance"],
+      conditions: ["medication_side_effects", "drug_nutrient_depletion", "polypharmacy"],
+      interventions: ["dietary_protocols", "nutrient_repletion", "food_therapy"],
+    },
+    "product dosing": {
+      topics: ["apex_energetics_dosing", "supplement_protocols", "product_dosing", "nutritional_support_dosing"],
+      conditions: ["adrenal_dysfunction", "thyroid_dysfunction", "gi_dysfunction", "hormonal_imbalance", "blood_sugar_dysregulation", "biliary_stasis", "electrolyte_imbalance"],
+      interventions: ["apex_energetics_products", "adaptocrine", "adrenacalm", "thyrocsin", "repairvite", "strengtia", "gastrazyme", "bilemin", "glucobalance", "livotrit_plus", "dipan_9", "nitric_balance", "turmero", "clearvite", "x_flam"],
     },
     "neurotransmitter assessment": {
       topics: ["neurotransmitter_assessment", "ntap", "mood", "cognition", "sleep", "stress", "autonomic_function", "brain_health"],
