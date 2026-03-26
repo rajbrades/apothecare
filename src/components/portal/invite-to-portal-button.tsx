@@ -49,19 +49,6 @@ export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: 
     );
   }
 
-  if (sent || alreadyInvited) {
-    return (
-      <button
-        onClick={() => { setSent(false); setShowForm(true); }}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface-secondary)] transition-colors"
-        title="Resend portal invitation"
-      >
-        <Send className="w-3.5 h-3.5" />
-        Resend invite
-      </button>
-    );
-  }
-
   if (showForm) {
     return (
       <div className="flex items-center gap-1.5">
@@ -91,6 +78,27 @@ export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: 
           Cancel
         </button>
       </div>
+    );
+  }
+
+  if (sent || alreadyInvited) {
+    return (
+      <button
+        onClick={() => {
+          // If we already have the email, resend immediately
+          if (email.trim()) {
+            handleSend();
+          } else {
+            setShowForm(true);
+          }
+        }}
+        disabled={loading}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface-secondary)] transition-colors disabled:opacity-40"
+        title="Resend portal invitation"
+      >
+        <Send className="w-3.5 h-3.5" />
+        {loading ? "Sending…" : "Resend invite"}
+      </button>
     );
   }
 

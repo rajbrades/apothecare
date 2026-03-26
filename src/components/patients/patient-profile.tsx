@@ -493,6 +493,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
           {!patient.is_archived && (
             <InviteToPortalButton
               patientId={patient.id}
+              patientEmail={patient.email}
               portalStatus={patient.portal_status}
             />
           )}
