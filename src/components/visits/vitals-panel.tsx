@@ -37,9 +37,10 @@ const PILLARS: {
   label: string;
   icon: typeof Moon;
   description: string;
+  inverted?: boolean;
 }[] = [
   { key: "sleep", label: "Sleep", icon: Moon, description: "Quality & duration of sleep" },
-  { key: "stress", label: "Stress", icon: Zap, description: "Stress levels (1 = very stressed, 10 = no stress)" },
+  { key: "stress", label: "Stress", icon: Zap, description: "Stress levels (1 = low stress, 10 = extreme stress)", inverted: true },
   { key: "movement", label: "Movement", icon: Dumbbell, description: "Physical activity & exercise" },
   { key: "nutrition", label: "Nutrition", icon: Leaf, description: "Diet quality & consistency" },
   { key: "digestion", label: "Digestion", icon: Waves, description: "Gut comfort & regularity" },
@@ -48,24 +49,27 @@ const PILLARS: {
   { key: "hydration", label: "Hydration", icon: Droplets, description: "Daily water intake" },
 ];
 
-function ratingColor(value: number | undefined): string {
+function ratingColor(value: number | undefined, inverted = false): string {
   if (!value) return "text-[var(--color-text-muted)]";
-  if (value <= 4) return "text-red-600";
-  if (value <= 7) return "text-amber-600";
+  const effective = inverted ? 11 - value : value;
+  if (effective <= 4) return "text-red-600";
+  if (effective <= 7) return "text-amber-600";
   return "text-emerald-600";
 }
 
-function ratingBg(value: number | undefined): string {
+function ratingBg(value: number | undefined, inverted = false): string {
   if (!value) return "bg-[var(--color-border-light)]";
-  if (value <= 4) return "bg-red-500";
-  if (value <= 7) return "bg-amber-500";
+  const effective = inverted ? 11 - value : value;
+  if (effective <= 4) return "bg-red-500";
+  if (effective <= 7) return "bg-amber-500";
   return "bg-emerald-500";
 }
 
-function sliderCssColor(value: number | undefined): string {
+function sliderCssColor(value: number | undefined, inverted = false): string {
   if (!value) return "#94a3b8"; // slate-400
-  if (value <= 4) return "#dc2626"; // red-600
-  if (value <= 7) return "#d97706"; // amber-600
+  const effective = inverted ? 11 - value : value;
+  if (effective <= 4) return "#dc2626"; // red-600
+  if (effective <= 7) return "#d97706"; // amber-600
   return "#059669"; // emerald-600
 }
 
@@ -98,11 +102,11 @@ const LBS_TO_KG = 1 / KG_TO_LBS;
 const CM_PER_INCH = 2.54;
 
 function kgToLbs(kg: number): number {
-  return Math.round(kg * KG_TO_LBS * 10) / 10;
+  return Math.round(kg * KG_TO_LBS);
 }
 
 function lbsToKg(lbs: number): number {
-  return Math.round(lbs * LBS_TO_KG * 10) / 10;
+  return Math.round(lbs * LBS_TO_KG * 10) / 10; // keep kg precision for BMI accuracy
 }
 
 function cmToFtIn(cm: number): { ft: number; inches: number } {
@@ -406,11 +410,11 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
-                        step="0.1"
+                        step="1"
                         min="0"
                         max="1100"
-                        placeholder={isGhostVital("weight_kg") && prevWeightLbs != null ? String(prevWeightLbs) : "0.0"}
-                        value={weightLbs ?? ""}
+                        placeholder={isGhostVital("weight_kg") && prevWeightLbs != null ? String(Math.round(prevWeightLbs)) : "0"}
+                        value={weightLbs != null ? Math.round(weightLbs) : ""}
                         onChange={(e) => updateWeightLbs(e.target.value)}
                         className={`w-24 px-2 py-1 text-sm border border-[var(--color-border)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-400)] ${isGhostVital("weight_kg") ? ghostInputClass : ""}`}
                       />
@@ -568,11 +572,11 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
           <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Pillars of Health</h2>
         </div>
         <p className="text-xs text-[var(--color-text-muted)] mb-4">
-          Patient-reported ratings · 1 = very poor, 10 = excellent
+          Patient-reported ratings · 1 = very poor, 10 = excellent (stress: 1 = low, 10 = extreme)
         </p>
 
         <div className="space-y-3">
-          {PILLARS.map(({ key, label, icon: Icon, description }) => {
+          {PILLARS.map(({ key, label, icon: Icon, description, inverted }) => {
             const val = ratings[key];
             const prevVal = previousRatings?.[key];
             const isGhost = val == null && prevVal != null && carryForwardMode;
@@ -591,11 +595,11 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
                   <div className="flex items-center gap-3 flex-1">
                     <div className="flex-1 h-2 bg-[var(--color-border-light)] rounded-full overflow-hidden">
                       <div
-                        className={`h-2 rounded-full transition-all ${ratingBg(val)}`}
+                        className={`h-2 rounded-full transition-all ${ratingBg(val, inverted)}`}
                         style={{ width: val ? `${(val / 10) * 100}%` : "0%" }}
                       />
                     </div>
-                    <span className={`text-sm font-semibold w-5 text-right ${ratingColor(val)}`}>
+                    <span className={`text-sm font-semibold w-5 text-right ${ratingColor(val, inverted)}`}>
                       {val ?? "—"}
                     </span>
                   </div>
@@ -611,13 +615,13 @@ export function VitalsPanel({ visitId, initialVitals, initialRatings, readOnly =
                       title={description}
                       className="pillar-slider flex-1"
                       style={{
-                        "--slider-color": isGhost ? "#d97706" : sliderCssColor(val),
+                        "--slider-color": isGhost ? "#d97706" : sliderCssColor(val, inverted),
                         "--slider-pct": displayVal != null ? `${((displayVal - 1) / 9) * 100}%` : "0%",
                         opacity: isGhost ? 0.5 : 1,
                       } as React.CSSProperties}
                     />
                     <span className={`text-sm font-semibold w-5 text-right tabular-nums ${
-                      isGhost ? "text-amber-400 italic" : ratingColor(val)
+                      isGhost ? "text-amber-400 italic" : ratingColor(val, inverted)
                     }`}>
                       {isGhost ? prevVal : (val ?? "·")}
                     </span>

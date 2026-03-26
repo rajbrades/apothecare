@@ -31,9 +31,10 @@ const PILLAR_META: {
   key: keyof RatingPoint;
   label: string;
   icon: typeof Moon;
+  inverted?: boolean;
 }[] = [
   { key: "sleep", label: "Sleep", icon: Moon },
-  { key: "stress", label: "Stress", icon: Zap },
+  { key: "stress", label: "Stress", icon: Zap, inverted: true },
   { key: "movement", label: "Movement", icon: Dumbbell },
   { key: "nutrition", label: "Nutrition", icon: Leaf },
   { key: "digestion", label: "Digestion", icon: Waves },
@@ -42,15 +43,17 @@ const PILLAR_META: {
   { key: "hydration", label: "Hydration", icon: Droplets },
 ];
 
-function ratingColor(value: number): string {
-  if (value <= 4) return "text-red-600";
-  if (value <= 7) return "text-amber-600";
+function ratingColor(value: number, inverted = false): string {
+  const effective = inverted ? 11 - value : value;
+  if (effective <= 4) return "text-red-600";
+  if (effective <= 7) return "text-amber-600";
   return "text-emerald-600";
 }
 
-function ratingBarBg(value: number): string {
-  if (value <= 4) return "bg-red-500";
-  if (value <= 7) return "bg-amber-500";
+function ratingBarBg(value: number, inverted = false): string {
+  const effective = inverted ? 11 - value : value;
+  if (effective <= 4) return "bg-red-500";
+  if (effective <= 7) return "bg-amber-500";
   return "bg-emerald-500";
 }
 
@@ -257,7 +260,7 @@ export function VitalsSnapshot({ patientId, onViewTrends }: VitalsSnapshotProps)
       {hasRatings && latestRating && (
         <div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-            {PILLAR_META.map(({ key, label, icon: Icon }) => {
+            {PILLAR_META.map(({ key, label, icon: Icon, inverted }) => {
               const val = latestRating[key] as number | undefined;
               if (val == null) return null;
               return (
@@ -266,11 +269,11 @@ export function VitalsSnapshot({ patientId, onViewTrends }: VitalsSnapshotProps)
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[10px] text-[var(--color-text-muted)]">{label}</span>
-                      <span className={`text-[10px] font-semibold ${ratingColor(val)}`}>{val}</span>
+                      <span className={`text-[10px] font-semibold ${ratingColor(val, inverted)}`}>{val}</span>
                     </div>
                     <div className="h-1.5 bg-[var(--color-border-light)] rounded-full overflow-hidden">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${ratingBarBg(val)}`}
+                        className={`h-1.5 rounded-full transition-all ${ratingBarBg(val, inverted)}`}
                         style={{ width: `${(val / 10) * 100}%` }}
                       />
                     </div>
