@@ -121,6 +121,9 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
   const stream = useVisitStream();
   const isReadOnly = visit.status === "completed";
+
+  // Undo AI Generation — snapshot state before generation
+  const preGenSnapshotRef = useRef<Pick<Visit, "subjective" | "objective" | "assessment" | "plan" | "ifm_matrix" | "ai_protocol"> | null>(null);
   const patientName = visit.patients
     ? [visit.patients.first_name, visit.patients.last_name].filter(Boolean).join(" ")
     : null;
@@ -211,8 +214,36 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
         plan: stream.soap.data.plan || prev.plan,
       }));
       setShowNotes(false);
+
+      // Show undo toast if we have a snapshot
+      if (preGenSnapshotRef.current) {
+        const snapshot = preGenSnapshotRef.current;
+        toast("AI generation complete", {
+          description: "SOAP note has been updated",
+          action: {
+            label: "Undo",
+            onClick: () => {
+              setVisit((prev) => ({ ...prev, ...snapshot }));
+              // Persist the undo to the server
+              fetch(`/api/visits/${visit.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  subjective: snapshot.subjective,
+                  objective: snapshot.objective,
+                  assessment: snapshot.assessment,
+                  plan: snapshot.plan,
+                }),
+              });
+              toast.success("AI generation undone");
+            },
+          },
+          duration: 10000,
+        });
+        preGenSnapshotRef.current = null;
+      }
     }
-  }, [stream.soap.status, stream.soap.data]);
+  }, [stream.soap.status, stream.soap.data, visit.id]);
 
   useEffect(() => {
     if (stream.ifm_matrix.status === "complete" && stream.ifm_matrix.data) {
@@ -369,6 +400,16 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
   const doGenerate = useCallback(() => {
     const text = useBlockEditor ? editorTextRef.current : rawNotes;
+
+    // Snapshot current SOAP state for undo
+    preGenSnapshotRef.current = {
+      subjective: visit.subjective,
+      objective: visit.objective,
+      assessment: visit.assessment,
+      plan: visit.plan,
+      ifm_matrix: visit.ifm_matrix,
+      ai_protocol: visit.ai_protocol,
+    };
 
     // Save editor state before generating
     if (useBlockEditor && editorJsonRef.current) {

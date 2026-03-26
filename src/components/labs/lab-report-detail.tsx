@@ -41,6 +41,7 @@ interface ReportData {
   lab_vendor: LabVendor;
   test_type: string;
   collection_date: string | null;
+  created_at: string;
   status: LabReportStatus;
   error_message: string | null;
   raw_file_url: string;
@@ -869,7 +870,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             </h1>
             <p className="text-sm text-[var(--color-text-secondary)] mt-1">
               {vendorLabel}
-              {report.collection_date && ` \u00B7 ${formatDate(report.collection_date)}`}
+              {report.collection_date && ` \u00B7 Collected ${formatDate(report.collection_date)}`}
+              {report.created_at && ` \u00B7 Uploaded ${formatDate(report.created_at)}`}
               {patientName && ` \u00B7 ${patientName}`}
             </p>
             {panels.length > 1 && (
@@ -959,7 +961,9 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
           <div>
             <p className="text-sm font-medium text-amber-800">Processing your lab report</p>
             <p className="text-xs text-amber-600 mt-0.5">
-              AI is extracting and analyzing biomarkers. This usually takes 30-60 seconds.
+              {report.error_message?.startsWith("progress:")
+                ? report.error_message.replace("progress:", "")
+                : "AI is extracting and analyzing biomarkers…"}
             </p>
           </div>
         </div>

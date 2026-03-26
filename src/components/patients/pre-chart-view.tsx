@@ -57,7 +57,8 @@ export function PreChartView({ patient, documentCount, onResynthesized }: PreCha
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[var(--color-brand-600)]" />
           <span className="text-xs font-medium text-[var(--color-brand-600)]">
-            AI-Synthesized from {synthesizedFrom} document{synthesizedFrom > 1 ? "s" : ""}
+            AI-Synthesized from {synthesizedFrom} document{synthesizedFrom !== 1 ? "s" : ""}
+            {(summary.visit_count ?? 0) > 0 ? ` + ${summary.visit_count} visit${summary.visit_count !== 1 ? "s" : ""}` : ""}
           </span>
         </div>
         <div className="flex items-center gap-3">

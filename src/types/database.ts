@@ -76,6 +76,7 @@ export interface PatientClinicalSummary {
   supplements_from_docs?: string[];
   allergies_from_docs?: string[];
   document_count?: number;
+  visit_count?: number;
   last_updated?: string;
 }
 

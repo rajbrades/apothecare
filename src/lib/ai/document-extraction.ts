@@ -162,7 +162,7 @@ async function autoPopulateFromExtraction(
     // Fetch current patient record to avoid overwriting existing data
     const { data: patient } = await serviceClient
       .from("patients")
-      .select("chief_complaints, medical_history, allergies, notes")
+      .select("id, practitioner_id, chief_complaints, medical_history, allergies, notes")
       .eq("id", patientId)
       .single();
 
@@ -211,7 +211,72 @@ async function autoPopulateFromExtraction(
         .eq("id", patientId);
       console.log(`[Auto-Populate] Updated ${Object.keys(updates).join(", ")} for patient ${patientId}`);
     }
+
+    // Auto-populate structured medications into patient_medications table
+    if (Array.isArray(extractedData.current_medications) && extractedData.current_medications.length > 0) {
+      await populateMedicationsFromExtraction(
+        patientId,
+        patient.practitioner_id,
+        extractedData.current_medications as Array<string | Record<string, string>>,
+        serviceClient
+      );
+    }
   } catch (err) {
     console.warn("[Auto-Populate] Failed (non-blocking):", err);
+  }
+}
+
+/**
+ * Insert extracted medications into patient_medications table.
+ * Skips duplicates by checking existing medication names (case-insensitive).
+ */
+async function populateMedicationsFromExtraction(
+  patientId: string,
+  practitionerId: string,
+  medications: Array<string | Record<string, string>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  serviceClient: any
+): Promise<void> {
+  try {
+    // Fetch existing medications to avoid duplicates
+    const { data: existing } = await serviceClient
+      .from("patient_medications")
+      .select("name")
+      .eq("patient_id", patientId);
+
+    const existingNames = new Set(
+      (existing || []).map((m: { name: string }) => m.name.toLowerCase())
+    );
+
+    const newMeds = medications
+      .map((med) => {
+        if (typeof med === "string") {
+          return { name: med.trim(), dosage: null, frequency: null };
+        }
+        return {
+          name: (med.name || "").trim(),
+          dosage: med.dosage || med.dose || null,
+          frequency: med.frequency || null,
+        };
+      })
+      .filter((m) => m.name && !existingNames.has(m.name.toLowerCase()));
+
+    if (newMeds.length === 0) return;
+
+    const rows = newMeds.map((m, i) => ({
+      patient_id: patientId,
+      practitioner_id: practitionerId,
+      name: m.name,
+      dosage: m.dosage,
+      frequency: m.frequency,
+      status: "active",
+      source: "document_extracted",
+      sort_order: (existing?.length || 0) + i,
+    }));
+
+    await serviceClient.from("patient_medications").insert(rows);
+    console.log(`[Auto-Populate] Inserted ${rows.length} medications for patient ${patientId}`);
+  } catch (err) {
+    console.warn("[Auto-Populate] Medication insert failed (non-blocking):", err);
   }
 }

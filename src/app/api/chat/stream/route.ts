@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
 import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM } from "@/lib/ai/anthropic";
-import { buildSourceFilterAddendum, type SourceId } from "@/lib/ai/source-filter";
+import { buildSourceFilterAddendum, EVIDENCE_SOURCES, type SourceId } from "@/lib/ai/source-filter";
 import { filterAllowedSources, isFeatureAvailable } from "@/lib/tier/gates";
 import { chatMessageSchema } from "@/lib/validations/chat";
 import { validateCsrf } from "@/lib/api/csrf";
@@ -172,47 +172,62 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // RAG: Retrieve relevant evidence (best-effort, non-blocking on failure)
+    // Determine which source categories are selected
+    const activeSources = (source_filter ?? []) as string[];
+    const partnershipSources = activeSources.filter(
+      (s) => EVIDENCE_SOURCES[s]?.category === "partnership"
+    );
+    const nonPartnershipSources = activeSources.filter(
+      (s) => EVIDENCE_SOURCES[s]?.category !== "partnership"
+    );
+    const hasPartnershipFilter = partnershipSources.length > 0;
+    const hasNonPartnershipFilter = nonPartnershipSources.length > 0 || activeSources.length === 0;
+
+    // RAG: Retrieve relevant evidence from PubMed/literature (skip if only partnership sources selected)
     let evidenceContext = "";
     let ragChunkCount = 0;
     const referenceChunks: ReferenceChunk[] = [];
-    try {
-      const evidence = await retrieveEvidence(message, {
-        sources: (source_filter ?? []) as string[],
-        matchCount: is_deep_consult ? 12 : 8,
-      });
-      evidenceContext = formatEvidenceContext(evidence, 1);
-      ragChunkCount = evidence.chunks.length;
-      for (const chunk of evidence.chunks) {
-        referenceChunks.push({
-          refNum: referenceChunks.length + 1,
-          title: chunk.title,
-          authors: chunk.authors,
-          year: chunk.publishedDate?.split("-")[0] || "",
-          doi: chunk.doi || "",
-          source: chunk.source,
-          publication: chunk.publication || chunk.source,
-          evidenceLevel: chunk.evidenceLevel || "other",
-          content: chunk.content,
+    if (hasNonPartnershipFilter) {
+      try {
+        const evidence = await retrieveEvidence(message, {
+          sources: nonPartnershipSources.length > 0 ? nonPartnershipSources : (source_filter ?? []) as string[],
+          matchCount: is_deep_consult ? 12 : 8,
         });
+        evidenceContext = formatEvidenceContext(evidence, 1);
+        ragChunkCount = evidence.chunks.length;
+        for (const chunk of evidence.chunks) {
+          referenceChunks.push({
+            refNum: referenceChunks.length + 1,
+            title: chunk.title,
+            authors: chunk.authors,
+            year: chunk.publishedDate?.split("-")[0] || "",
+            doi: chunk.doi || "",
+            source: chunk.source,
+            publication: chunk.publication || chunk.source,
+            evidenceLevel: chunk.evidenceLevel || "other",
+            content: chunk.content,
+          });
+        }
+      } catch (err) {
+        console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
       }
-    } catch (err) {
-      console.warn("[RAG] Evidence retrieval failed, proceeding without:", err);
     }
 
-    // Partnership RAG: Retrieve relevant chunks from partner knowledge base (pro only, best-effort)
+    // Partnership RAG: Retrieve relevant chunks from partner knowledge bases (pro only, best-effort)
     let partnershipContext = "";
-    let partnershipSources: string[] = [];
+    let partnershipSourcesList: string[] = [];
     if (!isFeatureAvailable(practitioner.subscription_tier, "partnership_rag")) {
       // Free tier: skip partnership RAG entirely
     } else try {
+      const selectedPartnership = hasPartnershipFilter ? partnershipSources[0] : undefined;
       const partnerChunks = await retrieveContext({
         query: message,
-        maxChunks: is_deep_consult ? 6 : 4,
-        threshold: 0.7,
+        maxChunks: is_deep_consult ? 8 : 5,
+        threshold: 0.65,
+        ...(selectedPartnership ? { sourceFilter: selectedPartnership } : {}),
       });
       partnershipContext = formatRagContext(partnerChunks, referenceChunks.length + 1);
-      partnershipSources = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
+      partnershipSourcesList = [...new Set(partnerChunks.map((c) => c.source).filter(Boolean))];
       for (const chunk of partnerChunks) {
         referenceChunks.push({
           refNum: referenceChunks.length + 1,
@@ -309,10 +324,10 @@ export async function POST(request: NextRequest) {
           }
 
           // Emit source attributions for partnership RAG (e.g. Apex Energetics)
-          if (partnershipSources.length > 0) {
+          if (partnershipSourcesList.length > 0) {
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "source_attributions", sources: partnershipSources })}\n\n`
+                `data: ${JSON.stringify({ type: "source_attributions", sources: partnershipSourcesList })}\n\n`
               )
             );
           }

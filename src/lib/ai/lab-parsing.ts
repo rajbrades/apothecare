@@ -60,11 +60,21 @@ export async function parseLabReport(
   const anthropic = getDirectAnthropicClient();
 
   try {
-    // Update status to parsing
+    // Update status to parsing with progress tracking
     await serviceClient
       .from("lab_reports")
-      .update({ status: "parsing" })
+      .update({ status: "parsing", error_message: null })
       .eq("id", reportId);
+
+    const updateProgress = async (step: string) => {
+      await serviceClient
+        .from("lab_reports")
+        .update({ error_message: `progress:${step}` })
+        .eq("id", reportId)
+        .eq("status", "parsing"); // Only update if still parsing
+    };
+
+    await updateProgress("Downloading PDF…");
 
     // Download PDF from storage
     const pdfBuffer: Buffer = await downloadFromStorage(storagePath);
@@ -81,6 +91,7 @@ export async function parseLabReport(
 
     const useTextPath = extractedText.trim().length > 200; // Has meaningful text content
     console.log(`[Lab Parse] Strategy: ${useTextPath ? "TEXT (Sonnet)" : "VISION (Opus)"}, text length: ${extractedText.length}`);
+    await updateProgress(useTextPath ? "Extracting biomarkers (text mode)…" : "Analyzing PDF with AI vision…");
 
     let response: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null;
     let lastError: unknown = null;
@@ -90,12 +101,12 @@ export async function parseLabReport(
       try {
         response = await anthropic.messages.create({
           model: ANTHROPIC_MODELS.standard, // Sonnet — fast
-          max_tokens: 16384,
+          max_tokens: 8192,
           system: LAB_PARSING_SYSTEM_PROMPT,
           messages: [
             {
               role: "user",
-              content: `Extract all biomarker data from this lab report text. Return valid JSON.\n\n---LAB REPORT TEXT---\n${extractedText}`,
+              content: `Extract all biomarker data from this lab report text. Return compact valid JSON — omit null subcategory fields and null parsing_notes to save tokens.\n\n---LAB REPORT TEXT---\n${extractedText}`,
             },
           ],
         });
@@ -157,6 +168,8 @@ export async function parseLabReport(
     if (!response) {
       throw lastError || new Error("All models failed for lab parsing. Check Anthropic API key and account status.");
     }
+
+    await updateProgress("Processing results…");
 
     // Parse extraction result
     const textContent = response.content.find((c) => c.type === "text");
@@ -221,6 +234,8 @@ export async function parseLabReport(
       .from("biomarker_results")
       .delete()
       .eq("lab_report_id", reportId);
+
+    await updateProgress(`Normalizing ${parsedData.biomarkers.length} biomarkers…`);
 
     // Normalize biomarkers against reference ranges and insert results
     const normResult = await normalizeBiomarkers(

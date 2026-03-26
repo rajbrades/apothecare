@@ -45,8 +45,8 @@ export async function POST(
       .single();
     if (!patient) return jsonError("Patient not found", 404);
 
-    // Rebuild clinical summary from all extracted documents
-    await rebuildPatientClinicalSummary(patientId, practitioner.id);
+    // Rebuild clinical summary from all extracted documents + visits using AI
+    await rebuildPatientClinicalSummary(patientId, practitioner.id, { useAI: true });
 
     auditLog({
       request,

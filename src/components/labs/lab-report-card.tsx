@@ -164,6 +164,12 @@ export function LabReportCard({ report, onDelete, onArchive, onAssign }: LabRepo
                 {formatDate(report.collection_date)}
               </span>
             )}
+            {!report.collection_date && report.created_at && (
+              <span className="inline-flex items-center gap-1" title="Uploaded date (no collection date)">
+                <Calendar className="w-3 h-3" />
+                Uploaded {formatDate(report.created_at)}
+              </span>
+            )}
             {patientName && (
               <span className="inline-flex items-center gap-1">
                 <User className="w-3 h-3" />
