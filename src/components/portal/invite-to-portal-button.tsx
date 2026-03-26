@@ -11,10 +11,10 @@ interface InviteToPortalButtonProps {
 }
 
 export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: InviteToPortalButtonProps) {
-  const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState(patientEmail || "");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const alreadyActive = portalStatus === "active";
   const alreadyInvited = portalStatus === "invited";
@@ -40,6 +40,14 @@ export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: 
     setLoading(false);
   }
 
+  function handleClick() {
+    if (email.trim()) {
+      handleSend();
+    } else {
+      setShowForm(true);
+    }
+  }
+
   if (alreadyActive) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">
@@ -49,6 +57,7 @@ export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: 
     );
   }
 
+  // Only show email form when no email is on file
   if (showForm) {
     return (
       <div className="flex items-center gap-1.5">
@@ -81,34 +90,18 @@ export function InviteToPortalButton({ patientId, patientEmail, portalStatus }: 
     );
   }
 
-  if (sent || alreadyInvited) {
-    return (
-      <button
-        onClick={() => {
-          // If we already have the email, resend immediately
-          if (email.trim()) {
-            handleSend();
-          } else {
-            setShowForm(true);
-          }
-        }}
-        disabled={loading}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface-secondary)] transition-colors disabled:opacity-40"
-        title="Resend portal invitation"
-      >
-        <Send className="w-3.5 h-3.5" />
-        {loading ? "Sending…" : "Resend invite"}
-      </button>
-    );
-  }
-
   return (
     <button
-      onClick={() => setShowForm(true)}
-      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-secondary)] transition-colors"
+      onClick={handleClick}
+      disabled={loading}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-secondary)] transition-colors disabled:opacity-40"
+      title={sent || alreadyInvited ? "Resend portal invitation" : "Send portal invitation"}
     >
-      <UserPlus className="w-3.5 h-3.5" />
-      Invite to portal
+      {sent || alreadyInvited ? (
+        <><Send className="w-3.5 h-3.5" />{loading ? "Sending…" : "Resend invite"}</>
+      ) : (
+        <><UserPlus className="w-3.5 h-3.5" />{loading ? "Sending…" : "Invite to portal"}</>
+      )}
     </button>
   );
 }
