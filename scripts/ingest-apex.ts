@@ -49,6 +49,29 @@ async function main() {
   files.forEach((f) => console.log(`  • ${f}`));
   console.log();
 
+  // Per-file metadata — matched to actual PDF content
+  const FILE_METADATA: Record<string, { topics: string[]; conditions: string[]; interventions: string[] }> = {
+    "blood chemistry": {
+      topics: ["cbc", "complete_blood_count", "blood_chemistry", "functional_blood_chemistry", "rbc", "wbc", "hemoglobin", "hematocrit", "platelets", "differential", "iron_studies", "metabolic_panel", "lipid_panel", "liver_function", "kidney_function", "thyroid_panel", "electrolytes"],
+      conditions: ["anemia", "iron_deficiency", "b12_deficiency", "folate_deficiency", "infection", "inflammation", "leukocytosis", "leukopenia", "thrombocytopenia", "polycythemia", "hypothyroidism", "hyperthyroidism", "diabetes", "insulin_resistance", "dyslipidemia", "liver_disease", "kidney_disease"],
+      interventions: ["iron", "b12", "folate", "vitamin_d", "zinc", "selenium", "omega_3", "magnesium", "functional_ranges", "optimal_ranges"],
+    },
+    "thyroid": {
+      topics: ["thyroid", "hypothyroidism", "hashimotos", "thyroid_antibodies", "t3", "t4", "tsh"],
+      conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism", "subclinical_hypothyroidism"],
+      interventions: ["selenium", "iodine", "zinc", "vitamin_d", "ashwagandha", "thyroid_support"],
+    },
+  };
+
+  function getMetadata(filename: string) {
+    const lower = filename.toLowerCase();
+    for (const [key, meta] of Object.entries(FILE_METADATA)) {
+      if (lower.includes(key)) return meta;
+    }
+    // Default fallback
+    return FILE_METADATA["thyroid"];
+  }
+
   const results = [];
 
   for (const file of files) {
@@ -59,6 +82,7 @@ async function main() {
       .replace(/\.pdf$/i, "")
       .replace(/[-_]/g, " ");
 
+    const meta = getMetadata(file);
     console.log(`\n━━━ Ingesting: ${title} ━━━`);
 
     const result = await ingestDocument({
@@ -67,9 +91,9 @@ async function main() {
       partnershipId: partnership.id,
       source: "apex_energetics",
       documentType: "masterclass",
-      topics: ["thyroid", "hypothyroidism", "hashimotos", "thyroid_antibodies", "t3", "t4", "tsh"],
-      conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism", "subclinical_hypothyroidism"],
-      interventions: ["selenium", "iodine", "zinc", "vitamin_d", "ashwagandha", "thyroid_support"],
+      topics: meta.topics,
+      conditions: meta.conditions,
+      interventions: meta.interventions,
     });
 
     results.push(result);

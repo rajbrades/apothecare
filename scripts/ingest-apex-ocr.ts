@@ -175,6 +175,28 @@ async function main() {
   const files = (await readdir(DOCS_DIR)).filter((f) => f.toLowerCase().endsWith(".pdf"));
   console.log(`Found ${files.length} PDFs\n`);
 
+  // Per-file metadata — matched to actual PDF content
+  const FILE_METADATA: Record<string, { topics: string[]; conditions: string[]; interventions: string[] }> = {
+    "blood chemistry": {
+      topics: ["cbc", "complete_blood_count", "blood_chemistry", "functional_blood_chemistry", "rbc", "wbc", "hemoglobin", "hematocrit", "platelets", "differential", "iron_studies", "metabolic_panel", "lipid_panel", "liver_function", "kidney_function", "thyroid_panel", "electrolytes"],
+      conditions: ["anemia", "iron_deficiency", "b12_deficiency", "folate_deficiency", "infection", "inflammation", "leukocytosis", "leukopenia", "thrombocytopenia", "polycythemia", "hypothyroidism", "hyperthyroidism", "diabetes", "insulin_resistance", "dyslipidemia", "liver_disease", "kidney_disease"],
+      interventions: ["iron", "b12", "folate", "vitamin_d", "zinc", "selenium", "omega_3", "magnesium", "functional_ranges", "optimal_ranges"],
+    },
+    "thyroid": {
+      topics: ["thyroid", "hypothyroidism", "hashimotos", "thyroid_antibodies", "t3", "t4", "tsh"],
+      conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism", "subclinical_hypothyroidism"],
+      interventions: ["selenium", "iodine", "zinc", "vitamin_d", "ashwagandha", "thyroid_support"],
+    },
+  };
+
+  function getMetadata(filename: string) {
+    const lower = filename.toLowerCase();
+    for (const [key, meta] of Object.entries(FILE_METADATA)) {
+      if (lower.includes(key)) return meta;
+    }
+    return FILE_METADATA["thyroid"];
+  }
+
   for (const file of files) {
     const filePath = resolve(DOCS_DIR, file);
     const title = file.replace(/\.pdf$/i, "");
@@ -220,6 +242,7 @@ async function main() {
     }
 
     // Create document record
+    const meta = getMetadata(file);
     const { data: doc, error: docErr } = await supabase
       .from("evidence_documents")
       .insert({
@@ -230,9 +253,9 @@ async function main() {
         file_hash: fileHash,
         storage_path: `docs/partnerships/${PARTNERSHIP_SLUG}/${file}`,
         status: "processing",
-        topics: ["thyroid", "hypothyroidism", "hashimotos", "t3", "t4", "tsh"],
-        conditions: ["hypothyroidism", "hashimotos_thyroiditis", "hyperthyroidism"],
-        interventions: ["selenium", "iodine", "zinc", "vitamin_d", "thyroid_support"],
+        topics: meta.topics,
+        conditions: meta.conditions,
+        interventions: meta.interventions,
       })
       .select("id")
       .single();
