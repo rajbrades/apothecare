@@ -140,7 +140,7 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
   const popoverRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const config = LEVEL_CONFIG[citation.level];
+  const config = LEVEL_CONFIG[citation.level] || LEVEL_CONFIG["case-study"];
   const displayLabel = citation.label || config.shortLabel;
   const Icon = config.icon;
 
