@@ -138,7 +138,7 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
 
       {/* Sticky progress */}
       <div className="sticky top-0 z-40 -mx-6 bg-[var(--color-surface)] border-b border-[var(--color-border)] shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center gap-0 px-4 overflow-x-auto scrollbar-hide">
+        <div className="max-w-2xl mx-auto flex items-center gap-0 px-4 overflow-x-auto scrollbar-hide touch-pan-x">
           {SECTIONS.map((name, i) => (
             <div key={name} className="flex items-center flex-shrink-0">
               <button

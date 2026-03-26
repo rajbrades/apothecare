@@ -630,7 +630,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
       )}
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide">
+      <div className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide touch-pan-x">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
