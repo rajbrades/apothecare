@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Lock, Library, ExternalLink } from "lucide-react";
 
 export interface PartnershipRecord {
@@ -144,7 +143,7 @@ function SourceRow({ source, locked }: { source: EvidenceSource; locked?: boolea
     }`}>
       {/* Logo */}
       <div className="w-[130px] flex-shrink-0 flex items-center h-6">
-        <Image
+        <img
           src={source.logo}
           alt={source.name}
           width={source.logoWidth}
@@ -180,7 +179,7 @@ function PartnershipRow({ partnership, isGranted }: { partnership: PartnershipRe
     <div className="group flex items-center gap-4 px-4 py-3 rounded-lg border border-purple-100 bg-purple-50/30 hover:border-purple-200 transition-all">
       <div className="w-[130px] flex-shrink-0 flex items-center h-6">
         {style ? (
-          <Image src={style.logo} alt={partnership.name} width={style.width} height={24} className="object-contain object-left" />
+          <img src={style.logo} alt={partnership.name} width={style.width} height={24} className="object-contain object-left" />
         ) : (
           <span className="font-bold text-sm text-[var(--color-text-primary)]">{partnership.name}</span>
         )}
