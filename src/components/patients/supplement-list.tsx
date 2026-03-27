@@ -35,8 +35,8 @@ const FORM_OPTIONS = [
 
 const FREQUENCY_OPTIONS = [
   "", "1x daily", "2x daily", "3x daily", "4x daily",
-  "Every other day", "Weekly", "2x weekly", "3x weekly",
-  "As needed", "With each meal", "Other",
+  "Every other day", "2x weekly", "3x weekly", "Weekly",
+  "2x monthly", "As needed", "With each meal", "Other",
 ];
 
 const TIMING_OPTIONS = [

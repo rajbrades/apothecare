@@ -271,7 +271,7 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
               {placeholder:"Medication name",autocomplete:{type:"medication"}},
               {placeholder:"Dosage",width:"110px"},
               {placeholder:"Form",width:"110px",select:{options:["Tablet","Capsule","Liquid","Injection","Patch","Cream/Topical","Inhaler","Drops","Suppository","Other"]}},
-              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","Weekly","As needed","Other"]}},
+              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","2x weekly","3x weekly","Weekly","2x monthly","As needed","Other"]}},
               {placeholder:"Route",width:"100px",select:{options:["Oral","Sublingual","Topical","Injection","Inhaled","Rectal","Other"]}},
             ]} rows={r.medications} onChange={(v) => set("medications", v)} addLabel="Add Medication" />
             <Subsection title="Allergies & Sensitivities" />
@@ -357,7 +357,7 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
               {placeholder:"Name (e.g. Magnesium Glycinate)",autocomplete:{type:"supplement"}},
               {placeholder:"Dosage",width:"110px"},
               {placeholder:"Form",width:"110px",select:{options:["Capsule","Softgel","Tablet","Chewable","Gummy","Powder","Liquid","Drops","Spray","Sublingual","Lozenge","Patch","Topical","Other"]}},
-              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","Weekly","2x weekly","3x weekly","As needed","With each meal","Other"]}},
+              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","2x weekly","3x weekly","Weekly","2x monthly","As needed","With each meal","Other"]}},
               {placeholder:"Timing",width:"130px",select:{options:["With food","With breakfast","With lunch","With dinner","Before bed","On empty stomach","Morning","Evening","30 min before meal","Other"]}},
               {placeholder:"Brand",autocomplete:{type:"supplement_brand"},width:"160px"},
             ]} rows={r.supplements} onChange={(v) => set("supplements", v)} addLabel="Add Supplement" />
