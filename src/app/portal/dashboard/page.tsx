@@ -11,6 +11,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Eye,
+  FileEdit,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 
@@ -256,6 +258,42 @@ export default function PatientDashboard() {
             </div>
           </section>
         )}
+        {/* Your Rights — HIPAA access links */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+            Your Rights
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link
+              href="/portal/disclosures"
+              className="flex items-center gap-3 px-5 py-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors group"
+            >
+              <Eye className="h-5 w-5 text-[var(--color-text-muted)] flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
+                  Access Disclosure Log
+                </p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  See who accessed your records
+                </p>
+              </div>
+            </Link>
+            <Link
+              href="/portal/amendments"
+              className="flex items-center gap-3 px-5 py-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors group"
+            >
+              <FileEdit className="h-5 w-5 text-[var(--color-text-muted)] flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
+                  Request Correction
+                </p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  Amend your health information
+                </p>
+              </div>
+            </Link>
+          </div>
+        </section>
       </div>
     </PortalShell>
   );

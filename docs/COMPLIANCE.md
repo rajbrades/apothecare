@@ -93,11 +93,16 @@
 
 | Service | BAA Status | Notes |
 |---------|-----------|-------|
-| Supabase | Required | Covers database, auth, storage. Verify Pro plan BAA is signed. |
-| Anthropic | Active | Zero data retention policy. PHI sent via API is never stored or used for training. |
-| OpenAI | Required | Covers Whisper transcription. Verify BAA status. |
+| Supabase | **Action Required** | Covers database, auth, storage. Supabase Pro plan includes HIPAA BAA — must be explicitly requested via Supabase Dashboard > Settings > Compliance. Ensure the BAA addendum is signed before processing PHI in production. |
+| Anthropic | Active | Zero data retention policy. PHI sent via API is never stored or used for training. BAA covers all Claude API usage. |
+| OpenAI | **Action Required** | Used for Whisper transcription only. OpenAI offers a BAA for Enterprise and API customers — request via sales or account dashboard. Audio recordings may contain PHI (patient names, conditions discussed). Until BAA is signed, consider: (a) using Anthropic for transcription, or (b) stripping identifiers before sending audio. |
 | Vercel | N/A (dev only) | Development environment only. Production on AWS Amplify. |
-| AWS Amplify | Required | HIPAA-eligible under standard AWS BAA. Production deployment. |
+| AWS Amplify | **Action Required** | HIPAA-eligible under standard AWS BAA. Must sign AWS BAA via AWS Artifact console before deploying PHI workloads. |
+
+### BAA Action Items
+1. **Supabase**: Request HIPAA BAA addendum through Supabase Pro plan dashboard
+2. **OpenAI**: Contact OpenAI sales to sign BAA for Whisper API usage, or migrate transcription to Anthropic
+3. **AWS**: Sign AWS BAA via AWS Artifact if not already completed
 
 ---
 

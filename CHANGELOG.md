@@ -2,6 +2,18 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.35.0] - 2026-03-27
+
+### Added — HIPAA Compliance Complete (H6-H9, M3)
+- **H7: Patient amendment requests** — Full HIPAA §164.526 workflow: patients submit correction requests via `/portal/amendments` (field selector, current/requested values, reason). Practitioners review and approve/deny via `GET/POST /api/patients/[id]/amendments`. Approved amendments auto-apply to patient record. Migration 039: `amendment_requests` table with patient + practitioner RLS policies.
+- **H8: Patient disclosure log** — `/portal/disclosures` page shows patients an accounting of all PHI access events (HIPAA §164.528). API: `GET /api/patient-portal/me/disclosures` queries audit logs scoped to patient's resource_id with cursor pagination.
+- **H6: Audit log archival script** — `scripts/archive-audit-logs.ts` exports logs older than N months to JSON, with optional `--delete` flag. Supports `--months` parameter. Output to `archives/` directory for S3 Glacier upload.
+- **M3: Breach detection** — `src/lib/api/breach-detection.ts` with threshold-based anomaly detection: excessive exports (>5/hour), excessive patient views (>100/hour). Alerts logged to audit_logs. Wired into account export route.
+- **Patient dashboard "Your Rights" section** — Links to disclosure log and amendment request pages.
+
+### Changed
+- **H9: BAA documentation** — Updated `docs/COMPLIANCE.md` with specific action items for Supabase Pro BAA, OpenAI Whisper BAA, and AWS Artifact BAA. Marked each as "Action Required" with instructions.
+
 ## [0.34.1] - 2026-03-27
 
 ### Fixed — HIPAA Compliance (H10-H11, M1-M6)

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
+import { checkExportAnomaly } from "@/lib/api/breach-detection";
 import { downloadFromStorage } from "@/lib/storage/patient-documents";
 import JSZip from "jszip";
 import { z } from "zod";
@@ -170,6 +171,9 @@ export async function POST(request: NextRequest) {
       resourceType: "account",
       detail: { includePdfs, ...manifest.counts },
     });
+
+    // HIPAA M3: Check for anomalous export volume
+    checkExportAnomaly(practitioner.id);
 
     return new Response(new Uint8Array(zipBuffer), {
       headers: {
