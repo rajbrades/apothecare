@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
 
   if (!patient) return jsonError("Patient not found", 404);
 
-  const { data: documents } = await supabase
+  // Use service client — patient_documents RLS only allows practitioner access
+  const service = createServiceClient();
+  const { data: documents } = await service
     .from("patient_documents")
     .select("id, title, document_type, status, file_name, file_size, uploaded_at, created_at")
     .eq("patient_id", patient.id)
