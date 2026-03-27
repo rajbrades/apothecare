@@ -161,6 +161,7 @@ export async function POST(request: NextRequest) {
           raw_file_size: file.size,
           status: "uploading",
           source_document_id: document.id,
+          is_shared_with_patient: true,
         })
         .select("id")
         .single();

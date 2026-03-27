@@ -26,8 +26,10 @@ export async function GET(
 
   if (!patient) return jsonError("Patient not found", 404);
 
-  // Verify the patient owns this shared lab (via RLS)
-  const { data: lab } = await supabase
+  // Use service client — lab_reports RLS only allows practitioner access
+  const service = createServiceClient();
+
+  const { data: lab } = await service
     .from("lab_reports")
     .select("id, test_name, collection_date, lab_vendor, test_type, status, created_at, is_shared_with_patient")
     .eq("id", id)
@@ -36,9 +38,6 @@ export async function GET(
     .single();
 
   if (!lab) return jsonError("Lab report not found", 404);
-
-  // Fetch biomarkers via service client (biomarker_results lacks patient RLS policy)
-  const service = createServiceClient();
   const { data: biomarkers } = await service
     .from("biomarker_results")
     .select(`

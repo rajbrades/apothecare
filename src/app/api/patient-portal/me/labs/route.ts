@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/api/audit";
 
 function jsonError(message: string, status: number) {
@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
 
   if (!patient) return jsonError("Patient not found", 404);
 
-  const { data: labs, error } = await supabase
+  // Use service client — lab_reports RLS only allows practitioner access
+  const service = createServiceClient();
+  const { data: labs, error } = await service
     .from("lab_reports")
     .select("id, collection_date, lab_vendor, test_type, test_name, status, created_at")
     .eq("patient_id", patient.id)
