@@ -337,6 +337,22 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ---
 
+## Business Associate Agreements (BAAs) — Required Before Production
+
+All services that process, store, or transmit PHI require a signed BAA under HIPAA.
+
+### Signed
+- [x] **Anthropic** — Claude API (chat, OCR, lab parsing, document extraction, visit generation, pre-chart synthesis). Zero data retention policy. BAA active.
+
+### Action Required
+- [ ] **Supabase** — PostgreSQL database, Auth, Storage. Stores all patient records, lab results, visit notes, audit logs, documents. **How:** Request HIPAA BAA addendum via Supabase Dashboard > Settings > Compliance (requires Pro plan).
+- [ ] **OpenAI** — Whisper API (audio transcription of clinical recordings — may contain patient names, conditions, medications). Also `text-embedding-3-small` for RAG vector embeddings (processes chunked clinical text). **How:** Request BAA via OpenAI API dashboard or contact sales. Alternative: migrate transcription to Deepgram/AssemblyAI (both HIPAA-ready) and embeddings to Voyage AI.
+- [ ] **AWS** — Amplify (production hosting), S3 (potential audit log archival). Serves all API responses containing PHI. **How:** Sign AWS BAA via AWS Artifact console.
+- [ ] **Resend** — Transactional email service. Sends patient portal invite emails containing patient first name and practitioner practice name. **How:** Verify Resend's HIPAA compliance and BAA availability, or switch to AWS SES (covered under AWS BAA).
+- [ ] **Vercel** _(if used in production)_ — Currently marked dev-only, but if any production traffic routes through Vercel, a BAA is needed. Vercel offers HIPAA compliance on Enterprise plan. **How:** Confirm production is 100% AWS Amplify, or upgrade to Vercel Enterprise with BAA.
+
+---
+
 ## Sprint 7 — UX Fixes & Polish (Feb 16) ✅ COMPLETE
 
 - [x] **Fix:** Lab parsing resilience — retry logic with model fallback (Opus → Sonnet) for transient 429/529/503 errors
