@@ -20,12 +20,29 @@ const SECTIONS = [
   "Supplements",
 ] as const;
 
+interface PrefillData {
+  first_name?: string;
+  last_name?: string;
+  date_of_birth?: string;
+  sex?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  gender_identity?: string;
+  ethnicity?: string;
+  referral_source?: string;
+  auth_email?: string;
+}
+
 interface FunctionalMedicineIntakeProps {
   templateId: string;
+  prefill?: PrefillData;
   onComplete: () => void;
 }
 
-export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalMedicineIntakeProps) {
+export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: FunctionalMedicineIntakeProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -34,8 +51,19 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
   // ── Form state ──────────────────────────────────────────────────────
   const [r, setR] = useState<Record<string, any>>({
     // Section 1
-    first_name: "", last_name: "", dob: "", bio_sex: "", gender_identity: "",
-    email: "", phone: "", city_state: "", zip: "", ethnicity: "", referral: "",
+    first_name: prefill?.first_name || "",
+    last_name: prefill?.last_name || "",
+    dob: prefill?.date_of_birth || "",
+    bio_sex: prefill?.sex || "",
+    gender_identity: prefill?.gender_identity || "",
+    email: prefill?.auth_email || prefill?.email || "",
+    phone: prefill?.phone || "",
+    address: "",
+    city: prefill?.city || "",
+    state: prefill?.state || "",
+    zip: prefill?.zip_code || "",
+    ethnicity: prefill?.ethnicity || "",
+    referral: prefill?.referral_source || "",
     reason_for_visit: "",
     // Section 2
     diagnoses: [] as string[], diagnoses_detail: "",
@@ -177,9 +205,13 @@ export function FunctionalMedicineIntake({ templateId, onComplete }: FunctionalM
           <SectionCard num={1} total={6} title="About You" why="Basic demographics help us contextualize everything else — age influences hormone patterns, biological sex affects reference ranges, and your contact details ensure your practitioner can reach you.">
             <FieldRow><TextField label="First Name" placeholder="Jane" value={r.first_name} onChange={(v) => set("first_name", v)} /><TextField label="Last Name" placeholder="Smith" value={r.last_name} onChange={(v) => set("last_name", v)} /></FieldRow>
             <FieldRow cols={3}><TextField label="Date of Birth" type="date" value={r.dob} onChange={(v) => set("dob", v)} /><SelectField label="Biological Sex" value={r.bio_sex} onChange={(v) => set("bio_sex", v)} options={[{value:"female",label:"Female"},{value:"male",label:"Male"},{value:"intersex",label:"Intersex"},{value:"pnts",label:"Prefer not to say"}]} /><TextField label="Gender Identity" placeholder="Optional" value={r.gender_identity} onChange={(v) => set("gender_identity", v)} optional /></FieldRow>
-            <FieldRow><TextField label="Email Address" type="email" placeholder="jane@email.com" value={r.email} onChange={(v) => set("email", v)} /><TextField label="Phone Number" type="tel" placeholder="(305) 000-0000" value={r.phone} onChange={(v) => set("phone", v)} /></FieldRow>
-            <FieldRow><TextField label="City / State" placeholder="Miami, FL" value={r.city_state} onChange={(v) => set("city_state", v)} /><TextField label="Zip Code" placeholder="33101" value={r.zip} onChange={(v) => set("zip", v)} /></FieldRow>
-            <FieldRow><TextField label="Ethnicity / Ancestry" placeholder="e.g. Ashkenazi Jewish, West African, Northern European..." value={r.ethnicity} onChange={(v) => set("ethnicity", v)} hint="Genetic ancestry can influence lab reference ranges and certain health predispositions." optional /><SelectField label="How did you hear about us?" value={r.referral} onChange={(v) => set("referral", v)} options={[{value:"practitioner",label:"Referred by practitioner"},{value:"friend",label:"Referred by friend/family"},{value:"social",label:"Social media"},{value:"search",label:"Search engine"},{value:"podcast",label:"Podcast/media"},{value:"conference",label:"Conference/event"},{value:"other",label:"Other"}]} /></FieldRow>
+            <FieldRow><TextField label="Email Address" type="email" placeholder="jane@email.com" value={r.email} onChange={(v) => set("email", v)} readOnly={!!prefill?.auth_email} /><TextField label="Phone Number" type="tel" placeholder="(305) 000-0000" value={r.phone} onChange={(v) => set("phone", v)} /></FieldRow>
+            <TextField label="Address" placeholder="1919 NE 45th St" value={r.address} onChange={(v) => set("address", v)} />
+            <FieldRow cols={3}><TextField label="City" placeholder="Miami" value={r.city} onChange={(v) => set("city", v)} /><TextField label="State" placeholder="FL" value={r.state} onChange={(v) => set("state", v)} /><TextField label="Zip Code" placeholder="33101" value={r.zip} onChange={(v) => set("zip", v)} /></FieldRow>
+            <FieldRow>
+              <TextField label="Ethnicity / Ancestry" placeholder="e.g. Ashkenazi Jewish, West African, Northern European..." value={r.ethnicity} onChange={(v) => set("ethnicity", v)} hint="Genetic ancestry can influence lab reference ranges and certain health predispositions." optional />
+              <SelectField label="How did you hear about us?" value={r.referral} onChange={(v) => set("referral", v)} topAligned options={[{value:"practitioner",label:"Referred by practitioner"},{value:"friend",label:"Referred by friend/family"},{value:"social",label:"Social media"},{value:"search",label:"Search engine"},{value:"podcast",label:"Podcast/media"},{value:"conference",label:"Conference/event"},{value:"other",label:"Other"}]} />
+            </FieldRow>
             <TextAreaField label="Primary Reason for Visit" hint="In your own words — what brings you here today?" placeholder="e.g. I've had chronic fatigue for 3 years. I've been to many conventional doctors and haven't found answers..." value={r.reason_for_visit} onChange={(v) => set("reason_for_visit", v)} />
           </SectionCard>
         )}

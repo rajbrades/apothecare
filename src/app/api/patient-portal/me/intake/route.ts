@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data: patient } = await supabase
     .from("patients")
-    .select("id, practitioner_id")
+    .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, email, phone, city, state, zip_code, gender_identity, ethnicity, referral_source")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -54,7 +54,24 @@ export async function GET(request: NextRequest) {
     detail: { via: "patient_portal", already_submitted: !!existing },
   });
 
-  return NextResponse.json({ template, already_submitted: !!existing, submitted_at: existing?.submitted_at ?? null });
+  // Return patient data for pre-population + auth email
+  const prefill = {
+    first_name: patient.first_name ?? "",
+    last_name: patient.last_name ?? "",
+    date_of_birth: patient.date_of_birth ?? "",
+    sex: patient.sex ?? "",
+    email: patient.email || user.email || "",
+    phone: patient.phone ?? "",
+    city: patient.city ?? "",
+    state: patient.state ?? "",
+    zip_code: patient.zip_code ?? "",
+    gender_identity: patient.gender_identity ?? "",
+    ethnicity: patient.ethnicity ?? "",
+    referral_source: patient.referral_source ?? "",
+    auth_email: user.email || "",
+  };
+
+  return NextResponse.json({ template, prefill, already_submitted: !!existing, submitted_at: existing?.submitted_at ?? null });
 }
 
 const submitSchema = z.object({
@@ -111,7 +128,12 @@ export async function POST(request: NextRequest) {
   // Demographics & Contact
   setIfPresent("email", r.email);
   setIfPresent("phone", r.phone);
-  if (r.city_state && typeof r.city_state === "string") {
+  setIfPresent("address", r.address);
+  // Support both new separate fields and legacy city_state
+  if (r.city) {
+    setIfPresent("city", r.city);
+    setIfPresent("state", r.state);
+  } else if (r.city_state && typeof r.city_state === "string") {
     const parts = r.city_state.split(",").map((s: string) => s.trim());
     setIfPresent("city", parts[0]);
     setIfPresent("state", parts[1]);

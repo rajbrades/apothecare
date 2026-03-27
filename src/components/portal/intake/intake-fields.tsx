@@ -15,9 +15,10 @@ interface TextFieldProps {
   onChange: (v: string) => void;
   type?: "text" | "email" | "tel" | "date" | "number";
   optional?: boolean;
+  readOnly?: boolean;
 }
 
-export function TextField({ label, hint, placeholder, value, onChange, type = "text", optional }: TextFieldProps) {
+export function TextField({ label, hint, placeholder, value, onChange, type = "text", optional, readOnly }: TextFieldProps) {
   return (
     <div>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
@@ -30,7 +31,12 @@ export function TextField({ label, hint, placeholder, value, onChange, type = "t
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3.5 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)] transition-all"
+        readOnly={readOnly}
+        className={`w-full px-3.5 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] transition-all ${
+          readOnly
+            ? "bg-[var(--color-surface-tertiary)] cursor-not-allowed opacity-70"
+            : "bg-[var(--color-surface-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)]"
+        }`}
       />
     </div>
   );
@@ -69,15 +75,17 @@ interface SelectFieldProps {
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   hint?: string;
+  topAligned?: boolean;
 }
 
-export function SelectField({ label, value, onChange, options, hint }: SelectFieldProps) {
+export function SelectField({ label, value, onChange, options, hint, topAligned }: SelectFieldProps) {
   return (
-    <div>
+    <div className={topAligned ? "flex flex-col" : ""}>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
         {label}
       </label>
       {hint && <p className="text-[12px] italic text-[var(--color-text-muted)] mb-2">{hint}</p>}
+      {topAligned && !hint && <div className="flex-1" />}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
