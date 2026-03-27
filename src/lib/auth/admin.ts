@@ -21,6 +21,10 @@ export async function requireAdmin() {
         .map((e) => e.trim().toLowerCase())
         .filter(Boolean);
 
+    if (adminEmails.length === 0) {
+        console.warn("[Admin] ADMIN_EMAILS env var is not configured — all admin access denied");
+    }
+
     if (!adminEmails.includes(user.email.toLowerCase())) {
         redirect("/");
     }
@@ -39,5 +43,8 @@ export function isAdminEmail(email: string | null | undefined) {
         .split(",")
         .map((e) => e.trim().toLowerCase())
         .filter(Boolean);
+    if (adminEmails.length === 0) {
+        console.warn("[Admin] ADMIN_EMAILS env var is not configured — all admin access denied");
+    }
     return adminEmails.includes(email.toLowerCase());
 }

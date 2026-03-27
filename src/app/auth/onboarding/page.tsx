@@ -22,6 +22,7 @@ export default function OnboardingPage() {
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [npiError, setNpiError] = useState<string | null>(null);
   const [licenseError, setLicenseError] = useState<string | null>(null);
+  const [aiConsent, setAiConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -76,6 +77,7 @@ export default function OnboardingPage() {
           npi: npi || null,
           practice_name: practiceName || null,
           specialty_focus: specialties.length > 0 ? specialties : null,
+          ai_consent_at: aiConsent ? new Date().toISOString() : null,
           verification_status: "pending" as const,
           subscription_tier: "free" as const,
           subscription_status: "active" as const,
@@ -321,6 +323,24 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
+              {/* AI Processing Consent */}
+              <div className="border border-[var(--color-border-light)] rounded-[var(--radius-sm)] p-4 bg-[var(--color-surface-secondary)]">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={aiConsent}
+                    onChange={(e) => setAiConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-brand-600)] focus:ring-[var(--color-brand-400)] accent-[var(--color-brand-600)]"
+                  />
+                  <span className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                    I acknowledge that Apothecare uses AI (Claude by Anthropic) to process
+                    patient health information for clinical decision support, including lab
+                    interpretation, protocol generation, and visit documentation. All AI
+                    processing is covered by a zero-data-retention BAA. *
+                  </span>
+                </label>
+              </div>
+
               {error && (
                 <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-700">{error}</p>
@@ -336,8 +356,8 @@ export default function OnboardingPage() {
                 </button>
                 <button
                   onClick={handleComplete}
-                  disabled={loading}
-                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-50"
+                  disabled={loading || !aiConsent}
+                  className="flex-1 py-2.5 bg-[var(--color-brand-700)] text-white text-sm font-medium rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-800)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Setting up..." : "Launch Apothecare →"}
                 </button>

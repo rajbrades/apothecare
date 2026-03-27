@@ -76,15 +76,39 @@ export async function POST(
     // Delete storage files first (patient documents + lab PDFs)
     await deleteStoragePrefix(`${practitioner.id}/${id}/`);
 
-    // Delete related records first, then the patient
-    // Order matters due to FK constraints
-    const deletions = [
+    // Delete related records first, then the patient.
+    // Tables with ON DELETE CASCADE are handled automatically, but tables with
+    // ON DELETE SET NULL (visits, lab_reports, biomarker_results, conversations,
+    // clinical_reviews, interaction_checks) must be explicitly deleted to ensure
+    // all PHI is removed per HIPAA §164.530(c).
+
+    // Phase 1: Delete records that other FK-cascade tables depend on
+    await Promise.all([
       service.from("patient_supplements").delete().eq("patient_id", id),
       service.from("timeline_events").delete().eq("patient_id", id),
-    ];
-    await Promise.all(deletions);
+      service.from("biomarker_results").delete().eq("patient_id", id),
+      service.from("clinical_reviews").delete().eq("patient_id", id),
+      service.from("interaction_checks").delete().eq("patient_id", id),
+    ]);
 
-    // Delete the patient row (remaining FKs should cascade or have been cleaned)
+    // Phase 2: Delete conversations (messages cascade from conversations)
+    // and visits/labs which may contain PHI in text fields
+    const { data: patientConversations } = await service
+      .from("conversations")
+      .select("id")
+      .eq("patient_id", id);
+    if (patientConversations && patientConversations.length > 0) {
+      const convIds = patientConversations.map((c: { id: string }) => c.id);
+      await service.from("messages").delete().in("conversation_id", convIds);
+      await service.from("conversations").delete().in("id", convIds);
+    }
+
+    await Promise.all([
+      service.from("visits").delete().eq("patient_id", id),
+      service.from("lab_reports").delete().eq("patient_id", id),
+    ]);
+
+    // Delete the patient row (remaining CASCADE FKs handle the rest)
     const { error: deleteError } = await service
       .from("patients")
       .delete()

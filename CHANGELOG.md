@@ -2,6 +2,19 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.34.1] - 2026-03-27
+
+### Fixed — HIPAA Compliance (H10-H11, M1-M6)
+- **H10/H11**: Verified already resolved — RLS deny policies on `citation_corrections` and Zod validation for replacement citation data were already implemented.
+- **M1**: Verified already resolved — site-access cookie in `/api/gate` already sets HttpOnly, Secure, SameSite flags.
+- **M2**: `requireAdmin()` and `isAdminEmail()` now log `console.warn` when `ADMIN_EMAILS` env var is empty/unconfigured.
+- **M4**: Added AI processing consent checkbox to practitioner onboarding step 2. Records `ai_consent_at` timestamp (migration 038). Button disabled until consent is checked.
+- **M5**: Added "AI-Generated Responses as PHI" section to `docs/COMPLIANCE.md` documenting classification, protections (RLS, encryption, audit, zero-retention BAA), and residual risk.
+- **M6**: Patient permanent delete now explicitly deletes SET NULL tables (visits, lab_reports, biomarker_results, conversations + messages, clinical_reviews, interaction_checks) before patient row deletion — ensures no orphaned PHI.
+
+### Fixed
+- **Patient portal 429 rate limit**: Invite accept flow now uses `verifyOtp()` client-side instead of redirecting to Supabase's `/auth/v1/verify` GET endpoint (which has strict rate limits). Falls back to redirect if verifyOtp fails.
+
 ## [0.34.0] - 2026-03-26
 
 ### Added — Partnership RAG Overhaul & Chat Intelligence

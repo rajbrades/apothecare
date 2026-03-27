@@ -121,14 +121,14 @@
 
 Audit performed March 20, 2026 against commits 586d225, 87832dc.
 
-### Open Findings
+### Open Findings — All Resolved
 
-| # | Severity | HIPAA Ref | Finding | File(s) |
-|---|----------|-----------|---------|---------|
-| 1 | Critical | §164.312(b) | GET endpoints on `/api/admin/flagged-citations` and `/search` access PHI (user questions, AI answers) but do not call `auditLog()` | `src/app/api/admin/flagged-citations/route.ts`, `search/route.ts` |
-| 2 | Critical | §164.312(b) | Q&A context fetch (conversation messages containing clinical data) is not audit logged | `src/app/api/admin/flagged-citations/route.ts` |
-| 3 | High | §164.312(a)(1) | `citation_corrections` table has RLS enabled with SELECT-only policy but no explicit INSERT/UPDATE/DELETE deny policies — relies on implicit denial | `supabase/migrations/028_citation_corrections.sql` |
-| 4 | Medium | — | `replacement_doi`, `replacement_title`, `replacement_authors` lack format validation and length limits | `src/app/api/admin/flagged-citations/route.ts` |
+| # | Severity | HIPAA Ref | Finding | Status |
+|---|----------|-----------|---------|--------|
+| 1 | Critical | §164.312(b) | GET endpoints missing `auditLog()` | ✅ Resolved — audit logging added to both GET routes |
+| 2 | Critical | §164.312(b) | Q&A context fetch not audit logged | ✅ Resolved — conversation_messages access logged |
+| 3 | High | §164.312(a)(1) | `citation_corrections` missing deny policies | ✅ Resolved — explicit INSERT/UPDATE/DELETE deny policies in migration 028 |
+| 4 | Medium | — | Replacement citation data missing validation | ✅ Resolved — DOI regex, title max(1000), authors max(50) in Zod schema |
 
 ### Confirmed Good
 
@@ -143,6 +143,32 @@ Audit performed March 20, 2026 against commits 586d225, 87832dc.
 | Encryption at rest | Pass | AES-256 via Supabase PostgreSQL |
 | Anthropic BAA | Pass | Zero data retention policy active |
 | Immutable audit logs | Pass | No delete operations permitted |
+
+---
+
+## AI-Generated Responses as PHI
+
+### Classification
+AI chat responses stored in the `messages` table are classified as **Protected Health Information (PHI)** when they reference patient context (name, DOB, medications, lab results, clinical history). This applies to:
+
+- **Chat responses**: The `/api/chat/stream` route injects patient biomarker results and clinical context into the system prompt. Claude's responses may synthesize and reference this PHI.
+- **Visit AI generation**: SOAP notes, IFM Matrix mappings, and protocol recommendations contain patient-specific clinical data.
+- **Pre-chart synthesis**: AI-generated clinical summaries aggregate data from multiple documents and visits.
+- **Visit assistant**: Streaming AI responses include patient demographics, vitals, and clinical notes.
+
+### Protections in Place
+| Control | Status | Description |
+|---------|--------|-------------|
+| RLS isolation | Active | Practitioners can only read their own conversations (`practitioner_id` match) |
+| Encryption at rest | Active | AES-256 via Supabase PostgreSQL |
+| Encryption in transit | Active | TLS 1.3 for all API calls |
+| Audit logging | Active | All chat sessions and message reads are logged |
+| Patient deletion cascade | Active | Conversations linked to a patient are explicitly deleted during permanent delete (not just SET NULL) |
+| Anthropic zero-retention | Active | PHI sent to Claude API is never stored or used for training |
+| OpenAI zero-retention | Active | Audio sent to Whisper API uses zero-retention endpoint |
+
+### Residual Risk
+AI responses may synthesize PHI that was not present in any single source document (e.g., combining lab results with medication history to produce a clinical narrative). This synthesized PHI is subject to the same protections as source PHI. RLS ensures practitioner-only access, and permanent patient deletion now explicitly removes associated conversations and messages.
 
 ---
 

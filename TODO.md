@@ -236,7 +236,7 @@ Full codebase audit findings. Organized by severity.
 
 ---
 
-### 🟡 HIGH — H1-H5 Resolved, H6-H11 Remaining
+### 🟡 HIGH — H1-H5, H10-H11 Resolved; H6-H9 Remaining
 
 - [x] **H1. `select("*")` violates minimum necessary (12+ routes)** — Account export fetches ALL columns from patients, visits, labs, conversations, supplements, timeline_events. Other routes (`patient-reports`, `protocol-milestones`, `symptom-logs`, `supplements`) also over-fetch. **HIPAA Minimum Necessary Standard**. **Fix:** Replace with explicit field lists.
 
@@ -256,25 +256,25 @@ Full codebase audit findings. Organized by severity.
 
 - [ ] **H9. OpenAI and Supabase BAA status unverified** — Anthropic BAA confirmed (zero-retention). OpenAI (Whisper transcription) and Supabase marked "required" in `docs/COMPLIANCE.md` but not confirmed as signed. **Fix:** Verify and document current BAA status for both vendors.
 
-- [ ] **H10. RLS deny policies missing on `citation_corrections` table** — `citation_corrections` (migration 028) lacks explicit `WITH CHECK (false)` / `USING (false)` deny policies for client INSERT/UPDATE/DELETE. Currently admin-only via service client, but explicit deny is defense-in-depth. **Fix:** Add migration with deny policies.
+- [x] **H10. RLS deny policies missing on `citation_corrections` table** — ✅ Already implemented in migration 028: explicit `WITH CHECK (false)` / `USING (false)` deny policies for INSERT, UPDATE, DELETE.
 
-- [ ] **H11. Zod validation missing for replacement citation data** — `replacement_doi` needs DOI format regex (`10.xxxx/...`), `replacement_title` max length (1000), `replacement_authors` max array size (50) in the admin flagged-citations endpoint.
+- [x] **H11. Zod validation missing for replacement citation data** — ✅ Already implemented: DOI regex (`/^10\.\d{4,9}\/[^\s]+$/`), `replacement_title` max(1000), `replacement_authors` array max(50) with per-item max(200).
 
 ---
 
-### 🟠 MEDIUM — Fix Next Sprint
+### 🟠 MEDIUM — M1-M2, M4-M6 Resolved; M3 Remaining
 
-- [ ] **M1. Site-access cookie missing secure flags** — `src/middleware.ts` (line 14) sets `site_access` cookie without HttpOnly, Secure, SameSite=Strict flags. Only relevant if `SITE_PASSWORD` is used in production.
+- [x] **M1. Site-access cookie missing secure flags** — ✅ Already implemented in `/api/gate`: `httpOnly: true`, `secure: true` (production), `sameSite: "lax"`.
 
-- [ ] **M2. Empty ADMIN_EMAILS not logged** — If env var is unset/empty, all admin routes silently deny access. No warning logged at startup or request time. **Fix:** Log warning when `isAdmin()` is checked and ADMIN_EMAILS is empty.
+- [x] **M2. Empty ADMIN_EMAILS not logged** — ✅ Added `console.warn` when `ADMIN_EMAILS` is not configured in `requireAdmin()` and `isAdminEmail()` (`src/lib/auth/admin.ts`). Inline `isAdmin()` in flagged-citations already had this.
 
 - [ ] **M3. No breach detection automation** — No alerting for anomalous export volumes, unusual IP access patterns, or failed login tracking. `docs/COMPLIANCE.md` documents a 5-step response process but no detection. **Fix:** Add thresholds and alerts (e.g., >3 exports/hour, access from new country).
 
-- [ ] **M4. No practitioner AI consent documentation** — Patients sign consent forms before portal access. Practitioners don't explicitly consent to AI processing of patient PHI. **Fix:** Add consent checkbox in practitioner settings or onboarding.
+- [x] **M4. No practitioner AI consent documentation** — ✅ Added AI processing consent checkbox to onboarding step 2. Records `ai_consent_at` timestamp in practitioners table (migration 038). Consent acknowledges Claude AI processing under zero-retention BAA.
 
-- [ ] **M5. AI responses stored as-is may contain synthesized PHI** — Chat responses referencing patient context (name, DOB, medications) are stored in `messages` table. Mitigated by RLS (practitioners see only their own conversations). **Fix:** Document in compliance guide that stored AI responses are PHI and subject to same protections.
+- [x] **M5. AI responses stored as-is may contain synthesized PHI** — ✅ Documented in `docs/COMPLIANCE.md` "AI-Generated Responses as PHI" section. Details: classification, protections in place (RLS, encryption, audit, cascade deletion, zero-retention BAA), and residual risk.
 
-- [ ] **M6. Patient deletion doesn't cascade all tables** — `POST /api/patients/[id]/permanent-delete` only explicitly deletes `patient_supplements` and `timeline_events`. Other tables (`patient_documents`, `lab_reports`, `visits`, conversation `messages`) may rely on FK cascades but this isn't verified. **Fix:** Verify FK cascade behavior or add explicit deletes.
+- [x] **M6. Patient deletion doesn't cascade all tables** — ✅ Verified FK cascades: 12 tables use CASCADE, 6 use SET NULL. Updated `permanent-delete/route.ts` to explicitly delete SET NULL tables (visits, lab_reports, biomarker_results, conversations+messages, clinical_reviews, interaction_checks) before patient row deletion.
 
 ---
 
