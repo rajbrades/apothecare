@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   // Extract token_hash and type from the action_link so the client can use
   // verifyOtp() directly instead of redirecting to Supabase's /auth/v1/verify
   // GET endpoint (which has stricter rate limits).
-  const linkUrl = new URL(actionLink);
+  const linkUrl = new URL(actionLink!);
   const otpTokenHash = linkUrl.searchParams.get("token");
   const otpType = linkUrl.searchParams.get("type") || "magiclink";
 
