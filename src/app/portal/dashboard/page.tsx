@@ -644,13 +644,17 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
       </div>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
-      {success && <p className="text-xs text-emerald-600">Document uploaded successfully. Your provider will be notified.</p>}
+      {success && <p className="text-xs text-[var(--color-brand-600)]">Document uploaded successfully. Your provider will be notified.</p>}
 
       {file && docType && (
         <button
           onClick={handleUpload}
           disabled={uploading}
-          className="w-full px-4 py-3 text-sm font-semibold text-white bg-[var(--color-brand-900)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-700)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className={`w-full px-4 py-3 text-sm font-semibold rounded-[var(--radius-md)] transition-all flex items-center justify-center gap-2 ${
+            uploading
+              ? "bg-[var(--color-surface-tertiary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] cursor-wait"
+              : "text-white bg-[var(--color-brand-900)] hover:bg-[var(--color-brand-700)] hover:-translate-y-px hover:shadow-lg"
+          }`}
         >
           {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</> : "Upload Document"}
         </button>
