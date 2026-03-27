@@ -20,6 +20,39 @@ const SECTIONS = [
   "Supplements",
 ] as const;
 
+const US_STATES = [
+  { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" }, { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" }, { value: "CA", label: "California" }, { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" }, { value: "DE", label: "Delaware" }, { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" }, { value: "HI", label: "Hawaii" }, { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" }, { value: "IN", label: "Indiana" }, { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" }, { value: "KY", label: "Kentucky" }, { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" }, { value: "MD", label: "Maryland" }, { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" }, { value: "MN", label: "Minnesota" }, { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" }, { value: "MT", label: "Montana" }, { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" }, { value: "NH", label: "New Hampshire" }, { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" }, { value: "NY", label: "New York" }, { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" }, { value: "OH", label: "Ohio" }, { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" }, { value: "PA", label: "Pennsylvania" }, { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" }, { value: "SD", label: "South Dakota" }, { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" }, { value: "UT", label: "Utah" }, { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" }, { value: "WA", label: "Washington" }, { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" }, { value: "WY", label: "Wyoming" }, { value: "DC", label: "District of Columbia" },
+];
+
+const CANADA_PROVINCES = [
+  { value: "AB", label: "Alberta" }, { value: "BC", label: "British Columbia" }, { value: "MB", label: "Manitoba" },
+  { value: "NB", label: "New Brunswick" }, { value: "NL", label: "Newfoundland and Labrador" },
+  { value: "NS", label: "Nova Scotia" }, { value: "NT", label: "Northwest Territories" },
+  { value: "NU", label: "Nunavut" }, { value: "ON", label: "Ontario" }, { value: "PE", label: "Prince Edward Island" },
+  { value: "QC", label: "Quebec" }, { value: "SK", label: "Saskatchewan" }, { value: "YT", label: "Yukon" },
+];
+
+const COUNTRIES = [
+  { value: "US", label: "United States" },
+  { value: "CA", label: "Canada" },
+];
+
 interface PrefillData {
   first_name?: string;
   last_name?: string;
@@ -62,6 +95,7 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
     city: prefill?.city || "",
     state: prefill?.state || "",
     zip: prefill?.zip_code || "",
+    country: "US",
     ethnicity: prefill?.ethnicity || "",
     referral: prefill?.referral_source || "",
     reason_for_visit: "",
@@ -207,7 +241,12 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
             <FieldRow cols={3}><TextField label="Date of Birth" type="date" value={r.dob} onChange={(v) => set("dob", v)} /><SelectField label="Biological Sex" value={r.bio_sex} onChange={(v) => set("bio_sex", v)} options={[{value:"female",label:"Female"},{value:"male",label:"Male"},{value:"intersex",label:"Intersex"},{value:"pnts",label:"Prefer not to say"}]} /><TextField label="Gender Identity" placeholder="Optional" value={r.gender_identity} onChange={(v) => set("gender_identity", v)} optional /></FieldRow>
             <FieldRow><TextField label="Email Address" type="email" placeholder="jane@email.com" value={r.email} onChange={(v) => set("email", v)} readOnly={!!prefill?.auth_email} /><TextField label="Phone Number" type="tel" placeholder="(305) 000-0000" value={r.phone} onChange={(v) => set("phone", v)} /></FieldRow>
             <TextField label="Address" placeholder="1919 NE 45th St" value={r.address} onChange={(v) => set("address", v)} />
-            <FieldRow cols={3}><TextField label="City" placeholder="Miami" value={r.city} onChange={(v) => set("city", v)} /><TextField label="State" placeholder="FL" value={r.state} onChange={(v) => set("state", v)} /><TextField label="Zip Code" placeholder="33101" value={r.zip} onChange={(v) => set("zip", v)} /></FieldRow>
+            <FieldRow cols={3}>
+              <TextField label="City" placeholder="Miami" value={r.city} onChange={(v) => set("city", v)} />
+              <SelectField label={r.country === "CA" ? "Province" : "State"} value={r.state} onChange={(v) => set("state", v)} options={r.country === "CA" ? CANADA_PROVINCES : US_STATES} />
+              <TextField label={r.country === "CA" ? "Postal Code" : "Zip Code"} placeholder={r.country === "CA" ? "A1A 1A1" : "33101"} value={r.zip} onChange={(v) => set("zip", v)} />
+            </FieldRow>
+            <SelectField label="Country" value={r.country} onChange={(v) => { set("country", v); set("state", ""); }} options={COUNTRIES} />
             <FieldRow>
               <TextField label="Ethnicity / Ancestry" placeholder="e.g. Ashkenazi Jewish, West African, Northern European..." value={r.ethnicity} onChange={(v) => set("ethnicity", v)} hint="Genetic ancestry can influence lab reference ranges and certain health predispositions." optional />
               <SelectField label="How did you hear about us?" value={r.referral} onChange={(v) => set("referral", v)} topAligned options={[{value:"practitioner",label:"Referred by practitioner"},{value:"friend",label:"Referred by friend/family"},{value:"social",label:"Social media"},{value:"search",label:"Search engine"},{value:"podcast",label:"Podcast/media"},{value:"conference",label:"Conference/event"},{value:"other",label:"Other"}]} />

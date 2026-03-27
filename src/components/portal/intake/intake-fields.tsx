@@ -18,7 +18,25 @@ interface TextFieldProps {
   readOnly?: boolean;
 }
 
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function TextField({ label, hint, placeholder, value, onChange, type = "text", optional, readOnly }: TextFieldProps) {
+  const displayValue = type === "tel" ? formatPhone(value) : value;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (type === "tel") {
+      // Store raw digits only
+      onChange(e.target.value.replace(/\D/g, "").slice(0, 10));
+    } else {
+      onChange(e.target.value);
+    }
+  };
+
   return (
     <div>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
@@ -27,9 +45,9 @@ export function TextField({ label, hint, placeholder, value, onChange, type = "t
       </label>
       {hint && <p className="text-[12px] italic text-[var(--color-text-muted)] mb-2">{hint}</p>}
       <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        type={type === "tel" ? "text" : type}
+        value={displayValue}
+        onChange={handleChange}
         placeholder={placeholder}
         readOnly={readOnly}
         className={`w-full px-3.5 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] transition-all ${
