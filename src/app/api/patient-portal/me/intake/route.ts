@@ -172,13 +172,26 @@ export async function POST(request: NextRequest) {
     if (filtered.length > 0) patientUpdates.hospitalizations = filtered;
   }
 
-  // Medications (dynamic rows → text)
+  // Medications (dynamic rows → structured records for patient_medications table)
+  const intakeMedications: Array<{ name: string; dosage: string; form: string; frequency: string; route: string }> = [];
   if (Array.isArray(r.medications)) {
-    const meds = (r.medications as string[][])
-      .filter((row) => row[0]?.trim())
-      .map((row) => [row[0], row[1], row[2]].filter(Boolean).join(" — "))
-      .join("\n");
-    setIfPresent("current_medications", meds);
+    for (const row of r.medications as string[][]) {
+      if (!row[0]?.trim()) continue;
+      intakeMedications.push({
+        name: row[0],
+        dosage: row[1] || "",
+        form: row[2] || "",
+        frequency: row[3] || "",
+        route: row[4] || "",
+      });
+    }
+    // Also store as text for the legacy current_medications field
+    if (intakeMedications.length > 0) {
+      const medsText = intakeMedications
+        .map((m) => [m.name, m.dosage, m.form, m.frequency, m.route].filter(Boolean).join(" — "))
+        .join("\n");
+      setIfPresent("current_medications", medsText);
+    }
   }
 
   // Allergies (dynamic rows → text array)
@@ -189,13 +202,27 @@ export async function POST(request: NextRequest) {
     if (allergies.length > 0) patientUpdates.allergies = allergies;
   }
 
-  // Supplements (dynamic rows → text)
+  // Supplements (dynamic rows → structured records for patient_supplements table)
+  const intakeSupplements: Array<{ name: string; dosage: string; form: string; frequency: string; timing: string; brand: string }> = [];
   if (Array.isArray(r.supplements)) {
-    const supps = (r.supplements as string[][])
-      .filter((row) => row[0]?.trim())
-      .map((row) => [row[0], row[1], row[2]].filter(Boolean).join(" — "))
-      .join("\n");
-    setIfPresent("supplements", supps);
+    for (const row of r.supplements as string[][]) {
+      if (!row[0]?.trim()) continue;
+      intakeSupplements.push({
+        name: row[0],
+        dosage: row[1] || "",
+        form: row[2] || "",
+        frequency: row[3] || "",
+        timing: row[4] || "",
+        brand: row[5] || "",
+      });
+    }
+    // Also store as text for the legacy supplements field
+    if (intakeSupplements.length > 0) {
+      const suppsText = intakeSupplements
+        .map((s) => [s.brand, s.name, s.dosage, s.form, s.frequency, s.timing].filter(Boolean).join(" — "))
+        .join("\n");
+      setIfPresent("supplements", suppsText);
+    }
   }
 
   // Family History
@@ -276,6 +303,70 @@ export async function POST(request: NextRequest) {
       .update(patientUpdates)
       .eq("id", patient.id);
   }
+
+  // Insert structured medication records (best-effort)
+  if (intakeMedications.length > 0) {
+    await service.from("patient_medications").insert(
+      intakeMedications.map((m, i) => ({
+        patient_id: patient.id,
+        practitioner_id: patient.practitioner_id,
+        name: m.name,
+        dosage: m.dosage || null,
+        form: m.form || null,
+        frequency: m.frequency || null,
+        route: m.route || null,
+        status: "active",
+        source: "patient_reported",
+        sort_order: i,
+      }))
+    );
+  }
+
+  // Insert structured supplement records (best-effort)
+  if (intakeSupplements.length > 0) {
+    await service.from("patient_supplements").insert(
+      intakeSupplements.map((s, i) => ({
+        patient_id: patient.id,
+        practitioner_id: patient.practitioner_id,
+        name: s.name,
+        dosage: s.dosage || null,
+        form: s.form || null,
+        frequency: s.frequency || null,
+        timing: s.timing || null,
+        brand: s.brand || null,
+        status: "active",
+        source: "patient_reported",
+        sort_order: i,
+      }))
+    );
+  }
+
+  // Create a patient_documents record so the intake appears in the Documents tab
+  const now = new Date().toISOString();
+  const summaryParts: string[] = [];
+  if (r.first_name || r.last_name) summaryParts.push(`Patient: ${[r.first_name, r.last_name].filter(Boolean).join(" ")}`);
+  if (r.reason_for_visit) summaryParts.push(`Reason for visit: ${r.reason_for_visit}`);
+  if (Array.isArray(r.diagnoses) && r.diagnoses.length > 0) summaryParts.push(`Diagnoses: ${(r.diagnoses as string[]).join(", ")}`);
+  if (intakeMedications.length > 0) summaryParts.push(`Medications: ${intakeMedications.map((m) => m.name).join(", ")}`);
+  if (intakeSupplements.length > 0) summaryParts.push(`Supplements: ${intakeSupplements.map((s) => s.name).join(", ")}`);
+
+  await service.from("patient_documents").insert({
+    practitioner_id: patient.practitioner_id,
+    patient_id: patient.id,
+    file_name: "Patient Intake Questionnaire.pdf",
+    file_size: 0,
+    file_type: "application/json",
+    storage_path: `intake-submissions/${submission.id}`,
+    document_type: "intake_form",
+    document_date: now,
+    title: "New Patient Health Intake",
+    status: "extracted",
+    extracted_text: JSON.stringify(responses, null, 2),
+    extracted_data: mappedFields,
+    extraction_summary: summaryParts.join("\n") || "Patient intake form submitted via portal",
+    uploaded_at: now,
+    extracted_at: now,
+  });
 
   auditLog({
     request,

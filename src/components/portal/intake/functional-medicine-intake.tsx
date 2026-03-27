@@ -102,7 +102,7 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
     // Section 2
     diagnoses: [] as string[], diagnoses_detail: "",
     surgeries: [["", ""]], hospitalizations: [["", ""]],
-    medications: [["", "", ""]], allergies_list: [["", ""]],
+    medications: [["", "", "", "", ""]], allergies_list: [["", ""]],
     // Section 3
     family_conditions: [] as string[], family_detail: "",
     genetic_testing: "", apoe: "", mthfr: "",
@@ -122,7 +122,7 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
     alcohol: "", caffeine: "", tobacco: "", cannabis: "", other_substances: "",
     env_exposures: [] as string[], env_detail: "",
     // Section 6
-    supplements: [["", "", "", ""]], past_supplements: "", preferred_brands: "",
+    supplements: [["", "", "", "", "", ""]], past_supplements: "", preferred_brands: "",
     supplement_budget: "",
     prior_labs: [] as string[],
     health_goals: "", anything_else: "",
@@ -266,8 +266,14 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
             <DynamicRows label="" fields={[{placeholder:"Procedure / Surgery name"},{placeholder:"Approx. year",width:"120px"}]} rows={r.surgeries} onChange={(v) => set("surgeries", v)} addLabel="Add Surgery / Procedure" />
             <Subsection title="Hospitalizations" />
             <DynamicRows label="" fields={[{placeholder:"Reason for hospitalization"},{placeholder:"Approx. year",width:"120px"}]} rows={r.hospitalizations} onChange={(v) => set("hospitalizations", v)} addLabel="Add Hospitalization" />
-            <Subsection title="Current Prescription Medications" desc="Include dose and how long you've been taking it" />
-            <DynamicRows label="" fields={[{placeholder:"Medication name",autocomplete:{type:"medication"}},{placeholder:"Dose (e.g. 50mg)",width:"130px"},{placeholder:"How long?",width:"130px"}]} rows={r.medications} onChange={(v) => set("medications", v)} addLabel="Add Medication" />
+            <Subsection title="Current Prescription Medications" desc="Include all current prescriptions — dose, how you take it, and how often" />
+            <DynamicRows label="" fields={[
+              {placeholder:"Medication name",autocomplete:{type:"medication"}},
+              {placeholder:"Dosage",width:"110px"},
+              {placeholder:"Form",width:"110px",select:{options:["Tablet","Capsule","Liquid","Injection","Patch","Cream/Topical","Inhaler","Drops","Suppository","Other"]}},
+              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","Weekly","As needed","Other"]}},
+              {placeholder:"Route",width:"100px",select:{options:["Oral","Sublingual","Topical","Injection","Inhaled","Rectal","Other"]}},
+            ]} rows={r.medications} onChange={(v) => set("medications", v)} addLabel="Add Medication" />
             <Subsection title="Allergies & Sensitivities" />
             <DynamicRows label="" fields={[{placeholder:"Allergen (food, medication, environmental)",autocomplete:{type:"allergen"}},{placeholder:"Reaction"}]} rows={r.allergies_list} onChange={(v) => set("allergies_list", v)} addLabel="Add Allergy / Sensitivity" />
           </SectionCard>
@@ -347,7 +353,14 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
           <SectionCard num={6} total={6} title="Supplements & Current Protocols" why="Supplements can interact with each other and with medications — and more is not always better. A complete picture lets us identify gaps, duplications, and opportunities for a safer, more targeted protocol.">
             <InfoBox>Include everything — vitamins, minerals, herbs, protein powders, adaptogens, hormones (DHEA, melatonin), peptides, and any other health products.</InfoBox>
             <Subsection title="Current Supplements" />
-            <DynamicRows label="" fields={[{placeholder:"Brand (e.g. Pure Encapsulations)",autocomplete:{type:"supplement_brand"},width:"200px"},{placeholder:"Name (e.g. Magnesium Glycinate)",autocomplete:{type:"supplement"}},{placeholder:"Dose (e.g. 400mg)",width:"120px"},{placeholder:"Frequency (e.g. nightly)",width:"140px"}]} rows={r.supplements} onChange={(v) => set("supplements", v)} addLabel="Add Supplement" />
+            <DynamicRows label="" fields={[
+              {placeholder:"Name (e.g. Magnesium Glycinate)",autocomplete:{type:"supplement"}},
+              {placeholder:"Dosage",width:"110px"},
+              {placeholder:"Form",width:"110px",select:{options:["Capsule","Softgel","Tablet","Chewable","Gummy","Powder","Liquid","Drops","Spray","Sublingual","Lozenge","Patch","Topical","Other"]}},
+              {placeholder:"Frequency",width:"120px",select:{options:["1x daily","2x daily","3x daily","4x daily","Every other day","Weekly","2x weekly","3x weekly","As needed","With each meal","Other"]}},
+              {placeholder:"Timing",width:"130px",select:{options:["With food","With breakfast","With lunch","With dinner","Before bed","On empty stomach","Morning","Evening","30 min before meal","Other"]}},
+              {placeholder:"Brand",autocomplete:{type:"supplement_brand"},width:"160px"},
+            ]} rows={r.supplements} onChange={(v) => set("supplements", v)} addLabel="Add Supplement" />
             <Subsection title="Supplement History & Preferences" />
             <TextAreaField label="Past supplements you've tried and stopped" hint="Why did you stop? Did they help? Did they cause reactions?" placeholder="e.g. Tried Ashwagandha for 3 months — felt more anxious..." value={r.past_supplements} onChange={(v) => set("past_supplements", v)} />
             <TextField label="Brands you prefer or trust" placeholder="e.g. Designs for Health, Thorne, Metagenics..." value={r.preferred_brands} onChange={(v) => set("preferred_brands", v)} />
