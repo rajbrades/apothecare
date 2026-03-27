@@ -48,9 +48,9 @@ export function PortalShell({ children, maxWidth = "3xl" }: PortalShellProps) {
       </main>
       <footer className="border-t border-[var(--color-border)] py-4 px-6">
         <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-          <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</Link>
-          <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</Link>
-          <Link href="/telehealth" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</Link>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</a>
+          <a href="/security" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</a>
+          <a href="/telehealth" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</a>
         </nav>
       </footer>
     </div>
