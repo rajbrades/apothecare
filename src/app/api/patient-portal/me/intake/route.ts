@@ -125,7 +125,13 @@ export async function POST(request: NextRequest) {
     }
   };
 
-  // Demographics & Contact
+  // Core demographics
+  setIfPresent("first_name", r.first_name);
+  setIfPresent("last_name", r.last_name);
+  setIfPresent("date_of_birth", r.dob);
+  setIfPresent("sex", r.bio_sex);
+
+  // Contact
   setIfPresent("email", r.email);
   setIfPresent("phone", r.phone);
   setIfPresent("address", r.address);
@@ -296,17 +302,21 @@ export async function POST(request: NextRequest) {
 
   if (error || !submission) return jsonError("Failed to save intake", 500);
 
-  // Update patient record with mapped fields (best-effort)
+  // Update patient record with mapped fields
   if (Object.keys(patientUpdates).length > 0) {
-    await service
+    const { error: updateError } = await service
       .from("patients")
       .update(patientUpdates)
       .eq("id", patient.id);
+
+    if (updateError) {
+      console.error("[intake] Patient update failed:", updateError.message, "Fields:", Object.keys(patientUpdates));
+    }
   }
 
-  // Insert structured medication records (best-effort)
+  // Insert structured medication records
   if (intakeMedications.length > 0) {
-    await service.from("patient_medications").insert(
+    const { error: medError } = await service.from("patient_medications").insert(
       intakeMedications.map((m, i) => ({
         patient_id: patient.id,
         practitioner_id: patient.practitioner_id,
@@ -320,11 +330,12 @@ export async function POST(request: NextRequest) {
         sort_order: i,
       }))
     );
+    if (medError) console.error("[intake] Medication insert failed:", medError.message);
   }
 
-  // Insert structured supplement records (best-effort)
+  // Insert structured supplement records
   if (intakeSupplements.length > 0) {
-    await service.from("patient_supplements").insert(
+    const { error: suppError } = await service.from("patient_supplements").insert(
       intakeSupplements.map((s, i) => ({
         patient_id: patient.id,
         practitioner_id: patient.practitioner_id,
@@ -339,6 +350,7 @@ export async function POST(request: NextRequest) {
         sort_order: i,
       }))
     );
+    if (suppError) console.error("[intake] Supplement insert failed:", suppError.message);
   }
 
   // Create a patient_documents record so the intake appears in the Documents tab

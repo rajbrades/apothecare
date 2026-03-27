@@ -107,6 +107,7 @@ interface DemoField {
 const DEMO_FIELDS: DemoField[] = [
   { key: "email", label: "Email", icon: Mail, type: "email", placeholder: "patient@email.com", format: (v) => <a href={`mailto:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
   { key: "phone", label: "Phone", icon: Phone, type: "tel", placeholder: "(555) 555-1234", format: (v) => <a href={`tel:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
+  { key: "address", label: "Address", icon: MapPin, placeholder: "Street address" },
   { key: "city", label: "City", icon: MapPin, placeholder: "City" },
   { key: "state", label: "State", icon: MapPin, placeholder: "State" },
   { key: "zip_code", label: "Zip", icon: MapPin, placeholder: "Zip code" },
