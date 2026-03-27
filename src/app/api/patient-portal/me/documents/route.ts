@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
  * Patient uploads a document (lab report, imaging, etc.)
  */
 export async function POST(request: NextRequest) {
+  try {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jsonError("Unauthorized", 401);
@@ -88,7 +89,6 @@ export async function POST(request: NextRequest) {
   const service = createServiceClient();
 
   // Create document record
-  const now = new Date().toISOString();
   const { data: document, error: insertError } = await service
     .from("patient_documents")
     .insert({
@@ -101,12 +101,14 @@ export async function POST(request: NextRequest) {
       document_type: documentType,
       title,
       status: "uploading",
-      uploaded_at: now,
     })
     .select("id")
     .single();
 
-  if (insertError || !document) return jsonError("Failed to create document record", 500);
+  if (insertError || !document) {
+    console.error("[patient-portal/documents] Insert failed:", insertError?.message);
+    return jsonError("Failed to create document record", 500);
+  }
 
   // Upload to storage
   const storagePath = buildStoragePath(patient.practitioner_id, patient.id, document.id, file.name);
@@ -178,7 +180,11 @@ export async function POST(request: NextRequest) {
     .single();
 
   return NextResponse.json({
-    document: finalDoc || { id: document.id, title, document_type: documentType },
+    document: finalDoc || { id: document.id, title, document_type: documentType, status: "uploaded", file_name: file.name, uploaded_at: new Date().toISOString() },
     lab_report_id: labReportId,
   }, { status: 201 });
+  } catch (err) {
+    console.error("[patient-portal/documents] Unhandled error:", err);
+    return jsonError("Internal server error", 500);
+  }
 }
