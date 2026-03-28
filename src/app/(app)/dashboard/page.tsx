@@ -42,18 +42,32 @@ export default async function DashboardPage() {
   const queriesRemaining = isFree ? Math.max(0, 2 - queriesUsed) : null;
 
   const supabase = await createClient();
-  const [{ data: patients }, { recentConversations }, partnerships, practitionerPartnerships] = await Promise.all([
-    supabase
-      .from("patients")
-      .select("id, first_name, last_name")
-      .eq("practitioner_id", practitioner.id)
-      .eq("is_archived", false)
-      .order("last_name", { ascending: true })
-      .limit(500),
-    getSidebarData(practitioner.id),
-    getActivePartnerships(),
-    isFree ? Promise.resolve([]) : getPractitionerPartnerships(practitioner.id),
-  ]);
+
+  let patients: { id: string; first_name: string | null; last_name: string | null }[] = [];
+  let recentConversations: ConversationItem[] = [];
+  let partnerships: Awaited<ReturnType<typeof getActivePartnerships>> = [];
+  let practitionerPartnerships: Awaited<ReturnType<typeof getPractitionerPartnerships>> = [];
+
+  try {
+    const [patientsRes, sidebarRes, partnershipsRes, practPartRes] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, first_name, last_name")
+        .eq("practitioner_id", practitioner.id)
+        .eq("is_archived", false)
+        .order("last_name", { ascending: true })
+        .limit(500),
+      getSidebarData(practitioner.id),
+      getActivePartnerships(),
+      isFree ? Promise.resolve([]) : getPractitionerPartnerships(practitioner.id),
+    ]);
+    patients = patientsRes.data || [];
+    recentConversations = sidebarRes.recentConversations;
+    partnerships = partnershipsRes;
+    practitionerPartnerships = practPartRes;
+  } catch (err) {
+    console.error("[Dashboard] Failed to load data:", err);
+  }
 
   const hasConversations = recentConversations.length > 0;
 
