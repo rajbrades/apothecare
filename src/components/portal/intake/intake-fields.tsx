@@ -15,9 +15,28 @@ interface TextFieldProps {
   onChange: (v: string) => void;
   type?: "text" | "email" | "tel" | "date" | "number";
   optional?: boolean;
+  readOnly?: boolean;
 }
 
-export function TextField({ label, hint, placeholder, value, onChange, type = "text", optional }: TextFieldProps) {
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+export function TextField({ label, hint, placeholder, value, onChange, type = "text", optional, readOnly }: TextFieldProps) {
+  const displayValue = type === "tel" ? formatPhone(value) : value;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (type === "tel") {
+      // Store raw digits only
+      onChange(e.target.value.replace(/\D/g, "").slice(0, 10));
+    } else {
+      onChange(e.target.value);
+    }
+  };
+
   return (
     <div>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
@@ -26,11 +45,16 @@ export function TextField({ label, hint, placeholder, value, onChange, type = "t
       </label>
       {hint && <p className="text-[12px] italic text-[var(--color-text-muted)] mb-2">{hint}</p>}
       <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        type={type === "tel" ? "text" : type}
+        value={displayValue}
+        onChange={handleChange}
         placeholder={placeholder}
-        className="w-full px-3.5 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)] transition-all"
+        readOnly={readOnly}
+        className={`w-full px-3.5 py-2.5 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] transition-all ${
+          readOnly
+            ? "bg-[var(--color-surface-tertiary)] cursor-not-allowed opacity-70"
+            : "bg-[var(--color-surface-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)]"
+        }`}
       />
     </div>
   );
@@ -69,15 +93,17 @@ interface SelectFieldProps {
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   hint?: string;
+  topAligned?: boolean;
 }
 
-export function SelectField({ label, value, onChange, options, hint }: SelectFieldProps) {
+export function SelectField({ label, value, onChange, options, hint, topAligned }: SelectFieldProps) {
   return (
-    <div>
+    <div className={topAligned ? "flex flex-col" : ""}>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
         {label}
       </label>
       {hint && <p className="text-[12px] italic text-[var(--color-text-muted)] mb-2">{hint}</p>}
+      {topAligned && !hint && <div className="flex-1" />}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -240,6 +266,7 @@ interface DynamicRowField {
   placeholder: string;
   width?: string;
   autocomplete?: { type: "medication" | "allergen" | "supplement" | "supplement_brand" };
+  select?: { options: string[] };
 }
 
 interface DynamicRowsProps {
@@ -353,6 +380,23 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     className={inputClass}
                     style={field.width ? { maxWidth: field.width } : undefined}
                   />
+                );
+              }
+
+              if (field.select) {
+                return (
+                  <select
+                    key={ci}
+                    value={cellValue}
+                    onChange={(e) => updateCell(ri, ci, e.target.value)}
+                    className={`${inputClass} cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%3E%3Cpath%20d%3D%22M1%201l5%205%205-5%22%20stroke%3D%22%237a7a7a%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_10px_center] pr-8`}
+                    style={field.width ? { maxWidth: field.width } : undefined}
+                  >
+                    <option value="">{field.placeholder}</option>
+                    {field.select.options.map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
                 );
               }
 

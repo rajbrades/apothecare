@@ -23,6 +23,28 @@
   --color-gold-600: #d97706;
   --color-gold-700: #b45309;
 
+  /* Destructive — desaturated wine/rust that pairs with the green brand */
+  --color-destructive-50:  #fdf2f2;
+  --color-destructive-100: #fde2e2;
+  --color-destructive-200: #f9c4c4;
+  --color-destructive-300: #f09898;
+  --color-destructive-400: #d66a6a;
+  --color-destructive-500: #b94a4a;
+  --color-destructive-600: #943535;
+  --color-destructive-700: #7a2e2e;
+  --color-destructive-800: #5c2424;
+  --color-destructive-900: #421c1c;
+
+  /* Warning — warm amber, less aggressive than destructive */
+  --color-warning-50:  #fefbf3;
+  --color-warning-100: #fef3d7;
+  --color-warning-200: #fce4a8;
+  --color-warning-300: #f8cf6d;
+  --color-warning-400: #e5a832;
+  --color-warning-500: #c08920;
+  --color-warning-600: #996c18;
+  --color-warning-700: #7a5614;
+
   --color-surface: #ffffff;
   --color-surface-secondary: #f9fafb;
   --color-surface-tertiary: #efefef;

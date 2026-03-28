@@ -9,6 +9,7 @@ import { FunctionalMedicineIntake } from "@/components/portal/intake/functional-
 export default function IntakePage() {
   const router = useRouter();
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [prefill, setPrefill] = useState<Record<string, string> | null>(null);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +31,9 @@ export default function IntakePage() {
         }
         if (data.template) {
           setTemplateId(data.template.id);
+        }
+        if (data.prefill) {
+          setPrefill(data.prefill);
         }
         setLoading(false);
       })
@@ -79,6 +83,7 @@ export default function IntakePage() {
     <PortalShell maxWidth="3xl">
       <FunctionalMedicineIntake
         templateId={templateId}
+        prefill={prefill ?? undefined}
         onComplete={() => router.push("/portal/dashboard")}
       />
     </PortalShell>

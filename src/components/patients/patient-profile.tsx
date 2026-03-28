@@ -107,6 +107,7 @@ interface DemoField {
 const DEMO_FIELDS: DemoField[] = [
   { key: "email", label: "Email", icon: Mail, type: "email", placeholder: "patient@email.com", format: (v) => <a href={`mailto:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
   { key: "phone", label: "Phone", icon: Phone, type: "tel", placeholder: "(555) 555-1234", format: (v) => <a href={`tel:${v}`} className="hover:text-[var(--color-brand-600)] transition-colors">{v}</a> },
+  { key: "address", label: "Address", icon: MapPin, placeholder: "Street address" },
   { key: "city", label: "City", icon: MapPin, placeholder: "City" },
   { key: "state", label: "State", icon: MapPin, placeholder: "State" },
   { key: "zip_code", label: "Zip", icon: MapPin, placeholder: "Zip code" },
@@ -496,8 +497,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
       {/* Archived banner */}
       {patient.is_archived && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 mb-4 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50">
-          <div className="flex items-center gap-2 text-sm text-amber-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 mb-4 rounded-[var(--radius-md)] border border-[var(--color-warning-200)] bg-[var(--color-warning-50)]">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-warning-700)]">
             <Archive className="w-4 h-4" />
             <span className="font-medium">This patient has been archived.</span>
           </div>
@@ -505,14 +506,14 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
             <button
               onClick={handleArchiveToggle}
               disabled={archiving}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-[var(--radius-md)] transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-warning-700)] bg-[var(--color-warning-100)] hover:bg-[var(--color-warning-200)] rounded-[var(--radius-md)] transition-colors disabled:opacity-50"
             >
               <ArchiveRestore className="w-3.5 h-3.5" />
               {archiving ? "Restoring..." : "Restore"}
             </button>
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-[var(--radius-md)] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-destructive-600)] bg-[var(--color-destructive-50)] hover:bg-[var(--color-destructive-100)] rounded-[var(--radius-md)] transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Permanently Delete
@@ -593,7 +594,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                       </button>
                       <button
                         onClick={() => { setShowMenu(false); setShowDeleteDialog(true); }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--color-destructive-600)] hover:bg-[var(--color-destructive-50)] transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                         Permanently Delete
@@ -942,16 +943,16 @@ function ConfirmDialog({
   onCancel: () => void;
 }) {
   const variantStyles = {
-    warning: "bg-amber-600 hover:bg-amber-700 text-white",
-    danger: "bg-red-600 hover:bg-red-700 text-white",
+    warning: "bg-[var(--color-warning-600)] hover:bg-[var(--color-warning-700)] text-white",
+    danger: "bg-[var(--color-destructive-600)] hover:bg-[var(--color-destructive-700)] text-white",
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0" onClick={onCancel} />
-      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/20" onClick={onCancel} />
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-elevated)] border border-[var(--color-border)] max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-150">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h2>
-        <p className="text-sm text-[var(--color-text-secondary)] mb-6">{description}</p>
+        <p className="text-sm text-[var(--color-text-secondary)] mb-6 leading-relaxed">{description}</p>
         <div className="flex items-center justify-end gap-3">
           <button
             onClick={onCancel}
@@ -1000,18 +1001,18 @@ function PermanentDeleteDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0" onClick={onCancel} />
-      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg max-w-md w-full mx-4 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/20" onClick={onCancel} />
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border)] max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-[var(--color-destructive-50)] border border-[var(--color-destructive-200)] flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-5 h-5 text-[var(--color-destructive-500)]" />
           </div>
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Permanently Delete Patient</h2>
         </div>
 
-        <p className="text-sm text-[var(--color-text-secondary)] mb-2">
-          This action is <strong className="text-red-600">irreversible</strong>. All patient data including visits, documents, lab reports, and supplements will be permanently deleted.
+        <p className="text-sm text-[var(--color-text-secondary)] mb-2 leading-relaxed">
+          This action is <strong className="text-[var(--color-destructive-600)]">irreversible</strong>. All patient data including visits, documents, lab reports, and supplements will be permanently deleted.
         </p>
 
         <p className="text-sm text-[var(--color-text-secondary)] mb-4">
@@ -1023,13 +1024,13 @@ function PermanentDeleteDialog({
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(null); }}
           placeholder={expected}
-          className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-[var(--color-text-muted)]"
+          className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-destructive-200)] focus:border-[var(--color-destructive-300)] placeholder:text-[var(--color-text-muted)]"
           autoFocus
           autoComplete="off"
           spellCheck={false}
         />
 
-        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+        {error && <p className="text-xs text-[var(--color-destructive-600)] mt-2">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 mt-6">
           <button
@@ -1041,7 +1042,7 @@ function PermanentDeleteDialog({
           <button
             onClick={handleSubmit}
             disabled={!isMatch || deleting}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-[var(--radius-md)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-destructive-600)] hover:bg-[var(--color-destructive-700)] rounded-[var(--radius-md)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {deleting ? "Deleting..." : "Permanently Delete"}
           </button>

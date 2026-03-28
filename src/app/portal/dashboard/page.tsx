@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,6 +13,12 @@ import {
   Minus,
   Eye,
   FileEdit,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  FileUp,
+  ExternalLink,
+  X,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 
@@ -37,6 +43,16 @@ interface SignedConsent {
   id: string;
   title: string;
   signed_at: string;
+  content_markdown?: string;
+}
+
+interface PatientDocument {
+  id: string;
+  title: string;
+  document_type: string;
+  status: string;
+  file_name: string;
+  uploaded_at: string;
 }
 
 interface Patient {
@@ -78,6 +94,8 @@ export default function PatientDashboard() {
   const [notes, setNotes] = useState<EncounterNote[]>([]);
   const [signedConsents, setSignedConsents] = useState<SignedConsent[]>([]);
   const [trends, setTrends] = useState<TrendItem[]>([]);
+  const [documents, setDocuments] = useState<PatientDocument[]>([]);
+  const [viewingConsent, setViewingConsent] = useState<SignedConsent | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
@@ -87,18 +105,19 @@ export default function PatientDashboard() {
 
   async function loadData() {
     try {
-      const [meRes, labsRes, notesRes, consentsRes, trendsRes] = await Promise.all([
+      const [meRes, labsRes, notesRes, consentsRes, trendsRes, docsRes] = await Promise.all([
         fetch("/api/patient-portal/me"),
         fetch("/api/patient-portal/me/labs"),
         fetch("/api/patient-portal/me/notes"),
         fetch("/api/patient-portal/me/consents"),
         fetch("/api/patient-portal/me/biomarkers/timeline?mode=overview"),
+        fetch("/api/patient-portal/me/documents"),
       ]);
 
       if (meRes.status === 401) { router.replace("/portal/login"); return; }
 
-      const [meData, labsData, notesData, consentsData, trendsData] = await Promise.all([
-        meRes.json(), labsRes.json(), notesRes.json(), consentsRes.json(), trendsRes.json(),
+      const [meData, labsData, notesData, consentsData, trendsData, docsData] = await Promise.all([
+        meRes.json(), labsRes.json(), notesRes.json(), consentsRes.json(), trendsRes.json(), docsRes.json(),
       ]);
 
       if (!meData.onboarding?.complete) {
@@ -112,6 +131,7 @@ export default function PatientDashboard() {
       setLabs(labsData.labs || []);
       setNotes(notesData.notes || []);
       setTrends(trendsData.trends || []);
+      setDocuments(docsData.documents || []);
       // Show only signed consents
       setSignedConsents(
         (consentsData.consents || []).filter((c: SignedConsent & { signed: boolean }) => c.signed)
@@ -119,6 +139,16 @@ export default function PatientDashboard() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function openDocumentFile(docId: string, docType: string) {
+    if (docType === "intake_form") return; // No downloadable file for intake submissions
+    try {
+      const res = await fetch(`/api/patient-portal/me/documents/${docId}/url`);
+      if (!res.ok) return;
+      const { url } = await res.json();
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch { /* silent */ }
   }
 
   if (loading || !onboardingComplete) {
@@ -237,14 +267,16 @@ export default function PatientDashboard() {
             </h2>
             <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
               {signedConsents.map((consent) => (
-                <div
+                <button
                   key={consent.id}
-                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)]"
+                  type="button"
+                  onClick={() => setViewingConsent(consent)}
+                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors w-full text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <ScrollText className="h-4 w-4 text-[var(--color-text-muted)] flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
                         {consent.title}
                       </p>
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -252,12 +284,55 @@ export default function PatientDashboard() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs text-emerald-600 font-medium">Signed</span>
-                </div>
+                  <span className="text-xs text-[var(--color-brand-600)] font-medium">Signed</span>
+                </button>
               ))}
             </div>
           </section>
         )}
+        {/* Upload documents */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+            Upload Documents
+          </h2>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Share lab results, imaging reports, or other health documents with your provider.
+          </p>
+          <PatientDocumentUpload onUploadComplete={(doc) => setDocuments((prev) => [doc, ...prev])} />
+          {documents.length > 0 && (
+            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden mt-3">
+              {documents.map((doc) => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => openDocumentFile(doc.id, doc.document_type)}
+                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors w-full text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileUp className="h-4 w-4 text-[var(--color-text-muted)] flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
+                        {doc.title}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        {doc.document_type.replace(/_/g, " ")} · Uploaded {formatDate(doc.uploaded_at)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium ${doc.status === "extracted" || doc.status === "uploaded" ? "text-[var(--color-brand-600)]" : doc.status === "error" ? "text-[var(--color-destructive-500)]" : "text-[var(--color-warning-500)]"}`}>
+                      {doc.status === "extracted" ? "Processed" : doc.status === "uploaded" ? "Received" : doc.status === "error" ? "Error" : "Processing..."}
+                    </span>
+                    {doc.document_type !== "intake_form" && (
+                      <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* Your Rights — HIPAA access links */}
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
@@ -295,6 +370,33 @@ export default function PatientDashboard() {
           </div>
         </section>
       </div>
+
+      {/* Consent viewer modal */}
+      {viewingConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/20" onClick={() => setViewingConsent(null)} />
+          <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border)] max-w-2xl w-full max-h-[80vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+              <div>
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{viewingConsent.title}</h2>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Signed {formatDate(viewingConsent.signed_at)}</p>
+              </div>
+              <button onClick={() => setViewingConsent(null)} className="p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-secondary)] transition-colors">
+                <X className="w-4 h-4 text-[var(--color-text-muted)]" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {viewingConsent.content_markdown ? (
+                <div className="prose prose-sm max-w-none text-[var(--color-text-secondary)] [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_p]:leading-relaxed whitespace-pre-wrap">
+                  {viewingConsent.content_markdown}
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--color-text-muted)]">Consent document content is not available for preview.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </PortalShell>
   );
 }
@@ -449,6 +551,164 @@ function PortalTrendsGrid({ trends }: { trends: TrendItem[] }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+const UPLOAD_DOCUMENT_TYPES = [
+  { value: "lab_report", label: "Lab Report" },
+  { value: "imaging", label: "Imaging / Radiology" },
+  { value: "outside_encounter_note", label: "Outside Provider Notes" },
+  { value: "insurance", label: "Insurance Document" },
+  { value: "other", label: "Other" },
+];
+
+function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: PatientDocument) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [docType, setDocType] = useState("");
+  const [title, setTitle] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (f: File) => {
+    setError("");
+    setSuccess(false);
+    if (f.type !== "application/pdf") {
+      setError("Only PDF files are accepted");
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setError("File exceeds 10MB limit");
+      return;
+    }
+    setFile(f);
+  };
+
+  const handleUpload = async () => {
+    if (!file || !docType) return;
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("document_type", docType);
+      if (title.trim()) formData.append("title", title.trim());
+
+      const res = await fetch("/api/patient-portal/me/documents", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Upload failed");
+        return;
+      }
+
+      const data = await res.json();
+      setSuccess(true);
+      setFile(null);
+      setDocType("");
+      setTitle("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      onUploadComplete(data.document);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      setError("Upload failed. Please check your connection.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
+            Document Type
+          </label>
+          <select
+            value={docType}
+            onChange={(e) => setDocType(e.target.value)}
+            className="w-full px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%3E%3Cpath%20d%3D%22M1%201l5%205%205-5%22%20stroke%3D%22%237a7a7a%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_14px_center] pr-9"
+          >
+            <option value="">Select type...</option>
+            {UPLOAD_DOCUMENT_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
+            Title <span className="font-normal italic normal-case tracking-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Quest Blood Panel March 2026"
+            className="w-full px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
+          dragOver
+            ? "border-[var(--color-brand-400)] bg-[var(--color-brand-50)]"
+            : file
+            ? "border-emerald-300 bg-emerald-50"
+            : "border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)]/30"
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+        />
+        {file ? (
+          <>
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{file.name}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{(file.size / 1024 / 1024).toFixed(1)} MB · Click to change</p>
+          </>
+        ) : (
+          <>
+            <Upload className="h-5 w-5 text-[var(--color-text-muted)]" />
+            <p className="text-sm text-[var(--color-text-muted)]">
+              <span className="font-medium text-[var(--color-brand-600)]">Click to upload</span> or drag and drop
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)]">PDF only, max 10MB</p>
+          </>
+        )}
+      </div>
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      {success && <p className="text-xs text-[var(--color-brand-600)]">Document uploaded successfully. Your provider will be notified.</p>}
+
+      {file && docType && (
+        <button
+          onClick={handleUpload}
+          disabled={uploading}
+          className={`w-full px-4 py-3 text-sm font-semibold rounded-[var(--radius-md)] transition-all flex items-center justify-center gap-2 ${
+            uploading
+              ? "bg-[var(--color-surface-tertiary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] cursor-wait"
+              : "text-white bg-[var(--color-brand-900)] hover:bg-[var(--color-brand-700)] hover:-translate-y-px hover:shadow-lg"
+          }`}
+        >
+          {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</> : "Upload Document"}
+        </button>
+      )}
     </div>
   );
 }
