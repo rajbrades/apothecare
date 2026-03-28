@@ -310,6 +310,63 @@ function RecommendationSection({
   );
 }
 
+// ── Re-populate intake banner ───────────────────────────────────────────
+
+function RepopulateIntakeBanner({
+  patient,
+  documents,
+  onRepopulated,
+}: {
+  patient: Patient;
+  documents: PatientDocument[];
+  onRepopulated: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  // Show if there's an intake form document but the patient has no intake-specific fields populated
+  const hasIntakeDoc = documents.some((d) => d.document_type === "intake_form" && d.status === "extracted");
+  const patientAny = patient as unknown as Record<string, unknown>;
+  const hasIntakeData = Boolean(
+    patientAny.diagnoses || patientAny.symptom_scores || patientAny.lifestyle ||
+    patientAny.family_history_conditions || patientAny.surgeries || patientAny.prior_labs || patientAny.health_goals
+  );
+
+  if (!hasIntakeDoc || hasIntakeData || done) return null;
+
+  async function handleRepopulate() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/patients/${patient.id}/repopulate-intake`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(`Updated ${data.fields_updated?.length || 0} fields from intake`);
+      setDone(true);
+      onRepopulated();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to re-populate");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-amber-50 border border-amber-200">
+      <div>
+        <p className="text-xs font-medium text-amber-800">Intake form data available</p>
+        <p className="text-[11px] text-amber-600 mt-0.5">Patient submitted an intake form but some fields weren&apos;t synced to their record.</p>
+      </div>
+      <button
+        onClick={handleRepopulate}
+        disabled={loading}
+        className="px-3 py-1.5 text-xs font-medium rounded-md bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 flex-shrink-0"
+      >
+        {loading ? "Syncing…" : "Sync Now"}
+      </button>
+    </div>
+  );
+}
+
 // ── Intake-sourced overview sections ────────────────────────────────────
 
 function IntakeShell({ title, children, empty }: { title: string; children: React.ReactNode; empty?: boolean }) {
@@ -801,6 +858,11 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               patient={patient}
               extractedDocCount={extractedDocCount}
               onPopulated={handlePopulated}
+            />
+            <RepopulateIntakeBanner
+              patient={patient}
+              documents={documents}
+              onRepopulated={handlePopulated}
             />
             {/* Demographics */}
             <DemographicsCard patient={patient} onSaved={handleFieldSaved} />
