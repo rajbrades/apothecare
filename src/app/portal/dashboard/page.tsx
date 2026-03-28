@@ -17,6 +17,8 @@ import {
   Loader2,
   CheckCircle2,
   FileUp,
+  ExternalLink,
+  X,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 
@@ -41,6 +43,7 @@ interface SignedConsent {
   id: string;
   title: string;
   signed_at: string;
+  content_markdown?: string;
 }
 
 interface PatientDocument {
@@ -92,6 +95,7 @@ export default function PatientDashboard() {
   const [signedConsents, setSignedConsents] = useState<SignedConsent[]>([]);
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [documents, setDocuments] = useState<PatientDocument[]>([]);
+  const [viewingConsent, setViewingConsent] = useState<SignedConsent | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
@@ -135,6 +139,16 @@ export default function PatientDashboard() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function openDocumentFile(docId: string, docType: string) {
+    if (docType === "intake_form") return; // No downloadable file for intake submissions
+    try {
+      const res = await fetch(`/api/patient-portal/me/documents/${docId}/url`);
+      if (!res.ok) return;
+      const { url } = await res.json();
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch { /* silent */ }
   }
 
   if (loading || !onboardingComplete) {
@@ -253,14 +267,16 @@ export default function PatientDashboard() {
             </h2>
             <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
               {signedConsents.map((consent) => (
-                <div
+                <button
                   key={consent.id}
-                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)]"
+                  type="button"
+                  onClick={() => setViewingConsent(consent)}
+                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors w-full text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <ScrollText className="h-4 w-4 text-[var(--color-text-muted)] flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
                         {consent.title}
                       </p>
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -268,8 +284,8 @@ export default function PatientDashboard() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs text-emerald-600 font-medium">Signed</span>
-                </div>
+                  <span className="text-xs text-[var(--color-brand-600)] font-medium">Signed</span>
+                </button>
               ))}
             </div>
           </section>
@@ -286,14 +302,16 @@ export default function PatientDashboard() {
           {documents.length > 0 && (
             <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden mt-3">
               {documents.map((doc) => (
-                <div
+                <button
                   key={doc.id}
-                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)]"
+                  type="button"
+                  onClick={() => openDocumentFile(doc.id, doc.document_type)}
+                  className="flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-surface-secondary)] transition-colors w-full text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <FileUp className="h-4 w-4 text-[var(--color-text-muted)] flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-600)]">
                         {doc.title}
                       </p>
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
@@ -301,10 +319,15 @@ export default function PatientDashboard() {
                       </p>
                     </div>
                   </div>
-                  <span className={`text-xs font-medium ${doc.status === "extracted" || doc.status === "uploaded" ? "text-emerald-600" : doc.status === "error" ? "text-red-500" : "text-amber-500"}`}>
-                    {doc.status === "extracted" ? "Processed" : doc.status === "uploaded" ? "Received" : doc.status === "error" ? "Error" : "Processing..."}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium ${doc.status === "extracted" || doc.status === "uploaded" ? "text-[var(--color-brand-600)]" : doc.status === "error" ? "text-[var(--color-destructive-500)]" : "text-[var(--color-warning-500)]"}`}>
+                      {doc.status === "extracted" ? "Processed" : doc.status === "uploaded" ? "Received" : doc.status === "error" ? "Error" : "Processing..."}
+                    </span>
+                    {doc.document_type !== "intake_form" && (
+                      <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
+                </button>
               ))}
             </div>
           )}
@@ -347,6 +370,33 @@ export default function PatientDashboard() {
           </div>
         </section>
       </div>
+
+      {/* Consent viewer modal */}
+      {viewingConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/20" onClick={() => setViewingConsent(null)} />
+          <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border)] max-w-2xl w-full max-h-[80vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+              <div>
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{viewingConsent.title}</h2>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Signed {formatDate(viewingConsent.signed_at)}</p>
+              </div>
+              <button onClick={() => setViewingConsent(null)} className="p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-secondary)] transition-colors">
+                <X className="w-4 h-4 text-[var(--color-text-muted)]" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {viewingConsent.content_markdown ? (
+                <div className="prose prose-sm max-w-none text-[var(--color-text-secondary)] [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_p]:leading-relaxed whitespace-pre-wrap">
+                  {viewingConsent.content_markdown}
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--color-text-muted)]">Consent document content is not available for preview.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </PortalShell>
   );
 }
