@@ -310,6 +310,151 @@ function RecommendationSection({
   );
 }
 
+// ── Intake-sourced overview sections ────────────────────────────────────
+
+function IntakeShell({ title, children, empty }: { title: string; children: React.ReactNode; empty?: boolean }) {
+  if (empty) return null;
+  return (
+    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] p-4">
+      <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function DiagnosesSection({ diagnoses }: { diagnoses: string[] | null }) {
+  if (!diagnoses || diagnoses.length === 0) return null;
+  return (
+    <IntakeShell title="Diagnoses">
+      <div className="flex flex-wrap gap-1.5">
+        {diagnoses.map((d, i) => (
+          <span key={i} className="px-2.5 py-1 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-full">{d}</span>
+        ))}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function SymptomScoresSection({ scores }: { scores: Record<string, number> | null }) {
+  if (!scores) return null;
+  const entries = Object.entries(scores).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a);
+  if (entries.length === 0) return null;
+  return (
+    <IntakeShell title="Symptom Scores (patient-reported)">
+      <div className="space-y-1.5">
+        {entries.map(([name, score]) => (
+          <div key={name} className="flex items-center gap-3">
+            <span className="w-32 text-xs text-[var(--color-text-secondary)] capitalize truncate">{name.replace(/_/g, " ")}</span>
+            <div className="flex-1 h-2.5 bg-[var(--color-surface-secondary)] rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${score * 10}%`,
+                  backgroundColor: score >= 7 ? "var(--color-biomarker-out-of-range)" : score >= 4 ? "var(--color-biomarker-borderline)" : "var(--color-biomarker-optimal)",
+                }}
+              />
+            </div>
+            <span className="text-xs font-mono w-6 text-right text-[var(--color-text-muted)]">{score}/10</span>
+          </div>
+        ))}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function LifestyleSection({ lifestyle }: { lifestyle: Record<string, unknown> | null }) {
+  if (!lifestyle) return null;
+  const entries = Object.entries(lifestyle).filter(([, v]) => v != null && v !== "");
+  if (entries.length === 0) return null;
+  return (
+    <IntakeShell title="Lifestyle">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+        {entries.map(([key, val]) => (
+          <div key={key}>
+            <span className="text-[11px] text-[var(--color-text-muted)] capitalize">{key.replace(/_/g, " ")}</span>
+            <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
+              {Array.isArray(val) ? val.join(", ") : String(val)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function FamilyHistorySection({ conditions, detail }: { conditions: string[] | null; detail: string | null }) {
+  if ((!conditions || conditions.length === 0) && !detail) return null;
+  return (
+    <IntakeShell title="Family History">
+      {conditions && conditions.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {conditions.map((c, i) => (
+            <span key={i} className="px-2 py-0.5 text-[11px] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{c}</span>
+          ))}
+        </div>
+      )}
+      {detail && <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">{detail}</p>}
+    </IntakeShell>
+  );
+}
+
+function GeneticsSection({ genetic_testing, apoe_genotype, mthfr_variants }: { genetic_testing: string | null; apoe_genotype: string | null; mthfr_variants: string | null }) {
+  if (!genetic_testing && !apoe_genotype && !mthfr_variants) return null;
+  return (
+    <IntakeShell title="Genetics">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+        {genetic_testing && (
+          <div><span className="text-[11px] text-[var(--color-text-muted)]">Testing</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5">{genetic_testing}</p></div>
+        )}
+        {apoe_genotype && (
+          <div><span className="text-[11px] text-[var(--color-text-muted)]">APOE Genotype</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5 font-mono">{apoe_genotype}</p></div>
+        )}
+        {mthfr_variants && (
+          <div><span className="text-[11px] text-[var(--color-text-muted)]">MTHFR Variants</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5 font-mono">{mthfr_variants}</p></div>
+        )}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function SurgeriesSection({ surgeries }: { surgeries: Array<{name: string; year: string}> | null }) {
+  if (!surgeries || surgeries.length === 0) return null;
+  return (
+    <IntakeShell title="Surgeries / Hospitalizations">
+      <div className="space-y-1">
+        {surgeries.map((s, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            <span className="text-[var(--color-text-primary)]">{s.name}</span>
+            {s.year && <span className="text-[var(--color-text-muted)]">({s.year})</span>}
+          </div>
+        ))}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function PriorLabsSection({ priorLabs }: { priorLabs: string[] | null }) {
+  if (!priorLabs || priorLabs.length === 0) return null;
+  return (
+    <IntakeShell title="Prior Labs (patient-reported)">
+      <div className="flex flex-wrap gap-1.5">
+        {priorLabs.map((lab, i) => (
+          <span key={i} className="px-2 py-0.5 text-[11px] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{lab}</span>
+        ))}
+      </div>
+    </IntakeShell>
+  );
+}
+
+function HealthGoalsSection({ goals }: { goals: string | null }) {
+  if (!goals) return null;
+  return (
+    <IntakeShell title="Health Goals">
+      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">{goals}</p>
+    </IntakeShell>
+  );
+}
+
 export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements, initialTab = "overview" }: PatientProfileProps) {
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
@@ -708,6 +853,22 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               onSaved={handleFieldSaved}
               tagColor="red"
             />
+            {/* Intake-sourced sections */}
+            <DiagnosesSection diagnoses={(patient as Record<string, unknown>).diagnoses as string[] | null} />
+            <SymptomScoresSection scores={(patient as Record<string, unknown>).symptom_scores as Record<string, number> | null} />
+            <LifestyleSection lifestyle={(patient as Record<string, unknown>).lifestyle as Record<string, unknown> | null} />
+            <FamilyHistorySection
+              conditions={(patient as Record<string, unknown>).family_history_conditions as string[] | null}
+              detail={(patient as Record<string, unknown>).family_history_detail as string | null}
+            />
+            <GeneticsSection
+              genetic_testing={(patient as Record<string, unknown>).genetic_testing as string | null}
+              apoe_genotype={(patient as Record<string, unknown>).apoe_genotype as string | null}
+              mthfr_variants={(patient as Record<string, unknown>).mthfr_variants as string | null}
+            />
+            <SurgeriesSection surgeries={(patient as Record<string, unknown>).surgeries as Array<{name: string; year: string}> | null} />
+            <PriorLabsSection priorLabs={(patient as Record<string, unknown>).prior_labs as string[] | null} />
+            <HealthGoalsSection goals={(patient as Record<string, unknown>).health_goals as string | null} />
             <EditableTextSection
               title="Notes"
               value={patient.notes}

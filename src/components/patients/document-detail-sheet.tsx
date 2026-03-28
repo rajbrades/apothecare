@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { X, ExternalLink, Loader2, FileText, RefreshCw, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -45,6 +45,93 @@ function formatFileSize(bytes: number): string {
 }
 
 const PROCESSING_STATUSES = new Set(["uploading", "uploaded", "extracting"]);
+
+/** Render extracted data values in a human-readable way instead of raw JSON */
+function renderExtractedValue(key: string, value: unknown): ReactNode {
+  if (value == null || value === "") return <span className="text-[var(--color-text-muted)] italic">—</span>;
+
+  // Simple string/number
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return <span>{String(value)}</span>;
+  }
+
+  // Arrays
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className="text-[var(--color-text-muted)] italic">None</span>;
+
+    // Array of objects (surgeries, hospitalizations)
+    if (typeof value[0] === "object" && value[0] !== null && !Array.isArray(value[0])) {
+      return (
+        <ul className="space-y-1 mt-0.5">
+          {value.map((item, i) => {
+            const obj = item as Record<string, unknown>;
+            const parts = Object.values(obj).filter(Boolean).map(String);
+            return <li key={i} className="flex items-start gap-1.5"><span className="text-[var(--color-text-muted)]">•</span>{parts.join(" — ")}</li>;
+          })}
+        </ul>
+      );
+    }
+
+    // Array of strings
+    return (
+      <div className="flex flex-wrap gap-1 mt-0.5">
+        {value.map((item, i) => (
+          <span key={i} className="inline-block px-2 py-0.5 text-[11px] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full">
+            {String(item)}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  // Objects (lifestyle, symptom_scores)
+  if (typeof value === "object" && value !== null) {
+    const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v != null && v !== "");
+    if (entries.length === 0) return <span className="text-[var(--color-text-muted)] italic">—</span>;
+
+    // Symptom scores: show as bar chart-like display
+    if (key === "symptom_scores") {
+      return (
+        <div className="space-y-1 mt-1">
+          {entries.map(([k, v]) => {
+            const score = Number(v) || 0;
+            return (
+              <div key={k} className="flex items-center gap-2">
+                <span className="w-24 truncate capitalize text-[11px] text-[var(--color-text-muted)]">{k.replace(/_/g, " ")}</span>
+                <div className="flex-1 h-2 bg-[var(--color-surface-secondary)] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${score * 10}%`,
+                      backgroundColor: score >= 7 ? "var(--color-biomarker-out-of-range)" : score >= 4 ? "var(--color-biomarker-borderline)" : "var(--color-biomarker-optimal)",
+                    }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono w-4 text-right">{score}</span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Generic object: key-value list
+    return (
+      <div className="space-y-0.5 mt-0.5">
+        {entries.map(([k, v]) => (
+          <div key={k} className="flex items-start gap-2">
+            <span className="text-[11px] text-[var(--color-text-muted)] capitalize w-28 flex-shrink-0">{k.replace(/_/g, " ")}</span>
+            <span className="text-[11px] text-[var(--color-text-secondary)]">
+              {Array.isArray(v) ? v.join(", ") : String(v)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <span>{String(value)}</span>;
+}
 
 export function DocumentDetailSheet({ documentId, patientId, patientName, onClose, onRetried }: DocumentDetailSheetProps) {
   const [doc, setDoc] = useState<DocumentData | null>(null);
@@ -233,14 +320,14 @@ export function DocumentDetailSheet({ documentId, patientId, patientName, onClos
                     {extractedEntries.map(([key, value]) => (
                       <div
                         key={key}
-                        className="flex items-start justify-between py-1.5 px-2 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-secondary)] transition-colors"
+                        className="py-1.5 px-2 rounded-[var(--radius-sm)] hover:bg-[var(--color-surface-secondary)] transition-colors"
                       >
-                        <span className="text-xs font-medium text-[var(--color-text-muted)] capitalize">
+                        <span className="text-xs font-medium text-[var(--color-text-muted)] capitalize block mb-0.5">
                           {key.replace(/_/g, " ")}
                         </span>
-                        <span className="text-xs text-[var(--color-text-secondary)] text-right ml-4 max-w-[60%] break-words">
-                          {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                        </span>
+                        <div className="text-xs text-[var(--color-text-secondary)]">
+                          {renderExtractedValue(key, value)}
+                        </div>
                       </div>
                     ))}
                   </div>
