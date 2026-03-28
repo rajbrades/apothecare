@@ -163,7 +163,6 @@ function SourceRow({ source, locked }: { source: EvidenceSource; locked?: boolea
           target="_blank"
           rel="noopener noreferrer"
           className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()}
         >
           <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
         </a>
