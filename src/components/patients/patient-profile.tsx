@@ -633,7 +633,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     { key: "documents", label: `Documents (${documents.length + labReports.length})`, icon: FileText },
     { key: "trends", label: "Trends", icon: TrendingUp },
     { key: "prechart", label: "Pre-Chart", icon: ClipboardList },
-    { key: "ifm_matrix", label: "IFM Matrix", icon: Grid3x3 },
+    { key: "ifm_matrix", label: "IFM", icon: Grid3x3 },
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
     { key: "timeline", label: "Timeline", icon: Clock },
     { key: "fm_timeline", label: "FM Timeline", icon: GitBranch },
