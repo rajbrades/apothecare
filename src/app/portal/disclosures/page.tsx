@@ -11,6 +11,7 @@ interface Disclosure {
   action: string;
   resource_type: string;
   accessed_at: string;
+  accessed_by: string;
   detail: string | null;
 }
 
@@ -90,8 +91,8 @@ export default function DisclosuresPage() {
                 >
                   <div>
                     <p className="text-sm text-[var(--color-text-primary)]">
-                      <span className="font-medium">{d.action}</span>{" "}
-                      <span className="text-[var(--color-text-secondary)]">{d.resource_type}</span>
+                      <span className="font-medium">{d.accessed_by}</span>{" "}
+                      <span className="text-[var(--color-text-secondary)]">{d.action.toLowerCase()} {d.resource_type}</span>
                     </p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                       {formatDate(d.accessed_at)}

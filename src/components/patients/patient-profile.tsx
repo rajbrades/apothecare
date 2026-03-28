@@ -318,8 +318,8 @@ function RepopulateIntakeBanner({
   onRepopulated,
 }: {
   patient: Patient;
-  documents: PatientDocument[];
-  onRepopulated: () => void;
+  documents: Pick<PatientDocument, "document_type" | "status">[];
+  onRepopulated: (data?: Partial<Patient>) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -392,9 +392,9 @@ function DiagnosesSection({ diagnoses }: { diagnoses: string[] | null }) {
   );
 }
 
-function SymptomScoresSection({ scores }: { scores: Record<string, number> | null }) {
+function SymptomScoresSection({ scores }: { scores: Record<string, number | undefined> | null }) {
   if (!scores) return null;
-  const entries = Object.entries(scores).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a);
+  const entries = Object.entries(scores).filter(([, v]) => v != null && v > 0).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0)) as [string, number][];
   if (entries.length === 0) return null;
   return (
     <IntakeShell title="Symptom Scores (patient-reported)">
@@ -541,8 +541,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     setPatient((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  const handlePopulated = useCallback((data: Partial<Patient>) => {
-    setPatient((prev) => ({ ...prev, ...data }));
+  const handlePopulated = useCallback((data?: Partial<Patient>) => {
+    if (data) setPatient((prev) => ({ ...prev, ...data }));
   }, []);
 
   const handleMatrixUpdate = useCallback(async (matrix: import("@/types/database").IFMMatrix) => {
@@ -916,21 +916,21 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               tagColor="red"
             />
             {/* Intake-sourced sections */}
-            <DiagnosesSection diagnoses={(patient as Record<string, unknown>).diagnoses as string[] | null} />
-            <SymptomScoresSection scores={(patient as Record<string, unknown>).symptom_scores as Record<string, number> | null} />
-            <LifestyleSection lifestyle={(patient as Record<string, unknown>).lifestyle as Record<string, unknown> | null} />
+            <DiagnosesSection diagnoses={patient.diagnoses} />
+            <SymptomScoresSection scores={patient.symptom_scores} />
+            <LifestyleSection lifestyle={patient.lifestyle} />
             <FamilyHistorySection
-              conditions={(patient as Record<string, unknown>).family_history_conditions as string[] | null}
-              detail={(patient as Record<string, unknown>).family_history_detail as string | null}
+              conditions={patient.family_history_conditions}
+              detail={patient.family_history_detail}
             />
             <GeneticsSection
-              genetic_testing={(patient as Record<string, unknown>).genetic_testing as string | null}
-              apoe_genotype={(patient as Record<string, unknown>).apoe_genotype as string | null}
-              mthfr_variants={(patient as Record<string, unknown>).mthfr_variants as string | null}
+              genetic_testing={patient.genetic_testing}
+              apoe_genotype={patient.apoe_genotype}
+              mthfr_variants={patient.mthfr_variants}
             />
-            <SurgeriesSection surgeries={(patient as Record<string, unknown>).surgeries as Array<{name: string; year: string}> | null} />
-            <PriorLabsSection priorLabs={(patient as Record<string, unknown>).prior_labs as string[] | null} />
-            <HealthGoalsSection goals={(patient as Record<string, unknown>).health_goals as string | null} />
+            <SurgeriesSection surgeries={patient.surgeries} />
+            <PriorLabsSection priorLabs={patient.prior_labs} />
+            <HealthGoalsSection goals={patient.health_goals} />
             <EditableTextSection
               title="Notes"
               value={patient.notes}

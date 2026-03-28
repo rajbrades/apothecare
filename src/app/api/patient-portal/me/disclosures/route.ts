@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
 
     const service = createServiceClient();
 
-    // Query audit logs where the resource is this patient's data
+    // Query audit logs where the resource is this patient's data, join practitioner name
     let query = service
       .from("audit_logs")
-      .select("id, action, resource_type, created_at, detail")
+      .select("id, action, resource_type, created_at, detail, practitioner_id, practitioners(full_name)")
       .eq("resource_id", patient.id)
       .in("resource_type", ["patient", "lab_report", "visit", "consent", "intake"])
       .order("created_at", { ascending: false })
@@ -59,13 +59,32 @@ export async function GET(request: NextRequest) {
       resource_type: string;
       created_at: string;
       detail: Record<string, unknown> | null;
-    }) => ({
-      id: log.id,
-      action: formatAction(log.action),
-      resource_type: formatResourceType(log.resource_type),
-      accessed_at: log.created_at,
-      detail: log.detail?.purpose || null,
-    }));
+      practitioner_id: string;
+      practitioners: { full_name: string } | null;
+    }) => {
+      // Determine who performed the action
+      const isPatientAction = ["patient_view_lab", "patient_view_note", "consent_signed", "intake_submitted"].includes(log.action);
+      const via = log.detail?.via as string | undefined;
+      const isPatientPortal = via === "patient_portal";
+
+      let accessed_by: string;
+      if (isPatientAction || isPatientPortal) {
+        accessed_by = "You";
+      } else if (log.practitioners?.full_name) {
+        accessed_by = log.practitioners.full_name;
+      } else {
+        accessed_by = "Your provider";
+      }
+
+      return {
+        id: log.id,
+        action: formatAction(log.action),
+        resource_type: formatResourceType(log.resource_type),
+        accessed_at: log.created_at,
+        accessed_by,
+        detail: log.detail?.purpose || null,
+      };
+    });
 
     const nextCursor = disclosures.length === limit
       ? disclosures[disclosures.length - 1].accessed_at
