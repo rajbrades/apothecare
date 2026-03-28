@@ -51,8 +51,8 @@ function CitationLink({
     href?.includes("scholar.google.com/scholar");
 
   if (isCitation && metaArr && metaArr.length > 0) {
-    // Multiple citations → render badge list (up to 3)
-    const badges = metaArr
+    // Multiple citations → render badge list (up to 3), deduplicated by ragSource
+    const allBadges = metaArr
       .filter((m) => m.evidenceLevel)
       .map((m) => ({
         level: m.evidenceLevel as EvidenceLevel,
@@ -64,6 +64,17 @@ function CitationLink({
         origin: m.origin,
         ragSource: m.ragSource,
       }));
+
+    // Deduplicate: for RAG citations from the same source, keep only the first
+    const seen = new Set<string>();
+    const badges = allBadges.filter((b) => {
+      if (b.ragSource) {
+        const key = `${b.ragSource}:${b.title}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+      }
+      return true;
+    });
 
     if (badges.length > 1) {
       return <EvidenceBadgeList citations={badges} verifyContext={verifyCtx} />;

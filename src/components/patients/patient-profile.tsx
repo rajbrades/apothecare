@@ -369,12 +369,24 @@ function RepopulateIntakeBanner({
 
 // ── Intake-sourced overview sections ────────────────────────────────────
 
-function IntakeShell({ title, children, empty }: { title: string; children: React.ReactNode; empty?: boolean }) {
+function IntakeShell({ title, icon, children, empty }: { title: string; icon?: React.ReactNode; children: React.ReactNode; empty?: boolean }) {
   if (empty) return null;
   return (
-    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] p-4">
-      <h3 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">{title}</h3>
-      {children}
+    <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
+        {icon && <span className="text-[var(--color-text-muted)]">{icon}</span>}
+        <h3 className="text-[11px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">{title}</h3>
+      </div>
+      <div className="px-4 py-3">{children}</div>
+    </div>
+  );
+}
+
+function IntakeField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <span className="block text-[11px] text-[var(--color-text-muted)] mb-0.5">{label}</span>
+      <p className={`text-sm text-[var(--color-text-primary)] ${mono ? "font-[var(--font-mono)]" : ""}`}>{value}</p>
     </div>
   );
 }
@@ -398,11 +410,11 @@ function SymptomScoresSection({ scores }: { scores: Record<string, number | unde
   if (entries.length === 0) return null;
   return (
     <IntakeShell title="Symptom Scores (patient-reported)">
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {entries.map(([name, score]) => (
           <div key={name} className="flex items-center gap-3">
-            <span className="w-32 text-xs text-[var(--color-text-secondary)] capitalize truncate">{name.replace(/_/g, " ")}</span>
-            <div className="flex-1 h-2.5 bg-[var(--color-surface-secondary)] rounded-full overflow-hidden">
+            <span className="w-36 text-xs text-[var(--color-text-secondary)] capitalize truncate">{name.replace(/_/g, " ")}</span>
+            <div className="flex-1 h-2 bg-[var(--color-surface-secondary)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -411,7 +423,7 @@ function SymptomScoresSection({ scores }: { scores: Record<string, number | unde
                 }}
               />
             </div>
-            <span className="text-xs font-mono w-6 text-right text-[var(--color-text-muted)]">{score}/10</span>
+            <span className="text-xs font-[var(--font-mono)] w-8 text-right text-[var(--color-text-muted)]">{score}/10</span>
           </div>
         ))}
       </div>
@@ -419,21 +431,67 @@ function SymptomScoresSection({ scores }: { scores: Record<string, number | unde
   );
 }
 
+const LIFESTYLE_GROUPS: { label: string; keys: string[] }[] = [
+  { label: "Substance Use", keys: ["alcohol", "tobacco", "cannabis", "caffeine"] },
+  { label: "Diet & Nutrition", keys: ["diet_type", "meals_per_day", "sugar_intake", "water_intake", "skip_breakfast", "food_triggers"] },
+  { label: "Sleep", keys: ["sleep_hours", "sleep_bedtime"] },
+  { label: "Exercise", keys: ["exercise_freq", "exercise_type", "exercise_tolerance"] },
+  { label: "Stress & Environment", keys: ["stress_level", "stressors", "env_exposures"] },
+];
+
+function formatLifestyleLabel(key: string): string {
+  const labels: Record<string, string> = {
+    alcohol: "Alcohol", tobacco: "Tobacco", cannabis: "Cannabis", caffeine: "Caffeine",
+    diet_type: "Diet", meals_per_day: "Meals/Day", sugar_intake: "Sugar (1-10)", water_intake: "Water (oz)",
+    skip_breakfast: "Skips Breakfast", food_triggers: "Food Triggers",
+    sleep_hours: "Hours", sleep_bedtime: "Bedtime",
+    exercise_freq: "Frequency", exercise_type: "Type", exercise_tolerance: "Tolerance",
+    stress_level: "Level (1-10)", stressors: "Stressors", env_exposures: "Exposures",
+  };
+  return labels[key] || key.replace(/_/g, " ");
+}
+
 function LifestyleSection({ lifestyle }: { lifestyle: Record<string, unknown> | null }) {
   if (!lifestyle) return null;
-  const entries = Object.entries(lifestyle).filter(([, v]) => v != null && v !== "");
-  if (entries.length === 0) return null;
+  const allEntries = Object.entries(lifestyle).filter(([, v]) => v != null && v !== "");
+  if (allEntries.length === 0) return null;
+
+  const entryMap = new Map(allEntries);
+  const renderedKeys = new Set<string>();
+
   return (
     <IntakeShell title="Lifestyle">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        {entries.map(([key, val]) => (
-          <div key={key}>
-            <span className="text-[11px] text-[var(--color-text-muted)] capitalize">{key.replace(/_/g, " ")}</span>
-            <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-              {Array.isArray(val) ? val.join(", ") : String(val)}
-            </p>
+      <div className="space-y-4">
+        {LIFESTYLE_GROUPS.map((group) => {
+          const items = group.keys.filter((k) => entryMap.has(k));
+          if (items.length === 0) return null;
+          items.forEach((k) => renderedKeys.add(k));
+          return (
+            <div key={group.label}>
+              <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">{group.label}</p>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
+                {items.map((key) => (
+                  <IntakeField
+                    key={key}
+                    label={formatLifestyleLabel(key)}
+                    value={Array.isArray(entryMap.get(key)) ? (entryMap.get(key) as string[]).join(", ") : String(entryMap.get(key))}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {/* Ungrouped entries */}
+        {allEntries.filter(([k]) => !renderedKeys.has(k)).length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Other</p>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
+              {allEntries.filter(([k]) => !renderedKeys.has(k)).map(([key, val]) => (
+                <IntakeField key={key} label={formatLifestyleLabel(key)} value={Array.isArray(val) ? val.join(", ") : String(val)} />
+              ))}
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </IntakeShell>
   );
@@ -446,11 +504,11 @@ function FamilyHistorySection({ conditions, detail }: { conditions: string[] | n
       {conditions && conditions.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {conditions.map((c, i) => (
-            <span key={i} className="px-2 py-0.5 text-[11px] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{c}</span>
+            <span key={i} className="px-2.5 py-1 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{c}</span>
           ))}
         </div>
       )}
-      {detail && <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">{detail}</p>}
+      {detail && <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">{detail}</p>}
     </IntakeShell>
   );
 }
@@ -459,16 +517,10 @@ function GeneticsSection({ genetic_testing, apoe_genotype, mthfr_variants }: { g
   if (!genetic_testing && !apoe_genotype && !mthfr_variants) return null;
   return (
     <IntakeShell title="Genetics">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        {genetic_testing && (
-          <div><span className="text-[11px] text-[var(--color-text-muted)]">Testing</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5">{genetic_testing}</p></div>
-        )}
-        {apoe_genotype && (
-          <div><span className="text-[11px] text-[var(--color-text-muted)]">APOE Genotype</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5 font-mono">{apoe_genotype}</p></div>
-        )}
-        {mthfr_variants && (
-          <div><span className="text-[11px] text-[var(--color-text-muted)]">MTHFR Variants</span><p className="text-xs text-[var(--color-text-primary)] mt-0.5 font-mono">{mthfr_variants}</p></div>
-        )}
+      <div className="grid grid-cols-3 gap-x-6 gap-y-2.5">
+        {genetic_testing && <IntakeField label="Testing Done" value={genetic_testing} />}
+        {apoe_genotype && <IntakeField label="APOE Genotype" value={apoe_genotype} mono />}
+        {mthfr_variants && <IntakeField label="MTHFR Variants" value={mthfr_variants} mono />}
       </div>
     </IntakeShell>
   );
@@ -478,11 +530,11 @@ function SurgeriesSection({ surgeries }: { surgeries: Array<{name: string; year:
   if (!surgeries || surgeries.length === 0) return null;
   return (
     <IntakeShell title="Surgeries / Hospitalizations">
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {surgeries.map((s, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            <span className="text-[var(--color-text-primary)]">{s.name}</span>
-            {s.year && <span className="text-[var(--color-text-muted)]">({s.year})</span>}
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-sm text-[var(--color-text-primary)]">{s.name}</span>
+            {s.year && <span className="text-xs text-[var(--color-text-muted)]">({s.year})</span>}
           </div>
         ))}
       </div>
@@ -496,7 +548,7 @@ function PriorLabsSection({ priorLabs }: { priorLabs: string[] | null }) {
     <IntakeShell title="Prior Labs (patient-reported)">
       <div className="flex flex-wrap gap-1.5">
         {priorLabs.map((lab, i) => (
-          <span key={i} className="px-2 py-0.5 text-[11px] bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{lab}</span>
+          <span key={i} className="px-2.5 py-1 text-xs bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)] rounded-full text-[var(--color-text-secondary)]">{lab}</span>
         ))}
       </div>
     </IntakeShell>

@@ -141,6 +141,7 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const config = LEVEL_CONFIG[citation.level] || LEVEL_CONFIG["case-study"];
+  const ragConfig = citation.ragSource ? RAG_SOURCE_CONFIG[citation.ragSource] : null;
   const displayLabel = citation.label || config.shortLabel;
   const Icon = config.icon;
 
@@ -294,27 +295,42 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
       onMouseLeave={handleMouseLeave}
     >
       {/* Inline badge */}
-      <button
-        type="button"
-        onClick={handleClick}
-        className={`citation-badge ${config.bgClass} ${config.textClass} border ${config.borderClass} evidence-badge-hover`}
-        aria-expanded={isExpanded}
-        aria-label={`${config.label} citation: ${citation.title}`}
-      >
-        {index !== undefined && (
-          <span className="font-[var(--font-mono)] text-[10px] mr-1 opacity-60">
-            {index}
+      {citation.ragSource && RAG_SOURCE_CONFIG[citation.ragSource] ? (
+        <button
+          type="button"
+          onClick={handleClick}
+          className={`citation-badge ${ragConfig!.bgClass} ${ragConfig!.textClass} border ${ragConfig!.borderClass} evidence-badge-hover`}
+          aria-expanded={isExpanded}
+          aria-label={`${ragConfig!.label} citation: ${citation.title}`}
+        >
+          {index !== undefined && (
+            <span className="font-[var(--font-mono)] text-[10px] mr-1 opacity-60">
+              {index}
+            </span>
+          )}
+          <Library size={10} className="mr-0.5 opacity-70" />
+          <span className="font-semibold text-[11px] tracking-wide">
+            {ragConfig!.label}
           </span>
-        )}
-        <span className="font-semibold text-[11px] tracking-wide uppercase">
-          {displayLabel}
-        </span>
-        {citation.ragSource && RAG_SOURCE_CONFIG[citation.ragSource] && (
-          <span className={`ml-0.5 px-1 py-px text-[9px] font-semibold rounded ${RAG_SOURCE_CONFIG[citation.ragSource].bgClass} ${RAG_SOURCE_CONFIG[citation.ragSource].textClass} border ${RAG_SOURCE_CONFIG[citation.ragSource].borderClass}`}>
-            {RAG_SOURCE_CONFIG[citation.ragSource].label}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleClick}
+          className={`citation-badge ${config.bgClass} ${config.textClass} border ${config.borderClass} evidence-badge-hover`}
+          aria-expanded={isExpanded}
+          aria-label={`${config.label} citation: ${citation.title}`}
+        >
+          {index !== undefined && (
+            <span className="font-[var(--font-mono)] text-[10px] mr-1 opacity-60">
+              {index}
+            </span>
+          )}
+          <span className="font-semibold text-[11px] tracking-wide uppercase">
+            {displayLabel}
           </span>
-        )}
-      </button>
+        </button>
+      )}
 
       {/* Expanded popover */}
       {isExpanded && (
@@ -334,21 +350,26 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
         >
           <div className={`bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden`}>
             {/* Evidence level header */}
-            <div className={`px-4 py-2.5 ${config.hoverBgClass} border-b ${config.borderClass}`}>
+            <div className={`px-4 py-2.5 ${ragConfig ? ragConfig.bgClass : config.hoverBgClass} border-b ${ragConfig ? ragConfig.borderClass : config.borderClass}`}>
               <div className="flex items-center gap-2">
-                <Icon size={14} className={config.textClass} />
-                <span className={`text-xs font-semibold ${config.textClass}`}>
-                  {config.label}
-                </span>
-                {citation.ragSource && RAG_SOURCE_CONFIG[citation.ragSource] && (
-                  <span className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${RAG_SOURCE_CONFIG[citation.ragSource].bgClass} ${RAG_SOURCE_CONFIG[citation.ragSource].textClass} border ${RAG_SOURCE_CONFIG[citation.ragSource].borderClass}`}>
-                    <Library size={10} />
-                    {RAG_SOURCE_CONFIG[citation.ragSource].label}
-                  </span>
+                {ragConfig ? (
+                  <>
+                    <Library size={14} className={ragConfig.textClass} />
+                    <span className={`text-xs font-semibold ${ragConfig.textClass}`}>
+                      {ragConfig.label}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Icon size={14} className={config.textClass} />
+                    <span className={`text-xs font-semibold ${config.textClass}`}>
+                      {config.label}
+                    </span>
+                  </>
                 )}
               </div>
-              <p className={`text-[11px] mt-0.5 ${config.textClass} opacity-70`}>
-                {config.description}
+              <p className={`text-[11px] mt-0.5 ${ragConfig ? ragConfig.textClass : config.textClass} opacity-70`}>
+                {ragConfig ? "Partner knowledge base" : config.description}
               </p>
             </div>
 
