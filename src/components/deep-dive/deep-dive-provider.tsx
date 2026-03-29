@@ -9,8 +9,9 @@ import {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, X, Loader2, Send } from "lucide-react";
+import { BookOpen, X, Loader2, Send, Headphones, Presentation, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { DeepDiveSlides } from "./deep-dive-slides";
 
 // ── Context ────────────────────────────────────────────────────────────
 
@@ -183,6 +184,9 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [followUpInput, setFollowUpInput] = useState("");
+  const [showSlides, setShowSlides] = useState(false);
+  const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevTopicRef = useRef("");
@@ -354,6 +358,59 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
           ) : null}
         </div>
 
+        {/* Action buttons: Slides + Audio */}
+        {isPro && content && !streaming && (
+          <div className="flex-shrink-0 border-t border-[var(--color-border-light)] px-4 py-2.5 flex items-center gap-2">
+            <button
+              onClick={() => setShowSlides(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)] transition-colors"
+            >
+              <Presentation className="w-3.5 h-3.5" />
+              Slides
+            </button>
+            <button
+              onClick={async () => {
+                setGeneratingAudio(true);
+                setAudioError(null);
+                try {
+                  const res = await fetch("/api/deep-dive/audio", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content, topic }),
+                  });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({ error: "Failed" }));
+                    setAudioError(data.error || "Audio generation failed");
+                    return;
+                  }
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `deep-dive-${topic.replace(/[^a-zA-Z0-9]/g, "-").slice(0, 40)}.mp3`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch {
+                  setAudioError("Network error");
+                } finally {
+                  setGeneratingAudio(false);
+                }
+              }}
+              disabled={generatingAudio}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)] transition-colors disabled:opacity-50"
+            >
+              {generatingAudio ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating...</>
+              ) : (
+                <><Headphones className="w-3.5 h-3.5" /> Podcast</>
+              )}
+            </button>
+            {audioError && (
+              <span className="text-[10px] text-[var(--color-destructive-500)]">{audioError}</span>
+            )}
+          </div>
+        )}
+
         {/* Follow-up input */}
         {isPro && content && !streaming && (
           <div className="flex-shrink-0 border-t border-[var(--color-border-light)] px-4 py-3">
@@ -382,6 +439,15 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
           </div>
         )}
       </div>
+
+      {/* Slideshow overlay */}
+      {showSlides && content && (
+        <DeepDiveSlides
+          topic={topic}
+          content={content}
+          onClose={() => setShowSlides(false)}
+        />
+      )}
     </>
   );
 }
