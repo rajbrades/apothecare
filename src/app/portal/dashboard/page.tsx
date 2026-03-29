@@ -172,7 +172,7 @@ export default function PatientDashboard() {
 
   return (
     <PortalShell>
-      <div className="w-full max-w-3xl mx-auto space-y-8">
+      <div className="w-full max-w-3xl mx-auto space-y-6 sm:space-y-8">
         {/* Greeting */}
         <div>
           <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">

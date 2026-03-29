@@ -126,7 +126,7 @@ export default function PatientLabDetailPage() {
         </Link>
 
         {/* Header */}
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-card)] px-6 py-4 space-y-1">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-card)] px-4 sm:px-6 py-4 space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {lab.test_name || `${vendorLabel} — ${lab.test_type?.replace(/_/g, " ")}`}

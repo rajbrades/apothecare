@@ -213,8 +213,8 @@ export default function PatientNoteDetailPage() {
           </div>
 
           {/* Visit metadata */}
-          <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <div className="px-4 sm:px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+            <div className="flex flex-wrap gap-x-3 sm:gap-x-6 gap-y-2">
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
                 <Calendar className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
                 <span>{visitDate}</span>
@@ -235,7 +235,7 @@ export default function PatientNoteDetailPage() {
           </div>
 
           {/* Note content */}
-          <div className="px-6 py-6 space-y-8">
+          <div className="px-4 sm:px-6 py-5 sm:py-6 space-y-6 sm:space-y-8">
             {hasContent ? (
               <>
                 <NoteSection sectionKey="subjective" content={note.subjective} />

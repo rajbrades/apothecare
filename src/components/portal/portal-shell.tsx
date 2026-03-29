@@ -29,25 +29,25 @@ export function PortalShell({ children, maxWidth = "3xl" }: PortalShellProps) {
   return (
     <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className={`${WIDTH_CLASSES[maxWidth]} mx-auto px-6 py-4 flex items-center justify-between`}>
-          <Link href="/portal/dashboard" className="flex items-center gap-2.5">
+        <div className={`${WIDTH_CLASSES[maxWidth]} mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between`}>
+          <Link href="/portal/dashboard" className="flex items-center gap-2 sm:gap-2.5 min-h-[44px]">
             <Logomark className="h-6 w-6" />
             <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
           </Link>
           <button
             onClick={signOut}
             aria-label="Sign out"
-            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-secondary)]"
+            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-3 py-2 rounded-md hover:bg-[var(--color-surface-secondary)] min-h-[44px] flex items-center"
           >
             Sign out
           </button>
         </div>
       </header>
-      <main className="flex-1 px-6 py-10">
+      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-10">
         {children}
       </main>
-      <footer className="border-t border-[var(--color-border)] py-4 px-6">
-        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
+      <footer className="border-t border-[var(--color-border)] py-4 px-4 sm:px-6">
+        <nav className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
           <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</a>
           <a href="/security" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</a>
           <a href="/telehealth" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</a>

@@ -241,14 +241,14 @@ export function SliderField({ label, value, onChange, min = 0, max = 10, lowLabe
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
         {label}
       </label>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <input
           type="range"
           min={min}
           max={max}
           value={value}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="flex-1 h-1.5 accent-[var(--color-brand-600)] bg-[var(--color-border)] rounded-full cursor-pointer"
+          className="flex-1 h-2 accent-[var(--color-brand-600)] bg-[var(--color-border)] rounded-full cursor-pointer"
         />
         <span className="text-sm font-mono font-medium text-[var(--color-brand-600)] min-w-[20px] text-center">
           {value}
@@ -321,7 +321,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
       {hint && <p className="text-[12px] italic text-[var(--color-text-muted)] mb-2">{hint}</p>}
       <div className="space-y-2">
         {rows.map((row, ri) => (
-          <div key={ri} className="flex gap-2 items-start">
+          <div key={ri} className="flex flex-wrap sm:flex-nowrap gap-2 items-start">
             {fields.map((field, ci) => {
               const cellValue = row[ci] || "";
               const inputClass = "w-full px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-600)]/20 focus:border-[var(--color-brand-400)] focus:bg-[var(--color-surface)] transition-all";
@@ -415,7 +415,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
             <button
               type="button"
               onClick={() => removeRow(ri)}
-              className="w-9 h-10 flex-shrink-0 flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+              className="w-11 h-11 sm:w-9 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -472,19 +472,19 @@ export function SectionCard({ num, total, title, why, children }: SectionCardPro
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)] overflow-hidden">
       {/* Header */}
-      <div className="px-7 py-5 border-b border-[var(--color-border)]">
+      <div className="px-4 sm:px-7 py-4 sm:py-5 border-b border-[var(--color-border)]">
         <p className="text-[10px] font-mono tracking-widest uppercase text-[var(--color-text-muted)] mb-1">
           Section {num} of {total}
         </p>
-        <h2 className="text-lg font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
+        <h2 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
           {title}
         </h2>
-        <p className="text-[12.5px] text-[var(--color-text-muted)] leading-relaxed mt-1 max-w-[520px]">
+        <p className="text-xs sm:text-[12.5px] text-[var(--color-text-muted)] leading-relaxed mt-1 max-w-[520px]">
           {why}
         </p>
       </div>
       {/* Body */}
-      <div className="px-7 py-7 space-y-5">
+      <div className="px-4 sm:px-7 py-5 sm:py-7 space-y-5">
         {children}
       </div>
     </div>
