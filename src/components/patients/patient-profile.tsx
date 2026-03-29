@@ -52,6 +52,18 @@ const VitalsTimeline = dynamic(
   }
 );
 
+const SymptomTimeline = dynamic(
+  () => import("@/components/patients/symptom-timeline").then((m) => m.SymptomTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+      </div>
+    ),
+  }
+);
+
 const PatientTimeline = dynamic(
   () => import("@/components/patients/patient-timeline").then((m) => m.PatientTimeline),
   {
@@ -419,7 +431,7 @@ function SymptomScoresSection({ scores }: { scores: Record<string, number | unde
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${score * 10}%`,
-                  backgroundColor: score >= 7 ? "var(--color-biomarker-out-of-range)" : score >= 4 ? "var(--color-biomarker-borderline)" : "var(--color-biomarker-optimal)",
+                  backgroundColor: score >= 7 ? "var(--color-brand-800)" : score >= 4 ? "var(--color-brand-500)" : "var(--color-brand-300)",
                 }}
               />
             </div>
@@ -573,7 +585,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [initialBiomarkerCode, setInitialBiomarkerCode] = useState<string | null>(null);
-  const [trendsView, setTrendsView] = useState<"biomarkers" | "vitals">("biomarkers");
+  const [trendsView, setTrendsView] = useState<"biomarkers" | "vitals" | "symptoms">("biomarkers");
   const [fmTimelineData, setFmTimelineData] = useState<FMTimelineData | null>(
     initialPatient.fm_timeline_data ?? null
   );
@@ -1014,14 +1026,14 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
 
         {activeTab === "trends" && (
           <div>
-            {/* Sub-toggle: Biomarkers / Vitals & Pillars */}
+            {/* Sub-toggle: Biomarkers / Vitals & Pillars / Symptoms */}
             <div className="flex items-center gap-1 mb-5">
-              {(["biomarkers", "vitals"] as const).map((v) => (
+              {(["biomarkers", "vitals", "symptoms"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => {
                     setTrendsView(v);
-                    if (v === "vitals") setInitialBiomarkerCode(null);
+                    if (v !== "biomarkers") setInitialBiomarkerCode(null);
                   }}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                     trendsView === v
@@ -1029,7 +1041,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                       : "bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                   }`}
                 >
-                  {v === "biomarkers" ? "Biomarkers" : "Vitals & Pillars"}
+                  {v === "biomarkers" ? "Biomarkers" : v === "vitals" ? "Vitals & Pillars" : "Symptoms"}
                 </button>
               ))}
             </div>
@@ -1038,8 +1050,10 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                 patientId={patient.id}
                 initialBiomarkerCode={initialBiomarkerCode ?? undefined}
               />
-            ) : (
+            ) : trendsView === "vitals" ? (
               <VitalsTimeline patientId={patient.id} />
+            ) : (
+              <SymptomTimeline patientId={patient.id} />
             )}
           </div>
         )}

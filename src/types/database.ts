@@ -121,6 +121,18 @@ export interface PatientSymptomScores {
   [key: string]: number | undefined;
 }
 
+export interface SymptomScoreSnapshot {
+  id: string;
+  patient_id: string;
+  practitioner_id: string;
+  scores: PatientSymptomScores;
+  notes: string | null;
+  source: "intake" | "check_in" | "visit";
+  recorded_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PatientLifestyle {
   diet_type?: string;
   meals_per_day?: string;

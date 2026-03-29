@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   FileUp,
   ExternalLink,
+  Activity,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { generateConsentPdf } from "@/lib/portal/generate-consent-pdf";
@@ -60,6 +61,20 @@ interface Patient {
   last_name: string | null;
 }
 
+interface SymptomTrendItem {
+  symptom_key: string;
+  symptom_name: string;
+  group: string;
+  group_label: string;
+  latest_value: number;
+  previous_value: number;
+  change: number;
+  change_pct: number;
+  latest_date: string;
+  previous_date: string;
+  data_points: { date: string; value: number }[];
+}
+
 interface TrendItem {
   biomarker_code: string;
   biomarker_name: string;
@@ -95,6 +110,8 @@ export default function PatientDashboard() {
   const [signedConsents, setSignedConsents] = useState<SignedConsent[]>([]);
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [documents, setDocuments] = useState<PatientDocument[]>([]);
+  const [symptomTrends, setSymptomTrends] = useState<SymptomTrendItem[]>([]);
+  const [lastCheckinAt, setLastCheckinAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
@@ -104,19 +121,20 @@ export default function PatientDashboard() {
 
   async function loadData() {
     try {
-      const [meRes, labsRes, notesRes, consentsRes, trendsRes, docsRes] = await Promise.all([
+      const [meRes, labsRes, notesRes, consentsRes, trendsRes, docsRes, symptomRes] = await Promise.all([
         fetch("/api/patient-portal/me"),
         fetch("/api/patient-portal/me/labs"),
         fetch("/api/patient-portal/me/notes"),
         fetch("/api/patient-portal/me/consents"),
         fetch("/api/patient-portal/me/biomarkers/timeline?mode=overview"),
         fetch("/api/patient-portal/me/documents"),
+        fetch("/api/patient-portal/me/symptom-checkin/history?mode=overview"),
       ]);
 
       if (meRes.status === 401) { router.replace("/portal/login"); return; }
 
-      const [meData, labsData, notesData, consentsData, trendsData, docsData] = await Promise.all([
-        meRes.json(), labsRes.json(), notesRes.json(), consentsRes.json(), trendsRes.json(), docsRes.json(),
+      const [meData, labsData, notesData, consentsData, trendsData, docsData, symptomData] = await Promise.all([
+        meRes.json(), labsRes.json(), notesRes.json(), consentsRes.json(), trendsRes.json(), docsRes.json(), symptomRes.ok ? symptomRes.json() : { trends: [], last_checkin_at: null },
       ]);
 
       if (!meData.onboarding?.complete) {
@@ -131,6 +149,8 @@ export default function PatientDashboard() {
       setNotes(notesData.notes || []);
       setTrends(trendsData.trends || []);
       setDocuments(docsData.documents || []);
+      setSymptomTrends(symptomData.trends || []);
+      setLastCheckinAt(symptomData.last_checkin_at || null);
       // Show only signed consents
       setSignedConsents(
         (consentsData.consents || []).filter((c: SignedConsent & { signed: boolean }) => c.signed)
@@ -168,6 +188,52 @@ export default function PatientDashboard() {
           <Shield className="h-4 w-4 flex-shrink-0" />
           <p className="text-xs leading-relaxed">Your records are securely encrypted and HIPAA compliant. Only your provider controls what is shared here.</p>
         </div>
+
+        {/* Symptom check-in prompt — show if no check-in in last 14 days */}
+        {(() => {
+          const daysSince = lastCheckinAt
+            ? Math.floor((Date.now() - new Date(lastCheckinAt).getTime()) / (1000 * 60 * 60 * 24))
+            : null;
+          if (daysSince === null || daysSince >= 14) {
+            return (
+              <Link
+                href="/portal/checkin"
+                className="flex items-center gap-4 px-5 py-4 rounded-lg border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)] transition-colors group"
+              >
+                <Activity className="h-5 w-5 text-[var(--color-brand-600)] flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[var(--color-brand-800)]">
+                    {lastCheckinAt ? "Time for a symptom check-in" : "Complete your first symptom check-in"}
+                  </p>
+                  <p className="text-xs text-[var(--color-brand-600)] mt-0.5">
+                    {lastCheckinAt
+                      ? `Last check-in was ${daysSince} days ago. Your provider would like to hear how you're feeling.`
+                      : "Rate your symptoms so your provider can track your progress over time."}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-[var(--color-brand-600)] group-hover:text-[var(--color-brand-800)] transition-colors">
+                  Start &rarr;
+                </span>
+              </Link>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Symptom trends — only shown when 2+ check-ins have overlapping symptoms */}
+        {symptomTrends.length > 0 && (
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+                Symptom Trends
+              </h2>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                {symptomTrends.length} symptom{symptomTrends.length !== 1 ? "s" : ""} tracked across your check-ins
+              </p>
+            </div>
+            <PortalSymptomTrendsGrid trends={symptomTrends} />
+          </section>
+        )}
 
         {/* Lab reports */}
         <section className="space-y-3">
@@ -463,6 +529,95 @@ function PortalTrendsGrid({ trends }: { trends: TrendItem[] }) {
                       }}
                     >
                       {FLAG_LABELS[flag]}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PortalSymptomTrendsGrid({ trends }: { trends: SymptomTrendItem[] }) {
+  // Group by body system
+  const grouped = trends.reduce<Record<string, SymptomTrendItem[]>>((acc, item) => {
+    const cat = item.group_label || "Other";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {});
+
+  const categories = Object.keys(grouped).sort((a, b) => {
+    if (a === "Other") return 1;
+    if (b === "Other") return -1;
+    return a.localeCompare(b);
+  });
+
+  function severityColor(value: number): string {
+    if (value >= 7) return "var(--color-brand-800)";
+    if (value >= 4) return "var(--color-brand-500)";
+    return "var(--color-brand-300)";
+  }
+
+  function severityLabel(value: number): string {
+    if (value >= 7) return "Significant";
+    if (value >= 4) return "Moderate";
+    return "Mild";
+  }
+
+  return (
+    <div className="space-y-4">
+      {categories.map((cat) => (
+        <div key={cat}>
+          <h3 className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
+            {cat}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {grouped[cat].map((trend) => {
+              const color = severityColor(trend.latest_value);
+              const ChangeIcon = trend.change > 0 ? ArrowUpRight : trend.change < 0 ? ArrowDownRight : Minus;
+              const changeColor = trend.change > 0 ? "var(--color-brand-800)" : trend.change < 0 ? "var(--color-brand-400)" : "var(--color-text-muted)";
+
+              return (
+                <div
+                  key={trend.symptom_key}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-[var(--color-text-secondary)] truncate">
+                        {trend.symptom_name}
+                      </p>
+                      <div className="flex items-baseline gap-1.5 mt-1">
+                        <span className="text-lg font-semibold text-[var(--color-text-primary)]">
+                          {trend.latest_value}
+                        </span>
+                        <span className="text-xs text-[var(--color-text-muted)]">/10</span>
+                      </div>
+                    </div>
+                    <PortalSparkline data={trend.data_points} color={color} />
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border-light)]">
+                    <div className="flex items-center gap-1">
+                      <ChangeIcon className="w-3.5 h-3.5" style={{ color: changeColor }} />
+                      <span className="text-xs font-medium" style={{ color: changeColor }}>
+                        {trend.change > 0 ? "+" : ""}{trend.change_pct}%
+                      </span>
+                      <span className="text-[10px] text-[var(--color-text-muted)] ml-1">
+                        from {formatDate(trend.previous_date)}
+                      </span>
+                    </div>
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                      style={{
+                        color,
+                        backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
+                      }}
+                    >
+                      {severityLabel(trend.latest_value)}
                     </span>
                   </div>
                 </div>
