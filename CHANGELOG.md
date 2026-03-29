@@ -2,6 +2,30 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.36.0] - 2026-03-29
+
+### Added — Longitudinal Symptom Tracking & Clinical Deep-Dive
+
+- **Longitudinal symptom tracking**: Recurring patient check-ins via portal (`/portal/checkin`) with 18 symptoms across 4 body-system groups. Shared constants in `src/lib/constants/symptoms.ts`. Migration 040: `symptom_score_snapshots` table with JSONB scores, timeline trigger, intake backfill. Portal dashboard shows check-in prompt card (14-day cadence) and symptom trend sparklines. Practitioner patient profile: "Symptoms" sub-tab under Trends with overview cards and recharts detail charts. 3 API endpoints: patient submit, patient history/trends, practitioner timeline.
+- **Clinical Deep-Dive**: Highlight any clinical term anywhere in the app, click floating "Deep Dive" button (or Cmd+Shift+D), and get AI-generated educational content in a 520px right-edge drawer panel. RAG-grounded from partnership knowledge bases (Apex, IFM). Structured output: What It Is, Clinical Relevance, Related Biomarkers, Treatment Implications, Key Takeaways. Follow-up questions supported. Tier gated (Pro/Pro+), rate limited (50/day).
+- **Features page** (`/features`): Dedicated marketing page with 6 detailed feature cards, Deep-Dive spotlight with interactive mockup, evidence sources grid (9 databases), HIPAA compliance banner, and conversion CTAs.
+- **Protocol Generator Pro PRD**: Full product requirements document at `docs/PRD-protocol-generator-pro.md` for the Pro+ tier ($199/mo) — multi-phase AI-generated treatment protocols with conditional branching, partnership products, visit integration, custom RAG.
+
+### Changed — Patient Portal & UX
+
+- **RAG citation badges**: Partner knowledge base citations now show just the partner name (e.g., "Apex Energetics") with Library icon instead of "CASE Apex Energetics". Duplicate badges from the same source deduplicated.
+- **Patient intake sections redesign**: Consistent card headers with subtle background, grouped lifestyle fields (Substance Use, Diet, Sleep, Exercise, Stress) as distinct mini-cards in 2-column grid, wider symptom label column, reusable IntakeField component.
+- **Mobile/tablet responsiveness**: Portal shell responsive padding and 44px touch targets, intake form slider height (6px to 8px), SectionCard responsive padding, DynamicRows flex-wrap on mobile, detail page padding/gap fixes.
+- **Portal clickable documents**: Signed consents generate PDF and open in new tab, uploaded documents open signed URL in new tab. Removed consent viewer modal.
+- **Disclosure log shows who accessed**: Joins practitioner name, displays "Dr. Smith viewed Patient Record" or "You viewed Lab Report".
+- **Populate from documents dialog**: Added visible backdrop with blur, fixed centering with scrollable overlay for all viewports.
+
+### Fixed
+
+- **Build errors**: Removed unnecessary `Record<string, unknown>` casts in patient-profile.tsx, fixed RepopulateIntakeBanner prop types, handled optional SymptomScores values.
+- **Dashboard crash**: Switched SVG trust badge logos from `next/image` to plain `img` tags, added error boundary.
+- **Symptom score bar colors**: Recolored from red/yellow/green biomarker palette to sage green brand palette (brand-300/500/800).
+
 ## [0.35.0] - 2026-03-27
 
 ### Added — HIPAA Compliance Complete (H6-H9, M3)

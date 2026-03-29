@@ -817,6 +817,40 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 10. ✅ Stress pillar color inversion — 10/10 stress = red (inverted scale)
 11. ✅ Post-hoc patient assignment — any visit without patient_id shows assign dropdown (not just fresh visits)
 
+### Sprint 35 — Symptom Tracking, Clinical Deep-Dive, Portal UX (Mar 28-29, 2026) ✅ COMPLETE
+
+**Longitudinal Symptom Tracking (Phase 1):**
+1. ✅ Migration 040: `symptom_score_snapshots` table — JSONB scores per check-in, timeline trigger, intake backfill
+2. ✅ Shared symptom constants — `src/lib/constants/symptoms.ts` (18 symptoms, 4 body-system groups)
+3. ✅ Patient portal check-in page — `/portal/checkin` with SliderField reuse
+4. ✅ Portal dashboard: 14-day check-in prompt card + symptom trend sparklines
+5. ✅ Practitioner patient profile: "Symptoms" sub-tab under Trends (overview cards + recharts detail charts)
+6. ✅ 3 API endpoints: patient submit, patient history/trends, practitioner timeline
+
+**Clinical Deep-Dive:**
+7. ✅ Global text selection listener (`DeepDiveProvider`) wraps authenticated layout
+8. ✅ Floating "Deep Dive" trigger button near text selection + Cmd+Shift+D shortcut
+9. ✅ 520px right-edge drawer panel with streaming markdown content
+10. ✅ API endpoint: `/api/deep-dive` with RAG retrieval from partnership knowledge bases
+11. ✅ Structured output: What It Is, Clinical Relevance, Related Biomarkers, Treatment, Key Takeaways
+12. ✅ Tier gated (Pro/Pro+), rate limited (50/day)
+
+**Portal & Patient Profile UX:**
+13. ✅ RAG citation badges — show partner name only (not "CASE"), deduplicate
+14. ✅ Patient intake sections redesign — card headers, grouped lifestyle mini-cards, consistent fonts
+15. ✅ Mobile/tablet responsiveness — 44px touch targets, responsive padding, slider height, DynamicRows flex-wrap
+16. ✅ Clickable consents (PDF generation) and uploaded documents (signed URL) in portal
+17. ✅ Disclosure log shows who accessed records (practitioner name vs. "You")
+18. ✅ Populate from documents dialog — visible backdrop, viewport-centered
+
+**Marketing:**
+19. ✅ Features page (`/features`) — 6 detailed feature cards, Deep-Dive spotlight with mockup, evidence grid, CTAs
+20. ✅ Protocol Generator Pro PRD — full spec at `docs/PRD-protocol-generator-pro.md`
+
+**Build Fixes:**
+21. ✅ Patient profile TypeScript errors — removed Record<string, unknown> casts, fixed RepopulateIntakeBanner
+22. ✅ Dashboard crash — plain img tags for SVG logos, added error boundary
+
 ### Homepage Design
 - [ ] **Design:** Add dark/teal CTA break section before pricing
 - [ ] **Design:** Ensure Admin Dashboard retains serif typography from marketing site
