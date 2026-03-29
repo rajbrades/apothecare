@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
+import { DeepDiveProvider } from "@/components/deep-dive/deep-dive-provider";
 import {
   getAuthUser,
   getPractitioner,
@@ -52,7 +53,9 @@ export default async function AppLayout({
         favoriteConversations={favoriteConversations}
         recentVisits={recentVisits}
       />
-      <main id="main-content" className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>
+      <DeepDiveProvider tier={practitioner.subscription_tier}>
+        <main id="main-content" className="pt-[var(--header-height)] md:pt-0 md:ml-[var(--sidebar-width)]">{children}</main>
+      </DeepDiveProvider>
     </div>
   );
 }

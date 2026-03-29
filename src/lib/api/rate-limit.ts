@@ -12,7 +12,8 @@ export type RateLimitAction =
   | "doc_populate"
   | "supplement_review"
   | "interaction_check"
-  | "data_export";
+  | "data_export"
+  | "deep_dive";
 
 // ── Configuration ───────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ const RATE_LIMITS: Record<RateLimitAction, RateLimitConfig> = {
   supplement_review:{ free: 5,   pro: 50,  window: "1 day" },
   interaction_check:{ free: 10,  pro: 100, window: "1 day" },
   data_export:      { free: 1,   pro: 3,   window: "1 day" },
+  deep_dive:        { free: 5,   pro: 50,  window: "1 day" },
 };
 
 // ── Public API ──────────────────────────────────────────────────────────

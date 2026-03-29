@@ -37,7 +37,8 @@ export type TierFeature =
   | "multi_citation_badges"
   | "unlimited_patients"
   | "full_conversation_history"
-  | "partnership_rag";
+  | "partnership_rag"
+  | "deep_dive";
 
 const PRO_ONLY_FEATURES: Set<TierFeature> = new Set([
   "labs",
@@ -50,6 +51,7 @@ const PRO_ONLY_FEATURES: Set<TierFeature> = new Set([
   "unlimited_patients",
   "full_conversation_history",
   "partnership_rag",
+  "deep_dive",
 ]);
 
 /**
