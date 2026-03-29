@@ -285,7 +285,7 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
       {/* Drawer */}
       <div
         data-deep-dive-panel
-        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-[min(420px,100vw)] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
+        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-[min(520px,100vw)] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -345,7 +345,7 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
               <span className="text-sm text-[var(--color-text-muted)]">Researching...</span>
             </div>
           ) : content ? (
-            <div className="prose prose-sm max-w-none text-[var(--color-text-secondary)] [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-[var(--color-border-light)] [&_h2]:pb-1 [&_p]:text-[13px] [&_p]:leading-relaxed [&_li]:text-[13px] [&_li]:leading-relaxed [&_strong]:text-[var(--color-text-primary)]">
+            <div className="prose max-w-none text-[var(--color-text-secondary)] [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-6 [&_h2]:mb-2.5 [&_h2]:border-b [&_h2]:border-[var(--color-border-light)] [&_h2]:pb-1.5 [&_p]:text-sm [&_p]:leading-relaxed [&_li]:text-sm [&_li]:leading-relaxed [&_strong]:text-[var(--color-text-primary)]">
               <ReactMarkdown>{content}</ReactMarkdown>
               {streaming && (
                 <span className="inline-block w-1.5 h-4 bg-[var(--color-brand-600)] animate-pulse rounded-sm ml-0.5 align-text-bottom" />
