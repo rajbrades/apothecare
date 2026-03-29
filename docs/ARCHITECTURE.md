@@ -781,8 +781,19 @@ supabase/migrations/
 ├── 020_supplement_evidence.sql          # Curated supplement evidence table with pg_trgm, 17 seed citations, RLS read-only
 ├── 021_vitals_pushed_at.sql             # visits.vitals_pushed_at TIMESTAMPTZ
 ├── 022_lab_source_document.sql          # lab_reports.source_document_id UUID FK to patient_documents
-└── 023_patient_recommendations.sql      # dietary_recommendations, lifestyle_recommendations, follow_up_labs JSONB on patients
+├── 023_patient_recommendations.sql      # dietary_recommendations, lifestyle_recommendations, follow_up_labs JSONB on patients
+├── ...                                  # 024-039: partnerships, patient portal, intake fields, medications, consents, amendments
+└── 040_symptom_score_snapshots.sql      # Longitudinal symptom tracking: JSONB scores per check-in, timeline trigger, backfill
 ```
+
+### Planned Tables (Pro+ Tier — Protocol Generator Pro)
+```
+treatment_protocols          # Multi-phase treatment plans with status lifecycle
+protocol_phases              # Individual phases with supplements, diet, labs, conditional logic
+protocol_phase_supplements   # Specific product recommendations per phase (RAG-grounded)
+protocol_progress            # Phase advancement events, lab results, practitioner notes
+```
+See `docs/PRD-protocol-generator-pro.md` for full schema.
 
 ## Test Infrastructure
 

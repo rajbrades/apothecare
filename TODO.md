@@ -333,6 +333,14 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ## Strategy & Pricing
 
+### Pro+ Tier ($199/mo) — Protocol Generator Pro
+- [ ] **PRD:** Full spec at `docs/PRD-protocol-generator-pro.md`
+- [ ] **Feature: Protocol Generator Pro** — AI-generated multi-phase treatment protocols (2-4 phases, 4-8 weeks each) synthesizing entire patient history: visits, labs, symptoms, IFM matrix, partnership RAG. Conditional branching, reassessment points, branded PDF export.
+- [ ] **Feature: Custom RAG** — Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation. Same ingestion pipeline as partnerships.
+- [ ] **Feature: Protocol Progress Tracking** — Active protocol status card on patient overview, phase advancement from visit workspace, patient portal protocol view with progress timeline.
+- [ ] **Feature: Visit Protocol Context** — Active protocol injected into visit AI system prompt. AI references current phase, week number, and goals. Auto-checks new labs against phase transition criteria.
+- [ ] **Migration:** `treatment_protocols`, `protocol_phases`, `protocol_phase_supplements`, `protocol_progress` tables with RLS, indexes, timeline triggers.
+- [ ] **Tier Gate:** Protocol generation, custom RAG, protocol export gated to Pro+ via `isFeatureAvailable()`.
 - [ ] **Strategy:** Determine pricing model for "Deep Research" premium service (autonomous literature review using advanced reasoning models).
 
 ---

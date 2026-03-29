@@ -953,6 +953,20 @@ The RAG infrastructure enables partnership content (e.g., Apex Energetics master
 - **PENDING**: Apply migration 024 in Supabase Dashboard SQL Editor, then run ingestion
 - **NEXT**: Wire retrieval into chat/supplement/visit endpoints (Phase 2-3)
 
+## Product Roadmap — Pro+ Tier ($199/mo)
+
+### Protocol Generator Pro (Sprints 30-35)
+**Full PRD:** `docs/PRD-protocol-generator-pro.md`
+
+AI-generated multi-phase treatment protocols synthesizing a patient's entire clinical history into 3-6 month phased plans with conditional branching, partnership product recommendations (Apex Energetics), reassessment points, and branded PDF export. Flagship Pro+ feature — replaces a $500/hr functional medicine mentor.
+
+**Key capabilities:** Longitudinal synthesis (all visits/labs/symptoms/IFM matrix), phased plans (Foundation -> Restore -> Optimize), conditional logic ("if zonulin normalizes, proceed"), visit AI integration (references active protocol), patient portal view, custom RAG (practitioners upload own knowledge base), branded PDF export.
+
+**Implementation:** 5 phases across Sprints 30-35. See PRD for full data model, API spec, and UI flows.
+
+### Longitudinal Symptom Tracking (Complete — Sprint 28)
+Recurring patient check-ins via portal (18 symptoms, 4 body-system groups), trend visualization for patients (dashboard sparklines) and practitioners (Trends > Symptoms sub-tab with recharts), foundation for Phase 2 treatment correlation with supplement/medication timeline overlay.
+
 ## Known Issues / Gotchas
 
 1. **Supabase uses `vector` not `pgvector`** for the extension name
