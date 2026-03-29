@@ -12,7 +12,7 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Logomark size="sm" withText />
         <nav className="hidden sm:flex items-center gap-6">
-          <a href="#features" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Features</a>
+          <Link href="/features" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Features</Link>
           <a href="#pricing" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Pricing</a>
           <a href="#about" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">About</a>
         </nav>
@@ -34,7 +34,7 @@ export function Header() {
       </div>
       {menuOpen && (
         <div className="sm:hidden border-t border-[var(--color-border-light)] bg-[var(--color-surface)] px-6 py-4 flex flex-col gap-4">
-          <a href="#features" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Features</a>
+          <Link href="/features" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Features</Link>
           <a href="#pricing" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Pricing</a>
           <a href="#about" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">About</a>
           <div className="flex flex-col gap-2 pt-2 border-t border-[var(--color-border-light)]">
