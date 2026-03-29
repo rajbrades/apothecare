@@ -471,39 +471,36 @@ function LifestyleSection({ lifestyle }: { lifestyle: Record<string, unknown> | 
   const entryMap = new Map(allEntries);
   const renderedKeys = new Set<string>();
 
+  function renderGroup(label: string, keys: string[]) {
+    const items = keys.filter((k) => entryMap.has(k));
+    if (items.length === 0) return null;
+    items.forEach((k) => renderedKeys.add(k));
+    return (
+      <div key={label} className="rounded-lg border border-[var(--color-border-light)] overflow-hidden">
+        <div className="px-3 py-1.5 bg-[var(--color-surface-secondary)] border-b border-[var(--color-border-light)]">
+          <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        </div>
+        <div className="px-3 py-2.5 grid grid-cols-2 gap-x-8 gap-y-2.5">
+          {items.map((key) => (
+            <IntakeField
+              key={key}
+              label={formatLifestyleLabel(key)}
+              value={Array.isArray(entryMap.get(key)) ? (entryMap.get(key) as string[]).join(", ") : String(entryMap.get(key))}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <IntakeShell title="Lifestyle">
-      <div className="space-y-4">
-        {LIFESTYLE_GROUPS.map((group) => {
-          const items = group.keys.filter((k) => entryMap.has(k));
-          if (items.length === 0) return null;
-          items.forEach((k) => renderedKeys.add(k));
-          return (
-            <div key={group.label}>
-              <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">{group.label}</p>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
-                {items.map((key) => (
-                  <IntakeField
-                    key={key}
-                    label={formatLifestyleLabel(key)}
-                    value={Array.isArray(entryMap.get(key)) ? (entryMap.get(key) as string[]).join(", ") : String(entryMap.get(key))}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {LIFESTYLE_GROUPS.map((group) => renderGroup(group.label, group.keys))}
         {/* Ungrouped entries */}
-        {allEntries.filter(([k]) => !renderedKeys.has(k)).length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Other</p>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
-              {allEntries.filter(([k]) => !renderedKeys.has(k)).map(([key, val]) => (
-                <IntakeField key={key} label={formatLifestyleLabel(key)} value={Array.isArray(val) ? val.join(", ") : String(val)} />
-              ))}
-            </div>
-          </div>
-        )}
+        {allEntries.filter(([k]) => !renderedKeys.has(k)).length > 0 &&
+          renderGroup("Other", allEntries.filter(([k]) => !renderedKeys.has(k)).map(([k]) => k))
+        }
       </div>
     </IntakeShell>
   );
