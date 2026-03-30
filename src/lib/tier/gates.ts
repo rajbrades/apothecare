@@ -12,7 +12,7 @@ import type { NextResponse } from "next/server";
 
 // ── Tier types ───────────────────────────────────────────────────────────
 
-export type SubscriptionTier = "free" | "pro";
+export type SubscriptionTier = "free" | "pro" | "pro_plus";
 
 // ── Free tier limits ─────────────────────────────────────────────────────
 
@@ -38,7 +38,11 @@ export type TierFeature =
   | "unlimited_patients"
   | "full_conversation_history"
   | "partnership_rag"
-  | "deep_dive";
+  | "deep_dive"
+  | "multi_phase_protocols"
+  | "custom_rag"
+  | "deep_research"
+  | "patient_education";
 
 const PRO_ONLY_FEATURES: Set<TierFeature> = new Set([
   "labs",
@@ -54,15 +58,24 @@ const PRO_ONLY_FEATURES: Set<TierFeature> = new Set([
   "deep_dive",
 ]);
 
+const PRO_PLUS_ONLY_FEATURES: Set<TierFeature> = new Set([
+  "multi_phase_protocols",
+  "custom_rag",
+  "deep_research",
+  "patient_education",
+]);
+
 /**
  * Returns true if the given feature is available for the practitioner's tier.
+ * Hierarchy: pro_plus > pro > free
  */
 export function isFeatureAvailable(
   tier: SubscriptionTier | string,
   feature: TierFeature
 ): boolean {
-  if (tier === "pro") return true;
-  return !PRO_ONLY_FEATURES.has(feature);
+  if (tier === "pro_plus") return true;
+  if (tier === "pro") return !PRO_PLUS_ONLY_FEATURES.has(feature);
+  return !PRO_ONLY_FEATURES.has(feature) && !PRO_PLUS_ONLY_FEATURES.has(feature);
 }
 
 // ── Evidence source gating ───────────────────────────────────────────────
@@ -92,7 +105,7 @@ export function filterAllowedSources(
   sources: string[],
   tier: SubscriptionTier | string
 ): string[] {
-  if (tier === "pro") return sources;
+  if (tier === "pro" || tier === "pro_plus") return sources;
   return sources.filter((s) =>
     (FREE_TIER_SOURCES as readonly string[]).includes(s)
   );
@@ -121,6 +134,23 @@ export function proGateResponse(
 }
 
 /**
+ * Standard 403 response for pro-plus-gated features.
+ */
+export function proPlusGateResponse(
+  NextResponseRef: typeof NextResponse,
+  feature: string
+) {
+  return NextResponseRef.json(
+    {
+      error: `${feature} is a Pro+ feature. Upgrade to Pro+ to access.`,
+      upgrade_url: UPGRADE_URL,
+      pro_plus_feature: true,
+    },
+    { status: 403 }
+  );
+}
+
+/**
  * Check patient count for free tier.
  * Returns an error response if the limit is reached, otherwise null.
  */
@@ -131,7 +161,7 @@ export async function checkPatientLimit(
   tier: SubscriptionTier | string,
   NextResponseRef: typeof NextResponse
 ): Promise<ReturnType<typeof NextResponse.json> | null> {
-  if (tier === "pro") return null;
+  if (tier === "pro" || tier === "pro_plus") return null;
 
   const { count } = await supabase
     .from("patients")

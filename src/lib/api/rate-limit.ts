@@ -13,27 +13,30 @@ export type RateLimitAction =
   | "supplement_review"
   | "interaction_check"
   | "data_export"
-  | "deep_dive";
+  | "deep_dive"
+  | "protocol_generate";
 
 // ── Configuration ───────────────────────────────────────────────────────
 
 interface RateLimitConfig {
   free: number;
   pro: number;
+  pro_plus?: number;
   window: string; // PostgreSQL interval string
 }
 
 const RATE_LIMITS: Record<RateLimitAction, RateLimitConfig> = {
-  visit_generate:   { free: 5,   pro: 100, window: "1 day" },
-  visit_scribe:     { free: 10,  pro: 100, window: "1 day" },
-  visit_transcribe: { free: 10,  pro: 200, window: "1 day" },
-  lab_upload:       { free: 3,   pro: 50,  window: "1 day" },
-  doc_extract:      { free: 10,  pro: 100, window: "1 day" },
-  doc_populate:     { free: 10,  pro: 100, window: "1 day" },
-  supplement_review:{ free: 5,   pro: 50,  window: "1 day" },
-  interaction_check:{ free: 10,  pro: 100, window: "1 day" },
-  data_export:      { free: 1,   pro: 3,   window: "1 day" },
-  deep_dive:        { free: 5,   pro: 50,  window: "1 day" },
+  visit_generate:    { free: 5,   pro: 100, window: "1 day" },
+  visit_scribe:      { free: 10,  pro: 100, window: "1 day" },
+  visit_transcribe:  { free: 10,  pro: 200, window: "1 day" },
+  lab_upload:        { free: 3,   pro: 50,  window: "1 day" },
+  doc_extract:       { free: 10,  pro: 100, window: "1 day" },
+  doc_populate:      { free: 10,  pro: 100, window: "1 day" },
+  supplement_review: { free: 5,   pro: 50,  window: "1 day" },
+  interaction_check: { free: 10,  pro: 100, window: "1 day" },
+  data_export:       { free: 1,   pro: 3,   window: "1 day" },
+  deep_dive:         { free: 5,   pro: 50,  window: "1 day" },
+  protocol_generate: { free: 0,   pro: 0,   pro_plus: 20, window: "1 day" },
 };
 
 // ── Public API ──────────────────────────────────────────────────────────
@@ -56,7 +59,11 @@ export async function checkRateLimit(
   const config = RATE_LIMITS[action];
   if (!config) return null;
 
-  const maxCount = subscriptionTier === "pro" ? config.pro : config.free;
+  const maxCount = subscriptionTier === "pro_plus"
+    ? (config.pro_plus ?? config.pro)
+    : subscriptionTier === "pro"
+    ? config.pro
+    : config.free;
 
   const { data, error } = await supabase.rpc("check_rate_limit", {
     p_practitioner_id: practitionerId,

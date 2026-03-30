@@ -6,7 +6,7 @@
 
 export type LicenseType = "md" | "do" | "np" | "aprn" | "pa" | "dc" | "nd" | "lac" | "other";
 export type VerificationStatus = "pending" | "verified" | "rejected" | "expired";
-export type SubscriptionTier = "free" | "pro";
+export type SubscriptionTier = "free" | "pro" | "pro_plus";
 export type SubscriptionStatus = "active" | "past_due" | "canceled" | "trialing";
 export type MessageRole = "user" | "assistant" | "system";
 export type LabVendor = "quest" | "labcorp" | "diagnostic_solutions" | "genova" | "precision_analytical" | "mosaic" | "vibrant" | "spectracell" | "realtime_labs" | "zrt" | "other";
