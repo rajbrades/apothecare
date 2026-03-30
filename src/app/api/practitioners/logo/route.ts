@@ -16,6 +16,42 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
+// ── GET /api/practitioners/logo — Get signed URL for logo preview ──
+
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) return jsonError("Unauthorized", 401);
+
+    const { data: practitioner } = await supabase
+      .from("practitioners")
+      .select("id, logo_storage_path")
+      .eq("auth_user_id", user.id)
+      .single();
+    if (!practitioner?.logo_storage_path) return jsonError("No logo", 404);
+
+    const serviceClient = createServiceClient();
+    const { data, error } = await serviceClient.storage
+      .from(BUCKET)
+      .createSignedUrl(practitioner.logo_storage_path, 3600);
+
+    if (error || !data?.signedUrl) {
+      return jsonError("Failed to generate URL", 500);
+    }
+
+    return NextResponse.json(
+      { url: data.signedUrl },
+      { headers: { "Cache-Control": "private, no-store" } }
+    );
+  } catch {
+    return jsonError("Internal server error", 500);
+  }
+}
+
 // ── POST /api/practitioners/logo — Upload practice logo ──
 
 export async function POST(request: NextRequest) {

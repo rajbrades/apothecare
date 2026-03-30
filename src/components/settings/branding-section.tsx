@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Loader2, Upload, Trash2, ImageIcon } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Loader2, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { Practitioner } from "@/types/database";
@@ -12,9 +12,24 @@ interface BrandingSectionProps {
 
 export function BrandingSection({ practitioner }: BrandingSectionProps) {
   const [logoPath, setLogoPath] = useState(practitioner.logo_storage_path);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchLogoUrl = useCallback(async () => {
+    if (!logoPath) { setLogoUrl(null); return; }
+    try {
+      const res = await fetch("/api/practitioners/logo");
+      if (!res.ok) { setLogoUrl(null); return; }
+      const data = await res.json();
+      setLogoUrl(data.url);
+    } catch {
+      setLogoUrl(null);
+    }
+  }, [logoPath]);
+
+  useEffect(() => { fetchLogoUrl(); }, [fetchLogoUrl]);
 
   const [addressLine1, setAddressLine1] = useState(practitioner.practice_address_line1 || "");
   const [addressLine2, setAddressLine2] = useState(practitioner.practice_address_line2 || "");
@@ -68,6 +83,12 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
 
       const data = await res.json();
       setLogoPath(data.logo_storage_path);
+      // Fetch fresh signed URL for preview
+      const urlRes = await fetch("/api/practitioners/logo");
+      if (urlRes.ok) {
+        const urlData = await urlRes.json();
+        setLogoUrl(urlData.url);
+      }
       toast.success("Logo uploaded");
     } catch {
       toast.error("Failed to upload logo");
@@ -86,6 +107,7 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
         return;
       }
       setLogoPath(null);
+      setLogoUrl(null);
       toast.success("Logo removed");
     } catch {
       toast.error("Failed to remove logo");
@@ -144,10 +166,12 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
         </label>
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--color-border)] flex items-center justify-center bg-[var(--color-surface-secondary)] overflow-hidden flex-shrink-0">
-            {logoPath ? (
-              <div className="w-full h-full flex items-center justify-center p-2">
-                <ImageIcon className="w-8 h-8 text-[var(--color-brand-600)]" />
-              </div>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Practice logo"
+                className="w-full h-full object-contain p-1.5"
+              />
             ) : (
               <Upload className="w-5 h-5 text-[var(--color-text-muted)]" />
             )}
