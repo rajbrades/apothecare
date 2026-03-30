@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Loader2, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,20 +16,23 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const skipFetchRef = useRef(false);
 
-  const fetchLogoUrl = useCallback(async () => {
-    if (!logoPath) { setLogoUrl(null); return; }
-    try {
-      const res = await fetch("/api/practitioners/logo");
-      if (!res.ok) { setLogoUrl(null); return; }
-      const data = await res.json();
-      setLogoUrl(data.url);
-    } catch {
-      setLogoUrl(null);
-    }
-  }, [logoPath]);
-
-  useEffect(() => { fetchLogoUrl(); }, [fetchLogoUrl]);
+  // Fetch signed URL only on initial mount (if logo exists in DB)
+  useEffect(() => {
+    if (skipFetchRef.current) { skipFetchRef.current = false; return; }
+    if (!practitioner.logo_storage_path) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/practitioners/logo");
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setLogoUrl(data.url);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [addressLine1, setAddressLine1] = useState(practitioner.practice_address_line1 || "");
   const [addressLine2, setAddressLine2] = useState(practitioner.practice_address_line2 || "");
@@ -82,9 +85,9 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
       }
 
       const data = await res.json();
-      setLogoPath(data.logo_storage_path);
-      // Use local object URL for instant preview
+      skipFetchRef.current = true;
       setLogoUrl(URL.createObjectURL(file));
+      setLogoPath(data.logo_storage_path);
       toast.success("Logo uploaded");
     } catch {
       toast.error("Failed to upload logo");
