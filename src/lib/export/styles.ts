@@ -46,46 +46,60 @@ export const EXPORT_STYLES = `
   .letterhead {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding-bottom: 14px;
-    margin-bottom: 6px;
-    border-bottom: 2.5px solid var(--sage);
+    align-items: center;
+    padding-bottom: 12px;
+    margin-bottom: 0;
+    border-bottom: 2px solid var(--sage);
   }
   .letterhead-left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
   }
   .letterhead-logo {
-    max-height: 52px;
-    max-width: 180px;
+    max-height: 44px;
+    max-width: 160px;
     object-fit: contain;
   }
-  .letterhead h1 {
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 20pt;
-    font-weight: 500;
-    color: var(--sage);
-    letter-spacing: -0.01em;
-    line-height: 1.15;
+  .letterhead-practice {
+    line-height: 1.3;
   }
-  .letterhead .subtitle {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9pt;
+  .letterhead-practice-name {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 13pt;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .letterhead-credentials {
+    font-size: 8pt;
     color: var(--ink-muted);
-    margin-top: 2px;
-    letter-spacing: 0.01em;
+    margin-top: 1px;
   }
   .letterhead .meta {
     text-align: right;
-    font-size: 8.5pt;
+    font-size: 8pt;
     color: var(--ink-secondary);
-    line-height: 1.55;
+    line-height: 1.6;
   }
-  .letterhead .meta strong {
-    color: var(--ink);
-    font-weight: 600;
-    font-size: 9pt;
+
+  /* ── Report Title ──────────────────────────── */
+  .report-title {
+    padding: 16px 0 14px;
+    margin-bottom: 4px;
+  }
+  .report-title h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 22pt;
+    font-weight: 500;
+    color: var(--sage);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .report-subtitle {
+    font-size: 9.5pt;
+    color: var(--ink-muted);
+    margin-top: 3px;
   }
 
   /* ── Patient Bar ────────────────────────────── */

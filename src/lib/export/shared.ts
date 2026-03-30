@@ -86,30 +86,21 @@ export function buildLetterhead(
     .filter(Boolean)
     .join(", ");
 
-  const addressParts = [
+  // Build a single-line address string
+  const addressLine = [
     practitioner.practice_address_line1,
     practitioner.practice_address_line2,
-  ].filter(Boolean);
+  ].filter(Boolean).join(", ");
 
   const cityStateZip = [
     practitioner.practice_city,
-    practitioner.practice_state,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  if (practitioner.practice_zip) {
-    if (cityStateZip) {
-      addressParts.push(`${cityStateZip} ${practitioner.practice_zip}`);
-    } else {
-      addressParts.push(practitioner.practice_zip);
-    }
-  } else if (cityStateZip) {
-    addressParts.push(cityStateZip);
-  }
+    [practitioner.practice_state, practitioner.practice_zip].filter(Boolean).join(" "),
+  ].filter(Boolean).join(", ");
+
+  const fullAddress = [addressLine, cityStateZip].filter(Boolean).join(", ");
 
   const contactParts = [
     practitioner.practice_phone,
-    practitioner.practice_fax ? `Fax: ${practitioner.practice_fax}` : null,
     practitioner.practice_website,
   ].filter(Boolean);
 
@@ -117,17 +108,19 @@ export function buildLetterhead(
   <div class="letterhead">
     <div class="letterhead-left">
       ${logoHtml}
-      <div>
-        <h1>${escapeHtml(title)}</h1>
-        ${subtitle ? `<div class="subtitle">${escapeHtml(subtitle)}</div>` : ""}
+      <div class="letterhead-practice">
+        <div class="letterhead-practice-name">${practitioner.practice_name ? escapeHtml(practitioner.practice_name) : ""}</div>
+        <div class="letterhead-credentials">${credentials}</div>
       </div>
     </div>
     <div class="meta">
-      <div><strong>${credentials}</strong></div>
-      ${practitioner.practice_name ? `<div>${escapeHtml(practitioner.practice_name)}</div>` : ""}
-      ${addressParts.map((a) => `<div>${escapeHtml(a!)}</div>`).join("")}
-      ${contactParts.length ? `<div>${contactParts.map((c) => escapeHtml(c!)).join(" | ")}</div>` : ""}
+      ${fullAddress ? `<div>${escapeHtml(fullAddress)}</div>` : ""}
+      ${contactParts.length ? `<div>${contactParts.map((c) => escapeHtml(c!)).join(" · ")}</div>` : ""}
     </div>
+  </div>
+  <div class="report-title">
+    <h1>${escapeHtml(title)}</h1>
+    ${subtitle ? `<div class="report-subtitle">${escapeHtml(subtitle)}</div>` : ""}
   </div>`;
 }
 
