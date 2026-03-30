@@ -83,12 +83,8 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
 
       const data = await res.json();
       setLogoPath(data.logo_storage_path);
-      // Fetch fresh signed URL for preview
-      const urlRes = await fetch("/api/practitioners/logo");
-      if (urlRes.ok) {
-        const urlData = await urlRes.json();
-        setLogoUrl(urlData.url);
-      }
+      // Use local object URL for instant preview
+      setLogoUrl(URL.createObjectURL(file));
       toast.success("Logo uploaded");
     } catch {
       toast.error("Failed to upload logo");
@@ -171,7 +167,10 @@ export function BrandingSection({ practitioner }: BrandingSectionProps) {
                 src={logoUrl}
                 alt="Practice logo"
                 className="w-full h-full object-contain p-1.5"
+                onError={() => setLogoUrl(null)}
               />
+            ) : logoPath ? (
+              <Upload className="w-5 h-5 text-[var(--color-brand-600)]" />
             ) : (
               <Upload className="w-5 h-5 text-[var(--color-text-muted)]" />
             )}
