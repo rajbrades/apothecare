@@ -19,10 +19,8 @@ export const EXPORT_STYLES = `
     --rule: #c8d9d5;
     --rule-light: #e2ece9;
     --surface: #ffffff;
-    --flag-high: #b91c1c;
-    --flag-high-bg: #fef2f2;
-    --flag-low: #1d4ed8;
-    --flag-low-bg: #eff6ff;
+    --flag-suboptimal: #92400e;
+    --flag-suboptimal-bg: #fef3c7;
     --flag-critical: #991b1b;
     --flag-critical-bg: #fef2f2;
     --flag-optimal: #047857;
@@ -104,11 +102,12 @@ export const EXPORT_STYLES = `
     page-break-inside: avoid;
   }
   .section-label {
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 11pt;
-    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
     color: var(--sage);
-    letter-spacing: 0.01em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     padding-bottom: 5px;
     margin-bottom: 10px;
     border-bottom: 1.5px solid var(--rule);
@@ -201,13 +200,9 @@ export const EXPORT_STYLES = `
     line-height: 1.3;
     white-space: nowrap;
   }
-  .flag-badge-high, .flag-badge-borderline_high {
-    color: var(--flag-high);
-    background: var(--flag-high-bg);
-  }
-  .flag-badge-low, .flag-badge-borderline_low {
-    color: var(--flag-low);
-    background: var(--flag-low-bg);
+  .flag-badge-suboptimal {
+    color: var(--flag-suboptimal);
+    background: var(--flag-suboptimal-bg);
   }
   .flag-badge-critical {
     color: var(--flag-critical);
@@ -219,8 +214,7 @@ export const EXPORT_STYLES = `
     background: var(--flag-optimal-bg);
   }
   /* Flagged result values get colored too */
-  .result-high, .result-borderline_high { color: var(--flag-high); }
-  .result-low, .result-borderline_low { color: var(--flag-low); }
+  .result-suboptimal { color: var(--flag-suboptimal); }
   .result-critical { color: var(--flag-critical); }
 
   /* ── Flagged Summary ────────────────────────── */
@@ -250,13 +244,9 @@ export const EXPORT_STYLES = `
     background: var(--sage-lighter);
     page-break-inside: avoid;
   }
-  .flagged-card-high, .flagged-card-borderline_high {
-    border-left-color: var(--flag-high);
-    background: var(--flag-high-bg);
-  }
-  .flagged-card-low, .flagged-card-borderline_low {
-    border-left-color: var(--flag-low);
-    background: var(--flag-low-bg);
+  .flagged-card-suboptimal {
+    border-left-color: var(--flag-suboptimal);
+    background: var(--flag-suboptimal-bg);
   }
   .flagged-card-critical {
     border-left-color: var(--flag-critical);

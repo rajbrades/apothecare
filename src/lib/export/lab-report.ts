@@ -10,23 +10,33 @@ function flagBadge(flag: string | null): string {
   if (!flag || flag === "normal") return "";
 
   const labels: Record<string, string> = {
-    optimal: "Optimal",
-    borderline_low: "▼ Low",
-    borderline_high: "▲ High",
-    low: "▼ Low",
-    high: "▲ High",
+    optimal: "✓ Optimal",
+    borderline_low: "↓ Suboptimal",
+    borderline_high: "↑ Suboptimal",
+    low: "↓ Suboptimal",
+    high: "↑ Suboptimal",
     critical: "‼ Critical",
+  };
+
+  const badgeClass: Record<string, string> = {
+    optimal: "flag-badge-optimal",
+    borderline_low: "flag-badge-suboptimal",
+    borderline_high: "flag-badge-suboptimal",
+    low: "flag-badge-suboptimal",
+    high: "flag-badge-suboptimal",
+    critical: "flag-badge-critical",
   };
 
   const label = labels[flag];
   if (!label) return "";
 
-  return `<span class="flag-badge flag-badge-${flag}">${label}</span>`;
+  return `<span class="flag-badge ${badgeClass[flag] || ""}">${label}</span>`;
 }
 
 function resultClass(flag: string | null): string {
   if (!flag || flag === "normal" || flag === "optimal") return "";
-  return `result-${flag}`;
+  if (flag === "critical") return "result-critical";
+  return "result-suboptimal";
 }
 
 function formatRange(low: number | null, high: number | null): string {
@@ -109,7 +119,7 @@ export function buildLabReportBody(
   for (const [category, items] of groups) {
     html += `
   <div class="section">
-    <div class="section-label">${escapeHtml(category)}</div>
+    <div class="section-label">${escapeHtml(category).toUpperCase()}</div>
     <table>
       <thead>
         <tr>
@@ -171,8 +181,10 @@ export function buildLabReportBody(
           ? `range ${bm.functional_low}–${bm.functional_high}`
           : "";
 
+      const cardClass = bm.functional_flag === "critical" ? "flagged-card-critical" : "flagged-card-suboptimal";
+
       html += `
-      <div class="flagged-card flagged-card-${bm.functional_flag}">
+      <div class="flagged-card ${cardClass}">
         <div class="flagged-card-name">${escapeHtml(bm.biomarker_name)}</div>
         <div class="flagged-card-detail">
           ${direction} at <span class="flagged-value">${bm.value} ${escapeHtml(bm.unit || "")}</span>${rangeStr ? ` · ${rangeStr}` : ""}${bm.interpretation ? ` — ${escapeHtml(bm.interpretation)}` : ""}
