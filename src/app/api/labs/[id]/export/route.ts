@@ -73,8 +73,8 @@ export async function GET(
   const logoDataUri = await fetchLogoAsBase64(practitioner.logo_storage_path);
 
   const letterhead = buildLetterhead(
-    "Lab Report",
-    lab.test_name || "",
+    "",
+    "",
     practitioner,
     logoDataUri
   );

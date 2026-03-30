@@ -44,62 +44,39 @@ export const EXPORT_STYLES = `
 
   /* ── Letterhead ─────────────────────────────── */
   .letterhead {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 12px;
-    margin-bottom: 0;
-    border-bottom: 2px solid var(--sage);
-  }
-  .letterhead-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    text-align: center;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1.5px solid var(--rule);
   }
   .letterhead-logo {
-    max-height: 44px;
-    max-width: 160px;
+    max-height: 52px;
+    max-width: 200px;
     object-fit: contain;
-  }
-  .letterhead-practice {
-    line-height: 1.3;
+    margin: 0 auto 8px;
+    display: block;
   }
   .letterhead-practice-name {
     font-family: 'Newsreader', Georgia, serif;
-    font-size: 13pt;
+    font-size: 15pt;
     font-weight: 500;
     color: var(--ink);
     letter-spacing: -0.01em;
+    margin-bottom: 2px;
   }
   .letterhead-credentials {
+    font-size: 8.5pt;
+    color: var(--ink-secondary);
+  }
+  .letterhead-address {
+    font-size: 8pt;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+  .letterhead-contact {
     font-size: 8pt;
     color: var(--ink-muted);
     margin-top: 1px;
-  }
-  .letterhead .meta {
-    text-align: right;
-    font-size: 8pt;
-    color: var(--ink-secondary);
-    line-height: 1.6;
-  }
-
-  /* ── Report Title ──────────────────────────── */
-  .report-title {
-    padding: 16px 0 14px;
-    margin-bottom: 4px;
-  }
-  .report-title h1 {
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 22pt;
-    font-weight: 500;
-    color: var(--sage);
-    letter-spacing: -0.01em;
-    line-height: 1.1;
-  }
-  .report-subtitle {
-    font-size: 9.5pt;
-    color: var(--ink-muted);
-    margin-top: 3px;
   }
 
   /* ── Patient Bar ────────────────────────────── */

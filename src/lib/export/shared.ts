@@ -81,7 +81,6 @@ export function buildLetterhead(
   const credentials = [
     escapeHtml(practitioner.full_name),
     practitioner.license_type ? practitioner.license_type.toUpperCase() : null,
-    practitioner.npi ? `NPI: ${escapeHtml(practitioner.npi)}` : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -106,21 +105,11 @@ export function buildLetterhead(
 
   return `
   <div class="letterhead">
-    <div class="letterhead-left">
-      ${logoHtml}
-      <div class="letterhead-practice">
-        <div class="letterhead-practice-name">${practitioner.practice_name ? escapeHtml(practitioner.practice_name) : ""}</div>
-        <div class="letterhead-credentials">${credentials}</div>
-      </div>
-    </div>
-    <div class="meta">
-      ${fullAddress ? `<div>${escapeHtml(fullAddress)}</div>` : ""}
-      ${contactParts.length ? `<div>${contactParts.map((c) => escapeHtml(c!)).join(" · ")}</div>` : ""}
-    </div>
-  </div>
-  <div class="report-title">
-    <h1>${escapeHtml(title)}</h1>
-    ${subtitle ? `<div class="report-subtitle">${escapeHtml(subtitle)}</div>` : ""}
+    ${logoHtml}
+    <div class="letterhead-practice-name">${practitioner.practice_name ? escapeHtml(practitioner.practice_name) : ""}</div>
+    <div class="letterhead-credentials">${credentials}</div>
+    ${fullAddress ? `<div class="letterhead-address">${escapeHtml(fullAddress)}</div>` : ""}
+    ${contactParts.length ? `<div class="letterhead-contact">${contactParts.map((c) => escapeHtml(c!)).join(" · ")}</div>` : ""}
   </div>`;
 }
 
