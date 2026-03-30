@@ -169,7 +169,7 @@ export function VisitAssistant({ visitId, patientName, onOpenChange }: VisitAssi
 
       {/* Drawer — slides in from right edge */}
       <div
-        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-[min(340px,100vw)] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
+        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-full sm:w-[340px] sm:max-w-[90vw] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",

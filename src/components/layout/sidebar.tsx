@@ -185,7 +185,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
         />
       )}
 
-      <aside className={`w-[var(--sidebar-width)] h-screen fixed left-0 top-0 bg-[var(--color-surface-secondary)] border-r border-[var(--color-border-light)] flex flex-col z-50 transition-transform duration-200 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      <aside className={`w-[var(--sidebar-width)] max-w-[85vw] h-screen fixed left-0 top-0 bg-[var(--color-surface-secondary)] border-r border-[var(--color-border-light)] flex flex-col z-50 transition-transform duration-200 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:max-w-none`}>
         {/* Logo + mobile close */}
         <div className="h-[var(--header-height)] flex items-center justify-between px-5 border-b border-[var(--color-border-light)]">
           <Link href="/dashboard" className="flex items-center gap-2.5">

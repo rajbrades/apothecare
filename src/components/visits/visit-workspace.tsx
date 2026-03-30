@@ -964,24 +964,27 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
       )}
 
       {/* Tab bar */}
-      <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 mb-6 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide touch-pan-x">
-        {tabs.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={activeTab === key}
-            aria-controls={`tabpanel-${key}`}
-            id={`tab-${key}`}
-            onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap flex-shrink-0 ${activeTab === key
-              ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
-              : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-              }`}
-          >
-            <Icon className="w-4 h-4 flex-shrink-0" />
-            {label}
-          </button>
-        ))}
+      <div className="relative mb-6">
+        <div role="tablist" aria-label="Visit sections" className="flex items-center gap-1 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide touch-pan-x -mb-px">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={activeTab === key}
+              aria-controls={`tabpanel-${key}`}
+              id={`tab-${key}`}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 min-h-[44px] ${activeTab === key
+                ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
+                : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                }`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-surface)] to-transparent pointer-events-none sm:hidden" />
       </div>
 
       {/* Tab content */}

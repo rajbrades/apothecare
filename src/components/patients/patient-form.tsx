@@ -167,7 +167,7 @@ export function PatientForm() {
               className={inputClass}
               placeholder="Type and press Enter"
             />
-            <button type="button" onClick={addChiefComplaint} className="px-3 py-2 text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-50)]">
+            <button type="button" onClick={addChiefComplaint} className="px-3 py-2.5 min-h-[44px] text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-50)]">
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -216,7 +216,7 @@ export function PatientForm() {
               className={inputClass}
               placeholder="Type and press Enter"
             />
-            <button type="button" onClick={addAllergy} className="px-3 py-2 text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-50)]">
+            <button type="button" onClick={addAllergy} className="px-3 py-2.5 min-h-[44px] text-xs font-medium text-[var(--color-brand-600)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)] hover:bg-[var(--color-brand-50)]">
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>

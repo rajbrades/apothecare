@@ -158,7 +158,7 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
                   <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">
                     {age !== null && <span>{age}y {patient.sex ? `/ ${patient.sex}` : ""}</span>}
                     {patient.chief_complaints?.length ? (
-                      <span className="truncate max-w-[200px]">{patient.chief_complaints.join(", ")}</span>
+                      <span className="truncate max-w-[120px] sm:max-w-[200px]">{patient.chief_complaints.join(", ")}</span>
                     ) : null}
                   </div>
                 </div>

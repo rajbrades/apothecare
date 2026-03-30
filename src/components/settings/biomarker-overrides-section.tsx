@@ -135,37 +135,64 @@ export function BiomarkerOverridesSection() {
 
       {/* Existing Overrides List */}
       {overrides.length > 0 ? (
-        <div className="mb-6 overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-[var(--color-text-secondary)]">
-                <th className="py-2 px-3 font-medium">Code</th>
-                <th className="py-2 px-3 font-medium">Name</th>
-                <th className="py-2 px-3 font-medium">Low Range</th>
-                <th className="py-2 px-3 font-medium">High Range</th>
-                <th className="py-2 px-3 font-medium w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {overrides.map((override) => (
-                <tr key={override.biomarker_code} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)]/50">
-                  <td className="py-2.5 px-3 font-medium text-[var(--color-text-primary)]">{override.biomarker_code}</td>
-                  <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.biomarker_name}</td>
-                  <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.functional_low ?? "—"}</td>
-                  <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.functional_high ?? "—"}</td>
-                  <td className="py-2.5 px-3">
-                    <button
-                      onClick={() => removeOverride(override.biomarker_code)}
-                      className="p-1.5 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                      title="Remove override"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+        <div className="mb-6">
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--color-border)] text-[var(--color-text-secondary)]">
+                  <th className="py-2 px-3 font-medium">Code</th>
+                  <th className="py-2 px-3 font-medium">Name</th>
+                  <th className="py-2 px-3 font-medium">Low Range</th>
+                  <th className="py-2 px-3 font-medium">High Range</th>
+                  <th className="py-2 px-3 font-medium w-10"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {overrides.map((override) => (
+                  <tr key={override.biomarker_code} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-surface-secondary)]/50">
+                    <td className="py-2.5 px-3 font-medium text-[var(--color-text-primary)]">{override.biomarker_code}</td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.biomarker_name}</td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.functional_low ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)]">{override.functional_high ?? "—"}</td>
+                    <td className="py-2.5 px-3">
+                      <button
+                        onClick={() => removeOverride(override.biomarker_code)}
+                        className="p-1.5 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        title="Remove override"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3">
+            {overrides.map((override) => (
+              <div key={override.biomarker_code} className="p-3 border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-[var(--color-surface)]">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <span className="font-medium text-sm text-[var(--color-text-primary)]">{override.biomarker_code}</span>
+                    <span className="text-sm text-[var(--color-text-secondary)] ml-2">{override.biomarker_name}</span>
+                  </div>
+                  <button
+                    onClick={() => removeOverride(override.biomarker_code)}
+                    className="p-2 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    title="Remove override"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex gap-4 text-xs text-[var(--color-text-secondary)]">
+                  <span>Low: <span className="font-medium text-[var(--color-text-primary)]">{override.functional_low ?? "—"}</span></span>
+                  <span>High: <span className="font-medium text-[var(--color-text-primary)]">{override.functional_high ?? "—"}</span></span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="mb-6 p-4 border border-dashed border-[var(--color-border)] rounded-[var(--radius-md)] flex flex-col items-center justify-center text-center">
@@ -178,7 +205,7 @@ export function BiomarkerOverridesSection() {
       {/* Add New Override Form */}
       <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] p-4">
         <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">Add Custom Range</h4>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
           <div className="md:col-span-1">
             <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Code (e.g., TSH)</label>
             <input

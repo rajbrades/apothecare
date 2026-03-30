@@ -289,7 +289,7 @@ function DeepDivePanel({ open, topic, tier, onClose, onFollowUp }: DeepDivePanel
       {/* Drawer */}
       <div
         data-deep-dive-panel
-        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-[min(520px,100vw)] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
+        className="fixed top-0 right-0 z-50 flex flex-col h-dvh w-full sm:w-[520px] sm:max-w-[90vw] bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl print:hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",

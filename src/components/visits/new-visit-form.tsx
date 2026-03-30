@@ -94,7 +94,7 @@ export function NewVisitForm({ patients: initialPatients }: { patients: PatientO
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="w-[220px] justify-between font-normal"
+              className="w-full sm:w-[220px] justify-between font-normal"
             >
               <div className="flex items-center gap-2">
                 <selectedType.icon className="w-4 h-4 text-[var(--color-brand-600)]" />
@@ -103,7 +103,7 @@ export function NewVisitForm({ patients: initialPatients }: { patients: PatientO
               <ChevronDown className="w-4 h-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[220px]">
+          <DropdownMenuContent align="start" className="w-[min(220px,90vw)]">
             {ENCOUNTER_TYPES.map((type) => (
               <DropdownMenuItem
                 key={type.value}

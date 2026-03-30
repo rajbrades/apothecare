@@ -3,7 +3,7 @@
 **Product:** Apothecare
 **Module:** Treatment Protocols — Multi-Phase AI-Generated Clinical Plans
 **Status:** Concept — Not Yet Built
-**Tier:** Pro+ ($199/mo)
+**Tier:** Pro+ ($179/mo)
 **Last Updated:** 2026-03-29
 
 ---
@@ -39,7 +39,7 @@ These are based only on that visit's context — the SOAP sections, chief compla
 ### Why this matters commercially
 - **Moat:** No competitor has practitioner-specific RAG + longitudinal protocol generation
 - **Lock-in:** Active protocols for 50+ patients create enormous switching costs
-- **Pricing power:** This is a $199/mo feature, not a $99/mo feature — it's the difference between a documentation tool and a clinical decision engine
+- **Pricing power:** This is a $179/mo feature, not a $99/mo feature — it's the difference between a documentation tool and a clinical decision engine
 - **Partnership revenue:** Protocols recommend specific partner products (Apex, etc.), creating affiliate/revenue-share opportunities
 
 ---
@@ -296,7 +296,7 @@ Protocol exports follow the existing browser print-to-PDF pattern (`src/lib/expo
 
 ## 9. Tier Gating
 
-| Feature | Free | Pro ($99/mo) | Pro+ ($199/mo) |
+| Feature | Free | Pro ($99/mo) | Pro+ ($179/mo) |
 |---------|------|-------------|-----------------|
 | Single-visit recommendations | - | Yes | Yes |
 | Protocol Generator (multi-phase) | - | - | Yes |
