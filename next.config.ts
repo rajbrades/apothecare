@@ -22,8 +22,8 @@ const cspDirectives = [
   // Styles: self + inline (Tailwind v4 / CSS custom properties) + Google Fonts CSS
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 
-  // Images: self + data URIs (SVG logomark, base64 thumbnails)
-  "img-src 'self' data:",
+  // Images: self + data URIs (SVG logomark, base64 thumbnails) + blob (local previews) + Supabase storage (signed URLs)
+  "img-src 'self' data: blob: https://*.supabase.co",
 
   // Fonts: self + Google Fonts static files
   "font-src 'self' https://fonts.gstatic.com",
