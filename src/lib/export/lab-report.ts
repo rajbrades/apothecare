@@ -1,38 +1,38 @@
 /**
  * Lab report PDF export template.
- * Renders biomarker results grouped by category with flags and trend indicators.
+ * Renders biomarker results grouped by category with flag badges and trend indicators.
  */
 
 import type { BiomarkerResult } from "@/types/database";
 import { escapeHtml } from "./shared";
 
-function flagClass(flag: string | null): string {
-  if (!flag) return "";
-  if (flag === "critical") return "flag-critical";
-  if (flag === "high" || flag === "borderline_high") return "flag-high";
-  if (flag === "low" || flag === "borderline_low") return "flag-low";
-  if (flag === "optimal") return "flag-optimal";
-  return "";
+function flagBadge(flag: string | null): string {
+  if (!flag || flag === "normal") return "";
+
+  const labels: Record<string, string> = {
+    optimal: "Optimal",
+    borderline_low: "▼ Low",
+    borderline_high: "▲ High",
+    low: "▼ Low",
+    high: "▲ High",
+    critical: "‼ Critical",
+  };
+
+  const label = labels[flag];
+  if (!label) return "";
+
+  return `<span class="flag-badge flag-badge-${flag}">${label}</span>`;
 }
 
-function flagLabel(flag: string | null): string {
-  if (!flag) return "";
-  const labels: Record<string, string> = {
-    optimal: "OPT",
-    normal: "",
-    borderline_low: "▼ BL",
-    borderline_high: "▲ BH",
-    low: "▼ L",
-    high: "▲ H",
-    critical: "!! C",
-  };
-  return labels[flag] || "";
+function resultClass(flag: string | null): string {
+  if (!flag || flag === "normal" || flag === "optimal") return "";
+  return `result-${flag}`;
 }
 
 function formatRange(low: number | null, high: number | null): string {
-  if (low !== null && high !== null) return `${low} - ${high}`;
-  if (low !== null) return `> ${low}`;
-  if (high !== null) return `< ${high}`;
+  if (low !== null && high !== null) return `${low} – ${high}`;
+  if (low !== null) return `≥ ${low}`;
+  if (high !== null) return `≤ ${high}`;
   return "—";
 }
 
@@ -87,15 +87,21 @@ export function buildLabReportBody(
     zrt: "ZRT Laboratory",
   };
 
+  const vendorDisplay =
+    labMeta.lab_vendor && labMeta.lab_vendor !== "other"
+      ? vendorLabels[labMeta.lab_vendor] || labMeta.lab_vendor
+      : null;
+
   // Lab summary header
   let html = `
-  <div style="margin-bottom: 20px;">
-    <div style="font-size: 10pt; color: #4a6660;">
-      ${labMeta.test_name ? `<strong>${escapeHtml(labMeta.test_name)}</strong>` : ""}
-      ${labMeta.lab_vendor && labMeta.lab_vendor !== "other" ? ` · ${vendorLabels[labMeta.lab_vendor] || labMeta.lab_vendor}` : ""}
+  <div class="lab-summary">
+    <div class="lab-summary-title">
+      ${labMeta.test_name ? escapeHtml(labMeta.test_name) : "Laboratory Results"}${vendorDisplay ? ` <span class="lab-summary-vendor">· ${escapeHtml(vendorDisplay)}</span>` : ""}
     </div>
-    <div style="font-size: 9pt; color: #7a9690; margin-top: 4px;">
-      ${collectionDate ? `Collected: ${collectionDate} · ` : ""}${biomarkers.length} biomarker${biomarkers.length !== 1 ? "s" : ""}${flaggedCount > 0 ? `, ${flaggedCount} flagged` : ""}
+    <div class="lab-summary-meta">
+      ${collectionDate ? `<span>Collected ${collectionDate}</span><span class="dot"></span>` : ""}
+      <span>${biomarkers.length} biomarker${biomarkers.length !== 1 ? "s" : ""} analyzed</span>
+      ${flaggedCount > 0 ? `<span class="dot"></span><span class="lab-summary-flagged-count">${flaggedCount} flagged</span>` : ""}
     </div>
   </div>`;
 
@@ -108,27 +114,27 @@ export function buildLabReportBody(
       <thead>
         <tr>
           <th style="width: 30%">Biomarker</th>
-          <th style="width: 12%">Result</th>
-          <th style="width: 10%">Unit</th>
-          <th style="width: 18%">Functional Range</th>
-          <th style="width: 18%">Conv. Range</th>
-          <th style="width: 6%">Flag</th>
+          <th style="width: 11%">Result</th>
+          <th style="width: 9%">Unit</th>
+          <th style="width: 16%">Functional Range</th>
+          <th style="width: 16%">Conv. Range</th>
+          <th style="width: 12%; text-align: center;">Flag</th>
         </tr>
       </thead>
       <tbody>`;
 
     for (const bm of items) {
-      const fFlag = flagLabel(bm.functional_flag);
-      const fClass = flagClass(bm.functional_flag);
+      const badge = flagBadge(bm.functional_flag);
+      const rClass = resultClass(bm.functional_flag);
 
       html += `
         <tr>
           <td>${escapeHtml(bm.biomarker_name)}</td>
-          <td style="font-family: 'JetBrains Mono', monospace; font-weight: 500;" class="${fClass}">${bm.value}</td>
+          <td class="result-cell ${rClass}">${bm.value}</td>
           <td>${escapeHtml(bm.unit || "")}</td>
-          <td>${formatRange(bm.functional_low, bm.functional_high)}</td>
-          <td>${formatRange(bm.conventional_low, bm.conventional_high)}</td>
-          <td class="${fClass}">${fFlag}</td>
+          <td class="range-cell">${formatRange(bm.functional_low, bm.functional_high)}</td>
+          <td class="range-cell">${formatRange(bm.conventional_low, bm.conventional_high)}</td>
+          <td style="text-align: center;">${badge}</td>
         </tr>`;
     }
 
@@ -138,7 +144,7 @@ export function buildLabReportBody(
   </div>`;
   }
 
-  // Flagged summary
+  // Flagged summary as card grid
   const flagged = biomarkers.filter(
     (b) =>
       b.functional_flag &&
@@ -148,27 +154,34 @@ export function buildLabReportBody(
 
   if (flagged.length > 0) {
     html += `
-  <div class="section">
-    <div class="section-label">Flagged Summary</div>
-    <div style="font-size: 9pt; color: #4a6660; margin-bottom: 8px;">
-      ${flagged.length} biomarker${flagged.length !== 1 ? "s" : ""} outside functional range:
-    </div>
-    <ul style="list-style: none; padding: 0; font-size: 9pt;">`;
+  <div class="flagged-summary">
+    <div class="flagged-summary-header">Flagged Results — ${flagged.length} Biomarker${flagged.length !== 1 ? "s" : ""} Outside Functional Range</div>
+    <div class="flagged-grid">`;
 
     for (const bm of flagged) {
       const direction =
         bm.functional_flag === "high" || bm.functional_flag === "borderline_high"
-          ? "elevated"
-          : "low";
+          ? "Elevated"
+          : bm.functional_flag === "critical"
+          ? "Critical"
+          : "Low";
+
+      const rangeStr =
+        bm.functional_low !== null && bm.functional_high !== null
+          ? `range ${bm.functional_low}–${bm.functional_high}`
+          : "";
+
       html += `
-      <li style="margin-bottom: 4px;">
-        <span class="${flagClass(bm.functional_flag)}" style="margin-right: 6px;">\u2022</span>
-        <strong>${escapeHtml(bm.biomarker_name)}</strong> ${direction} (${bm.value} ${bm.unit || ""})${bm.interpretation ? ` — ${escapeHtml(bm.interpretation)}` : ""}
-      </li>`;
+      <div class="flagged-card flagged-card-${bm.functional_flag}">
+        <div class="flagged-card-name">${escapeHtml(bm.biomarker_name)}</div>
+        <div class="flagged-card-detail">
+          ${direction} at <span class="flagged-value">${bm.value} ${escapeHtml(bm.unit || "")}</span>${rangeStr ? ` · ${rangeStr}` : ""}${bm.interpretation ? ` — ${escapeHtml(bm.interpretation)}` : ""}
+        </div>
+      </div>`;
     }
 
     html += `
-    </ul>
+    </div>
   </div>`;
   }
 

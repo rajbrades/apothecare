@@ -1,22 +1,45 @@
 /**
  * Shared print CSS for all Apothecare PDF exports.
- * Typography: Newsreader (display), DM Sans (body), JetBrains Mono (data).
- * Colors: sage-green brand accent (#2d7a6e).
+ * Design: "Clinical Editorial" — authoritative medical document aesthetic.
+ * Typography: Newsreader (display/headings), DM Sans (body), JetBrains Mono (data).
+ * Palette: sage-green (#2d7a6e) accent, warm whites, clinical grays.
  */
 
 export const EXPORT_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #1a2e2a;
+    --ink-secondary: #3d5a54;
+    --ink-muted: #6b8a83;
+    --ink-faint: #95b0a9;
+    --sage: #2d7a6e;
+    --sage-light: #e8f0ee;
+    --sage-lighter: #f4f8f7;
+    --rule: #c8d9d5;
+    --rule-light: #e2ece9;
+    --surface: #ffffff;
+    --flag-high: #b91c1c;
+    --flag-high-bg: #fef2f2;
+    --flag-low: #1d4ed8;
+    --flag-low-bg: #eff6ff;
+    --flag-critical: #991b1b;
+    --flag-critical-bg: #fef2f2;
+    --flag-optimal: #047857;
+    --flag-optimal-bg: #ecfdf5;
+  }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11pt;
-    line-height: 1.6;
-    color: #1a2e2a;
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: var(--ink);
     max-width: 7.5in;
     margin: 0.5in auto;
-    padding: 0 0.5in;
+    padding: 0 0.4in;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ── Letterhead ─────────────────────────────── */
@@ -24,109 +47,251 @@ export const EXPORT_STYLES = `
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-bottom: 2px solid #2d7a6e;
-    padding-bottom: 12px;
-    margin-bottom: 20px;
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+    border-bottom: 2.5px solid var(--sage);
   }
   .letterhead-left {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
   }
   .letterhead-logo {
-    max-height: 56px;
-    max-width: 200px;
+    max-height: 52px;
+    max-width: 180px;
     object-fit: contain;
   }
   .letterhead h1 {
-    font-family: 'Newsreader', serif;
-    font-size: 18pt;
-    color: #2d7a6e;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 20pt;
+    font-weight: 500;
+    color: var(--sage);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
   }
   .letterhead .subtitle {
-    font-size: 10pt;
-    color: #4a6660;
-    margin-top: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9pt;
+    color: var(--ink-muted);
+    margin-top: 2px;
+    letter-spacing: 0.01em;
   }
   .letterhead .meta {
     text-align: right;
-    font-size: 9pt;
-    color: #4a6660;
+    font-size: 8.5pt;
+    color: var(--ink-secondary);
+    line-height: 1.55;
   }
   .letterhead .meta strong {
-    color: #1a2e2a;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 9pt;
   }
 
   /* ── Patient Bar ────────────────────────────── */
   .patient-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
-    background: #f8fafb;
-    border: 1px solid #e2ece9;
-    border-radius: 6px;
-    padding: 10px 16px;
-    margin-bottom: 20px;
+    gap: 28px;
+    background: var(--sage-lighter);
+    border: 1px solid var(--rule-light);
+    border-radius: 4px;
+    padding: 10px 18px;
+    margin: 14px 0 22px 0;
     font-size: 9pt;
+    color: var(--ink-secondary);
   }
-  .patient-bar strong { color: #1a2e2a; }
-
-  /* ── Section Labels ─────────────────────────── */
-  .section { margin-bottom: 20px; }
-  .section-label {
-    display: inline-block;
-    background: #2d7a6e;
-    color: white;
-    font-size: 8pt;
+  .patient-bar strong {
+    color: var(--ink);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 2px 8px;
-    border-radius: 3px;
-    margin-bottom: 8px;
+    margin-right: 2px;
   }
-  .section-content {
-    padding-left: 4px;
-    white-space: pre-wrap;
+
+  /* ── Section Category Headers ──────────────── */
+  .section {
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+  }
+  .section-label {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--sage);
+    letter-spacing: 0.01em;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+
+  /* ── Lab Summary Header ────────────────────── */
+  .lab-summary {
+    margin-bottom: 24px;
+  }
+  .lab-summary-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 12pt;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .lab-summary-vendor {
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+  .lab-summary-meta {
+    font-size: 8.5pt;
+    color: var(--ink-muted);
+    margin-top: 3px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .lab-summary-meta .dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    display: inline-block;
+  }
+  .lab-summary-flagged-count {
+    color: var(--flag-high);
+    font-weight: 600;
   }
 
   /* ── Tables ─────────────────────────────────── */
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9pt;
-    margin-bottom: 16px;
+    font-size: 8.5pt;
+    margin-bottom: 4px;
+  }
+  thead {
+    border-bottom: 1.5px solid var(--sage);
   }
   th {
-    background: #f0f5f3;
-    color: #4a6660;
+    color: var(--ink-secondary);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    font-size: 8pt;
+    letter-spacing: 0.06em;
+    font-size: 7pt;
     text-align: left;
-    padding: 6px 10px;
-    border-bottom: 2px solid #d1e0db;
+    padding: 6px 8px 7px;
   }
   td {
-    padding: 6px 10px;
-    border-bottom: 1px solid #e8eeec;
-    vertical-align: top;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--rule-light);
+    vertical-align: middle;
   }
   tr:nth-child(even) td {
-    background: #fafcfb;
+    background: var(--sage-lighter);
   }
-  .flag-high { color: #dc2626; font-weight: 700; }
-  .flag-low { color: #2563eb; font-weight: 700; }
-  .flag-critical { color: #dc2626; font-weight: 700; text-decoration: underline; }
-  .flag-optimal { color: #059669; }
+  /* Result values in mono */
+  td.result-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt;
+    font-weight: 500;
+  }
+  /* Range cells slightly muted */
+  td.range-cell {
+    font-size: 8pt;
+    color: var(--ink-muted);
+  }
+
+  /* ── Flag Badges ────────────────────────────── */
+  .flag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .flag-badge-high, .flag-badge-borderline_high {
+    color: var(--flag-high);
+    background: var(--flag-high-bg);
+  }
+  .flag-badge-low, .flag-badge-borderline_low {
+    color: var(--flag-low);
+    background: var(--flag-low-bg);
+  }
+  .flag-badge-critical {
+    color: var(--flag-critical);
+    background: var(--flag-critical-bg);
+    font-weight: 800;
+  }
+  .flag-badge-optimal {
+    color: var(--flag-optimal);
+    background: var(--flag-optimal-bg);
+  }
+  /* Flagged result values get colored too */
+  .result-high, .result-borderline_high { color: var(--flag-high); }
+  .result-low, .result-borderline_low { color: var(--flag-low); }
+  .result-critical { color: var(--flag-critical); }
+
+  /* ── Flagged Summary ────────────────────────── */
+  .flagged-summary {
+    margin-top: 8px;
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+  }
+  .flagged-summary-header {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--sage);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+  .flagged-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .flagged-card {
+    border-left: 3px solid var(--rule);
+    padding: 7px 10px;
+    border-radius: 0 4px 4px 0;
+    background: var(--sage-lighter);
+    page-break-inside: avoid;
+  }
+  .flagged-card-high, .flagged-card-borderline_high {
+    border-left-color: var(--flag-high);
+    background: var(--flag-high-bg);
+  }
+  .flagged-card-low, .flagged-card-borderline_low {
+    border-left-color: var(--flag-low);
+    background: var(--flag-low-bg);
+  }
+  .flagged-card-critical {
+    border-left-color: var(--flag-critical);
+    background: var(--flag-critical-bg);
+  }
+  .flagged-card-name {
+    font-weight: 600;
+    font-size: 8.5pt;
+    color: var(--ink);
+  }
+  .flagged-card-detail {
+    font-size: 8pt;
+    color: var(--ink-secondary);
+    margin-top: 1px;
+  }
+  .flagged-card-detail .flagged-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
 
   /* ── Cards (supplement protocol) ────────────── */
   .card {
-    border: 1px solid #e2ece9;
-    border-radius: 6px;
+    border: 1px solid var(--rule-light);
+    border-radius: 4px;
     padding: 12px 16px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     page-break-inside: avoid;
   }
   .card-header {
@@ -137,7 +302,7 @@ export const EXPORT_STYLES = `
   }
   .action-badge {
     display: inline-block;
-    font-size: 8pt;
+    font-size: 7pt;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -148,17 +313,15 @@ export const EXPORT_STYLES = `
   .action-modify { background: #fef3c7; color: #92400e; }
   .action-discontinue { background: #fee2e2; color: #991b1b; }
   .action-add { background: #dbeafe; color: #1e40af; }
-
   .card-detail {
     font-size: 9pt;
-    color: #4a6660;
+    color: var(--ink-secondary);
     line-height: 1.5;
   }
-  .card-detail strong { color: #1a2e2a; }
-
+  .card-detail strong { color: var(--ink); }
   .interaction-warning {
     border: 1px dashed #f59e0b;
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 10px 14px;
     margin-bottom: 12px;
     font-size: 9pt;
@@ -166,45 +329,52 @@ export const EXPORT_STYLES = `
     page-break-inside: avoid;
   }
   .interaction-warning strong { color: #92400e; }
+  .section-content {
+    padding-left: 4px;
+    white-space: pre-wrap;
+  }
 
   /* ── Footer ─────────────────────────────────── */
   .footer {
-    margin-top: 30px;
-    padding-top: 12px;
-    border-top: 1px solid #e2ece9;
-    font-size: 8pt;
-    color: #7a9690;
+    margin-top: 28px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-size: 7.5pt;
+    color: var(--ink-faint);
     display: flex;
     justify-content: space-between;
   }
   .watermark {
-    margin-top: 8px;
+    margin-top: 6px;
     text-align: center;
-    font-size: 7pt;
-    color: #b0b0b0;
-    letter-spacing: 0.02em;
+    font-size: 6.5pt;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+    opacity: 0.7;
   }
 
   /* ── Print Banner ───────────────────────────── */
   .no-print {
     text-align: center;
-    padding: 12px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    font-size: 10pt;
+    padding: 10px 16px;
+    background: var(--sage-lighter);
+    border: 1px solid var(--rule-light);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    font-size: 9pt;
+    color: var(--ink-secondary);
   }
 
   /* ── Print Rules ────────────────────────────── */
   @page {
     size: letter;
-    margin: 0.75in 0.75in 1in 0.75in;
+    margin: 0.65in 0.7in 0.85in 0.7in;
   }
   @media print {
-    body { margin: 0; padding: 0.25in; }
+    body { margin: 0; padding: 0.15in; }
     .no-print { display: none !important; }
     .section { page-break-inside: avoid; }
     .card { page-break-inside: avoid; }
+    .flagged-summary { page-break-inside: avoid; }
   }
 `;
