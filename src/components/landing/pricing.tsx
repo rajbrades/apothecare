@@ -5,7 +5,7 @@ import { ScrollReveal } from "./scroll-reveal";
 export function Pricing() {
   return (
     <section id="pricing" className="bg-[#FCFCFC] py-20 md:py-28">
-      <div className="max-w-5xl mx-auto px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[var(--color-text-primary)] mb-4">
@@ -17,7 +17,7 @@ export function Pricing() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Free */}
           <ScrollReveal delay={0}>
             <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -111,6 +111,49 @@ export function Pricing() {
                 <Link
                   href="/auth/register?plan=pro"
                   className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] bg-[var(--color-brand-600)] text-white font-medium hover:bg-[var(--color-brand-500)] transition-colors"
+                >
+                  Start Free Trial &rarr;
+                </Link>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* Pro+ */}
+          <ScrollReveal delay={200}>
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="flex flex-col h-full space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Pro+</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Advanced protocols &amp; education
+                  </p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-bold text-[var(--color-text-primary)]">$179</span>
+                  <span className="text-[var(--color-text-tertiary)]">/mo</span>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {[
+                    "Everything in Pro",
+                    "Multi-phase protocol generator",
+                    "Longitudinal clinical synthesis",
+                    "Custom knowledge base (RAG uploads)",
+                    "Clinical Deep-Dive education",
+                    "Protocol progress tracking",
+                    "Patient portal protocol view",
+                    "Partnership product recommendations",
+                    "Deep Research literature reviews",
+                    "Patient education audio & visuals",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm">
+                      <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/auth/register?plan=pro_plus"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-brand-600)] text-[var(--color-brand-600)] font-medium hover:bg-[var(--color-brand-50)] transition-colors"
                 >
                   Start Free Trial &rarr;
                 </Link>
