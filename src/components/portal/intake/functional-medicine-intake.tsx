@@ -184,10 +184,10 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
     <div>
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] font-[var(--font-display)]">
           New Patient Health Intake
         </h1>
-        <p className="text-sm text-[var(--color-text-muted)] mt-1.5 max-w-[480px] mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1.5 max-w-[480px] mx-auto leading-relaxed">
           This questionnaire helps your practitioner understand the full picture of your health — not just your symptoms, but the story behind them.
         </p>
         <div className="inline-flex items-center gap-2 mt-4 px-4 py-1.5 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-light)]">
@@ -199,14 +199,14 @@ export function FunctionalMedicineIntake({ templateId, prefill, onComplete }: Fu
       </div>
 
       {/* Sticky progress */}
-      <div className="sticky top-0 z-40 -mx-6 bg-[var(--color-surface)] border-b border-[var(--color-border)] shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center gap-0 px-4 overflow-x-auto scrollbar-hide touch-pan-x">
+      <div className="sticky top-0 z-40 -mx-4 sm:-mx-6 bg-[var(--color-surface)] border-b border-[var(--color-border)] shadow-sm">
+        <div className="max-w-2xl mx-auto flex items-center gap-0 px-3 sm:px-4 overflow-x-auto scrollbar-hide touch-pan-x">
           {SECTIONS.map((name, i) => (
             <div key={name} className="flex items-center flex-shrink-0">
               <button
                 type="button"
                 onClick={() => goTo(i)}
-                className="flex flex-col items-center py-3 px-1"
+                className="flex flex-col items-center py-3 px-1.5 sm:px-1 min-w-[44px]"
               >
                 <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-mono font-medium mb-1 transition-all ${
                   i === current

@@ -335,7 +335,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     placeholder={field.placeholder}
                     fetchSuggestions={fetchMedicationSuggestions}
                     className={inputClass}
-                    style={field.width ? { maxWidth: field.width } : undefined}
+                    style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                   />
                 );
               }
@@ -349,7 +349,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     placeholder={field.placeholder}
                     suggestions={COMMON_ALLERGENS}
                     className={inputClass}
-                    style={field.width ? { maxWidth: field.width } : undefined}
+                    style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                   />
                 );
               }
@@ -363,7 +363,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     placeholder={field.placeholder}
                     fetchSuggestions={fetchSupplementSuggestions}
                     className={inputClass}
-                    style={field.width ? { maxWidth: field.width } : undefined}
+                    style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                   />
                 );
               }
@@ -378,7 +378,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     suggestions={KNOWN_SUPPLEMENT_BRANDS}
                     minChars={1}
                     className={inputClass}
-                    style={field.width ? { maxWidth: field.width } : undefined}
+                    style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                   />
                 );
               }
@@ -390,7 +390,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                     value={cellValue}
                     onChange={(e) => updateCell(ri, ci, e.target.value)}
                     className={`${inputClass} cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%3E%3Cpath%20d%3D%22M1%201l5%205%205-5%22%20stroke%3D%22%237a7a7a%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_10px_center] pr-8`}
-                    style={field.width ? { maxWidth: field.width } : undefined}
+                    style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                   >
                     <option value="">{field.placeholder}</option>
                     {field.select.options.map((o) => (
@@ -408,7 +408,7 @@ export function DynamicRows({ label, hint, fields, rows, onChange, addLabel }: D
                   value={cellValue}
                   onChange={(e) => updateCell(ri, ci, e.target.value)}
                   className={`flex-1 ${inputClass}`}
-                  style={field.width ? { maxWidth: field.width } : undefined}
+                  style={field.width ? { ["--field-max-w" as string]: field.width } : undefined}
                 />
               );
             })}
