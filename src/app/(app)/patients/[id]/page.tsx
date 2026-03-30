@@ -21,7 +21,7 @@ export default async function PatientDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }, { data: supplements }] = await Promise.all([
+  const [{ data: patient, error }, { data: documents }, { data: visits }, { data: labReports }, { data: supplements }, { data: protocols }] = await Promise.all([
     supabase
       .from("patients")
       .select("id, practitioner_id, first_name, last_name, date_of_birth, sex, email, phone, address, city, state, zip_code, gender_identity, ethnicity, referral_source, chief_complaints, medical_history, current_medications, supplements, allergies, notes, clinical_summary, ifm_matrix, fm_timeline_data, dietary_recommendations, lifestyle_recommendations, follow_up_labs, portal_status, is_archived, created_at, updated_at, diagnoses, surgeries, hospitalizations, family_history_conditions, family_history_detail, genetic_testing, apoe_genotype, mthfr_variants, symptom_scores, lifestyle, prior_labs, health_goals")
@@ -57,6 +57,13 @@ export default async function PatientDetailPage({
       .eq("status", "active")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
+    supabase
+      .from("treatment_protocols")
+      .select("id, title, status, focus_areas, created_at, total_duration_weeks")
+      .eq("patient_id", id)
+      .eq("practitioner_id", practitioner.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   if (error || !patient) notFound();
@@ -69,8 +76,8 @@ export default async function PatientDetailPage({
     detail: { patient_name: `${patient.first_name} ${patient.last_name}` },
   });
 
-  const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline", "fm_timeline"];
-  const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "fm_timeline" : "overview";
+  const validTabs = ["overview", "documents", "trends", "prechart", "ifm_matrix", "visits", "timeline", "fm_timeline", "protocols"];
+  const initialTab = validTabs.includes(tab ?? "") ? tab as "overview" | "documents" | "trends" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "fm_timeline" | "protocols" : "overview";
 
   return (
     <PatientProfile
@@ -80,6 +87,8 @@ export default async function PatientDetailPage({
       visits={visits || []}
       supplements={supplements || []}
       initialTab={initialTab}
+      subscriptionTier={practitioner.subscription_tier}
+      protocols={protocols || []}
     />
   );
 }

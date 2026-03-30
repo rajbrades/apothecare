@@ -346,6 +346,109 @@ export const EXPORT_STYLES = `
     color: var(--ink-secondary);
   }
 
+  /* ── Protocol Export ─────────────────────────── */
+  .protocol-summary {
+    margin-bottom: 20px;
+  }
+  .protocol-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 14pt;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .protocol-meta {
+    font-size: 8.5pt;
+    color: var(--ink-muted);
+    margin-top: 3px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .protocol-phase {
+    margin-bottom: 24px;
+    page-break-inside: avoid;
+    border: 1px solid var(--rule-light);
+    border-radius: 4px;
+    padding: 16px;
+  }
+  .phase-header {
+    margin-bottom: 8px;
+  }
+  .phase-number {
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sage);
+    margin-bottom: 2px;
+  }
+  .phase-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 12pt;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .phase-duration {
+    font-size: 8pt;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .phase-goal {
+    font-size: 9pt;
+    color: var(--ink-secondary);
+    margin-bottom: 14px;
+    padding: 8px 10px;
+    background: var(--sage-lighter);
+    border-radius: 3px;
+    line-height: 1.5;
+  }
+  .phase-section {
+    margin-bottom: 12px;
+  }
+  .phase-section-title {
+    font-size: 7.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .phase-list {
+    list-style: none;
+    padding: 0;
+    font-size: 9pt;
+    color: var(--ink-secondary);
+  }
+  .phase-list li {
+    padding: 3px 0;
+    padding-left: 14px;
+    position: relative;
+  }
+  .phase-list li::before {
+    content: "·";
+    position: absolute;
+    left: 4px;
+    color: var(--sage);
+    font-weight: 700;
+  }
+  .phase-notes {
+    font-size: 9pt;
+    color: var(--ink-secondary);
+    font-style: italic;
+    white-space: pre-wrap;
+  }
+  .conditional-card {
+    border: 1px solid var(--rule-light);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 8.5pt;
+    line-height: 1.6;
+  }
+  .conditional-if { color: var(--ink); }
+  .conditional-then { color: var(--flag-optimal); }
+  .conditional-else { color: var(--flag-suboptimal); }
+
   /* ── Print Rules ────────────────────────────── */
   @page {
     size: letter;
@@ -357,5 +460,6 @@ export const EXPORT_STYLES = `
     .section { page-break-inside: avoid; }
     .card { page-break-inside: avoid; }
     .flagged-summary { page-break-inside: avoid; }
+    .protocol-phase { page-break-inside: avoid; }
   }
 `;

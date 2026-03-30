@@ -25,6 +25,8 @@ import { SupplementList } from "./supplement-list";
 import { MedicationList } from "./medication-list";
 import { SectionShell, EditableTextSection, EditableTagSection } from "@/components/ui/editable-sections";
 import type { Patient, PatientDocument, PatientSupplement, ProtocolItem, FMTimelineData, FMCategory, FMLifeStage, DocumentType } from "@/types/database";
+import { GenerateProtocolButton } from "@/components/protocols/generate-protocol-button";
+import { ProtocolList } from "@/components/protocols/protocol-list";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 import type { TimelineEvent } from "@/hooks/use-timeline";
 
@@ -105,7 +107,7 @@ const VitalsSnapshot = dynamic(
   { ssr: false }
 );
 
-type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline";
+type Tab = "overview" | "documents" | "prechart" | "ifm_matrix" | "visits" | "timeline" | "trends" | "fm_timeline" | "protocols";
 
 interface DemoField {
   key: string;
@@ -245,6 +247,8 @@ interface PatientProfileProps {
   visits: VisitItem[];
   supplements: PatientSupplement[];
   initialTab?: Tab;
+  subscriptionTier?: string;
+  protocols?: { id: string; title: string; status: string; focus_areas: string[]; created_at: string; total_duration_weeks: number | null }[];
 }
 
 function getAge(dob: string | null): number | null {
@@ -573,7 +577,7 @@ function HealthGoalsSection({ goals }: { goals: string | null }) {
   );
 }
 
-export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements, initialTab = "overview" }: PatientProfileProps) {
+export function PatientProfile({ patient: initialPatient, documents: initialDocs, labReports: initialLabs, visits, supplements: initialSupplements, initialTab = "overview", subscriptionTier, protocols }: PatientProfileProps) {
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
@@ -698,6 +702,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
     { key: "visits", label: `Visits (${visits.length})`, icon: Stethoscope },
     { key: "timeline", label: "Timeline", icon: Clock },
     { key: "fm_timeline", label: "FM Timeline", icon: GitBranch },
+    { key: "protocols", label: "Protocols", icon: FlaskConical },
   ];
 
   const handleDocumentUploaded = (newDoc: typeof documents[0]) => {
@@ -1179,6 +1184,20 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
             initialData={fmTimelineData}
             onDataChange={setFmTimelineData}
           />
+        )}
+
+        {activeTab === "protocols" && (
+          <div className="space-y-4">
+            <GenerateProtocolButton
+              patientId={patient.id}
+              patientName={name}
+              tier={(subscriptionTier || "free") as import("@/lib/tier/gates").SubscriptionTier}
+            />
+            <ProtocolList
+              protocols={(protocols || []).map(p => ({ ...p, patient_id: patient.id, practitioner_id: "", generation_context: {}, started_at: null, completed_at: null, updated_at: p.created_at })) as import("@/types/protocol").ProtocolListItem[]}
+              patientId={patient.id}
+            />
+          </div>
         )}
       </div>
 
