@@ -172,7 +172,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
           <Menu className="icon-nav" />
         </button>
         <Link href="/dashboard" className="flex items-center gap-2 ml-3">
-          <Logomark size="xs" withText />
+          <Logomark size="sm" withText />
         </Link>
       </div>
 
@@ -189,7 +189,7 @@ export function Sidebar({ practitioner, recentConversations = [], favoriteConver
         {/* Logo + mobile close */}
         <div className="h-[var(--header-height)] flex items-center justify-between px-5 border-b border-[var(--color-border-light)]">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <Logomark size="xs" withText />
+            <Logomark size="sm" withText />
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
