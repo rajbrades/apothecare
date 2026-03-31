@@ -333,7 +333,28 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ## Strategy & Pricing
 
-- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service (autonomous literature review using advanced reasoning models).
+### Subscription Tiers (Planned)
+
+| Feature | Free | Pro ($99/mo) | Pro+ ($199/mo) |
+|---------|------|-------------|----------------|
+| AI Chat (Sonnet) | 2/day | Unlimited | Unlimited |
+| Deep Consult (Opus) | — | 10/month | Unlimited |
+| Deep Research (autonomous lit review) | — | — | Unlimited |
+| Protocol Generator Pro (phased treatment plans) | — | — | Unlimited |
+| Custom RAG (upload own knowledge bases) | — | — | Unlimited |
+| Partnership Knowledge Bases (Apex, etc.) | — | Included | Included |
+| Patient Portal | — | Included | Included |
+| Lab Parsing | 2/month | Unlimited | Unlimited |
+| Visit AI Generation | Included | Included | Included |
+| Data Export | 1/day | 3/day | Unlimited |
+
+### Pro+ Features — Implementation Plan
+
+- [ ] **Deep Research**: Autonomous multi-step literature review agent (see PRD: `docs/PRD-pro-plus.md`)
+- [ ] **Protocol Generator Pro**: Multi-phase longitudinal treatment protocols (see PRD: `docs/PRD-pro-plus.md`)
+- [ ] **Custom RAG**: Practitioner-uploaded knowledge bases with private vector search (see PRD: `docs/PRD-pro-plus.md`)
+- [ ] **Stripe Integration**: Payment processing, tier management, usage metering for Deep Consult credits
+- [ ] **Usage Tracking UI**: Deep Consult credit counter in sidebar/settings, purchase flow for additional credits
 
 ---
 

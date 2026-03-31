@@ -823,7 +823,6 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 - [ ] **Design:** Balance hero input microcopy alignment
 
 ### Backlog
-- HIPAA Medium findings (6 items — see TODO.md)
 - PWA support for mobile practitioners
 - Analytics (PostHog or Mixpanel)
 - A/B testing framework for landing page
@@ -832,6 +831,13 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 - Video Content Library
 - Clinical Insights Dashboard (analytics)
 - Business Metrics Dashboard
+
+### Pro+ Tier Roadmap ($199/mo) — See `docs/PRD-pro-plus.md`
+1. **Stripe Integration** — payment processing, tier management, usage metering
+2. **Deep Consult Credits** — 10/month for Pro, unlimited for Pro+, $2/additional
+3. **Protocol Generator Pro** — multi-phase longitudinal treatment protocols from full patient history
+4. **Deep Research** — autonomous literature review agent (Opus + PubMed + Cochrane + RAG)
+5. **Custom RAG** — practitioner-uploaded private knowledge bases (certifications, proprietary protocols)
 
 ---
 
