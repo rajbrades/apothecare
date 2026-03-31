@@ -851,21 +851,38 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 21. ✅ Patient profile TypeScript errors — removed Record<string, unknown> casts, fixed RepopulateIntakeBanner
 22. ✅ Dashboard crash — plain img tags for SVG logos, added error boundary
 
+### Sprint 29 — Protocol Generator Pro (Mar 31, 2026) ✅ COMPLETE
+1. ✅ Protocol Generator Pro — AI multi-phase treatment protocols (migration 042, 7 API routes, 5 components, AI prompts, streaming hook, PDF export)
+2. ✅ Visit Protocol Context — active protocol injected into visit SOAP generation prompt (phase, goal, supplements, labs)
+3. ✅ Active Protocol Card — progress widget on patient overview (week N of M, focus areas)
+4. ✅ Enterprise tier — 4-tier pricing (Free → Pro $99 → Pro+ $179 → Enterprise Custom), Custom RAG enterprise-only
+5. ✅ Tier gating — protocol generation Pro+, custom RAG Enterprise
+
+### Sprint 30 — Homepage & Conversion (Mar 31, 2026) ✅ COMPLETE
+1. ✅ Hero shortened — chat mockup visible near fold, removed scroll cue
+2. ✅ Dark CTA break section — brand-950 bg with accent text before pricing
+3. ✅ Centered hero microcopy
+4. ✅ Chat mockup — rich AI response with evidence badges (already built)
+
+### Sprint 31 — Integrations & Patient Engagement ✅ COMPLETE
+1. ✅ Clinical Deep-Dive (Patient Education Studio) — text selection → educational content with RAG grounding, slides, podcast audio
+2. ✅ Video Content Library — skipped (low clinical value)
+3. ⏳ Fullscript integration — deferred (requires developer API account)
+
 ### Homepage Design
-- [ ] **Design:** Add dark/teal CTA break section before pricing
-- [ ] **Design:** Ensure Admin Dashboard retains serif typography from marketing site
-- [ ] **Design:** Balance hero input microcopy alignment
+- [x] Dark/teal CTA break section before pricing
+- [x] Balance hero input microcopy alignment
+- [ ] Admin Dashboard visual continuity (slate → brand system, deferred)
 
 ### Backlog
-- HIPAA Medium findings (6 items — see TODO.md)
+- HIPAA: Vendor BAAs (Supabase, OpenAI, AWS, Resend, Vercel)
 - PWA support for mobile practitioners
 - Analytics (PostHog or Mixpanel)
 - A/B testing framework for landing page
 - Accessibility audit (WCAG 2.1 AA)
-- Patient Education Studio (NotebookLM-style audio + slides)
-- Video Content Library
-- Clinical Insights Dashboard (analytics)
-- Business Metrics Dashboard
+- Clinical Insights Dashboard (Sprint 32)
+- Business Metrics Dashboard (Sprint 32)
+- Fullscript integration (requires API account)
 
 ---
 

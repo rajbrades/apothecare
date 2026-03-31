@@ -2,6 +2,19 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.39.0] - 2026-03-31
+
+### Added — Sprints 29-31
+- **Enterprise tier**: 4-tier pricing (Free → Pro $99 → Pro+ $179 → Enterprise Custom). Custom RAG gated to Enterprise.
+- **Visit Protocol Context**: Active treatment protocol injected into visit SOAP generation prompt — phase, goal, supplements, labs to monitor.
+- **Active Protocol Card**: Progress widget on patient overview — week N of M progress bar, focus area badges, link to workspace.
+- **Homepage CTA break**: Dark brand-950 section with accent text inserted before pricing for visual rhythm.
+- **Hero above fold**: Reduced hero height so chat mockup visible near fold, removed scroll cue, centered microcopy.
+
+### Changed
+- Sprint 31 Patient Education Studio already complete as "Clinical Deep-Dive" (Sprint 35).
+- Video Content Library skipped (low clinical value). Fullscript deferred (requires API account).
+
 ## [0.36.0] - 2026-03-29
 
 ### Added — Longitudinal Symptom Tracking & Clinical Deep-Dive
