@@ -755,38 +755,62 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
-## Patient Education & Engagement (Planned)
+## Sprint 29 — Protocol Generator Pro (Pro+ Tier)
 
-Patient-facing content tools and third-party integrations.
+Core revenue feature — justifies $199/mo Pro+ tier.
 
-- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
-- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
-- [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
+- [ ] **Feature:** Protocol Generator Pro — AI-generated multi-phase treatment protocols (2-4 phases, 4-8 weeks each) synthesizing entire patient history: visits, labs, symptoms, IFM matrix, partnership RAG. Conditional branching, reassessment points, branded PDF export.
+- [ ] **Feature:** Custom RAG — Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation.
+- [ ] **Feature:** Protocol Progress Tracking — Active protocol status card on patient overview, phase advancement from visit workspace, patient portal protocol view with progress timeline.
+- [ ] **Feature:** Visit Protocol Context — Active protocol injected into visit AI system prompt. AI references current phase, week number, and goals. Auto-checks new labs against phase transition criteria.
+- [ ] **Tier Gate:** Protocol generation, custom RAG, protocol export gated to Pro+ via `isFeatureAvailable()`.
+- [ ] **Strategy:** Determine pricing model for Pro+ tier ($199/mo) and "Deep Research" premium service.
 
 ---
 
-## Analytics & Clinical Tools (Planned)
+## Sprint 30 — Homepage & Conversion
 
-Practice analytics, business metrics, and advanced clinical configuration.
+Marketing site polish for demo readiness and conversion optimization.
+
+- [ ] **Design:** Move chat product mockup into the hero viewport (above fold) — no visual anchor currently
+- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing — currently every section is white/near-white, no visual rhythm
+- [ ] **Design:** Show a rich AI response in the demo chat mockup — actual response with citations and evidence badges
+- [ ] **Design:** Balance hero input microcopy — center "2 free queries/day · No credit card required" below input
+- [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
+
+---
+
+## Sprint 31 — Integrations & Patient Engagement
+
+Patient-facing content tools and third-party connections.
+
+- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
+- [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
+- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
+
+---
+
+## Sprint 32 — Analytics & Business Intelligence
+
+Practice insights for practitioner retention and conversion optimization.
 
 - [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
+- [ ] **Feature:** Analytics integration (PostHog or Mixpanel)
+- [ ] **Feature:** A/B testing framework for landing page conversion
 - [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
 
 ---
 
-## Backlog
+## Sprint 33 — Infrastructure & Compliance
 
-### Design & UX Polish
-- [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
-- [x] **UX:** Clarify "Start Free" button action in landing page input
-- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
-- [x] **Design:** Show a rich AI response in the demo chat mockup — done: 5 evidence badges (META, RCT, GUIDELINE), formatted dosing, typewriter animation
-- [ ] **Design:** Balance hero input microcopy alignment
+Production hardening, accessibility, and vendor compliance.
 
-### Platform & Infrastructure
-- [ ] Mobile responsive pass on all pages
-- [ ] PWA support for mobile practitioners
-- [ ] Analytics integration (PostHog or Mixpanel)
-- [ ] A/B testing framework for landing page conversion
-- [ ] Accessibility audit (WCAG 2.1 AA)
+- [ ] **Infra:** PWA support for mobile practitioners
+- [ ] **Compliance:** BAA — Supabase (Pro plan, request via dashboard)
+- [ ] **Compliance:** BAA — OpenAI (Whisper API, or migrate to Deepgram/AssemblyAI)
+- [ ] **Compliance:** BAA — AWS (via AWS Artifact console)
+- [ ] **Compliance:** BAA — Resend (verify HIPAA compliance, or switch to AWS SES)
+- [ ] **Compliance:** BAA — Vercel (confirm production is 100% AWS, or upgrade to Enterprise)
+- [ ] **Accessibility:** WCAG 2.1 AA audit across all pages
+- [x] Mobile responsive pass on all pages
