@@ -760,7 +760,7 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 Core revenue feature — justifies $199/mo Pro+ tier.
 
 - [ ] **Feature:** Protocol Generator Pro — AI-generated multi-phase treatment protocols (2-4 phases, 4-8 weeks each) synthesizing entire patient history: visits, labs, symptoms, IFM matrix, partnership RAG. Conditional branching, reassessment points, branded PDF export.
-- [ ] **Feature:** Custom RAG — Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation.
+- [ ] **Feature:** Custom RAG — Enterprise only. Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation. Contact for pricing.
 - [ ] **Feature:** Protocol Progress Tracking — Active protocol status card on patient overview, phase advancement from visit workspace, patient portal protocol view with progress timeline.
 - [ ] **Feature:** Visit Protocol Context — Active protocol injected into visit AI system prompt. AI references current phase, week number, and goals. Auto-checks new labs against phase transition criteria.
 - [ ] **Tier Gate:** Protocol generation, custom RAG, protocol export gated to Pro+ via `isFeatureAvailable()`.

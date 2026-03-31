@@ -17,7 +17,7 @@ export function Pricing() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {/* Free */}
           <ScrollReveal delay={0}>
             <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -137,7 +137,6 @@ export function Pricing() {
                     "Everything in Pro",
                     "Multi-phase protocol generator",
                     "Longitudinal clinical synthesis",
-                    "Custom knowledge base (RAG uploads)",
                     "Clinical Deep-Dive education",
                     "Protocol progress tracking",
                     "Patient portal protocol view",
@@ -156,6 +155,47 @@ export function Pricing() {
                   className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-brand-600)] text-[var(--color-brand-600)] font-medium hover:bg-[var(--color-brand-50)] transition-colors"
                 >
                   Start Free Trial &rarr;
+                </Link>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* Enterprise */}
+          <ScrollReveal delay={300}>
+            <div className="h-full p-8 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="flex flex-col h-full space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Enterprise</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    For multi-provider practices
+                  </p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-[var(--color-text-primary)]">Custom</span>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {[
+                    "Everything in Pro+",
+                    "Custom knowledge base (RAG uploads)",
+                    "Private practitioner document library",
+                    "Multi-provider team management",
+                    "Practice-wide analytics",
+                    "SSO / SAML authentication",
+                    "Dedicated onboarding & support",
+                    "Custom BAA & compliance review",
+                    "SLA with priority response",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm">
+                      <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-600)] flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="mailto:enterprise@apothecare.ai?subject=Enterprise%20Inquiry"
+                  className="block text-center w-full px-6 py-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-surface-tertiary)] transition-colors"
+                >
+                  Contact for Pricing
                 </Link>
               </div>
             </div>

@@ -12,7 +12,7 @@ import type { NextResponse } from "next/server";
 
 // ── Tier types ───────────────────────────────────────────────────────────
 
-export type SubscriptionTier = "free" | "pro" | "pro_plus";
+export type SubscriptionTier = "free" | "pro" | "pro_plus" | "enterprise";
 
 // ── Free tier limits ─────────────────────────────────────────────────────
 
@@ -60,22 +60,26 @@ const PRO_ONLY_FEATURES: Set<TierFeature> = new Set([
 
 const PRO_PLUS_ONLY_FEATURES: Set<TierFeature> = new Set([
   "multi_phase_protocols",
-  "custom_rag",
   "deep_research",
   "patient_education",
 ]);
 
+const ENTERPRISE_ONLY_FEATURES: Set<TierFeature> = new Set([
+  "custom_rag",
+]);
+
 /**
  * Returns true if the given feature is available for the practitioner's tier.
- * Hierarchy: pro_plus > pro > free
+ * Hierarchy: enterprise > pro_plus > pro > free
  */
 export function isFeatureAvailable(
   tier: SubscriptionTier | string,
   feature: TierFeature
 ): boolean {
-  if (tier === "pro_plus") return true;
-  if (tier === "pro") return !PRO_PLUS_ONLY_FEATURES.has(feature);
-  return !PRO_ONLY_FEATURES.has(feature) && !PRO_PLUS_ONLY_FEATURES.has(feature);
+  if (tier === "enterprise") return true;
+  if (tier === "pro_plus") return !ENTERPRISE_ONLY_FEATURES.has(feature);
+  if (tier === "pro") return !PRO_PLUS_ONLY_FEATURES.has(feature) && !ENTERPRISE_ONLY_FEATURES.has(feature);
+  return !PRO_ONLY_FEATURES.has(feature) && !PRO_PLUS_ONLY_FEATURES.has(feature) && !ENTERPRISE_ONLY_FEATURES.has(feature);
 }
 
 // ── Evidence source gating ───────────────────────────────────────────────
