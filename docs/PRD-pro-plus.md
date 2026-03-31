@@ -16,6 +16,8 @@ Pro+ is a premium subscription tier for Apothecare targeting high-volume functio
 
 All three features leverage Claude Opus 4.6 (the most capable model) and are designed to replace workflows that currently require hours of manual work or expensive specialist consultations.
 
+**Key design principle:** Every recommendation must be transparent about its source. Peer-reviewed evidence, manufacturer literature, and practitioner-uploaded materials are distinct categories with distinct trust levels. The platform must never present biased content as independent evidence.
+
 ---
 
 ## Feature 1: Deep Research
@@ -276,6 +278,48 @@ Functional medicine practitioners accumulate specialized knowledge through certi
 ### Solution
 Practitioners upload their own PDFs, documents, and protocols to a private knowledge base. These are OCR'd, chunked, embedded, and searchable — just like the Apex Energetics partnership content. The AI cites their private materials alongside public evidence.
 
+### ⚠️ Critical: Custom RAG is NOT Evidence
+
+Custom RAG documents are **reference materials**, not peer-reviewed evidence. They may be:
+- **Manufacturer literature** — inherently biased toward their own products (e.g., Apex, Designs for Health, Metagenics)
+- **Certification course materials** — reflect one organization's clinical philosophy, not consensus evidence (e.g., A4M modules, IFM coursework, Kresser Institute)
+- **Conference presentations** — may contain preliminary findings not yet peer-reviewed
+- **Proprietary protocols** — based on clinical experience, not controlled studies
+
+**The platform must NEVER present Custom RAG content with the same trust level as PubMed citations.** This is both an ethical and legal requirement for a clinical decision support tool.
+
+#### How the AI Handles Custom RAG
+
+When Custom RAG chunks are included in context, the system prompt explicitly instructs the AI:
+
+```
+## Custom Knowledge Base Content (Practitioner-Uploaded)
+
+IMPORTANT: The following excerpts are from the practitioner's private
+knowledge base. These are NOT peer-reviewed evidence. They may reflect
+manufacturer recommendations, certification course content, or personal
+clinical protocols. Always note the source when citing this material
+and distinguish it from peer-reviewed evidence in your response.
+
+Source: [KB Name] — [Category: Certification Course]
+---
+[chunk text]
+---
+```
+
+#### Three Scenarios the AI Must Handle
+
+**1. Agreement (Custom RAG + peer-reviewed say the same thing):**
+> "L-glutamine for gut repair is supported by peer-reviewed evidence [REF-1, RCT] and aligns with your A4M course materials [Custom · A4M GI Module]."
+
+**2. Disagreement (Custom RAG contradicts peer-reviewed evidence):**
+> "Your uploaded protocol recommends X [Custom · Protocol Name]. Note: current peer-reviewed evidence suggests Y may be more effective [REF-2, Meta-analysis]. Consider reviewing the latest evidence."
+
+**3. Custom RAG only (no peer-reviewed evidence exists):**
+> "Based on your A4M course materials [Custom · A4M GI Module], the recommended approach is X. *No peer-reviewed evidence was found for this specific recommendation.*"
+
+This transparency is what makes Apothecare trustworthy in clinical practice.
+
 ### User Flow
 1. Go to **Settings → Knowledge Bases** (new section)
 2. Click **"Create Knowledge Base"**
@@ -368,3 +412,78 @@ CREATE POLICY "Practitioners read own + public evidence"
 - Deep Research: 2 sprints
 - Custom RAG: 2 sprints
 - Total: ~7 sprints (7-8 weeks)
+
+---
+
+## Evidence Source Hierarchy
+
+This is how Apothecare ranks and displays different source types across all features (chat, Deep Research, Protocol Generator, Custom RAG):
+
+| Tier | Source Type | Badge Style | Trust Level | Example |
+|------|-----------|-------------|-------------|---------|
+| 1 | Systematic Review / Meta-analysis | Gold **"META"** | Highest | Cochrane Review |
+| 2 | Randomized Controlled Trial | Blue **"RCT"** | High | PubMed RCT |
+| 3 | Clinical Practice Guideline | Green **"GUIDELINE"** | High | Endocrine Society, ACP |
+| 4 | Cohort / Observational Study | Purple **"COHORT"** | Moderate | PubMed cohort study |
+| 5 | Case Study / Series | Gray **"CASE"** | Lower | PubMed case report |
+| 6 | Partnership Protocol | Purple **"Partner · [Name]"** | ⚠️ Reference only | Apex Energetics product literature |
+| 7 | Custom RAG | Indigo **"Custom · [KB]"** | ⚠️ Reference only | A4M course, personal protocol |
+| 8 | Expert Consensus / Textbook | Gray **"EXPERT"** | ⚠️ Reference only | Clinical experience |
+
+**Tiers 1-5** are independently verifiable peer-reviewed sources.
+**Tiers 6-8** are reference materials — useful for clinical practice but NOT independent evidence. They may carry inherent bias (manufacturer product recommendations, single organization's philosophy, or individual clinical opinion). The platform must always distinguish these visually and in AI prompt instructions.
+
+### How This Applies to Each Feature
+
+**Chat:** Evidence badges already distinguish tiers 1-5. Partnership content (tier 6) currently uses a fallback badge. Custom RAG (tier 7) needs a new distinct badge style.
+
+**Deep Research:** Should ONLY use tiers 1-5 (peer-reviewed sources). Partnership and Custom RAG content should NOT appear in Deep Research results — this is a pure evidence feature. If partnership insights are relevant, they appear in a separate "Partnership Insights" section clearly labeled as manufacturer content.
+
+**Protocol Generator Pro:** Uses ALL tiers, but each supplement/recommendation carries a `source_type` field:
+- `"evidence"` — backed by PubMed/Cochrane citation → standard evidence badge
+- `"partner_protocol"` — from partnership RAG → purple "Partner · [Name]" badge
+- `"custom_rag"` — from practitioner's KB → indigo "Custom · [KB Name]" badge
+- `"clinical_framework"` — from IFM/A4M framework → teal "Framework" badge
+- `"practitioner_preference"` — from brand formulary → gray "Preferred" badge
+
+The practitioner always sees where each recommendation originates and can make an informed clinical judgment.
+
+**Custom RAG:** Always rendered with the indigo "Custom · [KB Name]" badge. Never promoted to a higher evidence tier regardless of the content. Even if a practitioner uploads a published RCT as a PDF, it should be cited from PubMed (tier 2), not from their custom KB — the Custom RAG version lacks the verification chain.
+
+---
+
+## You.com API Integration (Under Evaluation)
+
+### Context
+You.com offers a web search API with verified snippet extraction that could enhance two areas:
+
+### Potential Use Case 1: Citation Verification Layer
+After our existing `ground.ts` resolves citations from RAG chunks, use You.com's Deep Search API to verify that the cited paper actually supports the claim being made. This catches the "real paper, wrong claim" hallucination type.
+
+- **Endpoint:** `GET https://api.ydc-index.io/v1/search`
+- **Cost:** $5/1,000 calls ($0.005 per verification)
+- **Value:** Prevents citing real papers that don't actually support the claim
+
+### Potential Use Case 2: Deep Research Backend
+You.com's Research API (`POST https://api.you.com/v1/research`) with `research_effort: "deep"` could serve as the retrieval engine for the Deep Research feature instead of building a custom PubMed agent.
+
+- **Pros:** Multi-step search built-in, verified citations, fast to integrate
+- **Cons:** Returns general web results (not PubMed-specific), cost per deep call TBD, no control over source quality filtering
+- **Evaluate:** Test with $100 free credits, assess whether sources are journal-quality or generic health blogs
+
+### Decision Criteria
+- If You.com Research API returns ≥80% PubMed/journal-quality sources for clinical queries → integrate as Deep Research backend
+- If sources are too generic → build custom PubMed agent (Option B)
+- Citation verification layer (Use Case 1) is valuable regardless — low cost, high impact on hallucination reduction
+
+---
+
+## Open Questions
+
+1. **You.com Research API pricing:** Need actual per-call costs for each `research_effort` tier before committing
+2. **Stripe integration timeline:** Payment processing is a prerequisite for all tier differentiation
+3. **Custom RAG storage costs:** At 500MB × N practitioners, what's the Supabase storage/pgvector cost at scale?
+4. **Protocol liability disclaimer:** Should generated protocols include "AI-generated — practitioner review required before clinical use"?
+5. **Deep Research source restriction:** Should we restrict to PubMed/medical journals only, or allow general web (with quality filtering)?
+6. **Partnership RAG in protocols:** When Apex is selected as preferred brand, how prominently should Apex products appear vs. generic alternatives? Must always show both?
+7. **Custom RAG content moderation:** What if a practitioner uploads pseudoscientific content? Do we validate or just badge it appropriately?

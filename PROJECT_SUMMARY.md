@@ -835,9 +835,13 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 ### Pro+ Tier Roadmap ($199/mo) — See `docs/PRD-pro-plus.md`
 1. **Stripe Integration** — payment processing, tier management, usage metering
 2. **Deep Consult Credits** — 10/month for Pro, unlimited for Pro+, $2/additional
-3. **Protocol Generator Pro** — multi-phase longitudinal treatment protocols from full patient history
-4. **Deep Research** — autonomous literature review agent (Opus + PubMed + Cochrane + RAG)
-5. **Custom RAG** — practitioner-uploaded private knowledge bases (certifications, proprietary protocols)
+3. **Protocol Generator Pro** — multi-phase longitudinal treatment protocols from full patient history with conditional branching, specific product recs, and built-in reassessment points
+4. **Deep Research** — autonomous literature review agent (Opus + PubMed + Cochrane). Evaluating You.com Research API as backend alternative. Returns structured briefs with verified citations
+5. **Custom RAG** — practitioner-uploaded private knowledge bases (certifications, proprietary protocols). **NOT evidence** — always badged distinctly from peer-reviewed sources. Includes source transparency: partner protocol vs. custom vs. peer-reviewed
+
+**Evidence Source Hierarchy (enforced across all features):**
+- Tiers 1-5: Peer-reviewed (META, RCT, GUIDELINE, COHORT, CASE) — independent evidence
+- Tiers 6-8: Reference only (Partner Protocol, Custom RAG, Expert Consensus) — may carry bias, always labeled distinctly
 
 ---
 
