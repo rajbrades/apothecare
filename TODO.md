@@ -768,15 +768,15 @@ Core revenue feature — justifies $199/mo Pro+ tier. Enterprise tier added for 
 
 ---
 
-## Sprint 30 — Homepage & Conversion
+## Sprint 30 — Homepage & Conversion ✅ COMPLETE
 
 Marketing site polish for demo readiness and conversion optimization.
 
-- [ ] **Design:** Move chat product mockup into the hero viewport (above fold) — no visual anchor currently
-- [ ] **Design:** Add one dark/teal full-width CTA break section before pricing — currently every section is white/near-white, no visual rhythm
-- [ ] **Design:** Show a rich AI response in the demo chat mockup — actual response with citations and evidence badges
-- [ ] **Design:** Balance hero input microcopy — center "2 free queries/day · No credit card required" below input
-- [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
+- [x] **Design:** Move chat product mockup into hero viewport — reduced hero min-height, removed scroll cue, chat demo now visible near fold
+- [x] **Design:** Add dark/teal CTA break section before pricing — `CtaBreak` component (brand-950 bg, brand-300 accent) inserted before Pricing
+- [x] **Design:** Rich AI response in demo chat mockup — already implemented (evidence badges, typewriter animation, formatted response)
+- [x] **Design:** Balance hero input microcopy — centered "2 free queries daily · No credit card required" below input
+- [ ] **Design:** Admin Dashboard visual continuity — uses slate-* colors instead of brand system (deferred, lower priority)
 
 ---
 

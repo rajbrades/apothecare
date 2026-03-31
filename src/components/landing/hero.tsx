@@ -21,8 +21,8 @@ export function Hero() {
   };
 
   return (
-    <section className="relative bg-[#FCFCFC] min-h-[calc(100vh-4rem)] flex flex-col pb-12">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-10 lg:py-10 flex-1 flex items-center">
+    <section className="relative bg-[#FCFCFC] flex flex-col pb-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-16 lg:py-20 flex items-center">
         <div className="max-w-4xl mx-auto w-full">
           <div className="text-center space-y-6">
             <ScrollReveal>
@@ -62,7 +62,7 @@ export function Hero() {
                     Start Free <ArrowRight className="w-4 h-4 ml-1.5" />
                   </button>
                 </form>
-                <p className="text-sm text-[var(--color-text-muted)] mt-4">
+                <p className="text-sm text-[var(--color-text-muted)] mt-4 text-center">
                   2 free queries daily &middot; No credit card required
                 </p>
               </div>
@@ -91,16 +91,8 @@ export function Hero() {
 
       </div>
 
-      {/* Scroll cue */}
-      <div className="text-center pb-8">
-        <p className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">See it in action</p>
-        <svg className="w-5 h-5 text-[var(--color-brand-600)] animate-bounce mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
-
-      {/* Subtle gradient overlay at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FAFAFA]/20 to-transparent pointer-events-none" />
+      {/* Subtle gradient into chat mockup */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none" />
     </section>
   );
 }
