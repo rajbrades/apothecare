@@ -564,6 +564,8 @@ function OverflowMenu({
   showReparse,
   retrying,
   onReparse,
+  onRecalculate,
+  recalculating,
   archiving,
   isArchived,
   onArchive,
@@ -576,6 +578,8 @@ function OverflowMenu({
   showReparse: boolean;
   retrying: boolean;
   onReparse: () => void;
+  onRecalculate: () => void;
+  recalculating: boolean;
   archiving: boolean;
   isArchived: boolean;
   onArchive: () => void;
@@ -668,6 +672,17 @@ function OverflowMenu({
             </button>
           )}
 
+          {showReparse && (
+            <button
+              onClick={() => { onRecalculate(); setOpen(false); }}
+              disabled={recalculating}
+              className={itemClass}
+            >
+              <RefreshCcw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
+              {recalculating ? "Recalculating..." : "Recalculate Ranges"}
+            </button>
+          )}
+
           <button
             onClick={() => { onArchive(); setOpen(false); }}
             disabled={archiving}
@@ -687,6 +702,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
   const [biomarkers, setBiomarkers] = useState(initialBiomarkers);
   const [pdfUrl, setPdfUrl] = useState(initialPdfUrl);
   const [retrying, setRetrying] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [pushed, setPushed] = useState(false);
@@ -749,6 +765,30 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
       toast.error(err instanceof Error ? err.message : "Failed to start re-parse");
     } finally {
       setRetrying(false);
+    }
+  }, [report.id]);
+
+  const handleRecalculate = useCallback(async () => {
+    setRecalculating(true);
+    try {
+      const res = await fetch(`/api/labs/${report.id}/recalculate`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to recalculate");
+      }
+      const data = await res.json();
+      toast.success(`Ranges recalculated — ${data.flagged} flagged biomarkers`);
+      // Refresh the report data
+      const refreshRes = await fetch(`/api/labs/${report.id}`);
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setReport(refreshData.report);
+        setBiomarkers(refreshData.biomarkers);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to recalculate");
+    } finally {
+      setRecalculating(false);
     }
   }, [report.id]);
 
@@ -943,6 +983,8 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
             showReparse={report.status === "complete"}
             retrying={retrying}
             onReparse={handleRetry}
+            onRecalculate={handleRecalculate}
+            recalculating={recalculating}
             archiving={archiving}
             isArchived={isArchived}
             onArchive={handleArchive}
