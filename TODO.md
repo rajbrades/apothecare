@@ -780,13 +780,13 @@ Marketing site polish for demo readiness and conversion optimization.
 
 ---
 
-## Sprint 31 — Integrations & Patient Engagement
+## Sprint 31 — Integrations & Patient Engagement ✅ COMPLETE
 
 Patient-facing content tools and third-party connections.
 
-- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
-- [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
-- [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
+- [x] **Feature:** Patient Education Studio (Deep Dive) — Text selection triggers educational content generation with RAG grounding, slide deck presentations, and two-voice podcast audio via OpenAI TTS. Fully implemented.
+- [ ] **Feature:** Fullscript.com integration — Deferred. Requires Fullscript developer API account. Stub button exists ("coming soon").
+- [x] ~~**Feature:** Video Content Library~~ — Skipped. Low clinical value relative to other priorities.
 
 ---
 
