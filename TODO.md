@@ -333,15 +333,30 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ## Strategy & Pricing
 
-### Pro+ Tier ($199/mo) — Protocol Generator Pro
-- [ ] **PRD:** Full spec at `docs/PRD-protocol-generator-pro.md`
-- [ ] **Feature: Protocol Generator Pro** — AI-generated multi-phase treatment protocols (2-4 phases, 4-8 weeks each) synthesizing entire patient history: visits, labs, symptoms, IFM matrix, partnership RAG. Conditional branching, reassessment points, branded PDF export.
-- [ ] **Feature: Custom RAG** — Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation. Same ingestion pipeline as partnerships.
-- [ ] **Feature: Protocol Progress Tracking** — Active protocol status card on patient overview, phase advancement from visit workspace, patient portal protocol view with progress timeline.
-- [ ] **Feature: Visit Protocol Context** — Active protocol injected into visit AI system prompt. AI references current phase, week number, and goals. Auto-checks new labs against phase transition criteria.
-- [ ] **Migration:** `treatment_protocols`, `protocol_phases`, `protocol_phase_supplements`, `protocol_progress` tables with RLS, indexes, timeline triggers.
-- [ ] **Tier Gate:** Protocol generation, custom RAG, protocol export gated to Pro+ via `isFeatureAvailable()`.
-- [ ] **Strategy:** Determine pricing model for "Deep Research" premium service (autonomous literature review using advanced reasoning models).
+### Subscription Tiers (Planned)
+
+| Feature | Free | Pro ($99/mo) | Pro+ ($199/mo) |
+|---------|------|-------------|----------------|
+| AI Chat (Sonnet) | 2/day | Unlimited | Unlimited |
+| Deep Consult (Opus) | — | 10/month | Unlimited |
+| Deep Research (autonomous lit review) | — | — | Unlimited |
+| Protocol Generator Pro (phased treatment plans) | — | — | Unlimited |
+| Custom RAG (upload own knowledge bases) | — | — | Unlimited |
+| Partnership Knowledge Bases (Apex, etc.) | — | Included | Included |
+| Patient Portal | — | Included | Included |
+| Lab Parsing | 2/month | Unlimited | Unlimited |
+| Visit AI Generation | Included | Included | Included |
+| Data Export | 1/day | 3/day | Unlimited |
+
+### Pro+ Features — Implementation Plan
+
+- [ ] **Deep Research**: Autonomous multi-step literature review agent (see PRD: `docs/PRD-pro-plus.md`)
+- [ ] **Protocol Generator Pro**: Multi-phase longitudinal treatment protocols (see PRDs: `docs/PRD-pro-plus.md`, `docs/PRD-protocol-generator-pro.md`)
+- [ ] **Protocol Progress Tracking**: Active protocol card on patient overview, phase advancement from visit workspace, patient portal protocol view
+- [ ] **Visit Protocol Context**: Active protocol injected into visit AI system prompt, auto-checks labs against phase transition criteria
+- [ ] **Custom RAG**: Practitioner-uploaded knowledge bases with private vector search — **NOT evidence**, always badged distinctly from peer-reviewed sources (see PRD: `docs/PRD-pro-plus.md`)
+- [ ] **Stripe Integration**: Payment processing, tier management, usage metering for Deep Consult credits
+- [ ] **Usage Tracking UI**: Deep Consult credit counter in sidebar/settings, purchase flow for additional credits
 
 ---
 
