@@ -27,6 +27,7 @@ import { SectionShell, EditableTextSection, EditableTagSection } from "@/compone
 import type { Patient, PatientDocument, PatientSupplement, ProtocolItem, FMTimelineData, FMCategory, FMLifeStage, DocumentType } from "@/types/database";
 import { GenerateProtocolButton } from "@/components/protocols/generate-protocol-button";
 import { ProtocolList } from "@/components/protocols/protocol-list";
+import { ActiveProtocolCard } from "@/components/protocols/active-protocol-card";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 import type { TimelineEvent } from "@/hooks/use-timeline";
 
@@ -935,6 +936,9 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
             />
             {/* Demographics */}
             <DemographicsCard patient={patient} onSaved={handleFieldSaved} />
+            {protocols && protocols.length > 0 && (
+              <ActiveProtocolCard patientId={patient.id} protocols={protocols} />
+            )}
             <VitalsSnapshot
               patientId={patient.id}
               onViewTrends={() => {

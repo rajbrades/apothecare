@@ -121,6 +121,51 @@ export async function POST(
       console.warn("[RAG] Partnership context retrieval failed for visit generate:", err);
     }
 
+    // Active protocol context: inject current phase info into visit generation
+    let protocolContext = "";
+    if (visit.patient_id) {
+      try {
+        const { data: activeProtocol } = await supabase
+          .from("treatment_protocols")
+          .select("id, title, focus_areas, status, protocol_phases(phase_number, title, goal, duration_weeks, status, supplements, diet_recommendations, lifestyle_recommendations, labs_to_order)")
+          .eq("patient_id", visit.patient_id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (activeProtocol) {
+          const activePhase = activeProtocol.protocol_phases
+            ?.filter((p: { status: string }) => p.status === "active")
+            ?.[0];
+          const parts = [
+            `\n\n## Active Treatment Protocol`,
+            `Protocol: ${activeProtocol.title}`,
+            `Focus Areas: ${activeProtocol.focus_areas?.join(", ") || "General"}`,
+          ];
+          if (activePhase) {
+            parts.push(
+              `Current Phase: Phase ${activePhase.phase_number} — ${activePhase.title} (${activePhase.duration_weeks} weeks)`,
+              `Phase Goal: ${activePhase.goal || "Not specified"}`,
+            );
+            if (activePhase.supplements?.length) {
+              parts.push(`Current Supplements: ${activePhase.supplements.map((s: { name: string }) => s.name).join(", ")}`);
+            }
+            if (activePhase.labs_to_order?.length) {
+              parts.push(`Labs to Monitor: ${activePhase.labs_to_order.map((l: { name: string }) => l.name).join(", ")}`);
+            }
+          }
+          parts.push(
+            "",
+            "Reference this protocol in your Assessment and Plan sections. Note whether the patient is progressing, if any protocol adjustments are needed, and whether phase transition criteria are being met."
+          );
+          protocolContext = parts.join("\n");
+        }
+      } catch (err) {
+        console.warn("[Protocol] Active protocol fetch failed for visit generate:", err);
+      }
+    }
+
     const model = MODELS.standard;
     const encoder = new TextEncoder();
 
@@ -138,7 +183,7 @@ export async function POST(
             const soapPrompt = buildVisitSystemPrompt({
               visitType: visit.visit_type || "soap",
               patientContext,
-            }) + (partnershipContext ? "\n\n" + partnershipContext : "");
+            }) + (partnershipContext ? "\n\n" + partnershipContext : "") + protocolContext;
 
             let soapContent = "";
             await streamCompletion(

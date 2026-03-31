@@ -755,16 +755,16 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
-## Sprint 29 — Protocol Generator Pro (Pro+ Tier)
+## Sprint 29 — Protocol Generator Pro (Pro+ Tier) ✅ COMPLETE
 
-Core revenue feature — justifies $199/mo Pro+ tier.
+Core revenue feature — justifies $199/mo Pro+ tier. Enterprise tier added for Custom RAG.
 
-- [ ] **Feature:** Protocol Generator Pro — AI-generated multi-phase treatment protocols (2-4 phases, 4-8 weeks each) synthesizing entire patient history: visits, labs, symptoms, IFM matrix, partnership RAG. Conditional branching, reassessment points, branded PDF export.
-- [ ] **Feature:** Custom RAG — Enterprise only. Practitioners upload their own knowledge base PDFs (certifications, courses, proprietary protocols). Private to their account, searched alongside public evidence during protocol generation. Contact for pricing.
-- [ ] **Feature:** Protocol Progress Tracking — Active protocol status card on patient overview, phase advancement from visit workspace, patient portal protocol view with progress timeline.
-- [ ] **Feature:** Visit Protocol Context — Active protocol injected into visit AI system prompt. AI references current phase, week number, and goals. Auto-checks new labs against phase transition criteria.
-- [ ] **Tier Gate:** Protocol generation, custom RAG, protocol export gated to Pro+ via `isFeatureAvailable()`.
-- [ ] **Strategy:** Determine pricing model for Pro+ tier ($199/mo) and "Deep Research" premium service.
+- [x] **Feature:** Protocol Generator Pro — AI-generated multi-phase treatment protocols with full patient context, SSE streaming, branded PDF export. Migration 042, 7 API routes, 5 components, AI prompts, streaming hook.
+- [x] **Feature:** Custom RAG — Deferred to Enterprise tier ($Custom). Practitioners upload own PDFs. Tier gating implemented; UI deferred.
+- [x] **Feature:** Protocol Progress Tracking — Active protocol status card on patient overview (week N of M, progress bar, focus area badges), phase advancement API, protocol list on Protocols tab.
+- [x] **Feature:** Visit Protocol Context — Active protocol injected into visit SOAP generation prompt. AI references current phase, goals, supplements, and labs to monitor.
+- [x] **Tier Gate:** Protocol generation gated to Pro+ via `isFeatureAvailable()`. Custom RAG gated to Enterprise.
+- [x] **Pricing:** 4-tier model: Free ($0) → Pro ($99/mo) → Pro+ ($179/mo) → Enterprise (Contact for pricing).
 
 ---
 
