@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, Loader2 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 
 interface Disclosure {
@@ -75,7 +75,7 @@ export default function DisclosuresPage() {
         </div>
 
         {loading ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Loading disclosure log…</p>
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[var(--color-brand-600)] opacity-60" /></div>
         ) : disclosures.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-secondary)] px-6 py-10 flex flex-col items-center text-center gap-3">
             <Eye className="h-6 w-6 text-[var(--color-text-muted)]" />

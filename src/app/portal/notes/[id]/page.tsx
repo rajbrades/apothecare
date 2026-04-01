@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Calendar, User, Building2, Stethoscope, ClipboardList, Activity, ListChecks, Download } from "lucide-react";
+import { Calendar, User, Building2, Stethoscope, ClipboardList, Activity, ListChecks, Download, Loader2 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { generateNotePdf } from "@/lib/portal/generate-note-pdf";
 
@@ -130,7 +130,7 @@ export default function PatientNoteDetailPage() {
   }, [params.id, router]);
 
   if (loading) {
-    return <PortalShell><p className="text-sm text-[var(--color-text-muted)]">Loading note…</p></PortalShell>;
+    return <PortalShell><div className="fixed inset-0 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" /></div></PortalShell>;
   }
 
   if (error || !note) {

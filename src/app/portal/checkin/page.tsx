@@ -83,7 +83,7 @@ export default function SymptomCheckinPage() {
   if (loading) {
     return (
       <PortalShell>
-        <p className="text-sm text-[var(--color-text-muted)]">Loading check-in…</p>
+        <div className="fixed inset-0 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" /></div>
       </PortalShell>
     );
   }

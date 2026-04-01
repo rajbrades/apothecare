@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { BiomarkerPanel } from "@/components/chat/biomarker-range-bar";
-import { Info, FlaskConical } from "lucide-react";
+import { Info, FlaskConical, Loader2 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { mapDbFlagToComponentFlag } from "@/lib/labs/flag-mapping";
 import type { BiomarkerData, BiomarkerPanelData } from "@/components/chat/biomarker-range-bar";
@@ -99,7 +99,7 @@ export default function PatientLabDetailPage() {
   }, [params.id, router]);
 
   if (loading) {
-    return <PortalShell><p className="text-sm text-[var(--color-text-muted)]">Loading lab report…</p></PortalShell>;
+    return <PortalShell><div className="fixed inset-0 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" /></div></PortalShell>;
   }
 
   if (error || !lab) {
