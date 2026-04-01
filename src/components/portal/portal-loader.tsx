@@ -77,8 +77,7 @@ export function PortalLoader({ progress: controlledProgress, label = "Loading yo
           fontSize="9"
           fill="var(--color-text-muted)"
           fontFamily="inherit"
-          letterSpacing="0.08em"
-          textTransform="uppercase"
+          style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
         >
           LOADING
         </text>

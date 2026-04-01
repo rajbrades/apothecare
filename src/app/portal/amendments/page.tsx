@@ -32,6 +32,7 @@ const FIELD_LABELS: Record<string, string> = {
   allergies: "Allergies",
   medical_history: "Medical History",
   current_medications: "Current Medications",
+  other: "Other",
 };
 
 const STATUS_CONFIG = {
@@ -141,7 +142,8 @@ export default function AmendmentsPage() {
 
         {submitSuccess && (
           <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <p className="text-sm text-emerald-700">Your amendment request has been submitted. Your provider will review it.</p>
+            <p className="text-sm text-emerald-700 font-medium">Request submitted successfully.</p>
+            <p className="text-xs text-emerald-600 mt-1">A confirmation email has been sent to you. Your provider will review your request and respond within 30 days.</p>
           </div>
         )}
 
@@ -169,29 +171,31 @@ export default function AmendmentsPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
-                Current Value (optional)
-              </label>
-              <input
-                type="text"
-                value={currentValue}
-                onChange={(e) => setCurrentValue(e.target.value)}
-                placeholder="What is currently on file"
-                className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-md bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] placeholder:text-[var(--color-text-muted)]"
-              />
-            </div>
+            {fieldName !== "other" && (
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                  Current Value (optional)
+                </label>
+                <input
+                  type="text"
+                  value={currentValue}
+                  onChange={(e) => setCurrentValue(e.target.value)}
+                  placeholder="What is currently on file"
+                  className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-md bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] placeholder:text-[var(--color-text-muted)]"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
-                Corrected Value *
+                {fieldName === "other" ? "Description *" : "Corrected Value *"}
               </label>
               <input
                 type="text"
                 value={requestedValue}
                 onChange={(e) => setRequestedValue(e.target.value)}
                 required
-                placeholder="What it should be changed to"
+                placeholder={fieldName === "other" ? "Describe what needs to be corrected" : "What it should be changed to"}
                 className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-md bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] placeholder:text-[var(--color-text-muted)]"
               />
             </div>

@@ -3,6 +3,8 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateCsrf } from "@/lib/api/csrf";
 import { auditLog } from "@/lib/api/audit";
 import { z } from "zod";
+import { FIELD_LABELS } from "@/app/api/patient-portal/me/amendments/route";
+import { sendAmendmentReviewedEmail } from "@/lib/email/amendment";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -91,7 +93,7 @@ export async function POST(
     // Verify the amendment belongs to this patient and practitioner
     const { data: amendment } = await service
       .from("amendment_requests")
-      .select("id, field_name, requested_value, status")
+      .select("id, field_name, requested_value, status, patient_id")
       .eq("id", parsed.data.amendment_id)
       .eq("patient_id", id)
       .eq("practitioner_id", practitioner.id)
@@ -137,6 +139,28 @@ export async function POST(
         field_name: (amendment as { field_name: string }).field_name,
       },
     });
+
+    // Notify patient of the decision (non-blocking)
+    const fieldLabel = FIELD_LABELS[(amendment as { field_name: string }).field_name] ?? (amendment as { field_name: string }).field_name;
+    service
+      .from("patients")
+      .select("first_name, auth_user_id")
+      .eq("id", id)
+      .single()
+      .then(async ({ data: pat }: { data: { first_name?: string | null; auth_user_id?: string | null } | null }) => {
+        if (!pat?.auth_user_id) return;
+        const { data: authUser } = await service.auth.admin.getUserById(pat.auth_user_id);
+        const email = authUser?.user?.email;
+        if (!email) return;
+        return sendAmendmentReviewedEmail({
+          to: email,
+          patientFirstName: pat.first_name ?? null,
+          fieldLabel,
+          action: parsed.data.action,
+          reviewerNote: parsed.data.reviewer_note ?? null,
+        });
+      })
+      .catch((e: unknown) => console.error("[Amendments] Review email error:", e));
 
     return NextResponse.json({ success: true });
   } catch {

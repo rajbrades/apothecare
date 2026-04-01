@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/api/audit";
 import { z } from "zod";
+import {
+  sendAmendmentReceivedEmail,
+  sendAmendmentAlertEmail,
+} from "@/lib/email/amendment";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -10,15 +14,32 @@ function jsonError(message: string, status: number) {
 const AMENDABLE_FIELDS = [
   "first_name", "last_name", "email", "phone", "date_of_birth",
   "city", "state", "zip", "gender_identity", "ethnicity",
-  "allergies", "medical_history", "current_medications",
+  "allergies", "medical_history", "current_medications", "other",
 ] as const;
+
+export const FIELD_LABELS: Record<string, string> = {
+  first_name: "First Name",
+  last_name: "Last Name",
+  email: "Email",
+  phone: "Phone",
+  date_of_birth: "Date of Birth",
+  city: "City",
+  state: "State",
+  zip: "ZIP Code",
+  gender_identity: "Gender Identity",
+  ethnicity: "Ethnicity",
+  allergies: "Allergies",
+  medical_history: "Medical History",
+  current_medications: "Current Medications",
+  other: "Other",
+};
 
 const createAmendmentSchema = z.object({
   field_name: z.enum(AMENDABLE_FIELDS, {
     errorMap: () => ({ message: "Invalid field. Allowed: " + AMENDABLE_FIELDS.join(", ") }),
   }),
   current_value: z.string().max(2000).optional(),
-  requested_value: z.string().min(1, "Requested value is required").max(2000),
+  requested_value: z.string().min(1, "Description is required").max(2000),
   reason: z.string().min(5, "Please provide a reason (at least 5 characters)").max(1000),
 });
 
@@ -78,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     const { data: patient } = await supabase
       .from("patients")
-      .select("id, practitioner_id")
+      .select("id, practitioner_id, first_name, last_name")
       .eq("auth_user_id", user.id)
       .single();
 
@@ -120,6 +141,45 @@ export async function POST(request: NextRequest) {
         field_name: parsed.data.field_name,
       },
     });
+
+    // Send emails (non-blocking — don't fail the request if email fails)
+    const fieldLabel = FIELD_LABELS[parsed.data.field_name] ?? parsed.data.field_name;
+    const patientName = [
+      (patient as { first_name?: string | null }).first_name,
+      (patient as { last_name?: string | null }).last_name,
+    ].filter(Boolean).join(" ") || "Patient";
+
+    Promise.all([
+      // Confirmation to patient
+      sendAmendmentReceivedEmail({
+        to: user.email!,
+        patientFirstName: (patient as { first_name?: string | null }).first_name ?? null,
+        fieldLabel,
+        requestedValue: parsed.data.requested_value,
+      }).catch((e: unknown) => console.error("[Amendments] Patient email error:", e)),
+
+      // Alert to practitioner (if we can find their email)
+      patient.practitioner_id
+        ? supabase
+            .from("practitioners")
+            .select("first_name, email")
+            .eq("id", patient.practitioner_id)
+            .single()
+            .then(({ data: prac }: { data: { first_name?: string | null; email?: string | null } | null }) => {
+              if (!prac?.email) return;
+              return sendAmendmentAlertEmail({
+                to: prac.email,
+                practitionerFirstName: prac.first_name ?? null,
+                patientName,
+                fieldLabel,
+                requestedValue: parsed.data.requested_value,
+                reason: parsed.data.reason,
+                patientId: patient.id,
+              });
+            })
+            .catch((e: unknown) => console.error("[Amendments] Practitioner email error:", e))
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({ success: true, id: amendment?.id }, { status: 201 });
   } catch {

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .eq("patient_id", patient.id),
   ]);
 
-  const signedMap = new Map(
+  const signedMap = new Map<string, { signed_at: string; signed_name: string }>(
     (signatures || []).map((s: { consent_template_id: string; signed_at: string; signed_name: string }) => [
       s.consent_template_id,
       { signed_at: s.signed_at, signed_name: s.signed_name },
