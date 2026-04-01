@@ -93,8 +93,8 @@ function PortalLoginInner() {
     <div className="min-h-screen bg-[var(--color-surface)] flex flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo + label */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5 mb-4">
+        <div className="space-y-1 text-center">
+          <div className="flex items-center justify-center gap-2.5 mb-4">
             <Logomark className="h-7 w-7" />
             <span className="text-sm font-semibold text-[var(--color-text-primary)]">Apothecare</span>
           </div>
@@ -147,7 +147,7 @@ function PortalLoginInner() {
         )}
 
         {stage === "check_email" && (
-          <div className="space-y-4">
+          <div className="space-y-4 text-center">
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
               We sent a sign-in link to <strong>{email}</strong>. Click the link in that email to access your portal.
             </p>
@@ -164,15 +164,15 @@ function PortalLoginInner() {
         )}
 
         {stage === "signing_in" && (
-          <p className="text-sm text-[var(--color-text-muted)]">Signing you in…</p>
+          <p className="text-sm text-[var(--color-text-muted)] text-center">Signing you in…</p>
         )}
 
-        <p className="text-xs text-[var(--color-text-muted)]">
+        <p className="text-xs text-[var(--color-text-muted)] text-center">
           Don&apos;t have an account?{" "}
           <span>Check your email for an invitation from your provider.</span>
         </p>
 
-        <nav className="flex items-center gap-4 text-xs text-[var(--color-text-muted)]">
+        <nav className="flex items-center justify-center gap-4 text-xs text-[var(--color-text-muted)]">
           <Link href="/terms" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</Link>
           <Link href="/security" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</Link>
           <Link href="/telehealth" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</Link>
