@@ -68,20 +68,24 @@ function PortalLoginInner() {
       return;
     }
 
-    const redirectTo = `${window.location.origin}/portal/login?slug=${slug ?? ""}`;
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: redirectTo,
-        shouldCreateUser: false, // Don't create new users from login page
-      },
-    });
+    // Send branded magic link via our API (uses Resend instead of Supabase's default email)
+    try {
+      const res = await fetch("/api/patient-portal/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, slug: slug ?? "" }),
+      });
 
-    if (otpError) {
-      setError("No account found with that email address. If you haven't activated your invitation yet, check your email for an invitation link.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to send sign-in link. Please try again.");
+        setLoading(false);
+      } else {
+        setStage("check_email");
+      }
+    } catch {
+      setError("Failed to send sign-in link. Please check your connection and try again.");
       setLoading(false);
-    } else {
-      setStage("check_email");
     }
   }
 
