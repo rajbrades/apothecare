@@ -66,9 +66,9 @@ function groupBiomarkers(rows: BiomarkerRow[]): BiomarkerPanelData[] {
       value: b.value,
       unit: b.unit,
       conventionalLow: b.conventional_low ?? 0,
-      conventionalHigh: b.conventional_high ?? 0,
+      conventionalHigh: b.conventional_high ?? b.value * 2,
       functionalLow: b.functional_low ?? b.conventional_low ?? 0,
-      functionalHigh: b.functional_high ?? b.conventional_high ?? 0,
+      functionalHigh: b.functional_high ?? b.conventional_high ?? b.value * 2,
       flag: b.functional_flag
         ? mapDbFlagToComponentFlag(b.functional_flag)
         : b.conventional_flag
