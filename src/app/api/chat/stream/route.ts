@@ -193,6 +193,7 @@ export async function POST(request: NextRequest) {
           source: chunk.source,
           publication: chunk.publication || chunk.source,
           evidenceLevel: chunk.evidenceLevel || "other",
+          content: chunk.content || "",
         });
       }
     } catch (err) {
