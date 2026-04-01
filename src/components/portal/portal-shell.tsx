@@ -32,7 +32,7 @@ export function PortalShell({ children, maxWidth = "3xl" }: PortalShellProps) {
         <div className={`${WIDTH_CLASSES[maxWidth]} mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between`}>
           <Link href="/portal/dashboard" className="flex items-center gap-2 sm:gap-2.5 min-h-[44px]">
             <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Patient Portal</span>
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Apothecare <span className="text-[var(--color-text-muted)] font-normal">| Patient Portal</span></span>
           </Link>
           <button
             onClick={signOut}
