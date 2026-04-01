@@ -1,17 +1,3 @@
-import { sendEmail } from "./resend";
-import { env } from "@/lib/env";
-
-export interface SendMagicLinkEmailOptions {
-  to: string;
-  magicLinkUrl: string;
-}
-
-export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promise<{ id: string }> {
-  const { to, magicLinkUrl } = opts;
-
-  const domain = env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, "") || "apothecare.ai";
-
-  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +42,7 @@ export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promi
               <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
                 <tr>
                   <td style="background-color:#3d8b6e;border-radius:8px;padding:14px 32px;">
-                    <a href="${magicLinkUrl}" style="color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;">
+                    <a href="https://apothecare.ai/portal/login" style="color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;">
                       Sign In to Portal &rarr;
                     </a>
                   </td>
@@ -66,7 +52,7 @@ export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promi
                 Or copy this link into your browser:
               </p>
               <p style="margin:0 0 28px;word-break:break-all;text-align:center;">
-                <a href="${magicLinkUrl}" style="color:#3d8b6e;font-size:12px;">${magicLinkUrl}</a>
+                <a href="https://apothecare.ai/portal/login" style="color:#3d8b6e;font-size:12px;">https://apothecare.ai/auth/v1/verify?token=abc123&type=magiclink&redirect_to=https://apothecare.ai/portal/login</a>
               </p>
               <div style="height:1px;background-color:#e5e7eb;margin:0 0 20px;"></div>
               <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.6;text-align:center;">
@@ -81,7 +67,7 @@ export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promi
                 <tr>
                   <td style="text-align:center;">
                     <p style="margin:0 0 4px;color:#6b7280;font-size:11px;">Secured by Apothecare &middot; HIPAA Compliant</p>
-                    <p style="margin:0;color:#9ca3af;font-size:10px;">${domain}</p>
+                    <p style="margin:0;color:#9ca3af;font-size:10px;">apothecare.ai</p>
                   </td>
                 </tr>
               </table>
@@ -92,19 +78,4 @@ export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promi
     </tr>
   </table>
 </body>
-</html>`;
-
-  const text = `Sign in to your Patient Portal
-
-Click the link below to securely sign in (expires in 10 minutes):
-${magicLinkUrl}
-
-If you didn't request this, you can safely ignore this email.`;
-
-  return sendEmail({
-    to,
-    subject: "Sign in to your Apothecare Patient Portal",
-    html,
-    text,
-  });
-}
+</html>
