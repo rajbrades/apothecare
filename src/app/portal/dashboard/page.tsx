@@ -21,6 +21,7 @@ import {
   Activity,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalLoader } from "@/components/portal/portal-loader";
 import { generateConsentPdf } from "@/lib/portal/generate-consent-pdf";
 
 interface LabReport {
@@ -113,6 +114,7 @@ export default function PatientDashboard() {
   const [symptomTrends, setSymptomTrends] = useState<SymptomTrendItem[]>([]);
   const [lastCheckinAt, setLastCheckinAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   useEffect(() => {
@@ -120,15 +122,24 @@ export default function PatientDashboard() {
   }, []);
 
   async function loadData() {
+    // Fire all 7 fetches in parallel; each completion increments real progress
+    const TOTAL = 7;
+    const step = 100 / TOTAL;
+    let completed = 0;
+    const tick = () => {
+      completed += 1;
+      setLoadProgress(Math.round(Math.min((completed / TOTAL) * 100, 95)));
+    };
+
     try {
       const [meRes, labsRes, notesRes, consentsRes, trendsRes, docsRes, symptomRes] = await Promise.all([
-        fetch("/api/patient-portal/me"),
-        fetch("/api/patient-portal/me/labs"),
-        fetch("/api/patient-portal/me/notes"),
-        fetch("/api/patient-portal/me/consents"),
-        fetch("/api/patient-portal/me/biomarkers/timeline?mode=overview"),
-        fetch("/api/patient-portal/me/documents"),
-        fetch("/api/patient-portal/me/symptom-checkin/history?mode=overview"),
+        fetch("/api/patient-portal/me").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/labs").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/notes").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/consents").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/biomarkers/timeline?mode=overview").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/documents").then((r) => { tick(); return r; }),
+        fetch("/api/patient-portal/me/symptom-checkin/history?mode=overview").then((r) => { tick(); return r; }),
       ]);
 
       if (meRes.status === 401) { router.replace("/portal/login"); return; }
@@ -151,21 +162,20 @@ export default function PatientDashboard() {
       setDocuments(docsData.documents || []);
       setSymptomTrends(symptomData.trends || []);
       setLastCheckinAt(symptomData.last_checkin_at || null);
-      // Show only signed consents
       setSignedConsents(
         (consentsData.consents || []).filter((c: SignedConsent & { signed: boolean }) => c.signed)
       );
+      setLoadProgress(100);
     } finally {
-      setLoading(false);
+      // Brief pause at 100% before revealing content
+      setTimeout(() => setLoading(false), 200);
     }
   }
 
   if (loading || !onboardingComplete) {
     return (
       <PortalShell>
-        <div className="fixed inset-0 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" />
-        </div>
+        <PortalLoader progress={loadProgress} label="Loading your dashboard…" />
       </PortalShell>
     );
   }
@@ -640,8 +650,36 @@ const UPLOAD_DOCUMENT_TYPES = [
   { value: "other", label: "Other" },
 ];
 
+function UploadRing({ pct, label }: { pct: number; label: string }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r={r} fill="none" stroke="var(--color-brand-100)" strokeWidth="5" />
+        <circle
+          cx="36" cy="36" r={r}
+          fill="none"
+          stroke="var(--color-brand-600)"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={circ * (1 - pct / 100)}
+          transform="rotate(-90 36 36)"
+          style={{ transition: "stroke-dashoffset 0.25s ease" }}
+        />
+        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--color-text-primary)" fontFamily="inherit">
+          {Math.round(pct)}%
+        </text>
+      </svg>
+      <p className="text-xs text-[var(--color-text-secondary)]">{label}</p>
+    </div>
+  );
+}
+
 function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: PatientDocument) => void }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [docType, setDocType] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -667,6 +705,7 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
   const handleUpload = async () => {
     if (!file || !docType) return;
     setUploading(true);
+    setUploadPct(0);
     setError("");
     try {
       const formData = new FormData();
@@ -674,18 +713,21 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
       formData.append("document_type", docType);
       if (title.trim()) formData.append("title", title.trim());
 
-      const res = await fetch("/api/patient-portal/me/documents", {
-        method: "POST",
-        body: formData,
+      const responseText = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+          else reject(new Error((() => { try { return JSON.parse(xhr.responseText).error; } catch { return "Upload failed"; } })()));
+        });
+        xhr.addEventListener("error", () => reject(new Error("Upload failed. Please check your connection.")));
+        xhr.open("POST", "/api/patient-portal/me/documents");
+        xhr.send(formData);
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Upload failed");
-        return;
-      }
-
-      const data = await res.json();
+      const data = JSON.parse(responseText);
       setSuccess(true);
       setFile(null);
       setDocType("");
@@ -693,10 +735,11 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
       if (fileInputRef.current) fileInputRef.current.value = "";
       onUploadComplete(data.document);
       setTimeout(() => setSuccess(false), 3000);
-    } catch {
-      setError("Upload failed. Please check your connection.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
+      setUploadPct(0);
     }
   };
 
@@ -783,7 +826,7 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
               : "text-white bg-[var(--color-brand-900)] hover:bg-[var(--color-brand-700)] hover:-translate-y-px hover:shadow-lg"
           }`}
         >
-          {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</> : "Upload Document"}
+          {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> {uploadPct < 100 ? `Uploading ${uploadPct}%` : "Processing…"}</> : "Upload Document"}
         </button>
       )}
     </div>

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Calendar, User, Building2, Stethoscope, ClipboardList, Activity, ListChecks, Download, Loader2 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalLoader } from "@/components/portal/portal-loader";
 import { generateNotePdf } from "@/lib/portal/generate-note-pdf";
 
 interface EncounterNote {
@@ -130,7 +131,7 @@ export default function PatientNoteDetailPage() {
   }, [params.id, router]);
 
   if (loading) {
-    return <PortalShell><div className="fixed inset-0 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" /></div></PortalShell>;
+    return <PortalShell><PortalLoader label="Loading note…" /></PortalShell>;
   }
 
   if (error || !note) {

@@ -48,9 +48,38 @@ const TEST_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+function UploadRing({ pct, label }: { pct: number; label: string }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r={r} fill="none" stroke="var(--color-brand-100)" strokeWidth="5" />
+        <circle
+          cx="36" cy="36" r={r}
+          fill="none"
+          stroke="var(--color-brand-600)"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={circ * (1 - pct / 100)}
+          transform="rotate(-90 36 36)"
+          style={{ transition: "stroke-dashoffset 0.25s ease" }}
+        />
+        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--color-text-primary)" fontFamily="inherit">
+          {Math.round(pct)}%
+        </text>
+      </svg>
+      <p className="text-xs text-[var(--color-text-secondary)]">{label}</p>
+    </div>
+  );
+}
+
 export function LabUpload({ patients, onUploaded, defaultExpanded = false }: LabUploadProps) {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadPhase, setUploadPhase] = useState<"uploading" | "processing">("uploading");
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -75,6 +104,8 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
     }
 
     setUploading(true);
+    setUploadPct(0);
+    setUploadPhase("uploading");
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -84,15 +115,26 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
       if (testName.trim()) formData.append("test_name", testName.trim());
       if (collectionDate) formData.append("collection_date", collectionDate);
 
-      const res = await fetch("/api/labs", {
-        method: "POST",
-        body: formData,
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try { reject(new Error(JSON.parse(xhr.responseText).error || "Upload failed")); }
+            catch { reject(new Error("Upload failed")); }
+          }
+        });
+        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+        xhr.open("POST", "/api/labs");
+        xhr.send(formData);
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
+      setUploadPct(100);
+      setUploadPhase("processing");
 
       // Reset form
       setPatientId("");
@@ -110,6 +152,7 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
       toast.error(message);
     } finally {
       setUploading(false);
+      setUploadPct(0);
     }
   };
 
@@ -251,10 +294,10 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
             />
 
             {uploading ? (
-              <>
-                <Loader2 className="w-8 h-8 text-[var(--color-brand-600)] animate-spin mb-2" />
-                <p className="text-sm text-[var(--color-text-secondary)]">Uploading &amp; parsing...</p>
-              </>
+              <UploadRing
+                pct={uploadPhase === "processing" ? 100 : uploadPct}
+                label={uploadPhase === "processing" ? "Processing PDF…" : `Uploading ${uploadPct}%`}
+              />
             ) : (
               <>
                 <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-secondary)] flex items-center justify-center mb-3">

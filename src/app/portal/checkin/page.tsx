@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PortalLoader } from "@/components/portal/portal-loader";
 import { SliderField } from "@/components/portal/intake/intake-fields";
 import { SYMPTOM_GROUPS } from "@/lib/constants/symptoms";
 
@@ -83,7 +84,7 @@ export default function SymptomCheckinPage() {
   if (loading) {
     return (
       <PortalShell>
-        <div className="fixed inset-0 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-600)] opacity-70" /></div>
+        <PortalLoader label="Loading check-in…" />
       </PortalShell>
     );
   }
