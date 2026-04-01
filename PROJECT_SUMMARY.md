@@ -1,6 +1,6 @@
 # Apothecare — Project Summary & Handoff Document
 
-**Last updated:** March 26, 2026
+**Last updated:** April 1, 2026
 **Purpose:** Pick up development exactly where we left off.
 
 ---
@@ -10,7 +10,7 @@
 Apothecare is an AI-powered clinical decision support platform for functional and integrative medicine practitioners. It provides evidence-cited chat (Claude-powered), multi-modal lab interpretation, protocol generation, and visit documentation — all grounded in functional medicine research from IFM, A4M, and peer-reviewed literature.
 
 **Target users:** MDs, DOs, NPs, PAs, DCs, NDs practicing functional medicine.
-**Business model:** Freemium — Free (2 queries/day) → Pro ($99/mo, unlimited).
+**Business model:** 4-tier Freemium — Free ($0, 2 queries/day) → Pro ($99/mo, unlimited) → Pro+ ($179/mo, multi-phase protocols) → Enterprise (custom pricing, custom RAG).
 
 ---
 
@@ -317,7 +317,7 @@ src/
 
 **Key functions:** `check_and_increment_query()`, `reset_daily_queries()`, `search_evidence()`, `update_updated_at()`
 
-**Migrations:** 23 applied (see "Database Migrations" section below).
+**Migrations:** 42 applied (see "Database Migrations" section below).
 
 ---
 
@@ -783,10 +783,10 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 ## What Needs To Be Done Next
 
 ### High Priority
-- [ ] **HIPAA High findings** — see TODO.md "🟡 HIGH" section (11 items)
-- [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed)
-- [ ] **Mobile responsive pass** — all pages
-- [ ] **Stripe integration** — payment processing for Pro subscriptions
+- [x] **HIPAA High findings** — all H1-H11 resolved (see TODO.md)
+- [x] **Mobile responsive pass** — all pages (Sprint 29)
+- [ ] **Fullscript integration** — real API connection for dispensary ordering (currently stubbed, deferred)
+- [ ] **Stripe integration** — payment processing for Pro/Pro+/Enterprise subscriptions
 
 ### Sprint 27 Hotfix — Patient Portal Auth (Mar 26, 2026) ✅ COMPLETE
 1. ✅ Fixed patient invite link "Something went wrong" — middleware blocked `/api/patient-portal/*` (redirected to practitioner login)
@@ -869,6 +869,12 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 2. ✅ Video Content Library — skipped (low clinical value)
 3. ⏳ Fullscript integration — deferred (requires developer API account)
 
+### Sprint 32 — Analytics & Business Intelligence (April 1, 2026) — IN PROGRESS
+1. ✅ Clinical Insights Dashboard (`/analytics`) — Recharts visualizations: top conditions, visit volume, biomarker flags, supplement trends, protocol generation, lab vendors. Pro gated. Analytics sidebar nav.
+2. ⏳ Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
+3. ⏳ Analytics integration (PostHog or Mixpanel)
+4. ⏳ A/B testing framework for landing page conversion
+
 ### Homepage Design
 - [x] Dark/teal CTA break section before pricing
 - [x] Balance hero input microcopy alignment
@@ -877,19 +883,18 @@ Full codebase security audit with 3 parallel agents covering PHI exposure, acces
 ### Backlog
 - HIPAA: Vendor BAAs (Supabase, OpenAI, AWS, Resend, Vercel)
 - PWA support for mobile practitioners
-- Analytics (PostHog or Mixpanel)
-- A/B testing framework for landing page
 - Accessibility audit (WCAG 2.1 AA)
-- Clinical Insights Dashboard (Sprint 32)
-- Business Metrics Dashboard (Sprint 32)
 - Fullscript integration (requires API account)
+- Business Metrics Dashboard
+- Analytics integration (PostHog or Mixpanel)
+- A/B testing framework for landing page
 
-### Pro+ Tier Roadmap ($199/mo) — See `docs/PRD-pro-plus.md`
+### Pro+ Tier Roadmap ($179/mo) — See `docs/PRD-pro-plus.md`
 1. **Stripe Integration** — payment processing, tier management, usage metering
 2. **Deep Consult Credits** — 10/month for Pro, unlimited for Pro+, $2/additional
-3. **Protocol Generator Pro** — multi-phase longitudinal treatment protocols from full patient history with conditional branching, specific product recs, and built-in reassessment points
+3. ✅ **Protocol Generator Pro** — multi-phase longitudinal treatment protocols (migration 042, 7 API routes, 5 components, SSE streaming via Claude Opus, branded PDF export). Complete as of Sprint 29.
 4. **Deep Research** — autonomous literature review agent (Opus + PubMed + Cochrane). Evaluating You.com Research API as backend alternative. Returns structured briefs with verified citations
-5. **Custom RAG** — practitioner-uploaded private knowledge bases (certifications, proprietary protocols). **NOT evidence** — always badged distinctly from peer-reviewed sources. Includes source transparency: partner protocol vs. custom vs. peer-reviewed
+5. **Custom RAG** — practitioner-uploaded private knowledge bases (certifications, proprietary protocols). **NOT evidence** — always badged distinctly from peer-reviewed sources. Gated to Enterprise tier.
 
 **Evidence Source Hierarchy (enforced across all features):**
 - Tiers 1-5: Peer-reviewed (META, RCT, GUIDELINE, COHORT, CASE) — independent evidence
@@ -968,7 +973,7 @@ In **Supabase Dashboard → Authentication → URL Configuration**:
 
 ## Database Migrations
 
-23 migrations must be applied in order in Supabase SQL Editor:
+42 migrations must be applied in order in Supabase SQL Editor:
 
 1. `001_initial_schema.sql` — 12 core tables with RLS, audit logging, pgvector
 2. `002_visits_status.sql` — visit_type, status, ai_protocol columns on visits
@@ -1010,21 +1015,23 @@ The RAG infrastructure enables partnership content (e.g., Apex Energetics master
 - `supabase/migrations/024_partnership_rag.sql` — Schema migration
 - `docs/partnerships/apex-energetics/` — Test PDFs (gitignored)
 
-### Status (as of Mar 11, 2026)
-- Phase 1 code complete — migration, ingestion pipeline, retrieval layer, admin API all built
-- **PENDING**: Apply migration 024 in Supabase Dashboard SQL Editor, then run ingestion
-- **NEXT**: Wire retrieval into chat/supplement/visit endpoints (Phase 2-3)
+### Status — ✅ COMPLETE (as of Mar 26, 2026)
+- Phase 1 complete — migration 024, ingestion pipeline, retrieval layer, admin API
+- Phase 2 complete — chat integration with partnership citations
+- Phase 3 complete — supplement + visit generation integration
+- 17 focused Apex Energetics documents ingested with per-file RAG metadata
+- RAG threshold lowered to 0.45 for OCR content, max chunks 6/10
 
-## Product Roadmap — Pro+ Tier ($199/mo)
+## Product Roadmap — Pro+ Tier ($179/mo)
 
-### Protocol Generator Pro (Sprints 30-35)
+### Protocol Generator Pro ✅ COMPLETE (Sprint 29)
 **Full PRD:** `docs/PRD-protocol-generator-pro.md`
 
 AI-generated multi-phase treatment protocols synthesizing a patient's entire clinical history into 3-6 month phased plans with conditional branching, partnership product recommendations (Apex Energetics), reassessment points, and branded PDF export. Flagship Pro+ feature — replaces a $500/hr functional medicine mentor.
 
-**Key capabilities:** Longitudinal synthesis (all visits/labs/symptoms/IFM matrix), phased plans (Foundation -> Restore -> Optimize), conditional logic ("if zonulin normalizes, proceed"), visit AI integration (references active protocol), patient portal view, custom RAG (practitioners upload own knowledge base), branded PDF export.
+**Key capabilities:** Longitudinal synthesis (all visits/labs/symptoms/IFM matrix), phased plans (Foundation -> Restore -> Optimize), conditional logic ("if zonulin normalizes, proceed"), visit AI integration (references active protocol), patient portal view, branded PDF export.
 
-**Implementation:** 5 phases across Sprints 30-35. See PRD for full data model, API spec, and UI flows.
+**Implementation:** Migration 042 (treatment_protocols, protocol_phases, protocol_phase_supplements, protocol_progress). 7 API routes, 5 UI components (focus area modal, protocol workspace, phase cards, protocol list, generate button), useProtocolStream hook, branded PDF export. SSE streaming via Claude Opus. Pro+ gated (20/day rate limit).
 
 ### Longitudinal Symptom Tracking (Complete — Sprint 28)
 Recurring patient check-ins via portal (18 symptoms, 4 body-system groups), trend visualization for patients (dashboard sparklines) and practitioners (Trends > Symptoms sub-tab with recharts), foundation for Phase 2 treatment correlation with supplement/medication timeline overlay.

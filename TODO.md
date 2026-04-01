@@ -1,6 +1,6 @@
 # Apothecare — TODO
 
-Last updated: March 29, 2026
+Last updated: April 1, 2026
 
 ---
 
@@ -333,28 +333,29 @@ Partnership RAG pipeline end-to-end: ingestion, retrieval, chat/supplement/visit
 
 ## Strategy & Pricing
 
-### Subscription Tiers (Planned)
+### Subscription Tiers (4-Tier — Implemented)
 
-| Feature | Free | Pro ($99/mo) | Pro+ ($199/mo) |
-|---------|------|-------------|----------------|
-| AI Chat (Sonnet) | 2/day | Unlimited | Unlimited |
-| Deep Consult (Opus) | — | 10/month | Unlimited |
-| Deep Research (autonomous lit review) | — | — | Unlimited |
-| Protocol Generator Pro (phased treatment plans) | — | — | Unlimited |
-| Custom RAG (upload own knowledge bases) | — | — | Unlimited |
-| Partnership Knowledge Bases (Apex, etc.) | — | Included | Included |
-| Patient Portal | — | Included | Included |
-| Lab Parsing | 2/month | Unlimited | Unlimited |
-| Visit AI Generation | Included | Included | Included |
-| Data Export | 1/day | 3/day | Unlimited |
+| Feature | Free | Pro ($99/mo) | Pro+ ($179/mo) | Enterprise (Custom) |
+|---------|------|-------------|----------------|---------------------|
+| AI Chat (Sonnet) | 2/day | Unlimited | Unlimited | Unlimited |
+| Deep Consult (Opus) | — | 10/month | Unlimited | Unlimited |
+| Deep Research (autonomous lit review) | — | — | Unlimited | Unlimited |
+| Protocol Generator Pro (phased treatment plans) | — | — | 20/day | Unlimited |
+| Custom RAG (upload own knowledge bases) | — | — | — | Unlimited |
+| Partnership Knowledge Bases (Apex, etc.) | — | Included | Included | Included |
+| Patient Portal | — | Included | Included | Included |
+| Lab Parsing | 2/month | Unlimited | Unlimited | Unlimited |
+| Visit AI Generation | Included | Included | Included | Included |
+| Data Export | 1/day | 3/day | Unlimited | Unlimited |
+| Clinical Insights Dashboard | — | Included | Included | Included |
 
 ### Pro+ Features — Implementation Plan
 
 - [ ] **Deep Research**: Autonomous multi-step literature review agent (see PRD: `docs/PRD-pro-plus.md`)
-- [ ] **Protocol Generator Pro**: Multi-phase longitudinal treatment protocols (see PRDs: `docs/PRD-pro-plus.md`, `docs/PRD-protocol-generator-pro.md`)
-- [ ] **Protocol Progress Tracking**: Active protocol card on patient overview, phase advancement from visit workspace, patient portal protocol view
-- [ ] **Visit Protocol Context**: Active protocol injected into visit AI system prompt, auto-checks labs against phase transition criteria
-- [ ] **Custom RAG**: Practitioner-uploaded knowledge bases with private vector search — **NOT evidence**, always badged distinctly from peer-reviewed sources (see PRD: `docs/PRD-pro-plus.md`)
+- [x] **Protocol Generator Pro**: Multi-phase longitudinal treatment protocols (Sprint 29 — migration 042, 7 API routes, 5 components, SSE streaming, PDF export)
+- [x] **Protocol Progress Tracking**: Active protocol card on patient overview, phase advancement, protocol list on Protocols tab (Sprint 29)
+- [x] **Visit Protocol Context**: Active protocol injected into visit AI system prompt — phase, goal, supplements, labs to monitor (Sprint 29)
+- [ ] **Custom RAG**: Practitioner-uploaded knowledge bases with private vector search — gated to Enterprise tier (see PRD: `docs/PRD-pro-plus.md`)
 - [ ] **Stripe Integration**: Payment processing, tier management, usage metering for Deep Consult credits
 - [ ] **Usage Tracking UI**: Deep Consult credit counter in sidebar/settings, purchase flow for additional credits
 
@@ -805,11 +806,11 @@ Patient-facing content tools and third-party connections.
 
 ---
 
-## Sprint 32 — Analytics & Business Intelligence
+## Sprint 32 — Analytics & Business Intelligence (April 1, 2026) — IN PROGRESS
 
 Practice insights for practitioner retention and conversion optimization.
 
-- [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
+- [x] **Feature:** Clinical Insights Dashboard (`/analytics`) — Recharts visualizations: top conditions treated, visit volume over time, biomarker flag frequency, most prescribed supplements, protocol generation trends, lab vendor distribution. Pro gated. Analytics sidebar nav item.
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
 - [ ] **Feature:** Analytics integration (PostHog or Mixpanel)
 - [ ] **Feature:** A/B testing framework for landing page conversion

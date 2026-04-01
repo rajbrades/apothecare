@@ -2,6 +2,13 @@
 
 All notable changes to Apothecare will be documented in this file.
 
+## [0.40.0] - 2026-04-01
+
+### Added — Sprint 32
+- **Clinical Insights Dashboard** (`/analytics`): Practice-level analytics with Recharts visualizations — top conditions treated, visit volume over time, biomarker flag frequency, most prescribed supplements, protocol generation trends, lab vendor distribution. Pro tier gated. New "Analytics" sidebar nav item.
+
+---
+
 ## [0.39.0] - 2026-03-31
 
 ### Added — Sprints 29-31
