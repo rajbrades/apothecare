@@ -28,26 +28,34 @@ export function PortalShell({ children, maxWidth = "3xl" }: PortalShellProps) {
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] flex flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
-        <div className={`${WIDTH_CLASSES[maxWidth]} mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between`}>
-          <Link href="/portal/dashboard" className="flex items-center gap-2 sm:gap-2.5 min-h-[44px]">
-            <Logomark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)] ml-1">Apothecare <span className="text-[var(--color-text-muted)] font-normal">| Patient Portal</span></span>
+      {/* Nav — always full width, consistent regardless of content maxWidth */}
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)] sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <Link href="/portal/dashboard" className="flex items-center gap-3 min-h-[44px]">
+            <Logomark className="h-7 w-7" />
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+              Apothecare{" "}
+              <span className="text-[var(--color-text-muted)] font-normal">| Patient Portal</span>
+            </span>
           </Link>
           <button
             onClick={signOut}
             aria-label="Sign out"
-            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-3 py-2 rounded-md hover:bg-[var(--color-surface-secondary)] min-h-[44px] flex items-center"
+            className="text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors px-3 py-2 rounded-md hover:bg-[var(--color-surface-secondary)] min-h-[44px] flex items-center"
           >
             Sign out
           </button>
         </div>
       </header>
-      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-10">
-        {children}
+
+      <main className="flex-1 px-4 sm:px-6 py-8">
+        <div className={`${WIDTH_CLASSES[maxWidth]} mx-auto`}>
+          {children}
+        </div>
       </main>
+
       <footer className="border-t border-[var(--color-border)] py-4 px-4 sm:px-6">
-        <nav className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
+        <nav className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
           <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Terms</a>
           <a href="/security" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Security</a>
           <a href="/telehealth" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-secondary)] transition-colors">Telehealth</a>
