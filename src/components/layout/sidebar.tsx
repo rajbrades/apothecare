@@ -11,6 +11,7 @@ import {
   FlaskConical,
   Users,
   Pill,
+  BarChart3,
   Star,
   ChevronDown,
   Plus,
@@ -54,6 +55,7 @@ const navItems = [
   { href: "/labs", icon: FlaskConical, label: "Labs", proOnly: true },
   { href: "/supplements", icon: Pill, label: "Supplements", proOnly: false },
   { href: "/patients", icon: Users, label: "Patients", proOnly: false },
+  { href: "/analytics", icon: BarChart3, label: "Analytics", proOnly: true },
 ];
 
 
