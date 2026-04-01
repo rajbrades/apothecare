@@ -45,6 +45,7 @@ interface SignedConsent {
   id: string;
   title: string;
   signed_at: string;
+  signed_name?: string | null;
   content_markdown?: string;
 }
 
@@ -842,7 +843,8 @@ function ConsentRow({ consent }: { consent: SignedConsent }) {
     try {
       const pdfBytes = await generateConsentPdf({
         title: consent.title,
-        signedAt: formatDate(consent.signed_at),
+        signedAt: consent.signed_at,
+        signedName: consent.signed_name ?? undefined,
         contentMarkdown: consent.content_markdown,
       });
       const blob = new Blob([pdfBytes], { type: "application/pdf" });

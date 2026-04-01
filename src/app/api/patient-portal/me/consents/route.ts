@@ -33,18 +33,22 @@ export async function GET(request: NextRequest) {
       .order("document_type"),
     supabase
       .from("patient_consent_signatures")
-      .select("consent_template_id, signed_at")
+      .select("consent_template_id, signed_at, signed_name")
       .eq("patient_id", patient.id),
   ]);
 
   const signedMap = new Map(
-    (signatures || []).map((s: { consent_template_id: string; signed_at: string }) => [s.consent_template_id, s.signed_at])
+    (signatures || []).map((s: { consent_template_id: string; signed_at: string; signed_name: string }) => [
+      s.consent_template_id,
+      { signed_at: s.signed_at, signed_name: s.signed_name },
+    ])
   );
 
   const consents = (templates || []).map((t: { id: string; [key: string]: unknown }) => ({
     ...t,
     signed: signedMap.has(t.id),
-    signed_at: signedMap.get(t.id) ?? null,
+    signed_at: signedMap.get(t.id)?.signed_at ?? null,
+    signed_name: signedMap.get(t.id)?.signed_name ?? null,
   }));
 
   auditLog({
