@@ -144,6 +144,32 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
     setRenameValue("");
   };
 
+  const saveLabRename = async (labId: string) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    setRenameSaving(true);
+    try {
+      const res = await fetch(`/api/labs/${labId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ test_name: trimmed }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Rename failed");
+      }
+      toast.success("Lab report renamed");
+      setRenamingId(null);
+      setRenameValue("");
+      // Trigger parent refresh
+      window.location.reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Rename failed");
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
   const saveRename = async (docId: string) => {
     const trimmed = renameValue.trim();
     if (!trimmed) return;
@@ -253,9 +279,28 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                   <FlaskConical className="w-4.5 h-4.5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
+                  {renamingId === `lab-${lab.id}` ? (
+                    <form className="flex items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); saveLabRename(lab.id); }}>
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Escape") cancelRename(); }}
+                        className="text-sm font-medium px-2 py-1 border border-[var(--color-brand-300)] rounded-[var(--radius-sm)] bg-[var(--color-surface)] outline-none focus:border-[var(--color-brand-500)] w-full max-w-[300px]"
+                        disabled={renameSaving}
+                      />
+                      <button type="submit" className="p-1 text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)]" disabled={renameSaving || !renameValue.trim()}>
+                        {renameSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      </button>
+                      <button type="button" onClick={cancelRename} className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]" disabled={renameSaving}>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  ) : (
                   <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
                     {lab.test_name || lab.raw_file_name}
                   </p>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
                     <span>{formatLabVendor(lab.lab_vendor)}</span>
                     <span>&middot;</span>
@@ -290,6 +335,13 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
                     <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
+                <button
+                  onClick={() => { setRenamingId(`lab-${lab.id}`); setRenameValue(lab.test_name || lab.raw_file_name || ""); }}
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
+                  title="Rename"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
                 <button
                   onClick={() => handleDeleteLab(lab.id)}
                   disabled={deleting === lab.id}

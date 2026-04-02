@@ -48,9 +48,10 @@ export type LabListQuery = z.infer<typeof labListQuerySchema>;
 export const patchLabSchema = z.object({
   is_archived: z.boolean().optional(),
   patient_id: z.string().uuid().nullable().optional(),
+  test_name: z.string().min(1).max(200).optional(),
 }).refine(
-  (d) => d.is_archived !== undefined || "patient_id" in d,
-  "Must provide is_archived or patient_id"
+  (d) => d.is_archived !== undefined || "patient_id" in d || d.test_name !== undefined,
+  "Must provide is_archived, patient_id, or test_name"
 );
 
 export type PatchLabInput = z.infer<typeof patchLabSchema>;

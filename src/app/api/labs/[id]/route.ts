@@ -175,6 +175,10 @@ export async function PATCH(
       updates.is_archived = parsedBody.data.is_archived;
     }
 
+    if (parsedBody.data.test_name !== undefined) {
+      updates.test_name = parsedBody.data.test_name;
+    }
+
     if ("patient_id" in parsedBody.data) {
       const patientId = parsedBody.data.patient_id ?? null;
       // Verify patient ownership if non-null
