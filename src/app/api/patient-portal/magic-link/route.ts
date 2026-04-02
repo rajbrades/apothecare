@@ -72,11 +72,20 @@ export async function POST(request: NextRequest) {
       return jsonError("Failed to generate sign-in link. Please try again.", 500);
     }
 
+    // Build a portal callback URL with token_hash for client-side verification.
+    // The action_link goes through Supabase's /auth/v1/verify which uses implicit
+    // flow (hash fragments) — incompatible with @supabase/ssr PKCE. Instead, we
+    // extract token_hash and verify client-side with verifyOtp().
+    const actionUrl = new URL(linkData.properties.action_link);
+    const tokenHash = actionUrl.searchParams.get("token") || actionUrl.searchParams.get("token_hash") || "";
+    const verifyType = actionUrl.searchParams.get("type") || "magiclink";
+    const portalCallbackUrl = `${env.NEXT_PUBLIC_APP_URL}/portal/callback?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(verifyType)}`;
+
     // Send branded email via Resend
     try {
       await sendMagicLinkEmail({
         to: email,
-        magicLinkUrl: linkData.properties.action_link,
+        magicLinkUrl: portalCallbackUrl,
       });
     } catch (emailErr) {
       console.error("[Magic Link] Email send failed:", emailErr);
