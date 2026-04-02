@@ -916,7 +916,7 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         </div>
         {/* Desktop: single scrollable row */}
         <div className="hidden md:block relative">
-          <div className="flex items-center gap-1 border-b border-[var(--color-border-light)] overflow-x-auto -mb-px" style={{ scrollbarWidth: "thin" }}>
+          <div className="flex items-center gap-1 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide -mb-px">
             {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
