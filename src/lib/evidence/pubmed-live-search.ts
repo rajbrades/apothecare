@@ -73,8 +73,8 @@ export function shouldFallbackToLiveSearch(evidence: RetrievedEvidence): boolean
  *  (cancer), NOT functional medicine methylation metabolism. Use broader
  *  "methylation" which returns relevant GNMT/SAM/one-carbon papers in context. */
 const QUERY_SYNONYMS: Record<string, string> = {
-  overmethylation: "methylation",
-  undermethylation: "methylation",
+  overmethylation: "N-methyltransferase",
+  undermethylation: "methylation support",
   leaky_gut: "intestinal permeability",
   detox: "detoxification",
   pyroluria: "kryptopyrrole",
@@ -108,9 +108,10 @@ function normalizePubMedQuery(query: string): string {
  * Search PubMed live and return results as RetrievedChunk[].
  *
  * Uses a two-query strategy for better clinical relevance:
- *   1. Primary: normalized query (broad, by relevance)
+ *   1. Primary: normalized query sorted by PubMed relevance (most specific)
  *   2. Review boost: same query filtered to reviews/meta-analyses
- * Results are interleaved (reviews first) and deduped by PMID.
+ * Primary results come first (PubMed relevance is strong), then unique
+ * review articles fill remaining slots.
  */
 export async function searchPubMedLive(
   query: string,
@@ -128,10 +129,10 @@ export async function searchPubMedLive(
     ]);
     console.log(`[PubMed Live] Primary PMIDs: ${primaryIds.length}, Review PMIDs: ${reviewIds.length}`);
 
-    // Interleave: reviews first (higher clinical value), then primary, dedup
+    // Primary first (PubMed relevance sort is best signal), then unique reviews
     const seen = new Set<string>();
     const pmids: string[] = [];
-    for (const id of [...reviewIds, ...primaryIds]) {
+    for (const id of [...primaryIds, ...reviewIds]) {
       if (!seen.has(id)) {
         seen.add(id);
         pmids.push(id);
