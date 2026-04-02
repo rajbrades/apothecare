@@ -63,27 +63,70 @@ export function shouldFallbackToLiveSearch(evidence: RetrievedEvidence): boolean
   return avgSimilarity < MIN_SIMILARITY_THRESHOLD;
 }
 
+// ── Query Normalization ───────────────────────────────────────────────────
+
+/** Clinical colloquialisms that PubMed returns 0 (or near-0) results for.
+ *  Only map terms that genuinely fail — leave terms PubMed already handles
+ *  (e.g. "adrenal fatigue", "brain fog", "MTHFR") alone to avoid regressions. */
+const QUERY_SYNONYMS: Record<string, string> = {
+  overmethylation: "hypermethylation",
+  undermethylation: "hypomethylation",
+  leaky_gut: "intestinal permeability",
+  detox: "detoxification",
+  pyroluria: "kryptopyrrole",
+};
+
+/**
+ * Convert a natural language clinical query into effective PubMed search terms.
+ * Strips question words, replaces clinical colloquialisms with MeSH-friendly terms.
+ */
+function normalizePubMedQuery(query: string): string {
+  let normalized = query.toLowerCase()
+    .replace(/\b(how|does|what|why|can|is|are|the|with|for|and|or|help|about|explain)\b/g, " ")
+    .replace(/[?.,!]/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  // Replace clinical synonyms
+  for (const [term, replacement] of Object.entries(QUERY_SYNONYMS)) {
+    const regex = new RegExp(`\\b${term.replace(/_/g, "[_ ]?")}\\b`, "gi");
+    if (regex.test(normalized)) {
+      normalized = normalized.replace(regex, replacement);
+    }
+  }
+
+  return normalized;
+}
+
 // ── Live Search ──────────────────────────────────────────────────────────
 
 /**
  * Search PubMed live and return results as RetrievedChunk[].
- * Optimized for speed: fetches only top 5 articles.
- * Timeout after 4 seconds to prevent blocking chat responses.
+ * Normalizes the query for PubMed compatibility, then fetches abstracts.
  */
 export async function searchPubMedLive(
   query: string,
   maxResults: number = 5
 ): Promise<RetrievedChunk[]> {
   try {
-    // Start with the user's query directly — no restrictive filters
-    console.log(`[PubMed Live] Searching: "${query.slice(0, 80)}..."`);
-    let pmids = await searchPubMed(query, maxResults);
+    const normalizedQuery = normalizePubMedQuery(query);
+    console.log(`[PubMed Live] Original: "${query.slice(0, 60)}" → Normalized: "${normalizedQuery.slice(0, 60)}"`);
+
+    let pmids = await searchPubMed(normalizedQuery, maxResults);
     console.log(`[PubMed Live] PMIDs found: ${pmids.length}`);
+
+    // If normalized query fails, try with just the key nouns
+    if (pmids.length === 0) {
+      const fallbackQuery = normalizedQuery.split(" ").filter(w => w.length > 3).slice(0, 3).join(" ");
+      console.log(`[PubMed Live] Fallback query: "${fallbackQuery}"`);
+      pmids = await searchPubMed(fallbackQuery, maxResults);
+      console.log(`[PubMed Live] Fallback PMIDs: ${pmids.length}`);
+    }
 
     if (pmids.length === 0) return [];
 
     const articles = await fetchPubMedArticles(pmids.slice(0, maxResults));
-    console.log(`[PubMed Live] Articles fetched: ${articles.length}, with abstracts: ${articles.filter(a => a.abstract).length}`);
+    console.log(`[PubMed Live] Articles: ${articles.length}, with abstracts: ${articles.filter(a => a.abstract).length}`);
 
     const chunks = articles
       .map((a, i) => articleToChunk(a, i))
