@@ -74,35 +74,26 @@ export async function searchPubMedLive(
   query: string,
   maxResults: number = 5
 ): Promise<RetrievedChunk[]> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4000);
-
   try {
-    // Build a focused PubMed query
-    const pubmedQuery = `${query} AND (functional medicine OR integrative medicine OR clinical trial)`;
+    // Start with the user's query directly — no restrictive filters
+    console.log(`[PubMed Live] Searching: "${query.slice(0, 80)}..."`);
+    let pmids = await searchPubMed(query, maxResults);
+    console.log(`[PubMed Live] PMIDs found: ${pmids.length}`);
 
-    const pmids = await searchPubMed(pubmedQuery, maxResults);
-    if (pmids.length === 0) {
-      // Try broader query without FM filter
-      const broadPmids = await searchPubMed(query, maxResults);
-      if (broadPmids.length === 0) return [];
-      const articles = await fetchPubMedArticles(broadPmids.slice(0, maxResults));
-      return articles.map((a, i) => articleToChunk(a, i)).filter((c): c is RetrievedChunk => c !== null);
-    }
+    if (pmids.length === 0) return [];
 
     const articles = await fetchPubMedArticles(pmids.slice(0, maxResults));
-    return articles
+    console.log(`[PubMed Live] Articles fetched: ${articles.length}, with abstracts: ${articles.filter(a => a.abstract).length}`);
+
+    const chunks = articles
       .map((a, i) => articleToChunk(a, i))
       .filter((c): c is RetrievedChunk => c !== null);
+
+    console.log(`[PubMed Live] Chunks produced: ${chunks.length}`);
+    return chunks;
   } catch (err) {
-    if ((err as Error).name === "AbortError") {
-      console.warn("[PubMed Live] Search timed out after 4s");
-    } else {
-      console.warn("[PubMed Live] Search failed:", err);
-    }
+    console.warn("[PubMed Live] Search failed:", err);
     return [];
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
