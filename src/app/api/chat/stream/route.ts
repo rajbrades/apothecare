@@ -26,6 +26,7 @@ function jsonError(message: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("[Chat] POST /api/chat/stream — v2 with PubMed fallback + grounding debug");
   try {
     const csrfError = validateCsrf(request);
     if (csrfError) return csrfError;
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
 
       evidenceContext = formatEvidenceContext({ chunks: allChunks, queryTimeMs: evidence.queryTimeMs }, 1);
       ragChunkCount = allChunks.length;
+      console.log(`[Chat] Evidence: ${ragChunkCount} chunks, context length: ${evidenceContext.length} chars, fallback triggered: ${shouldFallbackToLiveSearch(evidence)}`);
       for (const chunk of allChunks) {
         referenceChunks.push({
           refNum: referenceChunks.length + 1,
