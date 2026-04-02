@@ -67,10 +67,14 @@ export function shouldFallbackToLiveSearch(evidence: RetrievedEvidence): boolean
 
 /** Clinical colloquialisms that PubMed returns 0 (or near-0) results for.
  *  Only map terms that genuinely fail — leave terms PubMed already handles
- *  (e.g. "adrenal fatigue", "brain fog", "MTHFR") alone to avoid regressions. */
+ *  (e.g. "adrenal fatigue", "brain fog", "MTHFR") alone to avoid regressions.
+ *
+ *  NOTE: "hypermethylation" and "hypomethylation" map to DNA/epigenetic papers
+ *  (cancer), NOT functional medicine methylation metabolism. Use broader
+ *  "methylation" which returns relevant GNMT/SAM/one-carbon papers in context. */
 const QUERY_SYNONYMS: Record<string, string> = {
-  overmethylation: "hypermethylation",
-  undermethylation: "hypomethylation",
+  overmethylation: "methylation",
+  undermethylation: "methylation",
   leaky_gut: "intestinal permeability",
   detox: "detoxification",
   pyroluria: "kryptopyrrole",
@@ -102,7 +106,11 @@ function normalizePubMedQuery(query: string): string {
 
 /**
  * Search PubMed live and return results as RetrievedChunk[].
- * Normalizes the query for PubMed compatibility, then fetches abstracts.
+ *
+ * Uses a two-query strategy for better clinical relevance:
+ *   1. Primary: normalized query (broad, by relevance)
+ *   2. Review boost: same query filtered to reviews/meta-analyses
+ * Results are interleaved (reviews first) and deduped by PMID.
  */
 export async function searchPubMedLive(
   query: string,
@@ -112,15 +120,31 @@ export async function searchPubMedLive(
     const normalizedQuery = normalizePubMedQuery(query);
     console.log(`[PubMed Live] Original: "${query.slice(0, 60)}" → Normalized: "${normalizedQuery.slice(0, 60)}"`);
 
-    let pmids = await searchPubMed(normalizedQuery, maxResults);
-    console.log(`[PubMed Live] PMIDs found: ${pmids.length}`);
+    // Run two searches in parallel: broad + review-filtered
+    const reviewQuery = `${normalizedQuery} AND (review[pt] OR meta-analysis[pt])`;
+    const [primaryIds, reviewIds] = await Promise.all([
+      searchPubMed(normalizedQuery, maxResults),
+      searchPubMed(reviewQuery, maxResults),
+    ]);
+    console.log(`[PubMed Live] Primary PMIDs: ${primaryIds.length}, Review PMIDs: ${reviewIds.length}`);
 
-    // If normalized query fails, try with just the key nouns
+    // Interleave: reviews first (higher clinical value), then primary, dedup
+    const seen = new Set<string>();
+    const pmids: string[] = [];
+    for (const id of [...reviewIds, ...primaryIds]) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        pmids.push(id);
+      }
+    }
+
+    // If both queries failed, try fallback with key nouns
     if (pmids.length === 0) {
       const fallbackQuery = normalizedQuery.split(" ").filter(w => w.length > 3).slice(0, 3).join(" ");
       console.log(`[PubMed Live] Fallback query: "${fallbackQuery}"`);
-      pmids = await searchPubMed(fallbackQuery, maxResults);
-      console.log(`[PubMed Live] Fallback PMIDs: ${pmids.length}`);
+      const fallbackIds = await searchPubMed(fallbackQuery, maxResults);
+      console.log(`[PubMed Live] Fallback PMIDs: ${fallbackIds.length}`);
+      pmids.push(...fallbackIds);
     }
 
     if (pmids.length === 0) return [];
