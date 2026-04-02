@@ -36,9 +36,9 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG = {
-  pending: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "Pending Review" },
-  approved: { icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "Approved" },
-  denied: { icon: XCircle, color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "Denied" },
+  pending: { icon: Clock, color: "text-[var(--color-gold-600)]", bg: "bg-[var(--color-gold-50)]", border: "border-[var(--color-gold-200)]", label: "Pending Review" },
+  approved: { icon: CheckCircle2, color: "text-[var(--color-brand-600)]", bg: "bg-[var(--color-brand-50)]", border: "border-[var(--color-brand-200)]", label: "Approved" },
+  denied: { icon: XCircle, color: "text-[var(--color-destructive-500)]", bg: "bg-[var(--color-destructive-50)]", border: "border-[var(--color-destructive-200)]", label: "Denied" },
 };
 
 function formatDate(dateStr: string) {
@@ -141,9 +141,9 @@ export default function AmendmentsPage() {
         </div>
 
         {submitSuccess && (
-          <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <p className="text-sm text-emerald-700 font-medium">Request submitted successfully.</p>
-            <p className="text-xs text-emerald-600 mt-1">A confirmation email has been sent to you. Your provider will review your request and respond within 30 days.</p>
+          <div className="px-4 py-3 bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-lg">
+            <p className="text-sm text-[var(--color-brand-700)] font-medium">Request submitted successfully.</p>
+            <p className="text-xs text-[var(--color-brand-600)] mt-1">A confirmation email has been sent to you. Your provider will review your request and respond within 30 days.</p>
           </div>
         )}
 

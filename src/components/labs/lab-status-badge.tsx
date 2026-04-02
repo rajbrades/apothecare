@@ -11,7 +11,7 @@ const STATUS_CONFIG: Record<LabReportStatus, { label: string; className: string 
   },
   parsing: {
     label: "Parsing",
-    className: "bg-amber-50 text-amber-700 border-amber-200",
+    className: "bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border-[var(--color-gold-200)]",
   },
   interpreting: {
     label: "Interpreting",
@@ -19,11 +19,11 @@ const STATUS_CONFIG: Record<LabReportStatus, { label: string; className: string 
   },
   complete: {
     label: "Complete",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    className: "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]",
   },
   error: {
     label: "Error",
-    className: "bg-red-50 text-red-700 border-red-200",
+    className: "bg-[var(--color-destructive-50)] text-[var(--color-destructive-500)] border-[var(--color-destructive-200)]",
   },
 };
 

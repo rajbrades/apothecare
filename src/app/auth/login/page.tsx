@@ -145,8 +145,8 @@ export default function LoginPage() {
             )}
 
             {success && (
-              <div role="status" className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700">{success}</p>
+              <div role="status" className="px-4 py-3 bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-lg">
+                <p className="text-sm text-[var(--color-brand-700)]">{success}</p>
               </div>
             )}
 

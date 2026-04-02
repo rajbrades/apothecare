@@ -8,10 +8,10 @@ interface ExtractionStatusBadgeProps {
 
 const STATUS_CONFIG: Record<string, { label: string; icon: typeof Loader2; color: string }> = {
   uploading: { label: "Uploading", icon: Upload, color: "text-blue-600" },
-  uploaded: { label: "Queued", icon: Clock, color: "text-amber-600" },
+  uploaded: { label: "Queued", icon: Clock, color: "text-[var(--color-gold-600)]" },
   extracting: { label: "Extracting", icon: Loader2, color: "text-[var(--color-brand-600)]" },
-  extracted: { label: "Extracted", icon: CheckCircle, color: "text-emerald-600" },
-  error: { label: "Error", icon: AlertCircle, color: "text-red-600" },
+  extracted: { label: "Extracted", icon: CheckCircle, color: "text-[var(--color-brand-600)]" },
+  error: { label: "Error", icon: AlertCircle, color: "text-[var(--color-destructive-500)]" },
 };
 
 export function ExtractionStatusBadge({ status }: ExtractionStatusBadgeProps) {

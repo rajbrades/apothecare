@@ -149,10 +149,10 @@ export function PatientListClient({ initialPatients, initialCursor }: PatientLis
                   <p className="text-sm font-medium text-[var(--color-text-primary)] flex items-center gap-2">
                     {name}
                     {patient.portal_status === "active" && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">Portal</span>
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand-600)] border border-[var(--color-brand-200)]">Portal</span>
                     )}
                     {patient.portal_status === "invited" && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-200">Invited</span>
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-[var(--color-gold-50)] text-[var(--color-gold-600)] border border-[var(--color-gold-200)]">Invited</span>
                     )}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">

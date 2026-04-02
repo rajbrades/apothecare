@@ -123,12 +123,12 @@ export function VisitListCard({ visit, onArchive, onDelete, onAssigned }: VisitL
               {visit.chief_complaint || "No chief complaint"}
             </h3>
             {isDraft && (
-              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 rounded">
+              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border border-[var(--color-gold-200)] rounded">
                 Draft
               </span>
             )}
             {!isDraft && (
-              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border border-[var(--color-brand-200)] rounded">
                 Complete
               </span>
             )}
@@ -146,7 +146,7 @@ export function VisitListCard({ visit, onArchive, onDelete, onAssigned }: VisitL
               </span>
             )}
             {!currentPatientId && (
-              <span className="text-amber-600 font-medium">No patient</span>
+              <span className="text-[var(--color-gold-600)] font-medium">No patient</span>
             )}
             <span className="capitalize">
               {isFollowUp ? "Follow-up" : "SOAP"}
