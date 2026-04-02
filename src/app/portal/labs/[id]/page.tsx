@@ -120,14 +120,15 @@ export default function PatientLabDetailPage() {
 
   return (
     <PortalShell>
-      <div className="w-full max-w-3xl mx-auto space-y-6">
+      <div className="w-full max-w-3xl mx-auto">
         {/* Back */}
-        <Link href="/portal/dashboard" className="text-xs text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] hover:underline transition-colors">
-          &larr; Back to dashboard
+        <Link href="/portal/dashboard" className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)] transition-colors mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Back to dashboard
         </Link>
 
         {/* Header */}
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-card)] px-4 sm:px-6 py-4 space-y-1">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-[var(--shadow-card)] px-4 sm:px-6 py-4 space-y-1 mb-6">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {lab.test_name || `${vendorLabel} — ${lab.test_type?.replace(/_/g, " ")}`}
@@ -141,7 +142,7 @@ export default function PatientLabDetailPage() {
 
         {/* Health literacy banner */}
         {panels.length > 0 && (
-          <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)]">
+          <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] text-[var(--color-brand-700)] mb-6">
             <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
             <p className="text-xs leading-relaxed">
               Results show both <strong>conventional</strong> (standard medical) and <strong>optimal</strong> (functional medicine) ranges. Your provider uses optimal ranges as more precise health targets. Discuss any questions with your provider.
