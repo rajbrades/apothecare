@@ -1,6 +1,6 @@
  "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -10,7 +10,7 @@ import {
   Archive, ArchiveRestore, ChevronDown, ExternalLink,
   Trash2, AlertTriangle, MoreVertical, GitBranch,
   Salad, HeartPulse, FlaskConical,
-  Mail, Phone, MapPin, Users,
+  Mail, Phone, MapPin, Users, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateVisitButton } from "@/components/visits/create-visit-button";
@@ -582,6 +582,16 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
   const router = useRouter();
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const updateScrollArrows = useCallback(() => {
+    const el = tabScrollRef.current;
+    if (!el) return;
+    setShowLeftArrow(el.scrollLeft > 4);
+    setShowRightArrow(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+  useEffect(() => { updateScrollArrows(); window.addEventListener("resize", updateScrollArrows); return () => window.removeEventListener("resize", updateScrollArrows); }, [updateScrollArrows]);
   const [documents, setDocuments] = useState(initialDocs);
   const [labReports, setLabReports] = useState(initialLabs);
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
@@ -914,9 +924,13 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
             ))}
           </select>
         </div>
-        {/* Desktop: single scrollable row */}
+        {/* Desktop: scrollable row with arrow buttons */}
         <div className="hidden md:block relative">
-          <div className="flex items-center gap-1 border-b border-[var(--color-border-light)] overflow-x-auto scrollbar-hide -mb-px">
+          <div
+            ref={tabScrollRef}
+            className="flex items-center gap-1 overflow-x-auto scrollbar-hide"
+            onScroll={() => updateScrollArrows()}
+          >
             {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -932,6 +946,25 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
               </button>
             ))}
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-[var(--color-border-light)]" />
+          {showLeftArrow && (
+            <button
+              onClick={() => tabScrollRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+              className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface)] to-transparent z-10"
+              aria-label="Scroll tabs left"
+            >
+              <ChevronLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
+            </button>
+          )}
+          {showRightArrow && (
+            <button
+              onClick={() => tabScrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+              className="absolute right-0 top-0 bottom-0 w-8 flex items-center justify-center bg-gradient-to-l from-[var(--color-surface)] via-[var(--color-surface)] to-transparent z-10"
+              aria-label="Scroll tabs right"
+            >
+              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+            </button>
+          )}
         </div>
       </div>
 
