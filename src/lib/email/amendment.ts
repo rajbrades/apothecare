@@ -39,7 +39,7 @@ function baseWrapper(content: string): string {
               ${content}
               <hr style="border:none;border-top:1px solid #e8f0eb;margin:28px 0 20px;" />
               <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;">
-                Apothecare Patient Portal &nbsp;·&nbsp; HIPAA Compliant &nbsp;·&nbsp;
+                Apothecare Patient Portal &nbsp;·&nbsp;
                 <a href="${appUrl}/portal/dashboard" style="color:#9ca3af;">portal.apothecare.com</a>
               </p>
             </td>

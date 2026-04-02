@@ -96,7 +96,7 @@ export async function sendPatientInviteEmail(opts: SendInviteEmailOptions): Prom
           <!-- Footer -->
           <tr>
             <td style="padding:16px 40px;background-color:#f0f5f2;border-top:1px solid #e5e7eb;">
-              <p style="margin:0 0 4px;color:#6b7280;font-size:11px;text-align:center;">Secured by Apothecare &middot; HIPAA Compliant</p>
+              <p style="margin:0 0 4px;color:#6b7280;font-size:11px;text-align:center;">Secured by Apothecare</p>
               <p style="margin:0;color:#9ca3af;font-size:10px;text-align:center;">apothecare.ai</p>
             </td>
           </tr>

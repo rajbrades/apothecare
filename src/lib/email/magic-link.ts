@@ -80,7 +80,7 @@ export async function sendMagicLinkEmail(opts: SendMagicLinkEmailOptions): Promi
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="text-align:center;">
-                    <p style="margin:0 0 4px;color:#6b7280;font-size:11px;">Secured by Apothecare &middot; HIPAA Compliant</p>
+                    <p style="margin:0 0 4px;color:#6b7280;font-size:11px;">Secured by Apothecare</p>
                     <p style="margin:0;color:#9ca3af;font-size:10px;">${domain}</p>
                   </td>
                 </tr>
