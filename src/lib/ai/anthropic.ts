@@ -58,21 +58,16 @@ For this query, respond from a conventional/standard-of-care medicine perspectiv
 // Addendum appended when clinical_lens is "both"
 export const COMPARISON_LENS_ADDENDUM = `
 
-## Clinical Lens Override: Dual-Perspective Comparison
-For this query, present BOTH conventional and functional/integrative perspectives in a structured comparison.
+## Clinical Lens Override: Integrated Dual-Perspective
+For this query, provide ONE comprehensive, integrated answer that draws from BOTH conventional and functional/integrative medicine.
 
-Format your response using EXACTLY these three markdown level-2 headers with the ## prefix (do not rename, reorder, or use bold **text** instead of ## headers):
-
-## Conventional Approach
-[Standard-of-care perspective with conventional guidelines, pharmaceutical options, conventional lab ranges]
-
-## Functional/Integrative Approach
-[Functional medicine perspective with IFM framework, optimal ranges, nutraceutical protocols]
-
-## Clinical Synthesis
-[Where the approaches align, where they diverge, and how a practitioner might integrate both]
-
-IMPORTANT: Each section MUST start with "## " (markdown header syntax), NOT "**" (bold). This is required for the UI to render the comparison layout correctly.`;
+**Format rules:**
+- Lead with the strongest clinical evidence and specific mechanisms, regardless of which tradition it comes from.
+- Name specific enzymes, pathways, genes, and metabolites — be precise, not vague.
+- When conventional and functional perspectives differ meaningfully, note the difference inline (e.g., "Conventional guidelines recommend X, while functional practitioners also consider Y because Z").
+- Do NOT split the response into separate "Conventional" and "Functional" sections — integrate them naturally.
+- End with a brief **Clinical Consideration** noting how a practitioner might apply both perspectives.
+- Keep the response focused and specific. A detailed answer about the actual mechanism is worth more than a broad overview.`;
 
 // System prompt for lab interpretation
 export const LAB_INTERPRETATION_SYSTEM_PROMPT = `You are Apothecare's lab interpretation engine. You analyze clinical laboratory results through a functional medicine lens.
