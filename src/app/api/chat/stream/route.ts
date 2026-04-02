@@ -282,9 +282,11 @@ export async function POST(request: NextRequest) {
           let resolvedContent = fullContent;
           let resolvedCitationsForDB: object[] = [];
           if (referenceChunks.length > 0) {
+            console.log(`[Chat] Grounding ${referenceChunks.length} refs. REF-N matches in content: ${(fullContent.match(/\[REF-\d+\]/g) || []).length}`);
             const grounding = groundCitations(fullContent, referenceChunks);
             resolvedContent = grounding.content;
 
+            console.log(`[Chat] Grounding result: ${grounding.flatCitations.length} citations resolved, content changed: ${resolvedContent !== fullContent}`);
             if (resolvedContent !== fullContent) {
               controller.enqueue(
                 encoder.encode(
