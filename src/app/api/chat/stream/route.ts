@@ -11,6 +11,7 @@ import { validateInputSafety, PromptInjectionError } from "@/lib/api/validate-in
 import { groundCitations, type ReferenceChunk } from "@/lib/citations/ground";
 import { retrieveEvidence } from "@/lib/evidence/retrieve";
 import { formatEvidenceContext } from "@/lib/evidence/format-context";
+import { shouldFallbackToLiveSearch, searchPubMedLive, mergeEvidence } from "@/lib/evidence/pubmed-live-search";
 import { retrieveContext } from "@/lib/rag/retrieve";
 import { formatRagContext } from "@/lib/rag/format-context";
 
@@ -181,9 +182,24 @@ export async function POST(request: NextRequest) {
         sources: (source_filter ?? []) as string[],
         matchCount: is_deep_consult ? 12 : 8,
       });
-      evidenceContext = formatEvidenceContext(evidence, 1);
-      ragChunkCount = evidence.chunks.length;
-      for (const chunk of evidence.chunks) {
+
+      // Live PubMed fallback when local evidence is insufficient
+      let allChunks = evidence.chunks;
+      if (shouldFallbackToLiveSearch(evidence)) {
+        try {
+          const liveChunks = await searchPubMedLive(message, 5);
+          if (liveChunks.length > 0) {
+            allChunks = mergeEvidence(evidence.chunks, liveChunks);
+            console.log(`[RAG] PubMed live fallback: ${liveChunks.length} articles found, ${allChunks.length} total chunks`);
+          }
+        } catch (liveErr) {
+          console.warn("[RAG] PubMed live fallback failed:", liveErr);
+        }
+      }
+
+      evidenceContext = formatEvidenceContext({ chunks: allChunks, queryTimeMs: evidence.queryTimeMs }, 1);
+      ragChunkCount = allChunks.length;
+      for (const chunk of allChunks) {
         referenceChunks.push({
           refNum: referenceChunks.length + 1,
           title: chunk.title,
