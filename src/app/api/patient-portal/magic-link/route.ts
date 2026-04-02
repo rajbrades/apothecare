@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate magic link via Supabase admin (doesn't send email)
-    const redirectTo = `${env.NEXT_PUBLIC_APP_URL}/portal/dashboard`;
+    const redirectTo = `${env.NEXT_PUBLIC_APP_URL}/portal/callback`;
 
     const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
       type: "magiclink",

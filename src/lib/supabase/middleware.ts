@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/p/") ||         // branded entry pages
     pathname === "/portal/login" ||
     pathname === "/portal/accept" ||
+    pathname === "/portal/callback" ||    // magic link auth callback
     pathname.startsWith("/api/patient-portal/");  // API routes handle their own auth
 
   if (isPortalPath) {
