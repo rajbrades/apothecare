@@ -113,8 +113,16 @@ export function useChat(options: UseChatOptions = {}) {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to send message");
+          let errorMessage = "Failed to send message";
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch {
+            // Response body is not JSON (e.g., timeout, server crash)
+            const text = await response.text().catch(() => "");
+            if (text) errorMessage = text.slice(0, 200);
+          }
+          throw new Error(errorMessage);
         }
 
         const reader = response.body?.getReader();
