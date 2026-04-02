@@ -43,8 +43,8 @@ const STATUS_ICONS: Record<string, typeof CheckCircle2> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  ready: "text-emerald-600",
-  processing: "text-amber-500",
+  ready: "text-[var(--color-brand-600)]",
+  processing: "text-[var(--color-gold-500)]",
   error: "text-red-500",
 };
 
@@ -275,7 +275,7 @@ export function PartnershipsClient() {
                 <span
                   className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                     p.is_active
-                      ? "bg-emerald-50 text-emerald-700"
+                      ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)]"
                       : "bg-slate-100 text-slate-500"
                   }`}
                 >

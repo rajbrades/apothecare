@@ -68,9 +68,9 @@ export default function TelehealthPage() {
           </div>
 
           {/* Important notice */}
-          <div className="mb-12 p-5 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] flex gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-900 leading-relaxed space-y-1">
+          <div className="mb-12 p-5 bg-[var(--color-gold-50)] border border-[var(--color-gold-200)] rounded-[var(--radius-md)] flex gap-3">
+            <AlertTriangle className="w-5 h-5 text-[var(--color-gold-600)] flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-[var(--color-gold-700)] leading-relaxed space-y-1">
               <p className="font-semibold">Important Disclaimer</p>
               <p>
                 Apothecare does not provide video conferencing, real-time

@@ -275,8 +275,8 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
               onClick={() => onLabClick?.(lab.id)}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <FlaskConical className="w-4.5 h-4.5 text-emerald-600" />
+                <div className="w-9 h-9 rounded-lg bg-[var(--color-brand-50)] border border-[var(--color-brand-100)] flex items-center justify-center shrink-0">
+                  <FlaskConical className="w-4.5 h-4.5 text-[var(--color-brand-600)]" />
                 </div>
                 <div className="min-w-0">
                   {renamingId === `lab-${lab.id}` ? (
@@ -470,7 +470,7 @@ export function DocumentList({ patientId, documents, labReports = [], onDeleted,
               {doc.document_type === "lab_report" && onParseAsLab && (
                 <button
                   onClick={() => onParseAsLab(doc.id)}
-                  className="p-1.5 text-[var(--color-text-muted)] hover:text-emerald-600 transition-colors"
+                  className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] transition-colors"
                   title="Parse biomarkers"
                 >
                   <FlaskConical className="w-3.5 h-3.5" />

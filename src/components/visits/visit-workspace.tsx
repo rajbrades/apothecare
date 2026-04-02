@@ -711,7 +711,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
                     value=""
                     onChange={(e) => handlePatientChange(e.target.value)}
                     disabled={updatingPatient}
-                    className="text-xs font-medium bg-amber-50 border border-amber-200 rounded-[var(--radius-sm)] px-2 py-0.5 text-amber-700 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50 max-w-[200px]"
+                    className="text-xs font-medium bg-[var(--color-gold-50)] border border-[var(--color-gold-200)] rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--color-gold-700)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-500)] cursor-pointer disabled:opacity-50 max-w-[200px]"
                   >
                     <option value="">Assign to patient…</option>
                     {patients.map((p) => (
@@ -745,9 +745,9 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
               disabled={pushingToRecord}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors disabled:opacity-50 ${
                 pushedToRecord === "already"
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  ? "bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border-[var(--color-gold-200)]"
                   : pushedToRecord === "pushed"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]"
                   : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border-light)] hover:border-[var(--color-brand-300)] hover:text-[var(--color-brand-600)]"
               }`}
               title="Push visit summary to patient timeline"
@@ -764,8 +764,8 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
           <button
             onClick={handleStatusToggle}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border transition-colors ${visit.status === "completed"
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-              : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)] hover:bg-[var(--color-brand-100)]"
+              : "bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border-[var(--color-gold-200)] hover:bg-[var(--color-gold-100)]"
               }`}
           >
             {visit.status === "completed" ? (
@@ -884,7 +884,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
 
           {/* Done */}
           {scribeStatus === "done" && (
-            <div className="px-6 py-4 flex items-center justify-center gap-2 text-sm font-medium text-emerald-600">
+            <div className="px-6 py-4 flex items-center justify-center gap-2 text-sm font-medium text-[var(--color-brand-600)]">
               <Check className="w-4 h-4" />
               Note sections populated — review below
             </div>
@@ -1058,7 +1058,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
             {visit.patients?.id && visit.ai_protocol?.supplements?.length > 0 && (
               <div className="flex items-center justify-end gap-3">
                 {protocolPushedAt && (
-                  <span className="text-xs text-emerald-600 font-medium">
+                  <span className="text-xs text-[var(--color-brand-600)] font-medium">
                     Pushed {new Date(protocolPushedAt).toLocaleDateString()}
                   </span>
                 )}

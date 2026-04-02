@@ -260,7 +260,7 @@ function getAge(dob: string | null): number | null {
 const EVIDENCE_COLORS: Record<string, string> = {
   meta_analysis: "bg-[var(--color-evidence-meta-bg)] text-[var(--color-evidence-meta-text)]",
   rct: "bg-blue-50 text-blue-700",
-  clinical_guideline: "bg-emerald-50 text-emerald-700",
+  clinical_guideline: "bg-[var(--color-brand-50)] text-[var(--color-brand-700)]",
   cohort_study: "bg-purple-50 text-purple-700",
   case_study: "bg-gray-50 text-gray-600",
   expert_consensus: "bg-gray-50 text-gray-600",
@@ -368,15 +368,15 @@ function RepopulateIntakeBanner({
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-amber-50 border border-amber-200">
+    <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-[var(--color-gold-50)] border border-[var(--color-gold-200)]">
       <div>
-        <p className="text-xs font-medium text-amber-800">Intake form data available</p>
-        <p className="text-[11px] text-amber-600 mt-0.5">Patient submitted an intake form but some fields weren&apos;t synced to their record.</p>
+        <p className="text-xs font-medium text-[var(--color-gold-700)]">Intake form data available</p>
+        <p className="text-[11px] text-[var(--color-gold-600)] mt-0.5">Patient submitted an intake form but some fields weren&apos;t synced to their record.</p>
       </div>
       <button
         onClick={handleRepopulate}
         disabled={loading}
-        className="px-3 py-1.5 text-xs font-medium rounded-md bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 flex-shrink-0"
+        className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--color-gold-600)] text-white hover:bg-[var(--color-gold-700)] disabled:opacity-50 flex-shrink-0"
       >
         {loading ? "Syncing…" : "Sync Now"}
       </button>
@@ -414,7 +414,7 @@ function DiagnosesSection({ diagnoses }: { diagnoses: string[] | null }) {
     <IntakeShell title="Diagnoses">
       <div className="flex flex-wrap gap-1.5">
         {diagnoses.map((d, i) => (
-          <span key={i} className="px-2.5 py-1 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-full">{d}</span>
+          <span key={i} className="px-2.5 py-1 text-xs bg-[var(--color-gold-50)] border border-[var(--color-gold-200)] text-[var(--color-gold-700)] rounded-full">{d}</span>
         ))}
       </div>
     </IntakeShell>
@@ -1179,8 +1179,8 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
                       <div className="flex items-center gap-2 shrink-0 ml-3">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           visit.status === "completed"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
+                            ? "bg-[var(--color-brand-50)] text-[var(--color-brand-700)]"
+                            : "bg-[var(--color-gold-50)] text-[var(--color-gold-700)]"
                         }`}>
                           {visit.status === "completed" ? "Completed" : "Draft"}
                         </span>

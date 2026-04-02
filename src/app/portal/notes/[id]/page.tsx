@@ -71,13 +71,13 @@ const SECTION_CONFIG = {
     label: "Examination Findings",
     sublabel: "Clinical observations",
     icon: Activity,
-    color: "text-emerald-600 bg-emerald-50",
+    color: "text-[var(--color-brand-600)] bg-[var(--color-brand-50)]",
   },
   assessment: {
     label: "Clinical Assessment",
     sublabel: "Provider analysis",
     icon: Stethoscope,
-    color: "text-amber-600 bg-amber-50",
+    color: "text-[var(--color-gold-600)] bg-[var(--color-gold-50)]",
   },
   plan: {
     label: "Treatment Plan",

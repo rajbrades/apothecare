@@ -37,8 +37,8 @@ const STATUS_STYLES: Record<
     label: "Pending",
   },
   active: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
+    bg: "bg-[var(--color-brand-50)]",
+    text: "text-[var(--color-brand-700)]",
     label: "Active",
   },
   completed: {
@@ -47,8 +47,8 @@ const STATUS_STYLES: Record<
     label: "Completed",
   },
   extended: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
+    bg: "bg-[var(--color-gold-50)]",
+    text: "text-[var(--color-gold-700)]",
     label: "Extended",
   },
   skipped: {
@@ -65,10 +65,10 @@ const ACTION_STYLES: Record<
   { bg: string; text: string }
 > = {
   start: { bg: "bg-blue-50", text: "text-blue-700" },
-  continue: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  increase: { bg: "bg-amber-50", text: "text-amber-700" },
-  decrease: { bg: "bg-amber-50", text: "text-amber-700" },
-  discontinue: { bg: "bg-red-50", text: "text-red-700" },
+  continue: { bg: "bg-[var(--color-brand-50)]", text: "text-[var(--color-brand-700)]" },
+  increase: { bg: "bg-[var(--color-gold-50)]", text: "text-[var(--color-gold-700)]" },
+  decrease: { bg: "bg-[var(--color-gold-50)]", text: "text-[var(--color-gold-700)]" },
+  discontinue: { bg: "bg-[var(--color-destructive-50)]", text: "text-[var(--color-destructive-600)]" },
 };
 
 // ── Props ──────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ export function PhaseCard({
     <div
       className={cn(
         "bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border-light)] shadow-[var(--shadow-card)] overflow-hidden transition-shadow",
-        phase.status === "active" && "ring-1 ring-emerald-200"
+        phase.status === "active" && "ring-1 ring-[var(--color-brand-200)]"
       )}
     >
       {/* ── Header ──────────────────────────────────────────── */}
@@ -223,7 +223,7 @@ export function PhaseCard({
           className={cn(
             "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5",
             phase.status === "active"
-              ? "bg-emerald-100 text-emerald-700"
+              ? "bg-[var(--color-brand-100)] text-[var(--color-brand-700)]"
               : phase.status === "completed"
               ? "bg-[var(--color-brand-600)]/10 text-[var(--color-brand-600)]"
               : "bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]"
@@ -527,7 +527,7 @@ export function PhaseCard({
                     </span>
                   </div>
                   <div className="flex items-start gap-1.5 mt-1">
-                    <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider flex-shrink-0">
+                    <span className="text-[10px] font-semibold text-[var(--color-brand-600)] uppercase tracking-wider flex-shrink-0">
                       THEN
                     </span>
                     <span className="text-[var(--color-text-secondary)]">
@@ -536,7 +536,7 @@ export function PhaseCard({
                   </div>
                   {rule.fallback && (
                     <div className="flex items-start gap-1.5 mt-1">
-                      <span className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider flex-shrink-0">
+                      <span className="text-[10px] font-semibold text-[var(--color-gold-600)] uppercase tracking-wider flex-shrink-0">
                         ELSE
                       </span>
                       <span className="text-[var(--color-text-muted)]">

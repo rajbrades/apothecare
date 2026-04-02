@@ -116,8 +116,8 @@ function OnboardingComplete() {
 
   return (
     <div className="w-full max-w-sm mx-auto text-center space-y-6 py-8">
-      <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
-        <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+      <div className="mx-auto w-12 h-12 rounded-full bg-[var(--color-brand-50)] flex items-center justify-center">
+        <CheckCircle2 className="w-6 h-6 text-[var(--color-brand-600)]" />
       </div>
 
       <div className="space-y-2">
@@ -143,7 +143,7 @@ function OnboardingComplete() {
             aria-label="Copy portal URL"
           >
             {copied ? (
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-[var(--color-brand-600)]" />
             ) : (
               <Copy className="w-4 h-4 text-[var(--color-text-muted)]" />
             )}

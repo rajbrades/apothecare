@@ -430,10 +430,10 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
                       type="button"
                       onClick={handleVerify}
                       disabled={isVerifying}
-                      className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50`}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[var(--color-brand-700)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)] border border-[var(--color-brand-200)] rounded-[var(--radius-sm)] transition-colors disabled:opacity-50`}
                     >
                       {isVerifying ? (
-                        <span className="w-3 h-3 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+                        <span className="w-3 h-3 border-2 border-[var(--color-brand-700)] border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <FileCheck size={11} />
                       )}
@@ -443,7 +443,7 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
                       type="button"
                       onClick={handleFlag}
                       disabled={isFlagging}
-                      className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-medium text-amber-700 hover:bg-amber-50 rounded-[var(--radius-sm)] transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-medium text-[var(--color-gold-700)] hover:bg-[var(--color-gold-50)] rounded-[var(--radius-sm)] transition-colors disabled:opacity-50"
                       title="Flag as incorrect"
                     >
                       <Flag size={10} />
@@ -452,7 +452,7 @@ export function EvidenceBadge({ citation, index, supplementName, verifyContext }
                 )}
 
                 {verified && (
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700`}>
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-[var(--color-brand-700)]`}>
                     <FileCheck size={11} />
                     Verified
                   </span>

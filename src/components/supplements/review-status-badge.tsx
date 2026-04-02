@@ -10,7 +10,7 @@ const STATUS_CONFIG: Record<
 > = {
   complete: {
     label: "Complete",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    className: "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]",
   },
   generating: {
     label: "Generating",
@@ -19,7 +19,7 @@ const STATUS_CONFIG: Record<
   },
   error: {
     label: "Error",
-    className: "bg-red-50 text-red-700 border-red-200",
+    className: "bg-[var(--color-destructive-50)] text-[var(--color-destructive-600)] border-[var(--color-destructive-200)]",
   },
   pending: {
     label: "Pending",

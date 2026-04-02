@@ -28,8 +28,8 @@ export default async function AdminDashboardPage() {
                     href="/admin/users"
                     className="group block p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
                 >
-                    <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
-                        <Users className="text-emerald-600" size={24} />
+                    <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-50)] flex items-center justify-center mb-4 group-hover:bg-[var(--color-brand-100)] transition-colors">
+                        <Users className="text-[var(--color-brand-600)]" size={24} />
                     </div>
                     <h2 className="text-lg font-semibold text-slate-900 mb-1">User Management</h2>
                     <p className="text-sm text-slate-500">Search practitioners, verify licenses, and manage subscriptions.</p>
@@ -40,8 +40,8 @@ export default async function AdminDashboardPage() {
                     href="/admin/flagged-citations"
                     className="group block p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
                 >
-                    <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center mb-4 group-hover:bg-amber-100 transition-colors">
-                        <Flag className="text-amber-600" size={24} />
+                    <div className="w-12 h-12 rounded-lg bg-[var(--color-gold-50)] flex items-center justify-center mb-4 group-hover:bg-[var(--color-gold-100)] transition-colors">
+                        <Flag className="text-[var(--color-gold-600)]" size={24} />
                     </div>
                     <h2 className="text-lg font-semibold text-slate-900 mb-1">Flagged Citations</h2>
                     <p className="text-sm text-slate-500">Review citations flagged by practitioners as incorrect or suspect.</p>

@@ -233,7 +233,7 @@ export function BrandFormulary() {
             {!isSupported(brand.brand_name) && (
               <button
                 onClick={() => removeBrand(brand.brand_name)}
-                className="p-1 text-[var(--color-text-muted)] hover:text-red-600 transition-colors"
+                className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-destructive-500)] transition-colors"
                 aria-label={`Remove ${brand.brand_name}`}
               >
                 <X className="w-3.5 h-3.5" />
@@ -302,7 +302,7 @@ export function BrandFormulary() {
         </div>
         {/* Unrecognized brand warning */}
         {isUnrecognized && !showSuggestions && (
-          <p className="mt-1.5 flex items-center gap-1 text-xs text-amber-600">
+          <p className="mt-1.5 flex items-center gap-1 text-xs text-[var(--color-gold-600)]">
             <AlertTriangle className="w-3 h-3 flex-shrink-0" />
             Not in our known brands list — double-check the spelling or add anyway.
           </p>

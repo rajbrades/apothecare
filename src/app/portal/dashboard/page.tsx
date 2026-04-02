@@ -786,7 +786,7 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
           dragOver
             ? "border-[var(--color-brand-400)] bg-[var(--color-brand-50)]"
             : file
-            ? "border-emerald-300 bg-emerald-50"
+            ? "border-[var(--color-brand-200)] bg-[var(--color-brand-50)]"
             : "border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:border-[var(--color-brand-300)] hover:bg-[var(--color-brand-50)]/30"
         }`}
       >
@@ -799,7 +799,7 @@ function PatientDocumentUpload({ onUploadComplete }: { onUploadComplete: (doc: P
         />
         {file ? (
           <>
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <CheckCircle2 className="h-5 w-5 text-[var(--color-brand-500)]" />
             <p className="text-sm font-medium text-[var(--color-text-primary)]">{file.name}</p>
             <p className="text-xs text-[var(--color-text-muted)]">{(file.size / 1024 / 1024).toFixed(1)} MB · Click to change</p>
           </>

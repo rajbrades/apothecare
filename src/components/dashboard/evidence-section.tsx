@@ -114,8 +114,8 @@ function ProCard({ partner }: { partner: Partner }) {
     <div className="relative rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-surface)] p-4 hover:border-[var(--color-brand-300)] hover:shadow-[var(--shadow-card)] transition-all">
       {/* Active badge */}
       <div className="absolute top-3 right-3 flex items-center gap-1">
-        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-        <span className="text-[10px] font-medium text-emerald-600">Active</span>
+        <CheckCircle2 className="w-3 h-3 text-[var(--color-brand-500)]" />
+        <span className="text-[10px] font-medium text-[var(--color-brand-600)]">Active</span>
       </div>
 
       <PartnerMark acronym={partner.acronym} bg={partner.bg} text={partner.text} />
@@ -242,9 +242,9 @@ export function EvidenceSection({ isFree, partnerships = [], practitionerPartner
             {9 + partnerships.length} databases included with your Pro plan
           </p>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="text-[11px] font-medium text-emerald-700">All Active</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)]" />
+          <span className="text-[11px] font-medium text-[var(--color-brand-700)]">All Active</span>
         </div>
       </div>
 

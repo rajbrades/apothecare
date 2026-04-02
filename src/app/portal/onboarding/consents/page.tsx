@@ -257,8 +257,8 @@ export default function ConsentsPage() {
             />
             {signedName.trim().length >= 2 && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <div className="w-5 h-5 rounded-full bg-[var(--color-brand-100)] flex items-center justify-center">
+                  <svg className="w-3 h-3 text-[var(--color-brand-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>

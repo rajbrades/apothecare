@@ -24,10 +24,10 @@ const STATUS_STYLES: Record<
     dot: "bg-gray-400",
   },
   active: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
+    bg: "bg-[var(--color-brand-50)]",
+    text: "text-[var(--color-brand-700)]",
     label: "Active",
-    dot: "bg-emerald-500",
+    dot: "bg-[var(--color-brand-500)]",
   },
   completed: {
     bg: "bg-[var(--color-brand-600)]/10",
@@ -171,7 +171,7 @@ export function ProtocolList({ protocols, patientId }: ProtocolListProps) {
                           i + 1 < activePhase
                             ? "bg-[var(--color-brand-600)]"
                             : i + 1 === activePhase
-                            ? "bg-emerald-500"
+                            ? "bg-[var(--color-brand-500)]"
                             : "bg-[var(--color-surface-tertiary)]"
                         )}
                       />

@@ -45,15 +45,15 @@ const ACTION_BADGE_CONFIG: Record<
 > = {
   keep: {
     label: "Keep",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    className: "bg-[var(--color-brand-50)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]",
   },
   modify: {
     label: "Modify",
-    className: "bg-amber-50 text-amber-700 border-amber-200",
+    className: "bg-[var(--color-gold-50)] text-[var(--color-gold-700)] border-[var(--color-gold-200)]",
   },
   discontinue: {
     label: "Discontinue",
-    className: "bg-red-50 text-red-700 border-red-200",
+    className: "bg-[var(--color-destructive-50)] text-[var(--color-destructive-600)] border-[var(--color-destructive-200)]",
   },
   add: {
     label: "Add",
@@ -86,9 +86,9 @@ const EVIDENCE_LABEL_MAP: Record<string, string> = {
 };
 
 const SEVERITY_STYLES: Record<InteractionSeverity, string> = {
-  critical: "bg-red-50 border-red-200 text-red-800",
-  caution: "bg-amber-50 border-amber-200 text-amber-800",
-  safe: "bg-emerald-50 border-emerald-200 text-emerald-700",
+  critical: "bg-[var(--color-destructive-50)] border-[var(--color-destructive-200)] text-[var(--color-destructive-600)]",
+  caution: "bg-[var(--color-gold-50)] border-[var(--color-gold-200)] text-[var(--color-gold-700)]",
+  safe: "bg-[var(--color-brand-50)] border-[var(--color-brand-200)] text-[var(--color-brand-700)]",
   unknown: "bg-gray-50 border-gray-200 text-gray-700",
 };
 
@@ -210,7 +210,7 @@ function SupplementItemCard({
     (item.biomarker_correlations && item.biomarker_correlations.length > 0);
 
   return (
-    <div className={`relative border rounded-[var(--radius-md)] bg-[var(--color-surface)] overflow-visible ${badgeHovered ? "z-40" : ""} ${currentAction === "discontinue" ? "border-red-200" : "border-[var(--color-border-light)]"}`}>
+    <div className={`relative border rounded-[var(--radius-md)] bg-[var(--color-surface)] overflow-visible ${badgeHovered ? "z-40" : ""} ${currentAction === "discontinue" ? "border-[var(--color-destructive-200)]" : "border-[var(--color-border-light)]"}`}>
       {/* Always visible header */}
       <button
         onClick={() => hasDetails && setExpanded(!expanded)}
@@ -229,7 +229,7 @@ function SupplementItemCard({
               </span>
             )}
             <div className="min-w-0">
-              <p className={`text-sm font-medium ${currentAction === "discontinue" ? "text-red-700 line-through" : "text-[var(--color-text-primary)]"}`}>
+              <p className={`text-sm font-medium ${currentAction === "discontinue" ? "text-[var(--color-destructive-600)] line-through" : "text-[var(--color-text-primary)]"}`}>
                 {item.name}
               </p>
               {item.current_dosage && (
@@ -312,18 +312,18 @@ function SupplementItemCard({
           {/* Modify mode: editable fields with existing-value comparison */}
           {isModify && onFieldEditsChange ? (
             <div className="mt-3 space-y-3">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-gold-700)]">
                 <Pencil className="w-3 h-3" />
                 Edit fields before pushing
               </div>
 
               {/* Show existing patient values if they differ */}
               {existingSupplement && (
-                <div className="p-2.5 bg-amber-50/50 border border-amber-200/60 rounded-[var(--radius-sm)]">
-                  <p className="text-[10px] font-medium text-amber-700 uppercase tracking-wide mb-1.5">
+                <div className="p-2.5 bg-[var(--color-gold-50)]/50 border border-[var(--color-gold-200)]/60 rounded-[var(--radius-sm)]">
+                  <p className="text-[10px] font-medium text-[var(--color-gold-700)] uppercase tracking-wide mb-1.5">
                     Current Patient Record
                   </p>
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px] text-amber-800">
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] text-[var(--color-gold-700)]">
                     {existingSupplement.dosage && (
                       <span>Dosage: {existingSupplement.dosage}</span>
                     )}
@@ -337,7 +337,7 @@ function SupplementItemCard({
                       <span>Brand: {existingSupplement.brand}</span>
                     )}
                     {!existingSupplement.dosage && !existingSupplement.form && !existingSupplement.timing && !existingSupplement.brand && (
-                      <span className="col-span-2 text-amber-600 italic">No details on file</span>
+                      <span className="col-span-2 text-[var(--color-gold-600)] italic">No details on file</span>
                     )}
                   </div>
                 </div>
@@ -719,7 +719,7 @@ export function SupplementReviewDetail({
       {canPush && (
         <div className="flex justify-end">
           {pushed ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-[var(--radius-md)]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-700)] bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)]">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Pushed to Patient File
             </span>
@@ -802,8 +802,8 @@ export function SupplementReviewDetail({
         >
           <div className="w-full max-w-md mx-4 bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--color-border-light)] animate-[scaleIn_200ms_cubic-bezier(0.16,1,0.3,1)]">
             <div className="p-6">
-              <div className="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
+              <div className="w-11 h-11 rounded-full bg-[var(--color-gold-50)] flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-5 h-5 text-[var(--color-gold-500)]" strokeWidth={1.5} />
               </div>
               <h2 className="text-base font-semibold text-[var(--color-text-primary)] text-center font-[var(--font-display)] mb-1.5">
                 Push to Patient File?
@@ -814,16 +814,16 @@ export function SupplementReviewDetail({
 
               {/* Conflict warnings */}
               {conflicts.length > 0 && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)]">
-                  <p className="text-xs font-semibold text-amber-800 mb-2">
+                <div className="mt-4 p-3 bg-[var(--color-gold-50)] border border-[var(--color-gold-200)] rounded-[var(--radius-md)]">
+                  <p className="text-xs font-semibold text-[var(--color-gold-700)] mb-2">
                     The following fields will be overwritten:
                   </p>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {conflicts.map((c, i) => (
-                      <div key={i} className="text-[11px] text-amber-900 leading-relaxed">
+                      <div key={i} className="text-[11px] text-[var(--color-gold-700)] leading-relaxed">
                         <span className="font-medium">{c.supplementName}</span>
                         {" — "}
-                        <span className="text-amber-700">{c.field}</span>
+                        <span className="text-[var(--color-gold-700)]">{c.field}</span>
                         {": "}
                         <span className="line-through opacity-60">{c.existing}</span>
                         {" → "}

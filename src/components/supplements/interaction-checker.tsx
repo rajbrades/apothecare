@@ -206,9 +206,9 @@ export function InteractionChecker({ patients, selectedPatientId, onPatientChang
               ))}
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-4 bg-emerald-50 border border-emerald-200 rounded-[var(--radius-md)]">
-              <Shield className="w-5 h-5 text-emerald-600" />
-              <p className="text-sm text-emerald-700">
+            <div className="flex items-center gap-2 p-4 bg-[var(--color-brand-50)] border border-[var(--color-brand-200)] rounded-[var(--radius-md)]">
+              <Shield className="w-5 h-5 text-[var(--color-brand-600)]" />
+              <p className="text-sm text-[var(--color-brand-700)]">
                 No significant interactions detected.
               </p>
             </div>

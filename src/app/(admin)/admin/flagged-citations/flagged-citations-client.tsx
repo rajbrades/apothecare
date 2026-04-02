@@ -149,7 +149,7 @@ export function FlaggedCitationsClient() {
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
-        <Flag className="text-amber-500" size={24} />
+        <Flag className="text-[var(--color-gold-500)]" size={24} />
         <h1 className="text-2xl font-bold text-slate-900">Flagged Citations</h1>
       </div>
       <p className="text-slate-500 text-sm mb-2">
@@ -192,7 +192,7 @@ export function FlaggedCitationsClient() {
                         </span>
                       )}
                       {c.has_correction && (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--color-brand-50)] text-[var(--color-brand-700)]">
                           Has correction
                         </span>
                       )}
@@ -211,7 +211,7 @@ export function FlaggedCitationsClient() {
                           {c.evidence_level}
                         </span>
                       )}
-                      <span className="text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">
+                      <span className="text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded bg-[var(--color-gold-50)] text-[var(--color-gold-700)]">
                         {c.context_type}
                         {c.context_value ? `: ${c.context_value}` : ""}
                       </span>
@@ -231,8 +231,8 @@ export function FlaggedCitationsClient() {
                 </div>
 
                 {/* Flag reason */}
-                <div className="bg-amber-50 border border-amber-100 rounded px-3 py-2 mb-3">
-                  <p className="text-sm text-amber-900">
+                <div className="bg-[var(--color-gold-50)] border border-[var(--color-gold-100)] rounded px-3 py-2 mb-3">
+                  <p className="text-sm text-[var(--color-gold-700)]">
                     <span className="font-medium">Reason:</span> {c.flagged_reason}
                   </p>
                 </div>
@@ -385,7 +385,7 @@ export function FlaggedCitationsClient() {
                           <button
                             onClick={() => handleReplace(c.id, result)}
                             disabled={resolving === c.id}
-                            className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                            className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--color-brand-500)] text-white hover:bg-[var(--color-brand-600)] transition-colors disabled:opacity-50"
                           >
                             <Check size={12} />
                             Use this

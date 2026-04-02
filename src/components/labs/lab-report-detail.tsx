@@ -545,7 +545,7 @@ function AddToVisitModal({
                   {saving === visit.id ? (
                     <Loader2 size={16} className="animate-spin text-[var(--color-brand-600)] flex-shrink-0" />
                   ) : saved === visit.id ? (
-                    <Check size={16} className="text-emerald-600 flex-shrink-0" />
+                    <Check size={16} className="text-[var(--color-brand-600)] flex-shrink-0" />
                   ) : (
                     <CalendarPlus size={16} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-600)] flex-shrink-0 transition-colors" />
                   )}
@@ -972,7 +972,7 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
               onClick={handleCopyToClipboard}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:bg-[var(--color-surface-tertiary)] transition-colors"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-[var(--color-brand-600)]" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied!" : "Copy"}
             </button>
           )}
@@ -998,11 +998,11 @@ export function LabReportDetail({ report: initialReport, biomarkers: initialBiom
 
       {/* Processing state */}
       {isProcessing && (
-        <div className="flex items-center gap-3 p-4 mb-6 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50">
-          <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+        <div className="flex items-center gap-3 p-4 mb-6 rounded-[var(--radius-md)] border border-[var(--color-gold-200)] bg-[var(--color-gold-50)]">
+          <Loader2 className="w-5 h-5 text-[var(--color-gold-600)] animate-spin" />
           <div>
-            <p className="text-sm font-medium text-amber-800">Processing your lab report</p>
-            <p className="text-xs text-amber-600 mt-0.5">
+            <p className="text-sm font-medium text-[var(--color-gold-700)]">Processing your lab report</p>
+            <p className="text-xs text-[var(--color-gold-600)] mt-0.5">
               {report.error_message?.startsWith("progress:")
                 ? report.error_message.replace("progress:", "")
                 : "AI is extracting and analyzing biomarkers…"}
