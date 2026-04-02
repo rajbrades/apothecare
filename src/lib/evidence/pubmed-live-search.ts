@@ -88,6 +88,10 @@ function normalizePubMedQuery(query: string): string {
   let normalized = query.toLowerCase()
     .replace(/\b(how|does|what|why|can|is|are|the|with|for|and|or|help|about|explain)\b/g, " ")
     .replace(/[?.,!]/g, "")
+    // Collapse hyphens in compound words BEFORE synonym matching:
+    // "over-methylation" → "overmethylation", "leaky-gut" → "leakygut"
+    // (synonym replacements like "N-methyltransferase" are inserted AFTER this step)
+    .replace(/(\w)-(\w)/g, "$1$2")
     .trim()
     .replace(/\s+/g, " ");
 
