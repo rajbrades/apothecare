@@ -25,6 +25,9 @@ export function Footer() {
             <Link href="/advertising" className="hover:text-[var(--color-text-secondary)] transition-colors">
               Partnerships
             </Link>
+            <Link href="/portal/login" className="hover:text-[var(--color-text-secondary)] transition-colors">
+              Patient Portal
+            </Link>
           </nav>
           <p className="text-xs text-[var(--color-text-muted)]">
             &copy; {new Date().getFullYear()} Apothecare. All rights reserved.

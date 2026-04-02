@@ -170,6 +170,15 @@ export default function LoginPage() {
             Create one free
           </Link>
         </p>
+        <p className="text-center mt-3 text-xs text-[var(--color-text-muted)]">
+          Are you a patient?{" "}
+          <Link
+            href="/portal/login"
+            className="text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)] underline underline-offset-2 transition-colors"
+          >
+            Sign in to your portal
+          </Link>
+        </p>
       </div>
     </div>
   );

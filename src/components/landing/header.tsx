@@ -17,7 +17,6 @@ export function Header() {
           <a href="#about" className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">About</a>
         </nav>
         <div className="hidden sm:flex items-center gap-4">
-          <Link href="/portal/login" className="text-sm px-4 py-2 rounded-[var(--radius-sm)] border border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-tertiary)] hover:border-[var(--color-border)] transition-colors">Patient Login</Link>
           <Link href="/auth/login" className="text-sm px-4 py-2 rounded-[var(--radius-sm)] border border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-tertiary)] hover:border-[var(--color-border)] transition-colors">Sign in</Link>
           <Link href="/auth/register" className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-500)] transition-colors font-medium">Get Started Free</Link>
         </div>
@@ -39,7 +38,6 @@ export function Header() {
           <a href="#pricing" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">Pricing</a>
           <a href="#about" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">About</a>
           <div className="flex flex-col gap-2 pt-2 border-t border-[var(--color-border-light)]">
-            <Link href="/portal/login" onClick={() => setMenuOpen(false)} className="text-sm px-4 py-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-center">Patient Login</Link>
             <Link href="/auth/login" onClick={() => setMenuOpen(false)} className="text-sm px-4 py-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-center">Sign in</Link>
             <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="text-sm px-4 py-2 bg-[var(--color-brand-600)] text-white rounded-[var(--radius-sm)] hover:bg-[var(--color-brand-500)] transition-colors font-medium text-center">Get Started Free</Link>
           </div>
