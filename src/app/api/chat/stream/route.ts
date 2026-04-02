@@ -261,15 +261,16 @@ export async function POST(request: NextRequest) {
             )
           );
 
-          // Auto-detect when RAG returned no evidence — unlock expert knowledge mode
-          const hasEvidence = ragChunkCount > 0 || partnershipContext.length > 0;
-          const expertKnowledgeMode = !hasEvidence;
+          // Expert knowledge mode: triggers when RAG evidence is absent or too thin
+          // to produce a substantive answer (< 2 chunks with abstracts)
+          const hasSubstantiveEvidence = ragChunkCount >= 2 || partnershipContext.length > 0;
+          const expertKnowledgeMode = !hasSubstantiveEvidence;
           if (expertKnowledgeMode) {
-            console.log("[Chat] Expert knowledge mode: no RAG evidence, appending EXPERT_KNOWLEDGE_ADDENDUM");
+            console.log(`[Chat] Expert knowledge mode: thin RAG (${ragChunkCount} chunks), appending EXPERT_KNOWLEDGE_ADDENDUM`);
           }
 
-          // Increase token budget when expert mode is active (no RAG = model needs room for depth)
-          const maxTokens = is_deep_consult ? 4096 : expertKnowledgeMode ? 4096 : 2048;
+          // Always give the model room for depth — 4096 base, not 2048
+          const maxTokens = is_deep_consult ? 4096 : 4096;
 
           const usage = await streamCompletion(
             {
