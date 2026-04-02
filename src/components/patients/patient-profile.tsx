@@ -899,23 +899,39 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         />
       )}
 
-      {/* Tab bar */}
-      <div className="relative mb-6">
-        <div className="flex flex-wrap items-center gap-1 border-b border-[var(--color-border-light)] -mb-px">
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap min-h-[44px] ${
-                activeTab === key
-                  ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
-                  : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-              }`}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
-            </button>
-          ))}
+      {/* Tab bar — dropdown on mobile, scrollable row on desktop */}
+      <div className="mb-6">
+        {/* Mobile: dropdown select */}
+        <div className="md:hidden">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value as Tab)}
+            className="w-full px-4 py-3 text-sm font-medium border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-400)] appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b8a83' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+          >
+            {tabs.map(({ key, label }) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+        {/* Desktop: single scrollable row */}
+        <div className="hidden md:block relative">
+          <div className="flex items-center gap-1 border-b border-[var(--color-border-light)] overflow-x-auto -mb-px" style={{ scrollbarWidth: "thin" }}>
+            {tabs.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                  activeTab === key
+                    ? "border-[var(--color-brand-600)] text-[var(--color-brand-700)]"
+                    : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
