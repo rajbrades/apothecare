@@ -117,8 +117,9 @@ export async function POST(request: NextRequest) {
     if (!file) return jsonError("No file provided", 400);
 
     // Validate file
-    if (file.type !== "application/pdf") {
-      return jsonError("Only PDF files are accepted", 400);
+    const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return jsonError("Accepted formats: PDF, PNG, JPG, WebP", 400);
     }
     if (file.size > MAX_FILE_SIZE) {
       return jsonError("File size exceeds 10MB limit", 400);

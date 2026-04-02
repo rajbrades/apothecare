@@ -94,8 +94,9 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
   const handleFile = async (file: File) => {
     setError(null);
 
-    if (file.type !== "application/pdf") {
-      setError("Only PDF files are accepted");
+    const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Accepted formats: PDF, PNG, JPG, WebP");
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -285,7 +286,7 @@ export function LabUpload({ patients, onUploaded, defaultExpanded = false }: Lab
             <input
               ref={fileInputRef}
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,image/png,image/jpeg,image/webp"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleFile(file);

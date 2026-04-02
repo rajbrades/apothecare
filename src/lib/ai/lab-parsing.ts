@@ -74,24 +74,29 @@ export async function parseLabReport(
         .eq("status", "parsing"); // Only update if still parsing
     };
 
-    await updateProgress("Downloading PDF…");
+    await updateProgress("Downloading file…");
 
-    // Download PDF from storage
-    const pdfBuffer: Buffer = await downloadFromStorage(storagePath);
+    // Download file from storage
+    const fileBuffer: Buffer = await downloadFromStorage(storagePath);
+    const ext = storagePath.split(".").pop()?.toLowerCase() || "";
+    const isImage = ["png", "jpg", "jpeg", "webp"].includes(ext);
 
     // Strategy: Try text extraction first (fast Sonnet path), fall back to vision (slow Opus path)
+    // Images always go to vision path
     let extractedText = "";
-    try {
-      const { extractText } = await import("unpdf");
-      const { text: pages } = await extractText(new Uint8Array(pdfBuffer), { mergePages: true });
-      extractedText = Array.isArray(pages) ? pages.join("\n") : (pages ?? "");
-    } catch {
-      // Text extraction failed — will use vision
+    if (!isImage) {
+      try {
+        const { extractText } = await import("unpdf");
+        const { text: pages } = await extractText(new Uint8Array(fileBuffer), { mergePages: true });
+        extractedText = Array.isArray(pages) ? pages.join("\n") : (pages ?? "");
+      } catch {
+        // Text extraction failed — will use vision
+      }
     }
 
-    const useTextPath = extractedText.trim().length > 200; // Has meaningful text content
-    console.log(`[Lab Parse] Strategy: ${useTextPath ? "TEXT (Sonnet)" : "VISION (Opus)"}, text length: ${extractedText.length}`);
-    await updateProgress(useTextPath ? "Extracting biomarkers (text mode)…" : "Analyzing PDF with AI vision…");
+    const useTextPath = !isImage && extractedText.trim().length > 200;
+    console.log(`[Lab Parse] Strategy: ${useTextPath ? "TEXT (Sonnet)" : "VISION"}, isImage: ${isImage}, text length: ${extractedText.length}`);
+    await updateProgress(useTextPath ? "Extracting biomarkers (text mode)…" : isImage ? "Analyzing image with AI vision…" : "Analyzing PDF with AI vision…");
 
     let response: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null;
     let lastError: unknown = null;
@@ -118,8 +123,15 @@ export async function parseLabReport(
 
     if (!response) {
       // SLOW PATH: Image/scanned PDF or text path failed → Vision (30-90 seconds)
-      const base64Pdf = pdfBuffer.toString("base64");
+      const base64Data = fileBuffer.toString("base64");
       const models = [ANTHROPIC_MODELS.standard, ANTHROPIC_MODELS.vision]; // Try Sonnet first, Opus fallback
+
+      // Build the appropriate content block for image vs PDF
+      const imageMimeMap: Record<string, "image/png" | "image/jpeg" | "image/webp" | "image/gif"> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp" };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const contentBlock: any = isImage
+        ? { type: "image", source: { type: "base64", media_type: imageMimeMap[ext] || "image/png", data: base64Data } }
+        : { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64Data } };
 
       for (const model of models) {
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -132,14 +144,7 @@ export async function parseLabReport(
                 {
                   role: "user",
                   content: [
-                    {
-                      type: "document",
-                      source: {
-                        type: "base64",
-                        media_type: "application/pdf",
-                        data: base64Pdf,
-                      },
-                    },
+                    contentBlock,
                     {
                       type: "text",
                       text: "Extract all biomarker data from this lab report. Return valid JSON.",
