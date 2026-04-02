@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { streamCompletion, MODELS } from "@/lib/ai/provider";
-import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM } from "@/lib/ai/anthropic";
+import { CLINICAL_CHAT_SYSTEM_PROMPT, CONVENTIONAL_LENS_ADDENDUM, COMPARISON_LENS_ADDENDUM, EXPERT_KNOWLEDGE_ADDENDUM } from "@/lib/ai/anthropic";
 import { buildSourceFilterAddendum, type SourceId } from "@/lib/ai/source-filter";
 import { filterAllowedSources, isFeatureAvailable } from "@/lib/tier/gates";
 import { chatMessageSchema } from "@/lib/validations/chat";
@@ -261,11 +261,21 @@ export async function POST(request: NextRequest) {
             )
           );
 
+          // Auto-detect when RAG returned no evidence — unlock expert knowledge mode
+          const hasEvidence = ragChunkCount > 0 || partnershipContext.length > 0;
+          const expertKnowledgeMode = !hasEvidence;
+          if (expertKnowledgeMode) {
+            console.log("[Chat] Expert knowledge mode: no RAG evidence, appending EXPERT_KNOWLEDGE_ADDENDUM");
+          }
+
+          // Increase token budget when expert mode is active (no RAG = model needs room for depth)
+          const maxTokens = is_deep_consult ? 4096 : expertKnowledgeMode ? 4096 : 2048;
+
           const usage = await streamCompletion(
             {
               model,
-              maxTokens: is_deep_consult ? 4096 : 2048,
-              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum(filterAllowedSources((source_filter ?? []) as string[], practitioner.subscription_tier) as SourceId[]) + evidenceContext + (partnershipContext ? "\n\n" + partnershipContext : ""),
+              maxTokens,
+              system: CLINICAL_CHAT_SYSTEM_PROMPT + patientContext + (clinical_lens === "conventional" ? CONVENTIONAL_LENS_ADDENDUM : clinical_lens === "both" ? COMPARISON_LENS_ADDENDUM : "") + buildSourceFilterAddendum(filterAllowedSources((source_filter ?? []) as string[], practitioner.subscription_tier) as SourceId[]) + evidenceContext + (partnershipContext ? "\n\n" + partnershipContext : "") + (expertKnowledgeMode ? EXPERT_KNOWLEDGE_ADDENDUM : ""),
               messages,
             },
             {
