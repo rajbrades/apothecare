@@ -651,6 +651,30 @@ Practice branding infrastructure + shared export templates + branded PDF exports
 
 ---
 
+## Sprint 28 — Deploy Pipeline & Payment Infrastructure (Planned)
+
+Stabilization sprint to close the "push to main and pray" gap and prepare for paid subscriptions. Goal: deployment grade A.
+
+### Phase 1: CI/CD (P0)
+- [x] **Infra:** GitHub Actions CI — type check, lint, unit tests, and build on every PR and push to main
+- [ ] **Docs:** `docs/DEPLOYMENT.md` — Vercel instant rollback procedure, migration rollback steps, incident response checklist, environment matrix (dev/staging/prod)
+- [ ] **Infra:** Staging environment — second Vercel project + staging Supabase instance, preview deploys auto-point to staging DB
+
+### Phase 2: Payment Webhooks (P0 — before enabling billing)
+- [ ] **API:** `POST /api/webhooks/stripe` — webhook handler with Stripe signature verification (`stripe.webhooks.constructEvent`), idempotency key tracking, event logging to audit_logs
+- [ ] **Events:** Handle `checkout.session.completed` → upgrade tier to pro, `customer.subscription.deleted` → downgrade to free, `invoice.payment_failed` → flag account
+- [ ] **Resilience:** Idempotency table to prevent double-processing; DLQ pattern for failed events (log + retry queue)
+- [ ] **Test:** Integration test for webhook signature validation, event replay, and tier state transitions
+
+### Phase 3: Observability (P1)
+- [ ] **Infra:** Sentry integration (`@sentry/nextjs`) — client + server error tracking, source maps, session replay
+- [ ] **Infra:** Audit log resilience — local queue + retry instead of fire-and-forget; alert on write failures (compliance risk)
+
+### Phase 4: Migration Safety (P2)
+- [ ] **Infra:** Migration version tracking — `schema_migrations` table recording which migrations have run, preventing re-runs and enabling rollback awareness per environment
+
+---
+
 ## Patient Education & Engagement (Planned)
 
 Patient-facing content tools and third-party integrations.
@@ -667,7 +691,7 @@ Practice analytics, business metrics, and advanced clinical configuration.
 
 - [ ] **Feature:** Clinical Insights Dashboard — Analytics on most frequent conditions, protocol efficacy, supplement trends
 - [ ] **Feature:** Business Metrics — Patient retention rates, average visit frequency, Deep Consult usage stats
-- [ ] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
+- [x] **Feature:** Custom functional ranges — Allow practitioners to override default functional ranges per biomarker from Settings
 
 ---
 
