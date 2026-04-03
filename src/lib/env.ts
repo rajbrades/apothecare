@@ -53,6 +53,9 @@ const envSchema = z.object({
   // ── Admin ─────────────────────────────────────────────────────────────
   ADMIN_EMAILS: z.string().optional(), // Comma-separated list of emails
 
+  // ── Sentry ────────────────────────────────────────────────────────────
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
   // ── Database (used by CLI migration scripts, optional at runtime) ────
   DATABASE_URL: z.string().optional(),
 });

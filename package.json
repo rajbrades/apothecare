@@ -12,9 +12,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:migrate": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql",
-    "db:reset": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "db:reset": "psql $DATABASE_URL -f supabase/migrations/001_initial_schema.sql"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -25,6 +23,7 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@sentry/nextjs": "^10.47.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
     "@tiptap/extension-link": "^3.20.1",

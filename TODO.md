@@ -657,21 +657,21 @@ Stabilization sprint to close the "push to main and pray" gap and prepare for pa
 
 ### Phase 1: CI/CD (P0)
 - [x] **Infra:** GitHub Actions CI — type check, lint, unit tests, and build on every PR and push to main
-- [ ] **Docs:** `docs/DEPLOYMENT.md` — Vercel instant rollback procedure, migration rollback steps, incident response checklist, environment matrix (dev/staging/prod)
+- [x] **Docs:** `docs/DEPLOYMENT.md` — Vercel instant rollback procedure, migration rollback steps, incident response checklist, environment matrix (dev/staging/prod)
 - [ ] **Infra:** Staging environment — second Vercel project + staging Supabase instance, preview deploys auto-point to staging DB
 
 ### Phase 2: Payment Webhooks (P0 — before enabling billing)
-- [ ] **API:** `POST /api/webhooks/stripe` — webhook handler with Stripe signature verification (`stripe.webhooks.constructEvent`), idempotency key tracking, event logging to audit_logs
-- [ ] **Events:** Handle `checkout.session.completed` → upgrade tier to pro, `customer.subscription.deleted` → downgrade to free, `invoice.payment_failed` → flag account
-- [ ] **Resilience:** Idempotency table to prevent double-processing; DLQ pattern for failed events (log + retry queue)
-- [ ] **Test:** Integration test for webhook signature validation, event replay, and tier state transitions
+- [x] **API:** `POST /api/webhooks/stripe` — webhook handler with Stripe signature verification (`stripe.webhooks.constructEvent`), idempotency key tracking, event logging to audit_logs
+- [x] **Events:** Handle `checkout.session.completed` → upgrade tier to pro, `customer.subscription.deleted` → downgrade to free, `invoice.payment_failed` → flag account
+- [x] **Resilience:** Idempotency table (`stripe_webhook_events`, migration 043) to prevent double-processing; failed events return 500 for Stripe retry
+- [x] **Test:** Unit tests for webhook signature validation, idempotency, and tier state transitions (`tests/api/stripe-webhook.test.ts`)
 
 ### Phase 3: Observability (P1)
-- [ ] **Infra:** Sentry integration (`@sentry/nextjs`) — client + server error tracking, source maps, session replay
-- [ ] **Infra:** Audit log resilience — local queue + retry instead of fire-and-forget; alert on write failures (compliance risk)
+- [x] **Infra:** Sentry integration (`@sentry/nextjs`) — client + server + edge configs, session replay, HIPAA-safe (sendDefaultPii: false, breadcrumb scrubbing)
+- [x] **Infra:** Audit log resilience — retry with exponential backoff (up to 3 attempts); Sentry alert on permanent failure (compliance risk)
 
 ### Phase 4: Migration Safety (P2)
-- [ ] **Infra:** Migration version tracking — `schema_migrations` table recording which migrations have run, preventing re-runs and enabling rollback awareness per environment
+- [x] **Infra:** Migration version tracking — `schema_migrations` table (migration 044) recording all 44 migrations, preventing re-runs and enabling drift detection
 
 ---
 
