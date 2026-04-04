@@ -658,7 +658,7 @@ Stabilization sprint to close the "push to main and pray" gap and prepare for pa
 ### Phase 1: CI/CD (P0)
 - [x] **Infra:** GitHub Actions CI — type check, lint, unit tests, and build on every PR and push to main
 - [x] **Docs:** `docs/DEPLOYMENT.md` — Vercel instant rollback procedure, migration rollback steps, incident response checklist, environment matrix (dev/staging/prod)
-- [ ] **Infra:** Staging environment — second Vercel project + staging Supabase instance, preview deploys auto-point to staging DB
+- [ ] **Infra:** Staging environment — deferred until AWS migration (see below)
 
 ### Phase 2: Payment Webhooks (P0 — before enabling billing)
 - [x] **API:** `POST /api/webhooks/stripe` — webhook handler with Stripe signature verification (`stripe.webhooks.constructEvent`), idempotency key tracking, event logging to audit_logs
@@ -711,3 +711,16 @@ Practice analytics, business metrics, and advanced clinical configuration.
 - [ ] Analytics integration (PostHog or Mixpanel)
 - [ ] A/B testing framework for landing page conversion
 - [ ] Accessibility audit (WCAG 2.1 AA)
+
+### AWS Migration (Planned)
+
+Migrate from Vercel + Supabase to AWS. Key decisions:
+
+- [ ] **Compute:** ECS/Fargate vs Lambda vs App Runner for Next.js
+- [ ] **Database:** RDS Postgres (with RLS) vs Aurora vs keep Supabase as managed layer
+- [ ] **Auth:** Keep Supabase Auth or migrate to Cognito
+- [ ] **CDN:** CloudFront for static assets + edge caching
+- [ ] **Staging:** Staging environment on AWS (replaces deferred Vercel staging)
+- [ ] **Docs:** Update `docs/DEPLOYMENT.md` for AWS deploy/rollback procedures
+
+Notes: CI pipeline, Stripe webhooks, Sentry, and migrations are all cloud-agnostic and carry over unchanged.

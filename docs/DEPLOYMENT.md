@@ -122,3 +122,18 @@ All secrets are stored in Vercel Environment Variables. Never commit secrets to 
 - Supabase connectivity status
 - API key presence (not values)
 - Environment configuration
+
+---
+
+## AWS Migration (Planned)
+
+This document currently covers Vercel + Supabase. An AWS migration is planned — when it happens, update this doc to cover:
+
+- **Compute**: ECS/Fargate or App Runner deployment + rollback
+- **Database**: RDS/Aurora connection pooling, migration runner, backup/restore
+- **Auth**: Cognito or Supabase Auth retention
+- **CDN**: CloudFront invalidation on deploy
+- **CI/CD**: GitHub Actions → ECR push → ECS service update
+- **Staging**: Dedicated staging environment on AWS
+
+The CI pipeline, Stripe webhooks, Sentry, and database migrations are cloud-agnostic and will carry over.
