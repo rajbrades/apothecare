@@ -719,20 +719,28 @@ Enterprise protocol management system. Corporate partners (target: Cenegenics) d
 
 ### Phase 1: Schema & Protocol Engine
 - [ ] **DB:** `corporate_accounts` table — org name, slug, logo, branding, subscription, is_active
-- [ ] **DB:** `corporate_protocols` table — org_id FK, title, category (TRT, HRT, peptides, metabolic), version, status (draft/active/archived), authored_by
+- [ ] **DB:** `corporate_protocols` table ��� org_id FK, title, category (TRT, HRT, peptides, metabolic), version, status (draft/active/archived), authored_by, step_type (medication|supplement) per step
 - [ ] **DB:** `protocol_decision_rules` table — protocol_id FK, parameter matching rules as structured JSONB (e.g., `{ "sex": "male", "age_max": 50, "fertility_concern": true, "total_t_max": 500, "free_t_max": 15 }`)
-- [ ] **DB:** `protocol_steps` table — protocol_id FK, step_order, medication/supplement name, dosage, frequency, duration, cycle_on/cycle_off, clinical_justification, contraindications, references
+- [ ] **DB:** `protocol_steps` table — protocol_id FK, step_order, step_type (medication|supplement), name, dosage, frequency, duration, cycle_on/cycle_off days, titration_schedule JSONB, clinical_justification, contraindications, references
 - [ ] **DB:** `protocol_monitoring` table — protocol_id FK, lab test, timing (baseline/day 45/day 75), target ranges, escalation criteria
+- [ ] **DB:** `protocol_evidence_conflicts` table — protocol_id FK, conflict_description, org_justification (why org deviates from mainstream evidence), evidence_refs
 - [ ] **DB:** RLS — corporate providers see only their org's protocols + Apothecare standard library
 - [ ] **DB:** `corporate_provider_memberships` — links practitioners to corporate accounts
-- [ ] **Seed:** Pre-load Cenegenics-style protocols for demo (TRT with fertility preservation, TRT standard, female HRT, peptide therapy, metabolic optimization)
+- [ ] **Seed:** Pre-load Cenegenics-style demo protocols:
+  - TRT — Fertility Preservation (Male <50): Enclomiphene + Boron, 75/14 cycle
+  - TRT — Standard Exogenous (Male >50 or no fertility concern): Testosterone cypionate + anastrozole + HCG
+  - Peptide — BPC-157: Tissue repair/gut healing, 250-500mcg BID, 4-week cycles
+  - Peptide — CJC-1295/Ipamorelin: GH secretagogue stack, 5 days on/2 off cycling, 12-week protocol
+  - Peptide — GHK-Cu: Tissue remodeling/anti-aging, topical + injectable protocols
 
 ### Phase 2: Matching Engine & API
 - [ ] **Lib:** `src/lib/protocols/corporate-matcher.ts` — takes patient parameters (age, sex, labs, clinical concerns) and scores against `protocol_decision_rules` to find best-match protocol(s)
-- [ ] **API:** `POST /api/corporate/protocols/match` — input: patient parameters, output: ranked protocol matches with confidence scores and justification
+- [ ] **API:** `POST /api/corporate/protocols/match` — input: patient parameters (manual or auto-pulled from patient chart biomarker_results), output: ranked protocol matches with confidence scores and justification
 - [ ] **API:** `GET /api/corporate/protocols` — list protocols for provider's org (filterable by category)
-- [ ] **API:** `GET /api/corporate/protocols/[id]` — full protocol detail with steps, monitoring, justification
+- [ ] **API:** `GET /api/corporate/protocols/[id]` — full protocol detail with steps, monitoring, justification, evidence conflicts (if any)
 - [ ] **API:** `POST /api/corporate/protocols/[id]/deep-dive` — generate two-voice audio deep dive explaining the protocol rationale (reuse TTS pipeline)
+- [ ] **API:** `POST /api/corporate/protocols/[id]/apply` — apply matched protocol to patient plan (creates treatment_protocol record linked to corporate template)
+- [ ] **Lib:** `src/lib/protocols/evidence-check.ts` — cross-reference protocol steps against RAG evidence platform (PubMed, A4M, IFM); flag conflicts with org-provided justification for why they deviate
 
 ### Phase 3: Provider UI (Demo-Ready)
 - [ ] **Page:** `/protocols/library` — browsable protocol library with category filters, search, org branding
@@ -759,12 +767,26 @@ Enterprise protocol management system. Corporate partners (target: Cenegenics) d
 - **Contraindications:** History of DVT/PE, polycythemia (Hct >54%), hormone-sensitive cancers
 - **Deep dive audio:** Two-voice explanation of why enclomiphene over exogenous T, mechanism of action, what to expect, when to escalate
 
+### Demo Scenario: Peptide Therapy (BPC-157)
+**Input:** Male, 38, chronic shoulder tendinopathy, post-surgical, wants to avoid NSAIDs
+**Matched Protocol:** "Peptide ��� BPC-157 Tissue Repair"
+**Output:**
+- BPC-157 250mcg subcutaneous BID (near injury site preferred; promotes tendon/ligament healing via GH receptor upregulation and angiogenesis)
+- 4 weeks on / 2 weeks off cycle (prevents receptor desensitization; most tissue remodeling occurs in first 4 weeks)
+- **Monitoring:** Pain VAS score weekly, ROM assessment at 2 and 4 weeks, inflammatory markers (hs-CRP) at baseline and day 28
+- **Contraindications:** Active malignancy, pregnancy, history of hormone-sensitive cancers
+- **Evidence note:** BPC-157 is not FDA-approved; org justification provided for off-label use based on animal model evidence and clinical observation
+
 ### Key Decisions
 - Demo-first: pre-load protocols, build matching + UI, close the deal, then build admin portal
 - Multi-tenant: each org sees only their protocols + shared Apothecare standard library
 - Protocol versioning: immutable once assigned to patient, new version for new assignments
 - Matching is toggleable by provider (opt-in, not forced)
 - Deep dive audio on-demand (same TTS pipeline as existing feature)
+- Medication vs supplement distinction: protocol_steps.step_type differentiates prescriptions from supplements
+- Evidence conflicts: when a protocol step deviates from mainstream evidence, the org provides justification; system flags with explanation rather than blocking
+- Patient chart integration: "Find Protocol" auto-pulls biomarker_results when available for precision matching
+- Tier: Pro+ feature gate (enterprise contracts get Pro+ automatically)
 
 ---
 

@@ -116,7 +116,22 @@
 
 ---
 
-## Slide 10: New Feature: Patient Education Studio
+## Slide 10: Enterprise — Corporate Protocol Intelligence
+**Headline:** AI-Powered Clinical Decision Support That Operationalizes Your Protocols.
+**Body:**
+*   **The Problem:** Large clinical organizations (Cenegenics, age-management clinics, HRT networks) have proprietary protocols locked in PDFs and tribal knowledge. Training new providers takes months. Protocol adherence varies.
+*   **The Solution:** Apothecare transforms static protocol documents into an **executable clinical decision engine.**
+    *   Provider enters patient parameters (age, labs, concerns) → System returns the **exact protocol** with dosing, monitoring schedule, and evidence-based justification.
+    *   Protocols grounded in the organization's evidence base AND peer-reviewed literature. Conflicts flagged with explanation.
+    *   Two-voice audio deep dives explain the clinical reasoning behind each protocol decision.
+*   **Revenue:** Enterprise contracts ($X,XXX/mo per organization) with per-seat provider licensing.
+*   **Moat:** Once an organization's protocols live in Apothecare, switching costs are enormous.
+**Visual:** Split screen. LEFT: A protocol matching interface showing patient parameters → recommended TRT protocol. RIGHT: Corporate branding with "Powered by Apothecare."
+**Speaker Notes:** "This is our enterprise play. We don't just sell seats — we become the infrastructure that operationalizes an organization's clinical IP. Once their protocols live in our system, we're embedded in their clinical workflow. That's a very sticky contract."
+
+---
+
+## Slide 10b: Patient Education Studio
 **Headline:** Viral Growth Loop.
 **Body:**
 *   **Product-Led Growth:** Every protocol sent includes AI-generated **Audio Overviews** and **Visual Guides** for the patient.
