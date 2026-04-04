@@ -717,38 +717,33 @@ Provider-facing education generation from treatment protocols. Converts clinical
 
 Enterprise protocol management system. Corporate partners (target: Cenegenics) define proprietary treatment protocols. Providers enter patient parameters → system matches the right protocol with full clinical justification and optional deep-dive audio. Demo-ready first, production admin tooling after deal closes.
 
-### Phase 1: Schema & Protocol Engine
-- [ ] **DB:** `corporate_accounts` table — org name, slug, logo, branding, subscription, is_active
-- [ ] **DB:** `corporate_protocols` table ��� org_id FK, title, category (TRT, HRT, peptides, metabolic), version, status (draft/active/archived), authored_by, step_type (medication|supplement) per step
-- [ ] **DB:** `protocol_decision_rules` table — protocol_id FK, parameter matching rules as structured JSONB (e.g., `{ "sex": "male", "age_max": 50, "fertility_concern": true, "total_t_max": 500, "free_t_max": 15 }`)
-- [ ] **DB:** `protocol_steps` table — protocol_id FK, step_order, step_type (medication|supplement), name, dosage, frequency, duration, cycle_on/cycle_off days, titration_schedule JSONB, clinical_justification, contraindications, references
-- [ ] **DB:** `protocol_monitoring` table — protocol_id FK, lab test, timing (baseline/day 45/day 75), target ranges, escalation criteria
-- [ ] **DB:** `protocol_evidence_conflicts` table — protocol_id FK, conflict_description, org_justification (why org deviates from mainstream evidence), evidence_refs
-- [ ] **DB:** RLS — corporate providers see only their org's protocols + Apothecare standard library
-- [ ] **DB:** `corporate_provider_memberships` — links practitioners to corporate accounts
-- [ ] **Seed:** Pre-load Cenegenics-style demo protocols:
+### Phase 1: Schema & Protocol Engine ✅ COMPLETE
+- [x] **DB:** Migration 045 — `corporate_accounts`, `corporate_protocols`, `protocol_decision_rules`, `corporate_protocol_steps`, `corporate_protocol_monitoring`, `corporate_protocol_evidence_conflicts`, `corporate_provider_memberships` tables with RLS
+- [x] **Types:** `src/types/corporate-protocol.ts` — full type system for protocols, steps, monitoring, matching
+- [x] **Validation:** `src/lib/validations/corporate-protocol.ts` — match + list query schemas
+- [x] **Seed:** Pre-load Cenegenics-style demo protocols:
   - TRT — Fertility Preservation (Male <50): Enclomiphene + Boron, 75/14 cycle
   - TRT — Standard Exogenous (Male >50 or no fertility concern): Testosterone cypionate + anastrozole + HCG
   - Peptide — BPC-157: Tissue repair/gut healing, 250-500mcg BID, 4-week cycles
   - Peptide — CJC-1295/Ipamorelin: GH secretagogue stack, 5 days on/2 off cycling, 12-week protocol
   - Peptide — GHK-Cu: Tissue remodeling/anti-aging, topical + injectable protocols
 
-### Phase 2: Matching Engine & API
-- [ ] **Lib:** `src/lib/protocols/corporate-matcher.ts` — takes patient parameters (age, sex, labs, clinical concerns) and scores against `protocol_decision_rules` to find best-match protocol(s)
-- [ ] **API:** `POST /api/corporate/protocols/match` — input: patient parameters (manual or auto-pulled from patient chart biomarker_results), output: ranked protocol matches with confidence scores and justification
-- [ ] **API:** `GET /api/corporate/protocols` — list protocols for provider's org (filterable by category)
-- [ ] **API:** `GET /api/corporate/protocols/[id]` — full protocol detail with steps, monitoring, justification, evidence conflicts (if any)
-- [ ] **API:** `POST /api/corporate/protocols/[id]/deep-dive` — generate two-voice audio deep dive explaining the protocol rationale (reuse TTS pipeline)
-- [ ] **API:** `POST /api/corporate/protocols/[id]/apply` — apply matched protocol to patient plan (creates treatment_protocol record linked to corporate template)
-- [ ] **Lib:** `src/lib/protocols/evidence-check.ts` — cross-reference protocol steps against RAG evidence platform (PubMed, A4M, IFM); flag conflicts with org-provided justification for why they deviate
+### Phase 2: Matching Engine & API ✅ COMPLETE
+- [x] **Lib:** `src/lib/protocols/corporate-matcher.ts` — weighted scoring engine with field weights (sex, age, concerns, lab thresholds), exclusion disqualifiers, priority tiebreakers
+- [x] **API:** `POST /api/corporate/protocols/match` — auto-pulls patient chart biomarker_results when patient_id provided; returns ranked matches with confidence scores and justification
+- [x] **API:** `GET /api/corporate/protocols` — list protocols for provider's org (filterable by category, searchable)
+- [x] **API:** `GET /api/corporate/protocols/[id]` — full protocol detail with steps, monitoring, evidence conflicts, decision rules
+- [x] **API:** `POST /api/corporate/protocols/[id]/apply` — creates treatment_protocol + protocol_phases from corporate template, linked to patient
+- [ ] **API:** `POST /api/corporate/protocols/[id]/deep-dive` — generate two-voice audio deep dive (deferred — reuses existing TTS pipeline)
+- [ ] **Lib:** `src/lib/protocols/evidence-check.ts` — RAG cross-reference (deferred — evidence conflicts table handles manual flagging for now)
 
-### Phase 3: Provider UI (Demo-Ready)
-- [ ] **Page:** `/protocols/library` — browsable protocol library with category filters, search, org branding
-- [ ] **Component:** Protocol detail view — steps with dosing, cycle visualization, monitoring timeline, clinical justification per step, contraindications
-- [ ] **Component:** Patient parameter input panel — quick form (age, sex, labs, concerns) with toggle for "Recommend protocol" → shows matched protocol(s) with confidence
-- [ ] **Component:** Deep dive panel — generate/play audio explanation of protocol rationale
+### Phase 3: Provider UI (Demo-Ready) — IN PROGRESS
+- [x] **Page:** `/protocols/library` — browsable protocol library with category grouping, icons, tags, org branding, "Find Protocol" CTA
+- [x] **Page:** `/protocols/[id]` — full protocol detail: steps with dosing/cycle/justification/contraindications, monitoring table, evidence conflict callouts, corporate branding
+- [x] **Nav:** Sidebar "Protocols" link (BookOpen icon, Pro+ gated)
+- [ ] **Component:** Patient parameter input panel — quick form (age, sex, labs, concerns) with "Recommend protocol" → shows matched protocol(s) with confidence
 - [ ] **Integration:** From patient chart → "Find Protocol" button that pre-fills parameters from patient data and runs matcher
-- [ ] **Branding:** Corporate logo + "Powered by Apothecare" on protocol views
+- [ ] **Component:** Deep dive panel — generate/play audio explanation of protocol rationale
 
 ### Phase 4: Production Admin (Post-Deal)
 - [ ] **Page:** Corporate admin portal — protocol authoring, versioning, publish/archive workflow

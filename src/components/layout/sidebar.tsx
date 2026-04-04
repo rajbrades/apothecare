@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ const navItems = [
   { href: "/labs", icon: FlaskConical, label: "Labs", proOnly: true },
   { href: "/supplements", icon: Pill, label: "Supplements", proOnly: false },
   { href: "/patients", icon: Users, label: "Patients", proOnly: false },
+  { href: "/protocols/library", icon: BookOpen, label: "Protocols", proOnly: true },
   { href: "/analytics", icon: BarChart3, label: "Analytics", proOnly: true },
 ];
 
