@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
+import { ChatMockup } from "./chat-mockup";
 
 function buildRegisterHref(query?: string) {
   if (!query) return "/auth/register";
@@ -88,11 +89,12 @@ export function Hero() {
             </ScrollReveal>
           </div>
         </div>
-
       </div>
 
-      {/* Subtle gradient into chat mockup */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#FAFAFA] to-transparent pointer-events-none" />
+      {/* Chat mockup — visible in hero viewport */}
+      <ScrollReveal delay={500}>
+        <ChatMockup autoStart />
+      </ScrollReveal>
     </section>
   );
 }
