@@ -713,6 +713,61 @@ Provider-facing education generation from treatment protocols. Converts clinical
 
 ---
 
+## Sprint 30 — Corporate Protocol Library & Clinical Decision Support (Planned)
+
+Enterprise protocol management system. Corporate partners (target: Cenegenics) define proprietary treatment protocols. Providers enter patient parameters → system matches the right protocol with full clinical justification and optional deep-dive audio. Demo-ready first, production admin tooling after deal closes.
+
+### Phase 1: Schema & Protocol Engine
+- [ ] **DB:** `corporate_accounts` table — org name, slug, logo, branding, subscription, is_active
+- [ ] **DB:** `corporate_protocols` table — org_id FK, title, category (TRT, HRT, peptides, metabolic), version, status (draft/active/archived), authored_by
+- [ ] **DB:** `protocol_decision_rules` table — protocol_id FK, parameter matching rules as structured JSONB (e.g., `{ "sex": "male", "age_max": 50, "fertility_concern": true, "total_t_max": 500, "free_t_max": 15 }`)
+- [ ] **DB:** `protocol_steps` table — protocol_id FK, step_order, medication/supplement name, dosage, frequency, duration, cycle_on/cycle_off, clinical_justification, contraindications, references
+- [ ] **DB:** `protocol_monitoring` table — protocol_id FK, lab test, timing (baseline/day 45/day 75), target ranges, escalation criteria
+- [ ] **DB:** RLS — corporate providers see only their org's protocols + Apothecare standard library
+- [ ] **DB:** `corporate_provider_memberships` — links practitioners to corporate accounts
+- [ ] **Seed:** Pre-load Cenegenics-style protocols for demo (TRT with fertility preservation, TRT standard, female HRT, peptide therapy, metabolic optimization)
+
+### Phase 2: Matching Engine & API
+- [ ] **Lib:** `src/lib/protocols/corporate-matcher.ts` — takes patient parameters (age, sex, labs, clinical concerns) and scores against `protocol_decision_rules` to find best-match protocol(s)
+- [ ] **API:** `POST /api/corporate/protocols/match` — input: patient parameters, output: ranked protocol matches with confidence scores and justification
+- [ ] **API:** `GET /api/corporate/protocols` — list protocols for provider's org (filterable by category)
+- [ ] **API:** `GET /api/corporate/protocols/[id]` — full protocol detail with steps, monitoring, justification
+- [ ] **API:** `POST /api/corporate/protocols/[id]/deep-dive` — generate two-voice audio deep dive explaining the protocol rationale (reuse TTS pipeline)
+
+### Phase 3: Provider UI (Demo-Ready)
+- [ ] **Page:** `/protocols/library` — browsable protocol library with category filters, search, org branding
+- [ ] **Component:** Protocol detail view — steps with dosing, cycle visualization, monitoring timeline, clinical justification per step, contraindications
+- [ ] **Component:** Patient parameter input panel — quick form (age, sex, labs, concerns) with toggle for "Recommend protocol" → shows matched protocol(s) with confidence
+- [ ] **Component:** Deep dive panel — generate/play audio explanation of protocol rationale
+- [ ] **Integration:** From patient chart → "Find Protocol" button that pre-fills parameters from patient data and runs matcher
+- [ ] **Branding:** Corporate logo + "Powered by Apothecare" on protocol views
+
+### Phase 4: Production Admin (Post-Deal)
+- [ ] **Page:** Corporate admin portal — protocol authoring, versioning, publish/archive workflow
+- [ ] **Feature:** Protocol compliance tracking — did provider follow the recommended protocol?
+- [ ] **Feature:** Protocol versioning — existing assignments keep old version, new patients get latest
+- [ ] **Feature:** Usage analytics for corporate admins — which protocols used, by whom, outcomes
+
+### Demo Scenario: Cenegenics TRT
+**Input:** Male, 47, fertility concern, Total T 445, Free T 11, FSH 2, LH 5
+**Matched Protocol:** "TRT — Fertility Preservation (Male <50)"
+**Output:**
+- Enclomiphene citrate 25mg M-F (preserves HPG axis → fertility; selective estrogen receptor modulator stimulates LH/FSH without suppressing spermatogenesis)
+- Boron 6mg daily (reduces SHBG → increases free T bioavailability)
+- 75 days on / 14 days off cycle (prevents receptor desensitization)
+- **Monitoring:** Recheck Total T, Free T, FSH, LH, estradiol at day 45. If Total T <600 at day 45, escalate to 50mg dose.
+- **Contraindications:** History of DVT/PE, polycythemia (Hct >54%), hormone-sensitive cancers
+- **Deep dive audio:** Two-voice explanation of why enclomiphene over exogenous T, mechanism of action, what to expect, when to escalate
+
+### Key Decisions
+- Demo-first: pre-load protocols, build matching + UI, close the deal, then build admin portal
+- Multi-tenant: each org sees only their protocols + shared Apothecare standard library
+- Protocol versioning: immutable once assigned to patient, new version for new assignments
+- Matching is toggleable by provider (opt-in, not forced)
+- Deep dive audio on-demand (same TTS pipeline as existing feature)
+
+---
+
 ## Other Planned Features
 
 - [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
