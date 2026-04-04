@@ -675,11 +675,46 @@ Stabilization sprint to close the "push to main and pray" gap and prepare for pa
 
 ---
 
-## Patient Education & Engagement (Planned)
+## Sprint 29 — Patient Education Studio: Provider Side (Planned)
 
-Patient-facing content tools and third-party integrations.
+Provider-facing education generation from treatment protocols. Converts clinical protocol phases into plain-language patient education with optional two-voice podcast audio. Reuses existing deep-dive TTS pipeline and protocol context.
 
-- [ ] **Feature:** Patient Education Studio — "NotebookLM" for protocols. Generate personalized audio overviews and slide decks explaining the "Why" behind protocols.
+### Phase 1: Foundation
+- [ ] **DB:** Migration 045 — `protocol_education` table (1:1 with protocol, content_markdown, audio_storage_path, is_shared_with_patient, status), `patient_education_views` audit table, RLS policies
+- [ ] **Types:** `src/types/education.ts` — ProtocolEducation, EducationView interfaces
+- [ ] **Validation:** `src/lib/validations/education.ts` — generateEducationSchema, shareEducationSchema
+- [ ] **Prompts:** `src/lib/ai/education-prompts.ts` — EDUCATION_SYSTEM_PROMPT (clinical → plain language), EDUCATION_DIALOGUE_SYSTEM_PROMPT (two-voice podcast), buildEducationUserMessage helper
+- [ ] **Storage:** `src/lib/storage/education-audio.ts` — upload/signed-URL helpers for MP3 (1hr expiry, HIPAA-safe)
+- [ ] **Rate limit:** Add `education_generate` action (pro_plus: 10/day)
+- [ ] **Audit:** Add `education_generated`, `education_audio_generated` action types
+
+### Phase 2: Provider API
+- [ ] **API:** `POST /api/patients/[id]/protocols/[protocolId]/education/generate` — SSE streaming, generates markdown narrative + optional two-voice audio via OpenAI TTS
+- [ ] **API:** `GET /api/patients/[id]/protocols/[protocolId]/education` — fetch education content + signed audio URL
+- [ ] **API:** `PATCH /api/patients/[id]/protocols/[protocolId]/education/share` — toggle is_shared_with_patient
+- [ ] **API:** `POST /api/patients/[id]/protocols/[protocolId]/education/audio` — on-demand audio generation for existing text
+
+### Phase 3: Provider UI
+- [ ] **Component:** `src/components/education/education-content-renderer.tsx` — renders markdown with styled phase sections
+- [ ] **Component:** `src/components/education/education-audio-player.tsx` — styled player with play/pause, progress, speed control
+- [ ] **Component:** `src/components/protocols/education-studio.tsx` — panel with generate button, audio checkbox, preview, share toggle, regenerate
+- [ ] **Integration:** Add "Patient Education" button (BookOpen icon) to protocol workspace toolbar
+
+### Future: Patient Portal Extension
+- [ ] Portal API, education page, dashboard cards, phase timeline — deferred to separate sprint
+
+### Key Decisions
+- Audio is on-demand (not automatic) — avoids expensive TTS when only text needed
+- One education record per protocol (UNIQUE) — regeneration replaces
+- Signed URLs for audio (1hr expiry) — no permanent public URLs
+- Practitioner reviews before sharing — no auto-share
+- Pro+ tier gate (already defined in gates.ts)
+- Stale content warning when protocol modified after education generated
+
+---
+
+## Other Planned Features
+
 - [ ] **Feature:** Video Content Library — Curate and embed educational videos relevant to functional medicine interventions
 - [ ] **Feature:** Fullscript.com integration — Connect practitioner Fullscript dispensary for direct ordering, patient auto-ship, and protocol-to-cart workflow
 
