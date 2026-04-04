@@ -17,6 +17,7 @@ export default function HomePage() {
       <Header />
       <main className="pt-16">
         <Hero />
+        <ChatMockup />
         <TrustLogos />
         <FeaturesGrid />
         <FeatureLab />

@@ -78,27 +78,18 @@ function buildTypewriterData() {
 
 const { fullText: AI_FULL_TEXT, badgeInsertions: BADGE_INSERTIONS } = buildTypewriterData();
 
-interface ChatMockupProps {
-  autoStart?: boolean;
-}
-
-export function ChatMockup({ autoStart = false }: ChatMockupProps) {
+export function ChatMockup() {
   const ref = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<"idle" | "thinking" | "typing" | "done">("idle");
   const [charIndex, setCharIndex] = useState(0);
   const hasStarted = useRef(false);
 
-  // Trigger on scroll into view (or immediately if autoStart / already visible)
+  // Trigger on scroll into view (or immediately if already visible)
   useEffect(() => {
-    if (autoStart) {
-      hasStarted.current = true;
-      setPhase("thinking");
-      return;
-    }
-
     const el = ref.current;
     if (!el) return;
 
+    // If already in viewport, start immediately
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) {
       hasStarted.current = true;
@@ -119,7 +110,7 @@ export function ChatMockup({ autoStart = false }: ChatMockupProps) {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [autoStart]);
+  }, []);
 
   // Thinking -> typing transition
   useEffect(() => {
@@ -191,9 +182,9 @@ export function ChatMockup({ autoStart = false }: ChatMockupProps) {
   return (
     <section
       ref={ref}
-      className={autoStart ? "px-6 lg:px-8 pb-8" : "bg-[#FAFAFA] py-20 md:py-28"}
+      className="bg-[#FAFAFA] py-20 md:py-28"
     >
-      <div className={autoStart ? "max-w-3xl mx-auto" : "max-w-5xl mx-auto px-6 lg:px-8"}>
+      <div className="max-w-5xl mx-auto px-6 lg:px-8">
         <Link href="/auth/register" className="block group">
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-elevated)] overflow-hidden bg-[var(--color-surface)] group-hover:shadow-[var(--shadow-modal)] transition-shadow">
             {/* Window chrome */}

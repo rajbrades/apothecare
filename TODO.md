@@ -700,9 +700,9 @@ Practice analytics, business metrics, and advanced clinical configuration.
 ### Design & UX Polish
 - [ ] **Design:** Ensure Admin Dashboard retains "magical" glow/serif typography from marketing site
 - [ ] **UX:** Clarify "Start Free" button action in landing page input
-- [x] **Design:** Move chat product mockup into the hero viewport (was 900px below fold)
+- [ ] **Design:** Move chat product mockup into the hero viewport (currently 900px below fold)
 - [ ] **Design:** Add one dark/teal full-width CTA break section before pricing
-- [x] **Design:** Show a rich AI response in the demo chat mockup
+- [ ] **Design:** Show a rich AI response in the demo chat mockup
 - [ ] **Design:** Balance hero input microcopy alignment
 
 ### Platform & Infrastructure
