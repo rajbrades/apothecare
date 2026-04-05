@@ -136,7 +136,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
   const isFollowUp = visit.visit_type === "follow_up";
 
   // Detect fresh/new visit — editable type + patient selectors
-  const isFreshVisit = !visit.raw_notes && !visit.subjective && !visit.objective && !visit.assessment && !visit.plan && !visit.template_content;
+  const isFreshVisit = !visit.subjective && !visit.objective && !visit.assessment && !visit.plan;
   const [updatingVisitType, setUpdatingVisitType] = useState(false);
   const [updatingPatient, setUpdatingPatient] = useState(false);
 
