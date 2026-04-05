@@ -745,11 +745,17 @@ Enterprise protocol management system. Corporate partners (target: Cenegenics) d
 - [ ] **Integration:** From patient chart → "Find Protocol" button that pre-fills parameters from patient data and runs matcher
 - [ ] **Component:** Deep dive panel — generate/play audio explanation of protocol rationale
 
-### Phase 4: Production Admin (Post-Deal)
-- [ ] **Page:** Corporate admin portal — protocol authoring, versioning, publish/archive workflow
-- [ ] **Feature:** Protocol compliance tracking — did provider follow the recommended protocol?
-- [ ] **Feature:** Protocol versioning — existing assignments keep old version, new patients get latest
-- [ ] **Feature:** Usage analytics for corporate admins — which protocols used, by whom, outcomes
+### Phase 4: Production Admin ✅ COMPLETE
+- [x] **Auth:** `src/lib/auth/corporate-admin.ts` — requireCorporateAdmin() guard (checks corporate_provider_memberships.role === "admin")
+- [x] **Layout:** `/corporate/admin/layout.tsx` — branded top nav with org logo, admin badge, nav links (Dashboard, Protocols, Analytics)
+- [x] **Page:** `/corporate/admin` — admin dashboard with stats (active protocols, provider count, match count) and quick actions
+- [x] **Page:** `/corporate/admin/protocols` — protocol list with status grouping (active/draft/archived), inline actions (edit, publish, archive, restore)
+- [x] **Page:** `/corporate/admin/analytics` — usage analytics: total matches, applied protocols, conversion rate, top matched protocols, recent match activity feed
+- [x] **Component:** `ProtocolActions` — dropdown menu with publish/archive/restore/new version actions
+- [x] **API:** `PATCH /api/corporate/admin/protocols/[id]` — update protocol fields + status transitions (corporate admin only)
+- [x] **API:** `DELETE /api/corporate/admin/protocols/[id]` — delete draft/archived protocols (not active)
+- [x] **API:** `POST /api/corporate/admin/protocols/[id]/version` — create new version (copies protocol + steps + monitoring + rules + evidence conflicts as draft; original stays active/immutable)
+- [x] **Feature:** Protocol versioning — existing assignments keep old version, new patients get latest
 
 ### Demo Scenario: Cenegenics TRT
 **Input:** Male, 47, fertility concern, Total T 445, Free T 11, FSH 2, LH 5
