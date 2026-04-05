@@ -102,6 +102,37 @@ function SoapSection({
   );
 }
 
+/** Section display config per visit type */
+const SECTION_LABELS: Record<string, { labels: [string, string][]; }> = {
+  soap: {
+    labels: [["Subjective", "S"], ["Objective", "O"], ["Assessment", "A"], ["Plan", "P"]],
+  },
+  consult: {
+    labels: [
+      ["Reason for Consultation & History", "RC"],
+      ["Examination & Data", "PE"],
+      ["Clinical Impression", "Dx"],
+      ["Recommendations", "Rec"],
+    ],
+  },
+  history_physical: {
+    labels: [
+      ["History", "Hx"],
+      ["Physical Examination", "PE"],
+      ["Assessment", "A"],
+      ["Plan", "P"],
+    ],
+  },
+  follow_up: {
+    labels: [
+      ["Progress & Symptoms", "Prg"],
+      ["Labs & Findings", "Lab"],
+      ["Updated Assessment", "A"],
+      ["Plan Modifications", "P"],
+    ],
+  },
+};
+
 interface SoapSectionsProps {
   subjective: string;
   objective: string;
@@ -110,6 +141,7 @@ interface SoapSectionsProps {
   soapStatus: "idle" | "generating" | "streaming" | "complete" | "error";
   streamingText: string;
   readOnly?: boolean;
+  visitType?: string;
   onUpdate: (field: string, value: string) => void;
 }
 
@@ -121,6 +153,7 @@ export function SoapSections({
   soapStatus,
   streamingText,
   readOnly,
+  visitType = "soap",
   onUpdate,
 }: SoapSectionsProps) {
   // Parse streaming text into sections as it arrives
@@ -164,11 +197,14 @@ export function SoapSections({
     return "idle" as const;
   };
 
+  const sectionConfig = SECTION_LABELS[visitType] || SECTION_LABELS.soap;
+  const [[sLabel, sBadge], [oLabel, oBadge], [aLabel, aBadge], [pLabel, pBadge]] = sectionConfig.labels;
+
   return (
     <div className="space-y-3">
       <SoapSection
-        label="Subjective"
-        shortLabel="S"
+        label={sLabel}
+        shortLabel={sBadge}
         value={subjective}
         status={getSectionStatus(streamS, subjective)}
         streamingText={streamS}
@@ -176,8 +212,8 @@ export function SoapSections({
         onChange={(v) => onUpdate("subjective", v)}
       />
       <SoapSection
-        label="Objective"
-        shortLabel="O"
+        label={oLabel}
+        shortLabel={oBadge}
         value={objective}
         status={getSectionStatus(streamO, objective)}
         streamingText={streamO}
@@ -185,8 +221,8 @@ export function SoapSections({
         onChange={(v) => onUpdate("objective", v)}
       />
       <SoapSection
-        label="Assessment"
-        shortLabel="A"
+        label={aLabel}
+        shortLabel={aBadge}
         value={assessment}
         status={getSectionStatus(streamA, assessment)}
         streamingText={streamA}
@@ -194,8 +230,8 @@ export function SoapSections({
         onChange={(v) => onUpdate("assessment", v)}
       />
       <SoapSection
-        label="Plan"
-        shortLabel="P"
+        label={pLabel}
+        shortLabel={pBadge}
         value={plan}
         status={getSectionStatus(streamP, plan)}
         streamingText={streamP}

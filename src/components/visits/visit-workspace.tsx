@@ -219,7 +219,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
       if (preGenSnapshotRef.current) {
         const snapshot = preGenSnapshotRef.current;
         toast("AI generation complete", {
-          description: "SOAP note has been updated",
+          description: `${VISIT_TYPE_LABELS[visit.visit_type] || "SOAP"} note has been updated`,
           action: {
             label: "Undo",
             onClick: () => {
@@ -629,9 +629,12 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
     }
   }, [visit.id, router]);
 
+  const noteTabLabel = VISIT_TYPE_LABELS[visit.visit_type] || "SOAP";
+  const NoteTabIcon = VISIT_TYPE_ICONS[visit.visit_type] || ClipboardList;
+
   const tabs: { key: Tab; label: string; icon: typeof ClipboardList }[] = [
     { key: "intake", label: "Vitals & Ratings", icon: Activity },
-    { key: "soap", label: "SOAP Note", icon: ClipboardList },
+    { key: "soap", label: `${noteTabLabel} Note`, icon: NoteTabIcon },
     { key: "ifm", label: "IFM Matrix", icon: Grid3x3 },
     { key: "protocol", label: "Protocol", icon: Pill },
   ];
@@ -1023,6 +1026,7 @@ export function VisitWorkspace({ visit: initialVisit, patients = [], previousVit
             soapStatus={stream.soap.status}
             streamingText={stream.soap.rawText}
             readOnly={isReadOnly}
+            visitType={visit.visit_type}
             onUpdate={handleFieldUpdate}
           />
         )}
