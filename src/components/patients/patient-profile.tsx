@@ -9,7 +9,7 @@ import {
   Stethoscope, Loader2, Clock, TrendingUp,
   Archive, ArchiveRestore, ChevronDown, ExternalLink,
   Trash2, AlertTriangle, MoreVertical, GitBranch,
-  Salad, HeartPulse, FlaskConical,
+  Salad, HeartPulse, FlaskConical, BookOpen,
   Mail, Phone, MapPin, Users, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import type { Patient, PatientDocument, PatientSupplement, ProtocolItem, FMTimel
 import { GenerateProtocolButton } from "@/components/protocols/generate-protocol-button";
 import { ProtocolList } from "@/components/protocols/protocol-list";
 import { ActiveProtocolCard } from "@/components/protocols/active-protocol-card";
+import { FindProtocolPanel } from "@/components/corporate/find-protocol-panel";
 import type { LabReportStatus, LabVendor, LabTestType } from "@/types/database";
 import type { TimelineEvent } from "@/hooks/use-timeline";
 
@@ -1239,12 +1240,32 @@ export function PatientProfile({ patient: initialPatient, documents: initialDocs
         )}
 
         {activeTab === "protocols" && (
-          <div className="space-y-4">
-            <GenerateProtocolButton
-              patientId={patient.id}
-              patientName={name}
-              tier={(subscriptionTier || "free") as import("@/lib/tier/gates").SubscriptionTier}
-            />
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <GenerateProtocolButton
+                patientId={patient.id}
+                patientName={name}
+                tier={(subscriptionTier || "free") as import("@/lib/tier/gates").SubscriptionTier}
+              />
+            </div>
+
+            {/* Corporate protocol matching — pre-fills from patient chart */}
+            <details className="rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-surface)]">
+              <summary className="px-5 py-3 cursor-pointer text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-brand-600)] transition-colors flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Find Corporate Protocol
+              </summary>
+              <div className="px-5 pb-5 pt-2">
+                <FindProtocolPanel
+                  patientId={patient.id}
+                  patientSex={patient.sex as "male" | "female" | undefined}
+                  patientAge={patient.date_of_birth ? Math.floor((Date.now() - new Date(patient.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : undefined}
+                  patientName={name}
+                  compact
+                />
+              </div>
+            </details>
+
             <ProtocolList
               protocols={(protocols || []).map(p => ({ ...p, patient_id: patient.id, practitioner_id: "", generation_context: {}, started_at: null, completed_at: null, updated_at: p.created_at })) as import("@/types/protocol").ProtocolListItem[]}
               patientId={patient.id}
